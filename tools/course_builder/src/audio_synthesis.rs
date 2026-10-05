@@ -13,9 +13,11 @@ const SYNTHESIS_WORKER_COUNT: usize = 6;
 const MINIMUM_VALID_FILE_BYTES: u64 = 500;
 const PROGRESS_LOG_INTERVAL: usize = 200;
 const AUDIO_FILE_EXTENSION: &str = "m4a";
+const PARTIAL_FILE_EXTENSION: &str = "m4a.part";
 
 pub fn synthesize_missing_audio(plan: &AudioPlan, audio_directory: &Path) -> Result<(), AppError> {
     fs::create_dir_all(audio_directory)?;
+    remove_partial_files(audio_directory)?;
 
     let missing_entries: Vec<(&String, &Utterance)> = plan
         .utterances
@@ -95,11 +97,15 @@ fn synthesize_utterance(destination: &Path, utterance: &Utterance) -> Result<(),
         destination.file_stem().and_then(|stem| stem.to_str()).unwrap_or("clip"),
     ));
 
-    let speech_result: Result<(), AppError> = run_say(&temporary_path, utterance)
-        .and_then(|()| run_ffmpeg(&temporary_path, destination));
+    let partial_path: PathBuf = destination.with_extension(PARTIAL_FILE_EXTENSION);
 
-    // The temporary file may not exist when speech synthesis failed first.
+    let speech_result: Result<(), AppError> = run_say(&temporary_path, utterance)
+        .and_then(|()| run_ffmpeg(&temporary_path, &partial_path))
+        .and_then(|()| fs::rename(&partial_path, destination).map_err(AppError::from));
+
+    // Either file may not exist when an earlier step failed.
     let _ = fs::remove_file(&temporary_path);
+    let _ = fs::remove_file(&partial_path);
 
     speech_result
 }
@@ -119,7 +125,7 @@ fn run_ffmpeg(input_path: &Path, output_path: &Path) -> Result<(), AppError> {
     let status: ExitStatus = Command::new("ffmpeg")
         .args(["-v", "error", "-y", "-i"])
         .arg(input_path)
-        .args(["-ac", "1", "-ar", "24000", "-c:a", "aac", "-b:a", "40k", "-movflags", "+faststart"])
+        .args(["-ac", "1", "-ar", "24000", "-c:a", "aac", "-b:a", "40k", "-movflags", "+faststart", "-f", "mp4"])
         .arg(output_path)
         .status()?;
 
@@ -149,4 +155,17 @@ pub fn remove_unreferenced_audio(plan: &AudioPlan, audio_directory: &Path) -> Re
     }
 
     Ok(removed_count)
+}
+
+fn remove_partial_files(audio_directory: &Path) -> Result<(), AppError> {
+    for directory_entry in fs::read_dir(audio_directory)? {
+        let path: PathBuf = directory_entry?.path();
+        let is_partial_file: bool = path.to_string_lossy().ends_with(PARTIAL_FILE_EXTENSION);
+
+        if is_partial_file {
+            fs::remove_file(&path)?;
+        }
+    }
+
+    Ok(())
 }

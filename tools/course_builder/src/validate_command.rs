@@ -1,5 +1,5 @@
 use shared::AppError;
-use shared::course::{CurriculumUnit, SeverityKind, Unit, ValidationIssue, validate_unit};
+use shared::course::{Curriculum, CurriculumUnit, SeverityKind, Unit, ValidationIssue, validate_unit};
 
 use crate::course_source;
 use crate::workspace::WorkspacePaths;
@@ -79,7 +79,7 @@ pub fn print_issues(report: &UnitValidationReport) {
 }
 
 pub fn run_validate(paths: &WorkspacePaths, requested_unit_ids: &[String], require_all: bool) -> Result<bool, AppError> {
-    let curriculum = course_source::read_curriculum(paths)?;
+    let curriculum: Curriculum = course_source::read_curriculum(paths)?;
 
     for requested_id in requested_unit_ids {
         if !curriculum.units.iter().any(|unit| &unit.id == requested_id) {

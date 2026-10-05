@@ -3,7 +3,7 @@
    and cargo-leptos type-erases dev builds. */
 #![recursion_limit = "512"]
 
-#[cfg(feature = "ssr")]
+#[cfg(feature = "ssr")] // the server binary has no role in the wasm32 build
 #[tokio::main]
 async fn main() {
     use std::process;
@@ -16,5 +16,5 @@ async fn main() {
     }
 }
 
-#[cfg(not(feature = "ssr"))]
+#[cfg(not(feature = "ssr"))] // the wasm32 build is a library only
 fn main() {}

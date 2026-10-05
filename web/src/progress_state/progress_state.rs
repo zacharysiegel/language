@@ -37,16 +37,19 @@ impl ProgressStore {
 
 pub fn provide_progress_store() {
     let progress: RwSignal<Progress> = RwSignal::new(Progress::default());
+    // Saving waits for the stored progress to be read, or it would overwrite it with the default.
     let loaded: RwSignal<bool> = RwSignal::new(false);
 
-    // Saving before the stored progress has been read would overwrite it with the empty default.
     Effect::new(move |_| {
         let stored_text: Option<String> = platform::read_stored_progress();
 
         if let Some(stored_text) = stored_text {
             match Progress::from_json(&stored_text) {
                 Ok(stored_progress) => progress.set(stored_progress),
-                Err(error) => log::warn!("ignoring unreadable saved progress; [error={error}]"),
+                Err(error) => {
+                    log::warn!("replacing unreadable saved progress, keeping a copy; [error={error}]");
+                    platform::back_up_unreadable_progress(&stored_text);
+                },
             }
         }
 

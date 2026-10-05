@@ -14,10 +14,8 @@ pub mod progress_view;
 pub mod review;
 pub mod unit;
 
-// Browser-only runtime glue; the ssr build compiles none of it.
-#[cfg(feature = "hydrate")]
+#[cfg(feature = "hydrate")] // uses browser APIs the server build lacks
 pub mod client;
 
-// The dev server; it does not exist in a browser.
-#[cfg(feature = "ssr")]
+#[cfg(feature = "ssr")] // serves files and sockets a browser build cannot
 pub mod server;

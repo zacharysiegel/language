@@ -1,4 +1,5 @@
 use std::fs;
+use std::path::PathBuf;
 
 use shared::AppError;
 use shared::course::{Course, Curriculum, CurriculumUnit, Unit};
@@ -41,7 +42,7 @@ pub fn run_build(paths: &WorkspacePaths, skip_audio: bool, allow_missing: bool) 
         return Ok(true);
     }
 
-    let audio_directory = paths.audio_directory();
+    let audio_directory: PathBuf = paths.audio_directory();
 
     audio_synthesis::synthesize_missing_audio(&plan, &audio_directory)?;
 
@@ -60,7 +61,7 @@ fn write_course(paths: &WorkspacePaths, course: &Course) -> Result<(), AppError>
     fs::create_dir_all(&paths.compiled_course_directory)?;
 
     let course_text: String = serde_json::to_string(course)?;
-    let course_path = paths.compiled_course_path();
+    let course_path: PathBuf = paths.compiled_course_path();
 
     fs::write(&course_path, format!("{course_text}\n"))?;
 
