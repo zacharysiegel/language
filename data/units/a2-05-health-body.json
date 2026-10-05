@@ -28,7 +28,7 @@
       "pt": "o ouvido",
       "en": "the ear (inner ear, hearing)",
       "pos": "noun",
-      "note": "Ouvido is used for earache and hearing. The visible outer ear is a orelha.",
+      "note": "Ouvido is used for earache and hearing. The visible outer ear is called orelha.",
       "example": {"pt": "Estou com dor de ouvido.", "en": "I have an earache."}
     },
     {
@@ -276,7 +276,7 @@
       "context": "Igor notices that his friend Rafaela is limping after a workout.",
       "lines": [
         {"speaker": "Igor", "gender": "m", "pt": "Rafa, você está mancando. O que aconteceu?", "en": "Rafa, you are limping. What happened?"},
-        {"speaker": "Rafaela", "gender": "f", "pt": "Torci o pé no treino ontem. Agora dói o pé e o joelho também.", "en": "I twisted my foot at practice yesterday. Now my foot hurts, and my knee too."},
+        {"speaker": "Rafaela", "gender": "f", "pt": "Torci o pé no treino ontem. Agora o pé dói, e o joelho também.", "en": "I twisted my foot at practice yesterday. Now my foot hurts, and my knee too."},
         {"speaker": "Igor", "gender": "m", "pt": "Você foi ao médico?", "en": "Did you go to the doctor?"},
         {"speaker": "Rafaela", "gender": "f", "pt": "Fui ao posto de saúde hoje cedo. Esperei duas horas, mas o médico foi ótimo.", "en": "I went to the health clinic early today. I waited two hours, but the doctor was great."},
         {"speaker": "Igor", "gender": "m", "pt": "O que ele disse?", "en": "What did he say?"},
@@ -450,7 +450,7 @@
     {
       "type": "fill_blank",
       "prompt_pt": "Onde ___? Aqui, na garganta.",
-      "answer": ["dói"],
+      "answer": ["dói", "está doendo"],
       "hint_en": "Where does it hurt? Here, in the throat.",
       "explanation": "Singular doer form: dói."
     },
@@ -526,16 +526,16 @@
     },
     {
       "type": "fill_blank",
-      "prompt_pt": "___ um comprimido de oito em oito horas.",
-      "answer": ["tome"],
-      "hint_en": "Take one pill every eight hours.",
-      "explanation": "Tomo becomes tome in the imperative for você."
+      "prompt_pt": "___ em casa hoje e não saia.",
+      "answer": ["fique", "descanse"],
+      "hint_en": "Stay home today and do not go out.",
+      "explanation": "Ficar changes c to qu before the e ending: fique."
     },
     {
       "type": "order_words",
       "prompt_en": "Take one pill every eight hours.",
       "words": ["Tome", "um", "comprimido", "de", "oito", "em", "oito", "horas."],
-      "distractors": ["toma"]
+      "distractors": ["tomar"]
     },
     {
       "type": "translate_to_pt",
@@ -552,14 +552,14 @@
       "prompt": "Which is the correct negative command for 'Do not eat anything cold'?",
       "choices": ["Não comeu nada frio.", "Não coma nada frio.", "Não comi nada frio.", "Não comendo nada frio."],
       "answer": 1,
-      "explanation": "Negative imperative: não plus the subjunctive-based form coma."
+      "explanation": "Negative imperative: não plus the same form, coma."
     },
     {
       "type": "fill_blank",
-      "prompt_pt": "Não ___ nada frio.",
-      "answer": ["coma"],
-      "hint_en": "Do not eat anything cold.",
-      "explanation": "Como becomes coma in the imperative."
+      "prompt_pt": "Não ___ muito café.",
+      "answer": ["beba", "tome"],
+      "hint_en": "Do not drink too much coffee.",
+      "explanation": "Beber: eu bebo becomes beba in the imperative."
     },
     {
       "type": "listening_choice",
@@ -605,10 +605,10 @@
     },
     {
       "type": "translate_to_pt",
-      "prompt_en": "Don't eat anything cold.",
+      "prompt_en": "Do not go out in the cold.",
       "answers": [
-        "Não coma nada frio.",
-        "Você não deve comer nada frio."
+        "Não saia no frio.",
+        "Você não deve sair no frio."
       ]
     },
     {
