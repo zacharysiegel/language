@@ -15,4 +15,4 @@ Follow `docs/conventions/` (type naming, log format, conditional compilation) an
 
 ## Running locally
 
-`./scripts/dev/serve.sh` needs only this machine: macOS voices and `ffmpeg` for the audio, no remote service.
+`./scripts/dev/serve.sh` needs only this machine. Audio is synthesized locally by Kokoro (ONNX Runtime and eSpeak NG, model files downloaded once into `models/`) or by the macOS voices (`--engine macos-say`); both are encoded with `ffmpeg`. Changing the engine or a voice changes the clip file names, and the build removes the clips no longer referenced.

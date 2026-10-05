@@ -1,8 +1,12 @@
+mod audio_encoding;
 mod audio_plan;
 mod audio_synthesis;
 mod build_command;
 mod course_source;
+mod kokoro;
+mod speech_engine;
 mod validate_command;
+mod work_pool;
 mod workspace;
 
 use std::process::ExitCode;
@@ -10,6 +14,7 @@ use std::process::ExitCode;
 use clap::{Args, Parser, Subcommand};
 use shared::AppError;
 
+use crate::speech_engine::SpeechEngineKind;
 use crate::workspace::WorkspacePaths;
 
 #[derive(Parser)]
@@ -39,6 +44,10 @@ struct ValidateArguments {
 
 #[derive(Args)]
 struct BuildArguments {
+    /// The engine that speaks the course.
+    #[arg(long, value_enum, default_value_t = SpeechEngineKind::Kokoro)]
+    engine: SpeechEngineKind,
+
     /// Write the compiled course without synthesizing audio.
     #[arg(long)]
     skip_audio: bool,
@@ -69,6 +78,6 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
 
     match command {
         CommandKind::Validate(arguments) => validate_command::run_validate(&paths, &arguments.unit_ids, arguments.all),
-        CommandKind::Build(arguments) => build_command::run_build(&paths, arguments.skip_audio, arguments.allow_missing),
+        CommandKind::Build(arguments) => build_command::run_build(&paths, arguments.engine, arguments.skip_audio, arguments.allow_missing),
     }
 }

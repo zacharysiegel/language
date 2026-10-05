@@ -8,7 +8,9 @@ A Brazilian Portuguese course for English speakers, from A1 to B2: 42 units of v
 ./scripts/dev/serve.sh
 ```
 
-That compiles the course data and synthesizes the audio on the first run (about 5,500 clips with the macOS Brazilian Portuguese voices and `ffmpeg`, roughly 20 minutes), then serves http://127.0.0.1:3000 with `cargo leptos watch`.
+That compiles the course data and synthesizes the audio on the first run, then serves http://127.0.0.1:3000 with `cargo leptos watch`. The audio is spoken by the Kokoro neural voices, run locally through ONNX Runtime with eSpeak NG for the phonemes. The first run downloads about 370 MB of pinned model files into `models/` (checked against checksums) and synthesizes about 5,500 clips, which takes roughly 20 minutes. It needs `cmake` (eSpeak NG is built from source) and `ffmpeg`, and Apple silicon.
+
+To use the macOS system voices instead, which need no download: `cargo run --release --package course_builder -- build --engine macos-say`.
 
 ## Layout
 

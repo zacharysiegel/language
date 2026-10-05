@@ -7,11 +7,13 @@ const WORKSPACE_MANIFEST_TABLE: &str = "[workspace]";
 const CURRICULUM_PATH: &str = "data/curriculum.json";
 const UNITS_DIRECTORY: &str = "data/units";
 const COMPILED_COURSE_DIRECTORY: &str = "web/static/course";
+const SPEECH_MODELS_DIRECTORY: &str = "models";
 
 pub struct WorkspacePaths {
     pub curriculum_path: PathBuf,
     pub units_directory: PathBuf,
     pub compiled_course_directory: PathBuf,
+    pub speech_models_directory: PathBuf,
 }
 
 impl WorkspacePaths {
@@ -23,6 +25,7 @@ impl WorkspacePaths {
             curriculum_path: root.join(CURRICULUM_PATH),
             units_directory: root.join(UNITS_DIRECTORY),
             compiled_course_directory: root.join(COMPILED_COURSE_DIRECTORY),
+            speech_models_directory: root.join(SPEECH_MODELS_DIRECTORY),
         })
     }
 
