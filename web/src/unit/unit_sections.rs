@@ -34,6 +34,13 @@ pub fn TranslationToggle() -> impl IntoView {
 #[component]
 fn PhraseRow(pair: PhrasePair) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
+    let literal = pair.literal.clone().map(|literal| {
+        view! {
+            <span class="literal" class:hidden=move || !progress_store.read(|progress| progress.settings.show_translations)>
+                "literally: "{literal}
+            </span>
+        }
+    });
 
     view! {
         <li class="phrase">
@@ -42,6 +49,7 @@ fn PhraseRow(pair: PhrasePair) -> impl IntoView {
             <span class="en" class:hidden=move || !progress_store.read(|progress| progress.settings.show_translations)>
                 {pair.en.clone()}
             </span>
+            {literal}
         </li>
     }
 }
@@ -86,6 +94,7 @@ pub fn OverviewSection(unit: Unit) -> impl IntoView {
 fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
     let part_of_speech = item.pos.clone().map(|pos| view! { <span class="muted">" "{pos}</span> });
     let note = item.note.clone().map(|note| view! { <div class="note">{note}</div> });
+    let literal = item.literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> });
 
     view! {
         <li class="vocabulary-item">
@@ -95,6 +104,7 @@ fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
                 {part_of_speech}
                 <span class="en">" — "{item.en.clone()}</span>
             </div>
+            {literal}
             <div class="example">
                 <PlayButton audio=item.example.audio.clone() text=item.example.pt.clone() />
                 <span class="pt">{item.example.pt.clone()}</span>
@@ -124,7 +134,7 @@ fn DialogueView(dialogue: Dialogue) -> impl IntoView {
             view! {
                 <li class="dialogue-line">
                     <span class="speaker">{speaker}</span>
-                    <PhraseRow pair=PhrasePair { pt: line.pt.clone(), en: line.en.clone(), audio: line.audio.clone() } />
+                    <PhraseRow pair=PhrasePair { pt: line.pt.clone(), en: line.en.clone(), literal: line.literal.clone(), audio: line.audio.clone() } />
                 </li>
             }
         })

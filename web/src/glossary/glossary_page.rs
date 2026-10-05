@@ -60,6 +60,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
                             <td><PlayButton audio=item.audio.clone() text=item.pt.clone() /></td>
                             <td class="pt">{item.pt.clone()}</td>
                             <td>{item.en.clone()}</td>
+                            <td class="literal">{item.literal.clone().unwrap_or_default()}</td>
                             <td><A href=unit_href>{unit_label}</A></td>
                         </tr>
                     }
@@ -69,7 +70,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
             view! {
                 <p class="muted">{format!("{total_matches} match(es)")}</p>
                 <table class="grid">
-                    <thead><tr><th></th><th>"Portuguese"</th><th>"English"</th><th>"Unit"</th></tr></thead>
+                    <thead><tr><th></th><th>"Portuguese"</th><th>"English"</th><th>"Literally"</th><th>"Unit"</th></tr></thead>
                     <tbody>{rows}</tbody>
                 </table>
             }
