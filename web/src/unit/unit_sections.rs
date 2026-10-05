@@ -1,4 +1,5 @@
 use leptos::prelude::*;
+use shared::progress::QueuedCards;
 use shared::course::{Dialogue, GrammarNote, PhrasePair, Reading, Unit, VocabularyItem};
 
 use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
@@ -65,8 +66,11 @@ pub fn OverviewSection(unit: Unit) -> impl IntoView {
             <button
                 type="button"
                 on:click=move |_| {
-                    let added_count: usize = progress_store.add_unit_vocabulary(&unit_id, vocabulary_count);
-                    added_message.set(Some(format!("{added_count} new word(s) added to your review deck.")));
+                    let queued: QueuedCards = progress_store.queue_unit_vocabulary_for_review(&unit_id, vocabulary_count);
+                    added_message.set(Some(format!(
+                        "{} new word(s) added and {} word(s) queued for review again.",
+                        queued.added_count, queued.made_due_count,
+                    )));
                 }
             >
                 {format!("Add the {vocabulary_count} words to my review deck")}

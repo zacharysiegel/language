@@ -62,6 +62,12 @@ pub struct DailyActivity {
     pub review_count: u32,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct QueuedCards {
+    pub added_count: usize,
+    pub made_due_count: usize,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Progress {
     #[serde(default)]
@@ -119,6 +125,30 @@ impl Progress {
         }
 
         added_count
+    }
+
+    /// Adds missing cards and makes cards that are scheduled for later due now, keeping their box.
+    pub fn queue_cards_for_review(&mut self, card_ids: impl Iterator<Item = String>, now_milliseconds: i64) -> QueuedCards {
+        let mut queued: QueuedCards = QueuedCards {
+            added_count: 0,
+            made_due_count: 0,
+        };
+
+        for card_id in card_ids {
+            match self.cards.get_mut(&card_id) {
+                Some(card) if card.due_milliseconds > now_milliseconds => {
+                    card.due_milliseconds = now_milliseconds;
+                    queued.made_due_count += 1;
+                },
+                Some(_) => {},
+                None => {
+                    self.cards.insert(card_id.clone(), ReviewCard::new(card_id, now_milliseconds));
+                    queued.added_count += 1;
+                },
+            }
+        }
+
+        queued
     }
 
     pub fn record_exercise_activity(&mut self, today: NaiveDate, exercise_count: u32) {
@@ -183,6 +213,21 @@ mod tests {
 
         assert_eq!(added_count, 1);
         assert_eq!(progress.cards["a:0"].box_index, 3);
+    }
+
+    #[test]
+    fn queue_cards_for_review_makes_scheduled_cards_due_and_keeps_their_box() {
+        let mut progress: Progress = Progress::default();
+        progress.add_cards_if_missing(["a:0".to_string(), "a:1".to_string()].into_iter(), 0);
+        let remembered: ReviewCard = progress.cards["a:0"].graded(true, 1_000);
+        progress.cards.insert("a:0".to_string(), remembered);
+
+        let queued: QueuedCards = progress.queue_cards_for_review(["a:0".to_string(), "a:1".to_string(), "a:2".to_string()].into_iter(), 2_000);
+
+        assert_eq!(queued, QueuedCards { added_count: 1, made_due_count: 1 });
+        assert_eq!(progress.cards["a:0"].due_milliseconds, 2_000);
+        assert_eq!(progress.cards["a:0"].box_index, 1);
+        assert_eq!(progress.cards["a:2"].due_milliseconds, 2_000);
     }
 
     #[test]
