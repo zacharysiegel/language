@@ -5,42 +5,41 @@ use shared::course::{
     Dialogue, Exercise, GrammarNote, PhrasePair, Reading, SpeakerGenderKind, Unit, VocabularyItem,
 };
 
+use crate::speech_engine::{PersonaKind, SpeechEngineKind, VoiceProfile};
+
 const AUDIO_PATH_PREFIX: &str = "audio/";
 const FILE_NAME_HASH_CHARACTERS: usize = 20;
 
-const NARRATOR_VOICE: &str = "Luciana";
-const FEMALE_VOICES: [&str; 4] = [
-    "Luciana",
-    "Flo (Portuguese (Brazil))",
-    "Sandy (Portuguese (Brazil))",
-    "Shelley (Portuguese (Brazil))",
-];
-const MALE_VOICES: [&str; 3] = [
-    "Reed (Portuguese (Brazil))",
-    "Eddy (Portuguese (Brazil))",
-    "Rocko (Portuguese (Brazil))",
-];
-
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq)]
 pub struct Utterance {
-    pub voice: &'static str,
+    pub profile: VoiceProfile,
     pub text: String,
 }
 
 /// Every distinct spoken clip of a compiled course, keyed by the file name it is stored under.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct AudioPlan {
+    pub engine: SpeechEngineKind,
     pub utterances: BTreeMap<String, Utterance>,
 }
 
 impl AudioPlan {
-    fn audio_path_for(&mut self, text: &str, voice: &'static str) -> String {
-        let file_name: String = format!("{}.m4a", &sha256_hex(&format!("{voice}\n{text}"))[..FILE_NAME_HASH_CHARACTERS]);
+    pub fn new(engine: SpeechEngineKind) -> AudioPlan {
+        AudioPlan {
+            engine,
+            utterances: BTreeMap::new(),
+        }
+    }
+
+    fn audio_path_for(&mut self, text: &str, persona: PersonaKind) -> String {
+        let profile: VoiceProfile = self.engine.profile_for(persona);
+        let identity: String = format!("{}\n{}\n{:.2}\n{text}", self.engine.code(), profile.voice_id, profile.speed);
+        let file_name: String = format!("{}.m4a", &sha256_hex(&identity)[..FILE_NAME_HASH_CHARACTERS]);
 
         self.utterances.insert(
             file_name.clone(),
             Utterance {
-                voice,
+                profile,
                 text: text.to_string(),
             },
         );
@@ -49,14 +48,13 @@ impl AudioPlan {
     }
 
     fn narrate(&mut self, text: &str) -> Option<String> {
-        Some(self.audio_path_for(text, NARRATOR_VOICE))
+        Some(self.audio_path_for(text, PersonaKind::Narrator))
     }
 
     fn voice_listening_exercise(&mut self, text: &str) -> Option<String> {
-        let voices: Vec<&'static str> = FEMALE_VOICES.iter().chain(MALE_VOICES.iter()).copied().collect();
-        let voice: &'static str = voices[hash_bucket(text, voices.len())];
+        let voice_index: usize = hash_bucket(text, self.engine.listening_pool_size());
 
-        Some(self.audio_path_for(text, voice))
+        Some(self.audio_path_for(text, PersonaKind::ListeningExercise(voice_index)))
     }
 }
 
@@ -105,15 +103,15 @@ fn compile_reading(reading: &mut Reading, plan: &mut AudioPlan) {
 }
 
 fn compile_dialogue(dialogue: &mut Dialogue, plan: &mut AudioPlan) {
-    let mut voice_by_speaker: BTreeMap<String, &'static str> = BTreeMap::new();
+    let mut persona_by_speaker: BTreeMap<String, PersonaKind> = BTreeMap::new();
     let mut female_speaker_count: usize = 0;
     let mut male_speaker_count: usize = 0;
 
     for line in &mut dialogue.lines {
-        if !voice_by_speaker.contains_key(&line.speaker) {
-            let voice: &'static str = match line.gender {
-                SpeakerGenderKind::Female => FEMALE_VOICES[female_speaker_count % FEMALE_VOICES.len()],
-                SpeakerGenderKind::Male => MALE_VOICES[male_speaker_count % MALE_VOICES.len()],
+        if !persona_by_speaker.contains_key(&line.speaker) {
+            let persona: PersonaKind = match line.gender {
+                SpeakerGenderKind::Female => PersonaKind::FemaleSpeaker(female_speaker_count),
+                SpeakerGenderKind::Male => PersonaKind::MaleSpeaker(male_speaker_count),
             };
 
             match line.gender {
@@ -121,10 +119,10 @@ fn compile_dialogue(dialogue: &mut Dialogue, plan: &mut AudioPlan) {
                 SpeakerGenderKind::Male => male_speaker_count += 1,
             }
 
-            voice_by_speaker.insert(line.speaker.clone(), voice);
+            persona_by_speaker.insert(line.speaker.clone(), persona);
         }
 
-        line.audio = Some(plan.audio_path_for(&line.pt, voice_by_speaker[&line.speaker]));
+        line.audio = Some(plan.audio_path_for(&line.pt, persona_by_speaker[&line.speaker]));
     }
 }
 
@@ -148,16 +146,27 @@ mod tests {
 
     #[test]
     fn audio_path_for_is_deterministic_and_voice_specific() {
-        let mut plan: AudioPlan = AudioPlan::default();
+        let mut plan: AudioPlan = AudioPlan::new(SpeechEngineKind::Kokoro);
 
-        let first: String = plan.audio_path_for("Olá", "Luciana");
-        let repeated: String = plan.audio_path_for("Olá", "Luciana");
-        let other_voice: String = plan.audio_path_for("Olá", "Reed (Portuguese (Brazil))");
+        let first: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
+        let repeated: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
+        let other_voice: String = plan.audio_path_for("Olá", PersonaKind::MaleSpeaker(0));
 
         assert_eq!(first, repeated);
         assert_ne!(first, other_voice);
         assert_eq!(plan.utterances.len(), 2);
         assert!(first.starts_with("audio/") && first.ends_with(".m4a"));
+    }
+
+    #[test]
+    fn audio_path_for_differs_between_engines() {
+        let mut kokoro_plan: AudioPlan = AudioPlan::new(SpeechEngineKind::Kokoro);
+        let mut say_plan: AudioPlan = AudioPlan::new(SpeechEngineKind::MacosSay);
+
+        assert_ne!(
+            kokoro_plan.audio_path_for("Olá", PersonaKind::Narrator),
+            say_plan.audio_path_for("Olá", PersonaKind::Narrator),
+        );
     }
 
     #[test]

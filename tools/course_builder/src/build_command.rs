@@ -7,10 +7,11 @@ use shared::course::{Course, Curriculum, CurriculumUnit, Unit};
 use crate::audio_plan::{self, AudioPlan};
 use crate::audio_synthesis;
 use crate::course_source;
+use crate::speech_engine::SpeechEngineKind;
 use crate::validate_command::{self, UnitValidationReport};
 use crate::workspace::WorkspacePaths;
 
-pub fn run_build(paths: &WorkspacePaths, skip_audio: bool, allow_missing: bool) -> Result<bool, AppError> {
+pub fn run_build(paths: &WorkspacePaths, engine: SpeechEngineKind, skip_audio: bool, allow_missing: bool) -> Result<bool, AppError> {
     let curriculum: Curriculum = course_source::read_curriculum(paths)?;
     let all_units: Vec<&CurriculumUnit> = curriculum.units.iter().collect();
     let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &all_units, !allow_missing)?;
@@ -22,7 +23,7 @@ pub fn run_build(paths: &WorkspacePaths, skip_audio: bool, allow_missing: bool) 
         return Ok(false);
     }
 
-    let mut plan: AudioPlan = AudioPlan::default();
+    let mut plan: AudioPlan = AudioPlan::new(engine);
     let compiled_units: Vec<Unit> = report
         .loaded_units
         .iter()
@@ -44,7 +45,7 @@ pub fn run_build(paths: &WorkspacePaths, skip_audio: bool, allow_missing: bool) 
 
     let audio_directory: PathBuf = paths.audio_directory();
 
-    audio_synthesis::synthesize_missing_audio(&plan, &audio_directory)?;
+    audio_synthesis::synthesize_missing_audio(&plan, paths)?;
 
     let removed_count: usize = audio_synthesis::remove_unreferenced_audio(&plan, &audio_directory)?;
 
