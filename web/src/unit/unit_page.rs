@@ -26,10 +26,10 @@ pub enum UnitTabKind {
 impl UnitTabKind {
     const ALL: [UnitTabKind; 6] = [
         UnitTabKind::Overview,
-        UnitTabKind::Vocabulary,
-        UnitTabKind::Dialogues,
         UnitTabKind::Grammar,
+        UnitTabKind::Dialogues,
         UnitTabKind::Readings,
+        UnitTabKind::Vocabulary,
         UnitTabKind::Practice,
     ];
 
@@ -49,7 +49,7 @@ impl UnitTabKind {
             UnitTabKind::Overview => "Overview",
             UnitTabKind::Vocabulary => "Vocabulary",
             UnitTabKind::Dialogues => "Dialogues",
-            UnitTabKind::Grammar => "Grammar",
+            UnitTabKind::Grammar => "Principles",
             UnitTabKind::Readings => "Reading",
             UnitTabKind::Practice => "Practice",
         }

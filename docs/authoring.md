@@ -14,6 +14,26 @@ Each unit is one JSON file at `data/units/<unit-id>.json`. The unit ids, levels,
 - Difficulty must match the level. A1 uses very short sentences and only the grammar covered so far (the current unit's focus plus all earlier units in the curriculum). A2 can use the past tenses once introduced; B1 and B2 use longer, richer text.
 - Recycle vocabulary and grammar from earlier units in the sequence, but each unit must introduce its own new vocabulary and must not require grammar from later units.
 
+## Principles first
+
+The learner wants to understand the language as a system before memorizing words. Vocabulary is secondary: it is easy to add to a firm foundation.
+
+- Teach the rule, then the examples. Every grammar note states the underlying principle (what the pattern is, why it exists, where it stops working) before any list of examples, in plain English, with the technical term defined the first time it is used.
+- Nothing is used before it is explained. Every letter, sound, diacritic, grammatical term, verb form and construction that appears in a `pt` string, example or exercise must have been explained in an earlier unit or in this one. When a unit introduces a word with an accent mark, a nasal vowel, an unusual spelling or a silent letter, a grammar note in the same unit (titled "Spelling and sound: ...") explains why it is written and pronounced that way, using the rules from the first three units. Never write an accented word without the reader knowing what the accent does.
+- Prefer a small, well-chosen vocabulary that serves the grammar over long thematic lists: 12 to 20 items is enough, chosen to illustrate the patterns being taught.
+- Explain in terms of the structure of the language, with contrasts to English: what English does with word order or auxiliary verbs, what Portuguese does with endings, agreement or contractions.
+- Exercises test the principles (apply the rule, choose the form, explain the spelling, place the stress) at least as much as they test recall of words.
+
+## Translation versus usage
+
+The learner wants three separate things, never blended into one gloss: the literal meaning, the natural translation, and how the expression is used.
+
+- `en` is the natural English equivalent, short and clean, with no parenthetical usage notes. For example `"en": "excuse me"`.
+- `literal` is the word-for-word rendering that follows the Portuguese structure and word order, so the learner sees what the words actually say. Join the English words that stand for one Portuguese word with a hyphen, and show structural differences honestly. For example `"literal": "with license"` for `com licença`, `"literal": "I-am with hunger"` for `estou com fome`, `"literal": "I have 30 years"` for `tenho trinta anos`, `"literal": "all well?"` for `tudo bem?`. Add `literal` to every vocabulary item, dialogue line, grammar example and reading paragraph where the natural translation differs significantly from the word-for-word rendering: idioms, fixed phrases, constructions where Portuguese uses a different structure (estar com, ter de, gostar de, ficar, dar, haver and so on), and false friends. Omit it when the natural translation is already essentially word-for-word (for example `o livro`, `the book`). Never fabricate a literal meaning: it must be a faithful word-level gloss, and when a word is itself opaque (an old or idiomatic form), gloss its parts as far as they are transparent.
+- `note` (and the lesson text) explain the usage: when and to whom you say it, register, regional differences, and why the literal and natural meanings diverge (the etymology or logic behind the idiom).
+
+The `literal` field is allowed on vocabulary items, dialogue lines and every phrase pair (grammar examples, reading paragraphs, match pairs). It is not spoken.
+
 ## File format
 
 ```json
@@ -27,6 +47,7 @@ Each unit is one JSON file at `data/units/<unit-id>.json`. The unit ids, levels,
     {
       "pt": "olá",
       "en": "hello",
+      "literal": "optional word-for-word gloss, only when it differs significantly",
       "pos": "interjection",
       "note": "optional short English usage note",
       "example": {"pt": "Olá, tudo bem?", "en": "Hello, how are you?"}
@@ -66,7 +87,7 @@ Each unit is one JSON file at `data/units/<unit-id>.json`. The unit ids, levels,
 
 Rules for each section:
 
-- `vocabulary`: at least 18 items, more is better (20 to 28 is typical). Every item needs an `example` pair. `pos` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `pt` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `pt` value within the unit.
+- `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `pos` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `pt` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `pt` value within the unit.
 - `dialogues`: 2 to 3 dialogues, each with 6 to 14 lines, 2 to 4 distinct speakers, speaker names consistent within a dialogue and `gender` of `f` or `m` on every line matching the speaker. Dialogues must use the unit's vocabulary and grammar focus in realistic situations. A dialogue id must be unique within the unit (`d1`, `d2`, ...).
 - `grammar`: 2 to 4 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, Brazilian usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
 - `culture`: one note of at least 200 characters.

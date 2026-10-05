@@ -90,7 +90,10 @@ fn NavigationBar() -> impl IntoView {
             <A href="/">"Course"</A>
             <A href="/review">
                 "Review"
-                {move || (due_count() > 0).then(|| view! { <span class="badge">{due_count()}</span> })}
+                {move || {
+                    (due_count() > 0)
+                        .then(|| view! { <span class="badge" title="Words ready to review now">{due_count()}</span> })
+                }}
             </A>
             <A href="/glossary">"Glossary"</A>
             <A href="/progress">"Progress"</A>

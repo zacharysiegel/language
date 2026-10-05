@@ -115,6 +115,8 @@ pub struct PhrasePair {
     pub pt: String,
     pub en: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub literal: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<String>,
 }
 
@@ -123,6 +125,8 @@ pub struct PhrasePair {
 pub struct VocabularyItem {
     pub pt: String,
     pub en: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub pos: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -148,6 +152,8 @@ pub struct DialogueLine {
     pub gender: SpeakerGenderKind,
     pub pt: String,
     pub en: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub audio: Option<String>,
 }

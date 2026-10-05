@@ -8,7 +8,7 @@ use crate::course::{
 };
 
 const MINIMUM_OBJECTIVES: usize = 3;
-const MINIMUM_VOCABULARY: usize = 18;
+const MINIMUM_VOCABULARY: usize = 12;
 const MINIMUM_DIALOGUES: usize = 2;
 const MINIMUM_DIALOGUE_LINES: usize = 6;
 const MINIMUM_SPEAKERS: usize = 2;
@@ -158,6 +158,19 @@ impl IssueCollector<'_> {
     fn check_pair(&mut self, location: &str, pair: &PhrasePair) {
         self.check_spoken_portuguese(&format!("{location}.pt"), &pair.pt);
         self.require_text(&format!("{location}.en"), "en", &pair.en);
+        self.check_literal(location, &pair.literal, &pair.en);
+    }
+
+    fn check_literal(&mut self, location: &str, literal: &Option<String>, natural: &str) {
+        let Some(literal) = literal else {
+            return;
+        };
+
+        self.require_text(&format!("{location}.literal"), "literal", literal);
+
+        if literal.trim().eq_ignore_ascii_case(natural.trim()) {
+            self.warning(&format!("{location}.literal"), "literal translation repeats the natural translation; omit it");
+        }
     }
 
     fn check_explanation(&mut self, location: &str, explanation: &Option<String>) {
@@ -365,6 +378,7 @@ fn check_vocabulary(collector: &mut IssueCollector, vocabulary: &[VocabularyItem
 
         collector.check_spoken_portuguese(&format!("{location}.pt"), &item.pt);
         collector.require_text(&format!("{location}.en"), "en", &item.en);
+        collector.check_literal(&location, &item.literal, &item.en);
         collector.check_pair(&format!("{location}.example"), &item.example);
 
         if let Some(note) = &item.note {
@@ -400,6 +414,7 @@ fn check_dialogue(collector: &mut IssueCollector, location: &str, dialogue: &Dia
         collector.require_text(&format!("{line_location}.speaker"), "speaker", &line.speaker);
         collector.check_spoken_portuguese(&format!("{line_location}.pt"), &line.pt);
         collector.require_text(&format!("{line_location}.en"), "en", &line.en);
+        collector.check_literal(&line_location, &line.literal, &line.en);
 
         let known_gender: Option<SpeakerGenderKind> = speaker_genders
             .iter()
