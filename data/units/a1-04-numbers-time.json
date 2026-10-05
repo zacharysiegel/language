@@ -1,0 +1,246 @@
+{
+  "id": "a1-04-numbers-time",
+  "level": "A1",
+  "order": 4,
+  "title": "Numbers, time and dates",
+  "objectives": [
+    "I can count from zero to one hundred and read out a phone number.",
+    "I can say how old I am and ask other people's age with ter.",
+    "I can ask for and tell the time, including half past, quarter past and on the dot.",
+    "I can name the days of the week and the months and say today's date.",
+    "I can say when a class, a meeting or a birthday is."
+  ],
+  "vocabulary": [
+    {"pt": "zero", "en": "zero", "pos": "number", "example": {"pt": "Zero é um número.", "en": "Zero is a number."}},
+    {"pt": "um", "en": "one", "pos": "number", "note": "Feminine: uma. Two also changes: dois for masculine and duas for feminine.", "example": {"pt": "Um, dois, três.", "en": "One, two, three."}},
+    {"pt": "dez", "en": "ten", "pos": "number", "example": {"pt": "São dez horas.", "en": "It is ten o'clock."}},
+    {"pt": "quinze", "en": "fifteen", "pos": "number", "example": {"pt": "Eu tenho quinze anos.", "en": "I am fifteen years old."}},
+    {"pt": "vinte", "en": "twenty", "pos": "number", "example": {"pt": "Ela tem vinte anos.", "en": "She is twenty years old."}},
+    {"pt": "cem", "en": "one hundred", "pos": "number", "note": "Exactly one hundred is cem. For 101 to 199 the word changes to cento, as in cento e um.", "example": {"pt": "Dez, vinte, trinta, cem.", "en": "Ten, twenty, thirty, one hundred."}},
+    {"pt": "ter", "en": "to have", "pos": "verb", "note": "Portuguese uses ter, not ser, to give your age: you have years.", "example": {"pt": "Eu tenho trinta anos.", "en": "I am thirty years old."}},
+    {"pt": "o ano", "en": "the year", "pos": "noun", "note": "Also used for age. The plural anos means years or years old.", "example": {"pt": "Ele tem vinte anos.", "en": "He is twenty years old."}},
+    {"pt": "a idade", "en": "age", "pos": "noun", "example": {"pt": "Qual é a idade da Ana?", "en": "How old is Ana?"}},
+    {"pt": "quantos anos", "en": "how old", "pos": "phrase", "note": "Literally how many years. Used with ter.", "example": {"pt": "Quantos anos você tem?", "en": "How old are you?"}},
+    {"pt": "o celular", "en": "the cell phone", "pos": "noun", "note": "The Brazilian word. In Portugal people say telemóvel.", "example": {"pt": "O celular é do Paulo.", "en": "The cell phone is Paulo's."}},
+    {"pt": "o telefone", "en": "the telephone", "pos": "noun", "example": {"pt": "O telefone é da Ana.", "en": "The telephone is new."}},
+    {"pt": "o número", "en": "the number", "pos": "noun", "example": {"pt": "O número é oito, sete, seis, cinco.", "en": "The number is eight, seven, six, five."}},
+    {"pt": "a hora", "en": "the hour", "pos": "noun", "note": "Used in the plural to tell the time: São duas horas.", "example": {"pt": "São duas horas.", "en": "It is two o'clock."}},
+    {"pt": "que horas são", "en": "what time is it", "pos": "phrase", "note": "The plural horas and são are used even when the answer is one o'clock: É uma hora.", "example": {"pt": "Com licença, que horas são?", "en": "Excuse me, what time is it?"}},
+    {"pt": "meio-dia", "en": "noon", "pos": "noun", "example": {"pt": "É meio-dia.", "en": "It is noon."}},
+    {"pt": "meia-noite", "en": "midnight", "pos": "noun", "example": {"pt": "É meia-noite.", "en": "It is midnight."}},
+    {"pt": "meia", "en": "half, half past", "pos": "adjective", "note": "Used after the hour: três e meia is half past three. It also appears in meia hora, half an hour.", "example": {"pt": "São três e meia.", "en": "It is half past three."}},
+    {"pt": "em ponto", "en": "on the dot, sharp", "pos": "phrase", "example": {"pt": "São duas horas em ponto.", "en": "It is exactly two o'clock."}},
+    {"pt": "a manhã", "en": "the morning", "pos": "noun", "note": "Used after the time to mean a.m.: oito da manhã.", "example": {"pt": "São nove da manhã.", "en": "It is nine in the morning."}},
+    {"pt": "a tarde", "en": "the afternoon", "pos": "noun", "example": {"pt": "São três da tarde.", "en": "It is three in the afternoon."}},
+    {"pt": "a noite", "en": "the evening, the night", "pos": "noun", "example": {"pt": "São dez da noite.", "en": "It is ten at night."}},
+    {"pt": "a aula", "en": "the class, the lesson", "pos": "noun", "example": {"pt": "A aula é às nove.", "en": "The class is at nine."}},
+    {"pt": "amanhã", "en": "tomorrow", "pos": "adverb", "example": {"pt": "Amanhã é sábado.", "en": "Tomorrow is Saturday."}},
+    {"pt": "segunda-feira", "en": "Monday", "pos": "noun", "note": "In everyday speech people often drop the -feira and just say segunda. The days from Monday to Friday are feminine.", "example": {"pt": "Hoje é segunda-feira.", "en": "Today is Monday."}},
+    {"pt": "sexta-feira", "en": "Friday", "pos": "noun", "example": {"pt": "Sexta-feira é um dia legal.", "en": "Friday is a nice day."}},
+    {"pt": "sábado", "en": "Saturday", "pos": "noun", "note": "Saturday and Sunday are masculine and have no -feira.", "example": {"pt": "Sábado é amanhã.", "en": "Saturday is tomorrow."}},
+    {"pt": "domingo", "en": "Sunday", "pos": "noun", "example": {"pt": "Hoje é domingo.", "en": "Today is Sunday."}},
+    {"pt": "a semana", "en": "the week", "pos": "noun", "example": {"pt": "A semana tem sete dias.", "en": "The week has seven days."}},
+    {"pt": "o mês", "en": "the month", "pos": "noun", "note": "Plural: os meses.", "example": {"pt": "Um ano tem doze meses.", "en": "A year has twelve months."}},
+    {"pt": "janeiro", "en": "January", "pos": "noun", "note": "Months are written with a lower case letter in Portuguese.", "example": {"pt": "Janeiro é verão no Brasil.", "en": "January is summer in Brazil."}},
+    {"pt": "dezembro", "en": "December", "pos": "noun", "example": {"pt": "Meu aniversário é em dezembro.", "en": "My birthday is in December."}},
+    {"pt": "o verão", "en": "summer", "pos": "noun", "example": {"pt": "Em janeiro é verão.", "en": "In January it is summer."}},
+    {"pt": "o inverno", "en": "winter", "pos": "noun", "example": {"pt": "Em julho é inverno.", "en": "In July it is winter."}},
+    {"pt": "a data", "en": "the date", "pos": "noun", "example": {"pt": "Qual é a data de hoje?", "en": "What is today's date?"}},
+    {"pt": "primeiro", "en": "first", "pos": "adjective", "note": "Used for the first day of a month only. All other days use the ordinary number.", "example": {"pt": "Hoje é primeiro de maio.", "en": "Today is the first of May."}},
+    {"pt": "o aniversário", "en": "birthday", "pos": "noun", "note": "Also means anniversary.", "example": {"pt": "Meu aniversário é em março.", "en": "My birthday is in March."}},
+    {"pt": "quando", "en": "when", "pos": "adverb", "example": {"pt": "Quando é o aniversário?", "en": "When is the birthday?"}},
+    {"pt": "que dia é hoje", "en": "what day is it today", "pos": "phrase", "example": {"pt": "Que dia é hoje?", "en": "What day is it today?"}}
+  ],
+  "dialogues": [
+    {
+      "id": "d1",
+      "title": "Age and phone numbers",
+      "context": "Rafael and Beatriz meet at a party and exchange phone numbers.",
+      "lines": [
+        {"speaker": "Rafael", "gender": "m", "pt": "Oi, Beatriz! Quantos anos você tem?", "en": "Hi, Beatriz! How old are you?"},
+        {"speaker": "Beatriz", "gender": "f", "pt": "Eu tenho vinte e oito anos. E você?", "en": "I am twenty-eight. And you?"},
+        {"speaker": "Rafael", "gender": "m", "pt": "Eu tenho trinta e dois.", "en": "I am thirty-two."},
+        {"speaker": "Beatriz", "gender": "f", "pt": "Qual é o seu celular, Rafael?", "en": "What is your cell phone number, Rafael?"},
+        {"speaker": "Rafael", "gender": "m", "pt": "É onze, nove, oito, sete, seis, cinco, quatro, três, dois, um.", "en": "It is eleven, nine, eight, seven, six, five, four, three, two, one."},
+        {"speaker": "Beatriz", "gender": "f", "pt": "Desculpa, como?", "en": "Sorry, what was that?"},
+        {"speaker": "Rafael", "gender": "m", "pt": "Onze, nove, oito, sete, seis, cinco, quatro, três, dois, um.", "en": "Eleven, nine, eight, seven, six, five, four, three, two, one."},
+        {"speaker": "Beatriz", "gender": "f", "pt": "Obrigada! O meu é onze, nove, oito, oito, quatro, quatro, três, três, dois, dois.", "en": "Thank you! Mine is eleven, nine, eight, eight, four, four, three, three, two, two."},
+        {"speaker": "Rafael", "gender": "m", "pt": "Tudo bem! Tchau, Beatriz.", "en": "Great! Bye, Beatriz."},
+        {"speaker": "Beatriz", "gender": "f", "pt": "Tchau!", "en": "Bye!"}
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "What time is the class?",
+      "context": "Lucas and Mariana wait outside a classroom on a Monday morning.",
+      "lines": [
+        {"speaker": "Lucas", "gender": "m", "pt": "Oi, Mariana! Que horas são?", "en": "Hi, Mariana! What time is it?"},
+        {"speaker": "Mariana", "gender": "f", "pt": "São nove e meia.", "en": "It is half past nine."},
+        {"speaker": "Lucas", "gender": "m", "pt": "A aula é às dez, né?", "en": "The class is at ten, right?"},
+        {"speaker": "Mariana", "gender": "f", "pt": "É, sim. Às dez em ponto.", "en": "Yes. At ten on the dot."},
+        {"speaker": "Lucas", "gender": "m", "pt": "Então tenho meia hora.", "en": "Then I have half an hour."},
+        {"speaker": "Mariana", "gender": "f", "pt": "Isso! Eu estou com sono.", "en": "Exactly! I am sleepy."},
+        {"speaker": "Lucas", "gender": "m", "pt": "Eu também! É segunda-feira.", "en": "Me too! It is Monday."},
+        {"speaker": "Mariana", "gender": "f", "pt": "Amanhã a aula é à uma da tarde.", "en": "Tomorrow the class is at one in the afternoon."},
+        {"speaker": "Lucas", "gender": "m", "pt": "À uma da tarde? Ótimo!", "en": "At one in the afternoon? Great!"},
+        {"speaker": "Mariana", "gender": "f", "pt": "Tchau, até amanhã!", "en": "Bye, see you tomorrow!"}
+      ]
+    },
+    {
+      "id": "d3",
+      "title": "Today's date and birthdays",
+      "context": "Camila and Pedro are filling in a form at work and start talking about their birthdays.",
+      "lines": [
+        {"speaker": "Pedro", "gender": "m", "pt": "Camila, que dia é hoje?", "en": "Camila, what day is it today?"},
+        {"speaker": "Camila", "gender": "f", "pt": "Hoje é quarta-feira, primeiro de outubro.", "en": "Today is Wednesday, the first of October."},
+        {"speaker": "Pedro", "gender": "m", "pt": "Quarta-feira! Então amanhã é quinta-feira.", "en": "Wednesday! Then tomorrow is Thursday."},
+        {"speaker": "Camila", "gender": "f", "pt": "É. Quando é o seu aniversário, Pedro?", "en": "Yes. When is your birthday, Pedro?"},
+        {"speaker": "Pedro", "gender": "m", "pt": "É dia vinte e três de novembro. E o seu?", "en": "It is the twenty-third of November. And yours?"},
+        {"speaker": "Camila", "gender": "f", "pt": "O meu é em janeiro, dia quinze.", "en": "Mine is in January, on the fifteenth."},
+        {"speaker": "Pedro", "gender": "m", "pt": "Janeiro é verão no Brasil!", "en": "January is summer in Brazil!"},
+        {"speaker": "Camila", "gender": "f", "pt": "É! E julho é inverno.", "en": "Yes! And July is winter."},
+        {"speaker": "Pedro", "gender": "m", "pt": "Que legal, janeiro é um mês lindo!", "en": "How cool, January is a lovely month!"},
+        {"speaker": "Camila", "gender": "f", "pt": "Sim! E dezembro também.", "en": "Yes! And December too."}
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "title": "Cardinal numbers from 0 to 100",
+      "explanation": "The numbers from zero to ten are zero, um, dois, três, quatro, cinco, seis, sete, oito, nove and dez. Learn these first, because all the other numbers are built from them. From eleven to nineteen the forms are onze, doze, treze, catorze (also written quatorze), quinze, dezesseis, dezessete, dezoito and dezenove. Note the Brazilian spelling dezesseis and dezessete, which are written dezasseis and dezassete in Portugal.\n\nThe tens are vinte, trinta, quarenta, cinquenta, sessenta, setenta, oitenta and noventa. Between the tens you join the parts with e, meaning and: vinte e um, trinta e cinco, noventa e nove. The number one hundred is cem. Cento is used from 101 upward, as in cento e um.\n\nThe numbers one and two have a feminine form that agrees with the noun that follows: um dia but uma hora, dois meses but duas horas. The same happens inside compounds: vinte e uma horas, trinta e duas pessoas. All the other numbers up to one hundred do not change.\n\nWhen you read a phone number, say the digits one by one, grouped as you like: onze, nove, oito, sete, seis, cinco, quatro, três, dois, um. In Brazil the first two digits are the area code, called DDD, and 11 is São Paulo. Many people say meia, short for meia dúzia or half a dozen, instead of seis when reading out phone numbers, to avoid confusion with other digits on a bad line.",
+      "table": {
+        "headers": ["Number", "Portuguese", "Number", "Portuguese"],
+        "rows": [
+          ["0", "zero", "11", "onze"],
+          ["1", "um, uma", "12", "doze"],
+          ["2", "dois, duas", "13", "treze"],
+          ["3", "três", "14", "catorze"],
+          ["4", "quatro", "15", "quinze"],
+          ["5", "cinco", "16", "dezesseis"],
+          ["6", "seis", "17", "dezessete"],
+          ["7", "sete", "18", "dezoito"],
+          ["8", "oito", "19", "dezenove"],
+          ["9", "nove", "20", "vinte"],
+          ["10", "dez", "30", "trinta"]
+        ]
+      },
+      "examples": [
+        {"pt": "Um, dois, três, quatro, cinco.", "en": "One, two, three, four, five."},
+        {"pt": "Vinte e um, vinte e dois, vinte e três.", "en": "Twenty-one, twenty-two, twenty-three."},
+        {"pt": "Trinta e cinco, quarenta e oito.", "en": "Thirty-five, forty-eight."},
+        {"pt": "Noventa e nove, cem.", "en": "Ninety-nine, one hundred."},
+        {"pt": "Duas horas e uma hora.", "en": "Two hours and one hour."},
+        {"pt": "O número é nove, oito, sete, seis.", "en": "The number is nine, eight, seven, six."}
+      ]
+    },
+    {
+      "title": "Ter in the present, and saying your age",
+      "explanation": "Ter means to have and is irregular. The forms are eu tenho, você tem, ele and ela tem, nós temos, a gente tem, vocês têm, and eles and elas têm. In the plural third person têm has a circumflex accent to separate it from the singular tem. In speech they sound almost the same, so the accent matters mainly in writing.\n\nPortuguese gives age with ter, not with ser. You do not say I am thirty but I have thirty years: Eu tenho trinta anos. The question is Quantos anos você tem?, literally how many years do you have. The word anos must always be included. A short answer such as Trinta is possible in conversation, but the full sentence is Tenho trinta anos.\n\nTer is also used for many other things you have. Ter fome and ter sono are possible with the same meaning as estar com fome and estar com sono, and you will hear both. Meu and seu mean my and your and are shown here only inside fixed questions such as Qual é o seu celular?. They are explained fully in unit 5.\n\nQuestions are made with intonation, like all other yes or no questions in Portuguese: Você tem vinte anos? To negate, put não before the verb: Eu não tenho trinta anos.",
+      "table": {
+        "headers": ["Pronoun", "ter", "Example"],
+        "rows": [
+          ["eu", "tenho", "Eu tenho vinte anos."],
+          ["você", "tem", "Você tem trinta anos?"],
+          ["ele, ela", "tem", "Ela tem vinte e dois anos."],
+          ["nós", "temos", "Nós temos quinze anos."],
+          ["a gente", "tem", "A gente tem trinta anos."],
+          ["vocês", "têm", "Vocês têm vinte anos?"],
+          ["eles, elas", "têm", "Eles têm dezoito anos."]
+        ]
+      },
+      "examples": [
+        {"pt": "Eu tenho vinte e cinco anos.", "en": "I am twenty-five years old."},
+        {"pt": "Quantos anos você tem?", "en": "How old are you?"},
+        {"pt": "Ela tem trinta e um anos.", "en": "She is thirty-one years old."},
+        {"pt": "Nós temos dezoito anos.", "en": "We are eighteen years old."},
+        {"pt": "Eles têm quinze anos.", "en": "They are fifteen years old."},
+        {"pt": "Eu não tenho quarenta anos.", "en": "I am not forty years old."}
+      ]
+    },
+    {
+      "title": "Telling the time",
+      "explanation": "To ask the time, say Que horas são? The answer uses são and the plural horas for every hour except one: São duas horas, São dez horas. For one o'clock use the singular, É uma hora. Noon and midnight are also singular: É meio-dia, É meia-noite.\n\nAdd minutes with e: São três e dez is ten past three. The quarter hour is e quinze, and half past is e meia: São quatro e meia. To say before the hour, use menos: São três menos dez is ten to three. In speech you will also hear São dez para as três. For exactly on the hour say em ponto: São duas horas em ponto.\n\nTo say what part of the day you mean, add da manhã, da tarde or da noite after the time: São oito da manhã, São três da tarde, São dez da noite. The 24 hour clock is used in schedules and announcements: quatorze horas means two in the afternoon.\n\nTo say that something happens at a certain time, use às before the hour: A aula é às nove. The word às is the preposition a joined with the article as. For one o'clock, noon and midnight the form changes: à uma hora, ao meio-dia, à meia-noite. You write à with a grave accent, which marks the fusion of two a sounds.",
+      "table": {
+        "headers": ["Time", "In Portuguese"],
+        "rows": [
+          ["1:00", "É uma hora."],
+          ["2:00", "São duas horas."],
+          ["3:15", "São três e quinze."],
+          ["4:30", "São quatro e meia."],
+          ["12:00 noon", "É meio-dia."],
+          ["12:00 midnight", "É meia-noite."],
+          ["7:00 sharp", "São sete horas em ponto."],
+          ["at nine", "às nove horas"]
+        ]
+      },
+      "examples": [
+        {"pt": "Que horas são?", "en": "What time is it?"},
+        {"pt": "É uma hora da tarde.", "en": "It is one in the afternoon."},
+        {"pt": "São três e quinze.", "en": "It is quarter past three."},
+        {"pt": "São oito e meia da manhã.", "en": "It is half past eight in the morning."},
+        {"pt": "A aula é às nove.", "en": "The class is at nine."},
+        {"pt": "A aula é ao meio-dia.", "en": "The class is at noon."}
+      ]
+    },
+    {
+      "title": "Days, months and dates",
+      "explanation": "The days of the week from Monday to Friday end in -feira: segunda-feira, terça-feira, quarta-feira, quinta-feira and sexta-feira. Saturday and Sunday are sábado and domingo. Days and months are not capitalized in Portuguese. In casual speech the -feira is often dropped: segunda, terça. The weekdays are feminine, so you say a segunda-feira and na segunda, while sábado and domingo are masculine: no sábado, no domingo. The words na and no mean em + a and em + o.\n\nThe months are janeiro, fevereiro, março, abril, maio, junho, julho, agosto, setembro, outubro, novembro and dezembro. To say in a month, use em: em março, em dezembro.\n\nTo ask for the date say Que dia é hoje? or Qual é a data de hoje? Answer with Hoje é dia cinco de maio, or Hoje é quinta-feira, cinco de maio. The word dia is optional. The first day of the month is the only one that uses an ordinal number: primeiro de maio. For all other days use the ordinary number: dois de maio, vinte e três de novembro. A date is written in the order day, month, year, so 3/4 is the third of April.\n\nBecause Brazil is in the southern hemisphere, the seasons are reversed compared with North America and Europe. The seasons are o verão, o outono, o inverno and a primavera. Summer runs roughly from December to March and winter from June to September.",
+      "table": {
+        "headers": ["Portuguese", "English"],
+        "rows": [
+          ["segunda-feira", "Monday"],
+          ["terça-feira", "Tuesday"],
+          ["quarta-feira", "Wednesday"],
+          ["quinta-feira", "Thursday"],
+          ["sexta-feira", "Friday"],
+          ["sábado", "Saturday"],
+          ["domingo", "Sunday"]
+        ]
+      },
+      "examples": [
+        {"pt": "Hoje é terça-feira.", "en": "Today is Tuesday."},
+        {"pt": "Amanhã é quarta-feira.", "en": "Tomorrow is Wednesday."},
+        {"pt": "Hoje é dia cinco de maio.", "en": "Today is the fifth of May."},
+        {"pt": "Hoje é primeiro de julho.", "en": "Today is the first of July."},
+        {"pt": "Meu aniversário é em março.", "en": "My birthday is in March."},
+        {"pt": "Em julho é inverno no Brasil.", "en": "In July it is winter in Brazil."}
+      ]
+    }
+  ],
+  "culture": {
+    "title": "Time, dates and phone numbers in Brazil",
+    "text": "Brazilians write dates in the order day, month, year, so 03/04 is the third of April, not the fourth of March. Months and days are written in lower case. In everyday conversation time is usually said on the 12 hour clock with da manhã, da tarde or da noite, but train timetables, flight information, TV listings and many official notices use the 24 hour clock: dezenove horas means seven in the evening.\n\nPunctuality is flexible in social situations. A party that starts at oito horas often fills up an hour or two later, and the expression hora brasileira jokingly describes this. At work, in class and for medical appointments you are expected to be on time, and em ponto means exactly that. Brazil abolished daylight saving time in 2019, so the clocks no longer change.\n\nPhone numbers have a two digit area code, the DDD, followed by nine digits for cell phones, which always start with 9. Most people use WhatsApp to message, so asking Qual é o seu WhatsApp? is as common as asking for a phone number. The seasons are reversed relative to the northern hemisphere: Christmas in dezembro and New Year come in the middle of the summer, and Carnaval falls in February or early March, at the end of the hot season."
+  },
+  "exercises": [
+    {"type": "multiple_choice", "prompt": "How do you say 'fifteen'?", "choices": ["catorze", "quinze", "cinquenta", "dezoito"], "answer": 1, "explanation": "Quinze is fifteen. Cinquenta is fifty."},
+    {"type": "multiple_choice", "prompt": "How do you say 'It is one o'clock'?", "choices": ["São uma hora.", "É uma hora.", "É um hora."], "answer": 1, "explanation": "One o'clock is singular: É uma hora. Hora is feminine, so it is uma."},
+    {"type": "multiple_choice", "prompt": "What time is 'São duas e meia'?", "choices": ["2:15", "2:45", "2:30", "1:30"], "answer": 2, "explanation": "Meia means half, so duas e meia is half past two."},
+    {"type": "multiple_choice", "prompt": "What does 'segunda-feira' mean?", "choices": ["Tuesday", "Sunday", "the second of the month", "Monday"], "answer": 3, "explanation": "Segunda-feira is Monday. Tuesday is terça-feira."},
+    {"type": "multiple_choice", "prompt": "Which number is 'quarenta'?", "choices": ["14", "40", "4", "44"], "answer": 1, "explanation": "Quarenta is forty. Catorze is fourteen."},
+    {"type": "multiple_choice", "prompt": "How do you say 'the first of May'?", "choices": ["Dois de maio", "Maio de primeiro", "Primeiro de maio"], "answer": 2, "explanation": "The first day of the month is the only one that uses an ordinal: primeiro de maio."},
+    {"type": "multiple_choice", "prompt": "In Brazil, which season is it in January?", "choices": ["verão", "inverno", "outono", "primavera"], "answer": 0, "explanation": "Brazil is in the southern hemisphere, so January is in the middle of summer."},
+    {"type": "fill_blank", "prompt_pt": "Eu ___ trinta anos.", "answer": ["tenho"], "hint_en": "I am thirty years old.", "explanation": "Age uses ter, so the eu form is tenho."},
+    {"type": "fill_blank", "prompt_pt": "Ela ___ vinte e dois anos.", "answer": ["tem"], "hint_en": "She is twenty-two years old.", "explanation": "Ela uses tem."},
+    {"type": "fill_blank", "prompt_pt": "Eles ___ quinze anos.", "answer": ["têm"], "hint_en": "They are fifteen years old.", "explanation": "The plural têm has a circumflex accent."},
+    {"type": "fill_blank", "prompt_pt": "São duas ___.", "answer": ["horas"], "hint_en": "It is two o'clock.", "explanation": "Hours are plural except for one o'clock."},
+    {"type": "fill_blank", "prompt_pt": "Hoje é sexta-feira. Amanhã é ___.", "answer": ["sábado"], "hint_en": "Today is Friday. Tomorrow is ___.", "explanation": "Saturday comes after Friday and is called sábado."},
+    {"type": "fill_blank", "prompt_pt": "São quatro e ___.", "answer": ["meia"], "hint_en": "It is half past four.", "explanation": "E meia means half past."},
+    {"type": "translate_to_pt", "prompt_en": "I am twenty-five years old.", "answers": ["Tenho vinte e cinco anos.", "Eu tenho vinte e cinco anos."], "explanation": "Age uses ter plus anos."},
+    {"type": "translate_to_pt", "prompt_en": "What time is it?", "answers": ["Que horas são?"], "explanation": "The question always uses the plural horas são."},
+    {"type": "translate_to_pt", "prompt_en": "Today is Tuesday.", "answers": ["Hoje é terça-feira.", "Hoje é terça."], "explanation": "The -feira is often dropped in everyday speech."},
+    {"type": "translate_to_pt", "prompt_en": "My birthday is in May.", "answers": ["Meu aniversário é em maio.", "O meu aniversário é em maio."], "explanation": "Use em before a month."},
+    {"type": "order_words", "prompt_en": "How old are you?", "words": ["Quantos", "anos", "você", "tem?"], "distractors": ["é"]},
+    {"type": "order_words", "prompt_en": "It is two o'clock sharp.", "words": ["São", "duas", "horas", "em", "ponto."]},
+    {"type": "order_words", "prompt_en": "The class is at nine.", "words": ["A", "aula", "é", "às", "nove."], "distractors": ["está"]},
+    {"type": "order_words", "prompt_en": "It is half past three.", "words": ["São", "três", "e", "meia."], "distractors": ["é"]},
+    {"type": "listening_choice", "audio_pt": "São oito e meia.", "choices": ["It is 8:30.", "It is 8:15.", "It is 9:30."], "answer": 0},
+    {"type": "listening_choice", "audio_pt": "Tenho trinta anos.", "choices": ["I am thirteen years old.", "I am forty years old.", "I am thirty years old."], "answer": 2},
+    {"type": "listening_choice", "audio_pt": "Hoje é domingo.", "choices": ["Today is Saturday.", "Today is Sunday.", "Today is Monday."], "answer": 1},
+    {"type": "listening_choice", "audio_pt": "Meu aniversário é em dezembro.", "choices": ["My birthday is in November.", "My birthday is in September.", "My birthday is in December."], "answer": 2},
+    {"type": "dictation", "audio_pt": "Tenho vinte e um anos.", "hint_en": "I am twenty-one years old."},
+    {"type": "dictation", "audio_pt": "É meio-dia e meia.", "hint_en": "It is half past twelve."},
+    {"type": "dictation", "audio_pt": "Hoje é dia primeiro de julho.", "hint_en": "Today is the first of July."},
+    {"type": "match", "prompt": "Match the number word with the digits", "pairs": [{"pt": "quatro", "en": "4"}, {"pt": "sete", "en": "7"}, {"pt": "doze", "en": "12"}, {"pt": "quinze", "en": "15"}, {"pt": "quarenta", "en": "40"}, {"pt": "cem", "en": "100"}]},
+    {"type": "match", "prompt": "Match the day with the English", "pairs": [{"pt": "segunda-feira", "en": "Monday"}, {"pt": "terça-feira", "en": "Tuesday"}, {"pt": "quarta-feira", "en": "Wednesday"}, {"pt": "quinta-feira", "en": "Thursday"}, {"pt": "sexta-feira", "en": "Friday"}, {"pt": "domingo", "en": "Sunday"}]}
+  ]
+}
