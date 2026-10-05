@@ -1,6 +1,8 @@
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::{Command, ExitStatus};
+use std::process::{Child, Command, ExitStatus};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use shared::AppError;
 
@@ -13,6 +15,8 @@ use crate::workspace::WorkspacePaths;
 
 const SAY_WORKER_COUNT: usize = 6;
 const MINIMUM_VALID_FILE_BYTES: u64 = 500;
+const SAY_TIMEOUT: Duration = Duration::from_secs(120);
+const SAY_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 pub fn synthesize_missing_audio(plan: &AudioPlan, paths: &WorkspacePaths) -> Result<(), AppError> {
     let audio_directory: PathBuf = paths.audio_directory();
@@ -70,12 +74,28 @@ fn say_utterance(destination: &Path, utterance: &Utterance) -> Result<(), AppErr
 }
 
 fn run_say(output_path: &Path, utterance: &Utterance) -> Result<(), AppError> {
-    let status: ExitStatus = Command::new("say")
+    let mut child: Child = Command::new("say")
         .args(["-v", utterance.profile.voice_id, "-o"])
         .arg(output_path)
         .arg("--")
         .arg(&utterance.text)
-        .status()?;
+        .spawn()?;
+    let started: Instant = Instant::now();
+
+    let status: ExitStatus = loop {
+        if let Some(status) = child.try_wait()? {
+            break status;
+        }
+
+        if started.elapsed() > SAY_TIMEOUT {
+            child.kill()?;
+            child.wait()?;
+
+            return Err(AppError::from(format!("say did not finish; [timeout_seconds={}]", SAY_TIMEOUT.as_secs())));
+        }
+
+        thread::sleep(SAY_POLL_INTERVAL);
+    };
 
     if !status.success() {
         return Err(AppError::from(format!("say exited unsuccessfully; [status={status}]")));

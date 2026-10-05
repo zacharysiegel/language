@@ -4,6 +4,7 @@ use shared::AppError;
 
 use crate::audio_encoding;
 use crate::audio_plan::Utterance;
+use crate::kokoro::kokoro_artifacts;
 use crate::kokoro::kokoro_models::{self, KokoroFiles};
 use crate::kokoro::kokoro_phonemizer::{Phonemizer, split_into_chunks};
 use crate::kokoro::kokoro_synthesizer::{self, KokoroSynthesizer, KokoroVocabulary, SAMPLE_RATE, VoiceTables};
@@ -12,12 +13,17 @@ use crate::work_pool;
 const INFERENCE_WORKER_COUNT: usize = 4;
 const INTRA_OP_THREADS_PER_WORKER: usize = 4;
 
+struct PreparedChunk {
+    phonemes: String,
+    tokens: Vec<i64>,
+}
+
 struct PreparedClip<'a> {
     file_name: &'a str,
     text: &'a str,
     voice_id: &'static str,
     speed: f32,
-    token_chunks: Vec<Vec<i64>>,
+    chunks: Vec<PreparedChunk>,
 }
 
 pub fn synthesize_clips(
@@ -53,13 +59,18 @@ fn prepare_clips<'a>(clips: &[(&'a String, &'a Utterance)], files: &KokoroFiles)
     let mut prepared_clips: Vec<PreparedClip> = Vec::with_capacity(clips.len());
 
     for (file_name, utterance) in clips {
-        let token_chunks: Vec<Vec<i64>> = split_into_chunks(&utterance.text)
+        let chunks: Vec<PreparedChunk> = split_into_chunks(&utterance.text)
             .iter()
-            .map(|chunk| vocabulary.tokens_for(&phonemizer.phonemize(chunk)))
-            .filter(|tokens| !tokens.is_empty())
+            .map(|chunk| {
+                let phonemes: String = phonemizer.phonemize(chunk);
+                let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
+
+                PreparedChunk { phonemes, tokens }
+            })
+            .filter(|chunk| !chunk.tokens.is_empty())
             .collect();
 
-        if token_chunks.is_empty() {
+        if chunks.is_empty() {
             return Err(AppError::from(format!("text produced no phonemes; [text={}]", utterance.text)));
         }
 
@@ -68,7 +79,7 @@ fn prepare_clips<'a>(clips: &[(&'a String, &'a Utterance)], files: &KokoroFiles)
             text: &utterance.text,
             voice_id: utterance.profile.voice_id,
             speed: utterance.profile.speed,
-            token_chunks,
+            chunks,
         });
     }
 
@@ -92,8 +103,10 @@ fn synthesize_clip(
 ) -> Result<(), AppError> {
     let mut samples: Vec<f32> = Vec::new();
 
-    for tokens in &clip.token_chunks {
-        samples.extend(synthesizer.synthesize(tokens, voice_tables, clip.voice_id, clip.speed)?);
+    for chunk in &clip.chunks {
+        let chunk_samples: Vec<f32> = synthesizer.synthesize(&chunk.tokens, voice_tables, clip.voice_id, clip.speed)?;
+
+        samples.extend(kokoro_artifacts::remove_spurious_noise(&chunk_samples, &chunk.phonemes));
     }
 
     audio_encoding::encode_samples(&samples, SAMPLE_RATE, &audio_directory.join(clip.file_name))
