@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use shared::course::vocabulary_card_id;
-use shared::progress::Progress;
+use shared::progress::{Progress, QueuedCards};
 
 use crate::platform;
 
@@ -22,6 +22,7 @@ impl ProgressStore {
         self.progress.set(replacement);
     }
 
+    /// Adds only the words that are not in the deck yet.
     pub fn add_unit_vocabulary(&self, unit_id: &str, vocabulary_count: usize) -> usize {
         let card_ids: Vec<String> = (0..vocabulary_count).map(|item_index| vocabulary_card_id(unit_id, item_index)).collect();
         let now_milliseconds: i64 = platform::now_milliseconds();
@@ -32,6 +33,22 @@ impl ProgressStore {
         });
 
         added_count
+    }
+
+    /// Adds missing words and brings words that are scheduled for later back to the review queue.
+    pub fn queue_unit_vocabulary_for_review(&self, unit_id: &str, vocabulary_count: usize) -> QueuedCards {
+        let card_ids: Vec<String> = (0..vocabulary_count).map(|item_index| vocabulary_card_id(unit_id, item_index)).collect();
+        let now_milliseconds: i64 = platform::now_milliseconds();
+        let mut queued: QueuedCards = QueuedCards {
+            added_count: 0,
+            made_due_count: 0,
+        };
+
+        self.progress.update(|progress| {
+            queued = progress.queue_cards_for_review(card_ids.into_iter(), now_milliseconds);
+        });
+
+        queued
     }
 }
 
