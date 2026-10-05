@@ -54,7 +54,7 @@ pub fn ExerciseSession(
         current_index.update(|index| *index += 1);
     };
 
-    _ = window_event_listener(ev::keydown, move |event| {
+    let keydown_listener = window_event_listener(ev::keydown, move |event| {
         let has_feedback: bool = current_result.get_untracked().is_some();
 
         if has_feedback && event.key() == ENTER_KEY {
@@ -62,6 +62,7 @@ pub fn ExerciseSession(
             advance();
         }
     });
+    on_cleanup(move || keydown_listener.remove());
 
     Effect::new(move |_| {
         let finished: bool = current_index.get() >= active_exercises.get().len();

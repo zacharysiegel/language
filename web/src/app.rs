@@ -11,31 +11,34 @@ use crate::progress_view::ProgressPage;
 use crate::review::ReviewPage;
 use crate::unit::UnitPage;
 
-/* Only the ssr build renders a document, and these exist solely to build it: on wasm they would compile
-   HashedStylesheet's filesystem lookup and AutoReload's embedded reload script for a function nothing
-   calls. */
-#[cfg(feature = "ssr")] // the browser build never renders the document shell
-use leptos::hydration::{AutoReload, HydrationScripts};
-#[cfg(feature = "ssr")] // the browser build never renders the document shell
-use leptos_meta::HashedStylesheet;
+#[cfg(feature = "ssr")] // the wasm32 client never renders the document shell
+pub use ssr::shell;
 
-#[cfg(feature = "ssr")] // the browser build never renders the document shell
-pub fn shell(options: LeptosOptions) -> impl IntoView {
-    view! {
-        <!DOCTYPE html>
-        <html lang="en">
-            <head>
-                <meta charset="utf-8" />
-                <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <title>"Português do Brasil"</title>
-                <HashedStylesheet options=options.clone() id="leptos" />
-                <AutoReload options=options.clone() />
-                <HydrationScripts options />
-            </head>
-            <body>
-                <App />
-            </body>
-        </html>
+#[cfg(feature = "ssr")] // the wasm32 client never renders the document shell
+mod ssr {
+    use leptos::hydration::{AutoReload, HydrationScripts};
+    use leptos::prelude::*;
+    use leptos_meta::HashedStylesheet;
+
+    use super::App;
+
+    pub fn shell(options: LeptosOptions) -> impl IntoView {
+        view! {
+            <!DOCTYPE html>
+            <html lang="en">
+                <head>
+                    <meta charset="utf-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1" />
+                    <title>"Português do Brasil"</title>
+                    <HashedStylesheet options=options.clone() id="leptos" />
+                    <AutoReload options=options.clone() />
+                    <HydrationScripts options />
+                </head>
+                <body>
+                    <App />
+                </body>
+            </html>
+        }
     }
 }
 

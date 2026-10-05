@@ -25,6 +25,7 @@ mod browser {
     use super::*;
 
     const PROGRESS_STORAGE_KEY: &str = "portuguese-course.progress.v1";
+    const UNREADABLE_PROGRESS_STORAGE_KEY: &str = "portuguese-course.progress.v1.unreadable";
     const SLOW_PLAYBACK_RATE: f64 = 0.7;
     const NORMAL_PLAYBACK_RATE: f64 = 1.0;
     const CLIP_ENDED: &str = "ended";
@@ -78,12 +79,20 @@ mod browser {
     }
 
     pub fn write_stored_progress(text: &str) {
+        store_text(PROGRESS_STORAGE_KEY, text);
+    }
+
+    pub fn back_up_unreadable_progress(text: &str) {
+        store_text(UNREADABLE_PROGRESS_STORAGE_KEY, text);
+    }
+
+    fn store_text(key: &str, text: &str) {
         let Some(storage) = local_storage() else {
             return;
         };
 
-        if let Err(error) = storage.set_item(PROGRESS_STORAGE_KEY, text) {
-            log::warn!("could not save progress; [error={error:?}]");
+        if let Err(error) = storage.set_item(key, text) {
+            log::warn!("could not write local storage; [key={key} error={error:?}]");
         }
     }
 
@@ -143,9 +152,12 @@ mod browser {
     }
 
     async fn play_without_stopping(url: &str, fallback_text: &str, rate: f64) {
+        let starting_generation: u64 = PLAYBACK_GENERATION.with(Cell::get);
         let outcome: String = play_audio_file(url, rate).await;
+        let stopped_meanwhile: bool = PLAYBACK_GENERATION.with(Cell::get) != starting_generation;
 
-        if outcome == CLIP_FAILED {
+        // A pause while play() is pending rejects it, which is a stop and not a load failure.
+        if outcome == CLIP_FAILED && !stopped_meanwhile {
             speak_with_browser_voice(fallback_text, rate).await;
         }
     }
@@ -236,6 +248,8 @@ mod server {
     }
 
     pub fn write_stored_progress(_text: &str) {}
+
+    pub fn back_up_unreadable_progress(_text: &str) {}
 
     pub fn now_milliseconds() -> i64 {
         0

@@ -61,13 +61,13 @@ impl AudioPlan {
 }
 
 fn sha256_hex(text: &str) -> String {
-    let digest = Sha256::digest(text.as_bytes());
+    let digest: [u8; 32] = Sha256::digest(text.as_bytes()).into();
 
     digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
 fn hash_bucket(text: &str, bucket_count: usize) -> usize {
-    let digest = Sha256::digest(text.as_bytes());
+    let digest: [u8; 32] = Sha256::digest(text.as_bytes()).into();
     let leading_value: u32 = u32::from_be_bytes([digest[0], digest[1], digest[2], digest[3]]);
 
     leading_value as usize % bucket_count

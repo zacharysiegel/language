@@ -25,14 +25,6 @@ pub fn ReviewPage() -> impl IntoView {
     course_gate(|course: Arc<Course>| view! { <ReviewSetup course /> })
 }
 
-fn direction_code(direction: ReviewDirectionKind) -> &'static str {
-    match direction {
-        ReviewDirectionKind::PortugueseToEnglish => "portuguese_to_english",
-        ReviewDirectionKind::EnglishToPortuguese => "english_to_portuguese",
-        ReviewDirectionKind::Mixed => "mixed",
-    }
-}
-
 fn direction_from_code(code: &str) -> ReviewDirectionKind {
     match code {
         "english_to_portuguese" => ReviewDirectionKind::EnglishToPortuguese,
@@ -72,6 +64,7 @@ fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
         progress_store.read(|progress| progress.cards.values().filter(|card| card.due_milliseconds <= now_milliseconds).count())
     };
     let total_count = move || progress_store.read(|progress| progress.cards.len());
+    let current_direction = move || progress_store.read(|progress| progress.settings.review_direction);
 
     view! {
         {move || match session_items.get() {
@@ -95,11 +88,14 @@ fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
 
                                 progress_store.update(|progress| progress.settings.review_direction = direction);
                             }
-                            prop:value=move || direction_code(progress_store.read(|progress| progress.settings.review_direction))
                         >
-                            <option value="portuguese_to_english">"Portuguese to English"</option>
-                            <option value="english_to_portuguese">"English to Portuguese"</option>
-                            <option value="mixed">"Mixed"</option>
+                            <option value="portuguese_to_english" selected=move || current_direction() == ReviewDirectionKind::PortugueseToEnglish>
+                                "Portuguese to English"
+                            </option>
+                            <option value="english_to_portuguese" selected=move || current_direction() == ReviewDirectionKind::EnglishToPortuguese>
+                                "English to Portuguese"
+                            </option>
+                            <option value="mixed" selected=move || current_direction() == ReviewDirectionKind::Mixed>"Mixed"</option>
                         </select>
                     </label>
                 </p>
@@ -224,12 +220,12 @@ fn card_view(
     let prompt_text: String = if prompt_is_portuguese { item.pt.clone() } else { item.en.clone() };
     let answer_text: String = if prompt_is_portuguese { item.en.clone() } else { item.pt.clone() };
     let unit_title: String = unit.title.clone();
-    let item_audio = item.audio.clone();
+    let item_audio: Option<String> = item.audio.clone();
     let item_portuguese: String = item.pt.clone();
-    let example_audio = item.example.audio.clone();
+    let example_audio: Option<String> = item.example.audio.clone();
     let example_portuguese: String = item.example.pt.clone();
     let example_english: String = item.example.en.clone();
-    let note = item.note.clone();
+    let note: Option<String> = item.note.clone();
     let grade_forgot = grade.clone();
 
     view! {

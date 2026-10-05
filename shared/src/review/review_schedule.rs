@@ -27,7 +27,7 @@ impl ReviewCard {
 
     pub fn graded(&self, remembered: bool, now_milliseconds: i64) -> ReviewCard {
         let last_box_index: usize = REVIEW_INTERVAL_DAYS.len() - 1;
-        let next_box_index: usize = if remembered { (self.box_index + 1).min(last_box_index) } else { 0 };
+        let next_box_index: usize = if remembered { self.box_index.saturating_add(1).min(last_box_index) } else { 0 };
         let delay_milliseconds: i64 = if remembered {
             i64::from(REVIEW_INTERVAL_DAYS[next_box_index]) * DAY_MILLISECONDS
         } else {
@@ -38,8 +38,8 @@ impl ReviewCard {
             id: self.id.clone(),
             box_index: next_box_index,
             due_milliseconds: now_milliseconds + delay_milliseconds,
-            lapse_count: self.lapse_count + u32::from(!remembered),
-            review_count: self.review_count + 1,
+            lapse_count: self.lapse_count.saturating_add(u32::from(!remembered)),
+            review_count: self.review_count.saturating_add(1),
         }
     }
 }
@@ -61,7 +61,7 @@ pub fn count_by_box<'a>(cards: impl Iterator<Item = &'a ReviewCard>) -> [usize; 
     let mut counts: [usize; REVIEW_INTERVAL_DAYS.len()] = [0; REVIEW_INTERVAL_DAYS.len()];
 
     for card in cards {
-        counts[card.box_index] += 1;
+        counts[card.box_index.min(REVIEW_INTERVAL_DAYS.len() - 1)] += 1;
     }
 
     counts
@@ -118,6 +118,14 @@ mod tests {
         let selected_ids: Vec<&str> = selected.iter().map(|card| card.id.as_str()).collect();
 
         assert_eq!(selected_ids, vec!["low-early", "low-late"]);
+    }
+
+    #[test]
+    fn count_by_box_clamps_a_box_index_beyond_the_last_box() {
+        let mut card: ReviewCard = ReviewCard::new("a".to_string(), NOW);
+        card.box_index = 99;
+
+        assert_eq!(count_by_box([card].iter()), [0, 0, 0, 0, 0, 0, 1]);
     }
 
     #[test]

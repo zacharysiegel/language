@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use leptos::prelude::*;
 use leptos_router::components::A;
+use shared::AppError;
 use shared::course::Course;
 use shared::progress::Progress;
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
@@ -84,22 +85,21 @@ fn ProgressSummary(course: Arc<Course>) -> impl IntoView {
 #[component]
 fn DataTransfer() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
-    let export_text: RwSignal<String> = RwSignal::new(String::new());
-    let import_text: RwSignal<String> = RwSignal::new(String::new());
+    let transfer_text: RwSignal<String> = RwSignal::new(String::new());
     let message: RwSignal<Option<String>> = RwSignal::new(None);
     let reset_requested: RwSignal<bool> = RwSignal::new(false);
 
     let export_progress = move |_| {
-        let serialized = progress_store.read(Progress::to_json);
+        let serialized: Result<String, AppError> = progress_store.read(Progress::to_json);
 
         match serialized {
-            Ok(text) => export_text.set(text),
+            Ok(text) => transfer_text.set(text),
             Err(error) => message.set(Some(format!("Could not export: {}", error.message))),
         }
     };
 
     let import_progress = move |_| {
-        let parsed = Progress::from_json(&import_text.get_untracked());
+        let parsed: Result<Progress, AppError> = Progress::from_json(&transfer_text.get_untracked());
 
         match parsed {
             Ok(imported) => {
@@ -131,8 +131,8 @@ fn DataTransfer() -> impl IntoView {
         <textarea
             rows="8"
             placeholder="Exported progress appears here. Paste a backup here to import it."
-            prop:value=move || if import_text.get().is_empty() { export_text.get() } else { import_text.get() }
-            on:input:target=move |event| import_text.set(event.target().value())
+            prop:value=move || transfer_text.get()
+            on:input:target=move |event| transfer_text.set(event.target().value())
         ></textarea>
         <p>{move || message.get()}</p>
         <h2>"Reset"</h2>

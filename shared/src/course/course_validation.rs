@@ -61,7 +61,10 @@ const EUROPEAN_PORTUGUESE_PHRASES: [&str; 6] = [
     "bilhete de identidade",
     "passadeira",
 ];
-const EUROPEAN_PROGRESSIVE_AUXILIARIES: [&str; 2] = ["estou", "estamos"];
+const EUROPEAN_PROGRESSIVE_AUXILIARIES: [&str; 9] = [
+    "estou", "estás", "está", "estamos", "estão", "estava", "estavam", "estive", "esteve",
+];
+const SHORT_INFINITIVES: [&str; 7] = ["ler", "ver", "ter", "dar", "ser", "vir", "pôr"];
 const INFINITIVE_ENDINGS: [&str; 4] = ["ar", "er", "ir", "or"];
 const INFINITIVE_LOOKALIKES: [&str; 1] = ["favor"];
 
@@ -206,9 +209,10 @@ fn contains_european_portuguese(text: &str) -> bool {
 fn contains_european_progressive(tokens: &[&str]) -> bool {
     tokens.windows(3).any(|window| {
         let [auxiliary, preposition, verb]: [&str; 3] = [window[0], window[1], window[2]];
-        let is_infinitive: bool = verb.chars().count() > 3
+        let long_infinitive: bool = verb.chars().count() > 3
             && INFINITIVE_ENDINGS.iter().any(|ending| verb.ends_with(ending))
             && !INFINITIVE_LOOKALIKES.contains(&verb);
+        let is_infinitive: bool = long_infinitive || SHORT_INFINITIVES.contains(&verb);
 
         EUROPEAN_PROGRESSIVE_AUXILIARIES.contains(&auxiliary) && preposition == "a" && is_infinitive
     })
@@ -238,6 +242,12 @@ fn check_fill_blank(collector: &mut IssueCollector, location: &str, exercise: &F
 
     if punctuated {
         collector.error(location, "fill_blank answers must not contain punctuation");
+    }
+
+    let has_single_blank_and_answer: bool = blank_count == 1 && !exercise.answer.is_empty();
+
+    if has_single_blank_and_answer {
+        collector.check_spoken_portuguese(&format!("{location}.completed_sentence"), &exercise.completed_sentence());
     }
 }
 
@@ -424,7 +434,9 @@ fn check_dialogues(collector: &mut IssueCollector, dialogues: &[Dialogue]) {
     for (dialogue_index, dialogue) in dialogues.iter().enumerate() {
         let location: String = format!("dialogues[{dialogue_index}]");
 
-        if !seen_ids.insert(&dialogue.id) {
+        let first_use_of_id: bool = seen_ids.insert(&dialogue.id);
+
+        if !first_use_of_id {
             collector.error(&location, format!("duplicate dialogue id: {}", dialogue.id));
         }
 
@@ -437,7 +449,9 @@ fn check_grammar_note(collector: &mut IssueCollector, location: &str, note: &Gra
 
     let explanation_characters: usize = note.explanation.chars().count();
 
-    if collector.require_text(&format!("{location}.explanation"), "explanation", &note.explanation)
+    let explanation_present: bool = collector.require_text(&format!("{location}.explanation"), "explanation", &note.explanation);
+
+    if explanation_present
         && explanation_characters < MINIMUM_GRAMMAR_EXPLANATION_CHARACTERS
     {
         collector.error(
@@ -481,7 +495,9 @@ fn check_culture(collector: &mut IssueCollector, culture: &CultureNote) {
 
     let text_characters: usize = culture.text.chars().count();
 
-    if collector.require_text("culture.text", "text", &culture.text) && text_characters < MINIMUM_CULTURE_CHARACTERS {
+    let text_present: bool = collector.require_text("culture.text", "text", &culture.text);
+
+    if text_present && text_characters < MINIMUM_CULTURE_CHARACTERS {
         collector.error("culture.text", format!("too short (need {MINIMUM_CULTURE_CHARACTERS} characters)"));
     }
 }
@@ -589,6 +605,9 @@ mod tests {
         assert!(contains_european_portuguese("Onde fica a casa de banho?"));
         assert!(contains_european_portuguese("Estou a fazer o jantar."));
         assert!(contains_european_portuguese("Tu estás cansado?"));
+        assert!(contains_european_portuguese("Ela está a cozinhar."));
+        assert!(contains_european_portuguese("Eles estavam a ver televisão."));
+        assert!(contains_european_portuguese("Estou a ler um livro."));
     }
 
     #[test]
@@ -596,6 +615,7 @@ mod tests {
         assert!(!contains_european_portuguese("Vou de ônibus."));
         assert!(!contains_european_portuguese("Estou fazendo o jantar."));
         assert!(!contains_european_portuguese("Estou a favor da ideia."));
+        assert!(!contains_european_portuguese("Ele está a par de tudo."));
         assert!(!contains_european_portuguese("Onde fica o banheiro?"));
     }
 }
