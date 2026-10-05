@@ -197,7 +197,7 @@
         {"speaker": "Sofia", "gender": "f", "pt": "Já vi mo e lho em livros antigos. Ninguém fala assim, né?", "en": "I have seen mo and lho in old books. Nobody talks like that, right?"},
         {"speaker": "Bruno", "gender": "m", "pt": "Na fala, ninguém. A gente diz ele me deu isso. Mo, to e lho só aparecem em textos jurídicos e na literatura.", "en": "In speech, nobody. We say ele me deu isso. Mo, to and lho only appear in legal texts and in literature."},
         {"speaker": "Sofia", "gender": "f", "pt": "Então vou escrever: peço-lhe que examine meu pedido e me comunique a decisão.", "en": "Then I will write: I ask you to examine my request and communicate the decision to me."},
-        {"speaker": "Bruno", "gender": "m", "pt": "Isso! Depois de que, o pronome vem antes do verbo. Sua carta está ótima.", "en": "Exactly! After que, the pronoun comes before the verb. Your letter is excellent."}
+        {"speaker": "Bruno", "gender": "m", "pt": "Isso! Depois da palavra que, o pronome vem antes do verbo. Sua carta está ótima.", "en": "Exactly! After que, the pronoun comes before the verb. Your letter is excellent."}
       ]
     },
     {
@@ -444,7 +444,7 @@
     {
       "type": "fill_blank",
       "prompt_pt": "Informo-___ que o pedido foi deferido.",
-      "answer": ["lhe"],
+      "answer": ["lhe", "o", "a"],
       "hint_en": "I inform you (sir or ma'am) that the request was granted.",
       "explanation": "Lhe is the indirect object pronoun for o senhor and a senhora."
     },
@@ -473,7 +473,7 @@
       "type": "fill_blank",
       "prompt_pt": "Enviar-___-ei os documentos amanhã.",
       "answer": ["lhe"],
-      "hint_en": "I will send you the documents tomorrow.",
+      "hint_en": "I will send you (sir) the documents tomorrow.",
       "explanation": "In mesoclisis the pronoun appears between the infinitive and the ending -ei."
     },
     {
@@ -503,12 +503,12 @@
     {
       "type": "translate_to_pt",
       "prompt_en": "I did not tell him anything.",
-      "answers": ["Não lhe disse nada.", "Eu não lhe disse nada.", "Não disse nada a ele.", "Eu não disse nada a ele.", "Não disse nada para ele.", "Eu não disse nada para ele."]
+      "answers": ["Não lhe disse nada.", "Eu não lhe disse nada.", "Não disse nada a ele.", "Eu não disse nada a ele.", "Não disse nada para ele.", "Eu não disse nada para ele.", "Não disse nada pra ele.", "Eu não disse nada pra ele."]
     },
     {
       "type": "translate_to_pt",
       "prompt_en": "We will meet on Friday.",
-      "answers": ["Encontrar-nos-emos na sexta.", "Nós nos encontraremos na sexta.", "Nos encontraremos na sexta.", "Encontramo-nos na sexta.", "Vamos nos encontrar na sexta.", "A gente se encontra na sexta.", "Nos encontramos na sexta.", "Nós nos encontramos na sexta."]
+      "answers": ["Encontrar-nos-emos na sexta.", "Nós nos encontraremos na sexta.", "Nos encontraremos na sexta.", "Encontramo-nos na sexta.", "Vamos nos encontrar na sexta.", "A gente se encontra na sexta.", "Nos encontramos na sexta.", "Nós nos encontramos na sexta.", "Vamos nos encontrar na sexta-feira.", "Nós nos encontraremos na sexta-feira.", "Encontrar-nos-emos na sexta-feira.", "A gente se encontra na sexta-feira."]
     },
     {
       "type": "order_words",
@@ -532,7 +532,7 @@
       "type": "order_words",
       "prompt_en": "The neighbors help one another.",
       "words": ["Os", "vizinhos", "se", "ajudam", "mutuamente."],
-      "distractors": ["ajudam-se"]
+      "distractors": ["ajudamos"]
     },
     {
       "type": "listening_choice",
@@ -549,7 +549,7 @@
     {
       "type": "listening_choice",
       "audio_pt": "Ela arrependeu-se de ter vendido a casa.",
-      "choices": ["She regrets having sold the house.", "She regrets having bought the house.", "She is happy she sold the house.", "She wants to sell the house."],
+      "choices": ["She regretted having sold the house.", "She regretted having bought the house.", "She is happy she sold the house.", "She wants to sell the house."],
       "answer": 0
     },
     {

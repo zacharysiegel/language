@@ -260,7 +260,7 @@
         {"speaker": "Thiago", "gender": "m", "pt": "Janela, por favor. Meu voo está no horário?", "en": "Window, please. Is my flight on time?"},
         {"speaker": "Vera", "gender": "f", "pt": "Está, sim. O embarque começa às dez e vinte no portão doze.", "en": "Yes, it is. Boarding starts at ten twenty at gate twelve."},
         {"speaker": "Thiago", "gender": "m", "pt": "A que horas o voo chega a Recife?", "en": "What time does the flight arrive in Recife?"},
-        {"speaker": "Vera", "gender": "f", "pt": "Chega ao meio-dia e dez. Demora três horas e meia.", "en": "It arrives at ten past noon. It takes three and a half hours."},
+        {"speaker": "Vera", "gender": "f", "pt": "Chega às duas e quarenta da tarde. Demora três horas e meia.", "en": "It arrives at two forty in the afternoon. It takes three and a half hours."},
         {"speaker": "Thiago", "gender": "m", "pt": "Ótimo. E a bagagem de mão?", "en": "Great. And the carry-on?"},
         {"speaker": "Vera", "gender": "f", "pt": "Pode levar até dez quilos. Boa viagem!", "en": "You can bring up to ten kilos. Have a good trip!"}
       ]
@@ -269,7 +269,7 @@
   "grammar": [
     {
       "title": "Prepositions with transport and destinations",
-      "explanation": "To say how you travel, Portuguese uses de plus the vehicle: de ônibus, de avião, de carro, de trem, de metrô, de táxi, de bicicleta, de Uber. On foot is the exception, a pé. Compare Vou de ônibus (I go by bus) with Estou no ônibus (I am on the bus): de names the means, while em (no, na) says where you physically are.\n\nFor destinations, ir takes a or para. A is more formal and used for short visits: Vou ao mercado, Vou à praia. Para suggests a longer stay or a trip, and in speech para is pronounced pra: Vou pra Bahia, Ele foi pro Rio. Chegar uses a or em, and em is extremely common in Brazil: Cheguei em São Paulo, Chegamos ao hotel.\n\nFor location, use em: Moro em Recife, Estou em casa, Fiquei no hotel. Remember the special cases: casa and trabalho take no article in Vou pra casa and Estou em casa, but Vou ao trabalho and Estou no trabalho. Contractions are automatic: a + o = ao, a + a = à, em + o = no, em + a = na, para + o = pro (speech), para + a = pra.",
+      "explanation": "To say how you travel, Portuguese uses de plus the vehicle: de ônibus, de avião, de carro, de trem, de metrô, de táxi, de bicicleta, de Uber. On foot is the exception, a pé. Compare Vou de ônibus (I go by bus) with Estou no ônibus (I am on the bus): de names the means, while em (no, na) says where you physically are.\n\nFor destinations, ir takes a or para. A is more formal and used for short visits: Vou ao mercado, Vou à praia. Para suggests a longer stay or a trip, and in speech para is pronounced pra: Vou pra Bahia, Ele foi pro Rio. Chegar uses a or em, and em is extremely common in Brazil: Cheguei em São Paulo, Chegamos ao hotel.\n\nFor location, use em: Moro em Recife, Estou em casa, Fiquei no hotel. Remember the special cases: casa takes no article in Vou pra casa and Estou em casa, while trabalho does take one: Vou ao trabalho and Estou no trabalho. Contractions are automatic: a + o = ao, a + a = à, em + o = no, em + a = na, para + o = pro (speech), para + a = pra.",
       "table": {
         "headers": ["Meaning", "Portuguese", "Example"],
         "rows": [
@@ -362,7 +362,7 @@
           "en": "Last year, my sister and I traveled by bus to Ouro Preto. The trip took eight hours and the bus arrived late. It was night and very cold."
         },
         {
-          "pt": "Ficamos numa pousada pequena perto do centro. O café da manhã era incluído e a dona, Dona Cida, era muito simpática. Ela nos deu um mapa e explicou os melhores passeios.",
+          "pt": "Ficamos numa pousada pequena perto do centro. O café da manhã estava incluído e a dona, Dona Cida, era muito simpática. Ela nos deu um mapa e explicou os melhores passeios.",
           "en": "We stayed at a small guesthouse near the center. Breakfast was included and the owner, Dona Cida, was very friendly. She gave us a map and explained the best tours."
         },
         {
@@ -465,7 +465,7 @@
       "type": "order_words",
       "prompt_en": "I would like to book a room.",
       "words": ["Eu", "queria", "reservar", "um", "quarto."],
-      "distractors": ["quero"]
+      "distractors": ["gostaria"]
     },
     {
       "type": "dictation",
@@ -488,7 +488,7 @@
     },
     {
       "type": "multiple_choice",
-      "prompt": "What does 'Quanto tempo demora a viagem?' mean?",
+      "prompt": "What does 'Quanto tempo leva o trajeto?' mean?",
       "choices": [
         "How much does the trip cost?",
         "When does the trip start?",
@@ -496,7 +496,7 @@
         "Where does the trip go?"
       ],
       "answer": 2,
-      "explanation": "Demorar means to take time."
+      "explanation": "Levar, like demorar, expresses how long something takes."
     },
     {
       "type": "fill_blank",
@@ -514,7 +514,7 @@
     {
       "type": "fill_blank",
       "prompt_pt": "A viagem ___ seis horas.",
-      "answer": ["demora", "leva"],
+      "answer": ["demora", "leva", "dura"],
       "hint_en": "The trip takes six hours.",
       "explanation": "Both demorar and levar express how long something takes."
     },
@@ -522,7 +522,7 @@
       "type": "order_words",
       "prompt_en": "The bus arrives at two o'clock.",
       "words": ["O", "ônibus", "chega", "às", "duas", "horas."],
-      "distractors": ["sai"]
+      "distractors": ["chegam"]
     },
     {
       "type": "translate_to_pt",
@@ -588,7 +588,7 @@
     {
       "type": "fill_blank",
       "prompt_pt": "A diária custa cento e oitenta reais, café da manhã ___.",
-      "answer": ["incluído"],
+      "answer": ["incluído", "incluso"],
       "hint_en": "The rate is one hundred eighty reais, breakfast included.",
       "explanation": "Incluído agrees with café da manhã, which is masculine."
     },
