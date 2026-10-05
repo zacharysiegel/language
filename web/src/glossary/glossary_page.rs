@@ -8,7 +8,6 @@ use shared::practice::normalize_answer_ignoring_accents;
 use crate::audio_player::PlayButton;
 use crate::course_data::course_gate;
 
-const RESULT_LIMIT: usize = 250;
 const ALL_LEVELS_CODE: &str = "all";
 
 #[component]
@@ -36,7 +35,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
         move || {
             let query: String = normalize_answer_ignoring_accents(&search_text.get());
             let level_filter: Option<LevelKind> = level_from_code(&level_code.get());
-            let mut matching_entries: Vec<(&Unit, &VocabularyItem)> = course
+            let matching_entries: Vec<(&Unit, &VocabularyItem)> = course
                 .units
                 .iter()
                 .filter(|unit| level_filter.is_none_or(|level| unit.level == level))
@@ -49,7 +48,6 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
                 .collect();
 
             let total_matches: usize = matching_entries.len();
-            matching_entries.truncate(RESULT_LIMIT);
 
             let rows: Vec<_> = matching_entries
                 .into_iter()
@@ -68,14 +66,8 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
                 })
                 .collect();
 
-            let truncation_note: String = if total_matches > RESULT_LIMIT {
-                format!(", showing the first {RESULT_LIMIT}")
-            } else {
-                String::new()
-            };
-
             view! {
-                <p class="muted">{format!("{total_matches} match(es){truncation_note}")}</p>
+                <p class="muted">{format!("{total_matches} match(es)")}</p>
                 <table class="grid">
                     <thead><tr><th></th><th>"Portuguese"</th><th>"English"</th><th>"Unit"</th></tr></thead>
                     <tbody>{rows}</tbody>
