@@ -1,52 +1,407 @@
 {
   "id": "a1-01-greetings-introductions",
   "level": "A1",
-  "order": 1,
+  "order": 4,
   "title": "Greetings and introductions",
   "objectives": [
     "I can greet people at different times of the day and say goodbye.",
     "I can introduce myself, ask someone's name and say that I am pleased to meet them.",
     "I can say where I am from and what nationality I am.",
     "I can use the subject pronouns and the present tense of ser.",
-    "I can use basic politeness expressions such as por favor, obrigado, desculpa and com licença."
+    "I can use basic politeness expressions such as por favor, obrigado, desculpa and com licença, and say what each one literally means.",
+    "I can explain why each word of this lesson is spelled and accented as it is, using the rules for stress, accents and sounds."
   ],
   "vocabulary": [
-    {"pt": "oi", "en": "hi", "pos": "interjection", "note": "The most common informal greeting in Brazil, used at any time of day.", "example": {"pt": "Oi, Ana!", "en": "Hi, Ana!"}},
-    {"pt": "olá", "en": "hello", "pos": "interjection", "note": "A little more formal or careful than oi. Common in writing and when speaking to a group.", "example": {"pt": "Olá, eu sou o Carlos.", "en": "Hello, I am Carlos."}},
-    {"pt": "bom dia", "en": "good morning", "pos": "phrase", "note": "Used from waking up until about noon.", "example": {"pt": "Bom dia, Ana!", "en": "Good morning, Ana!"}},
-    {"pt": "boa tarde", "en": "good afternoon", "pos": "phrase", "note": "Used from noon until it gets dark, around six in the evening.", "example": {"pt": "Boa tarde, senhor Lima.", "en": "Good afternoon, Mr. Lima."}},
-    {"pt": "boa noite", "en": "good evening, good night", "pos": "phrase", "note": "Works as both a greeting and a goodbye after dark, like both good evening and good night in English.", "example": {"pt": "Boa noite, até amanhã!", "en": "Good night, see you tomorrow!"}},
-    {"pt": "tchau", "en": "bye", "pos": "interjection", "note": "Pronounced like 'chow'. Informal goodbye borrowed from Italian ciao.", "example": {"pt": "Tchau, Carlos!", "en": "Bye, Carlos!"}},
-    {"pt": "até logo", "en": "see you later", "pos": "phrase", "example": {"pt": "Até logo, Ana!", "en": "See you later, Ana!"}},
-    {"pt": "até amanhã", "en": "see you tomorrow", "pos": "phrase", "example": {"pt": "Tchau, até amanhã!", "en": "Bye, see you tomorrow!"}},
-    {"pt": "tudo bem", "en": "how are you; fine, all good", "pos": "phrase", "note": "Used both as the question (with rising intonation) and as the answer. A common reply is Tudo bem, e você? or Tudo ótimo.", "example": {"pt": "Oi, tudo bem?", "en": "Hi, how's it going?"}},
-    {"pt": "como vai", "en": "how are you", "pos": "phrase", "note": "A bit more formal than tudo bem. Answer with Bem, obrigado or Bem, obrigada.", "example": {"pt": "Como vai, senhor Lima?", "en": "How are you, Mr. Lima?"}},
-    {"pt": "muito prazer", "en": "nice to meet you", "pos": "phrase", "note": "Often shortened to just prazer. The reply can be prazer too, or o prazer é meu.", "example": {"pt": "Muito prazer, eu sou a Ana.", "en": "Nice to meet you, I am Ana."}},
-    {"pt": "por favor", "en": "please", "pos": "phrase", "example": {"pt": "Por favor, senhora Souza.", "en": "Please, Mrs. Souza."}},
-    {"pt": "obrigado", "en": "thank you (said by a man)", "pos": "interjection", "note": "Obrigado literally means obliged and agrees with the person speaking, not the person being thanked.", "example": {"pt": "Obrigado, Ana!", "en": "Thank you, Ana!"}},
-    {"pt": "obrigada", "en": "thank you (said by a woman)", "pos": "interjection", "example": {"pt": "Muito obrigada!", "en": "Thank you very much!"}},
-    {"pt": "desculpa", "en": "sorry, excuse me", "pos": "interjection", "note": "Informal apology. The more formal version is desculpe. It is also a polite way to say pardon me when you did not hear something.", "example": {"pt": "Desculpa, Carlos!", "en": "Sorry, Carlos!"}},
-    {"pt": "com licença", "en": "excuse me (to get past or to interrupt)", "pos": "phrase", "note": "Use it to pass someone, to enter a room or to politely get someone's attention. It is not an apology.", "example": {"pt": "Com licença, senhora.", "en": "Excuse me, ma'am."}},
-    {"pt": "de nada", "en": "you're welcome", "pos": "phrase", "example": {"pt": "Obrigada! De nada.", "en": "Thank you! You're welcome."}},
-    {"pt": "o nome", "en": "the name", "pos": "noun", "example": {"pt": "Meu nome é Paulo.", "en": "My name is Paulo."}},
-    {"pt": "como você se chama", "en": "what is your name", "pos": "phrase", "note": "Literally how do you call yourself. The answer is Eu me chamo Ana or Meu nome é Ana.", "example": {"pt": "Oi, como você se chama?", "en": "Hi, what is your name?"}},
-    {"pt": "de onde", "en": "from where", "pos": "phrase", "example": {"pt": "De onde você é?", "en": "Where are you from?"}},
-    {"pt": "o Brasil", "en": "Brazil", "pos": "noun", "note": "Most country names take an article in Portuguese: o Brasil, a Argentina, os Estados Unidos.", "example": {"pt": "Eu sou do Brasil.", "en": "I am from Brazil."}},
-    {"pt": "os Estados Unidos", "en": "the United States", "pos": "noun", "note": "Plural, so it takes os and the verb that follows is plural when it is the subject.", "example": {"pt": "Ela é dos Estados Unidos.", "en": "She is from the United States."}},
-    {"pt": "brasileiro", "en": "Brazilian", "pos": "adjective", "note": "Feminine: brasileira. Nationalities are written in lower case in Portuguese.", "example": {"pt": "Ele é brasileiro.", "en": "He is Brazilian."}},
-    {"pt": "americano", "en": "American", "pos": "adjective", "note": "Feminine: americana. In Brazil americano usually means from the United States.", "example": {"pt": "Ela é americana.", "en": "She is American."}},
-    {"pt": "canadense", "en": "Canadian", "pos": "adjective", "note": "Same form for men and women.", "example": {"pt": "Eu sou canadense.", "en": "I am Canadian."}},
-    {"pt": "mexicano", "en": "Mexican", "pos": "adjective", "note": "Feminine: mexicana.", "example": {"pt": "Ele é mexicano.", "en": "He is Mexican."}},
-    {"pt": "argentino", "en": "Argentinian", "pos": "adjective", "note": "Feminine: argentina.", "example": {"pt": "Elas são argentinas.", "en": "They are Argentinian."}},
-    {"pt": "português", "en": "Portuguese (from Portugal)", "pos": "adjective", "note": "Feminine: portuguesa. The accent disappears in the feminine and in the plural: portugueses.", "example": {"pt": "Ele é português.", "en": "He is Portuguese."}},
-    {"pt": "francês", "en": "French", "pos": "adjective", "note": "Feminine: francesa. The accent disappears in the feminine.", "example": {"pt": "Ela é francesa.", "en": "She is French."}},
-    {"pt": "o amigo", "en": "the friend (male)", "pos": "noun", "note": "Feminine: a amiga.", "example": {"pt": "O Carlos é amigo.", "en": "Carlos is a friend."}},
-    {"pt": "a amiga", "en": "the friend (female)", "pos": "noun", "example": {"pt": "A Ana é amiga.", "en": "Ana is a friend."}},
-    {"pt": "este é", "en": "this is (introducing a man)", "pos": "phrase", "note": "Use esta é when introducing a woman.", "example": {"pt": "Este é o Carlos.", "en": "This is Carlos."}},
-    {"pt": "legal", "en": "cool, nice", "pos": "adjective", "note": "Very common in everyday speech. Que legal! means How cool!", "example": {"pt": "Que legal!", "en": "How cool!"}},
-    {"pt": "também", "en": "also, too", "pos": "adverb", "example": {"pt": "Eu também sou brasileiro.", "en": "I am Brazilian too."}},
-    {"pt": "o senhor", "en": "you (formal, to a man)", "pos": "pronoun", "note": "Used with older people, strangers in formal settings and customers.", "example": {"pt": "O senhor é brasileiro?", "en": "Are you Brazilian, sir?"}},
-    {"pt": "a senhora", "en": "you (formal, to a woman)", "pos": "pronoun", "example": {"pt": "A senhora é de São Paulo?", "en": "Are you from São Paulo, ma'am?"}}
+    {
+      "pt": "oi",
+      "en": "hi",
+      "pos": "interjection",
+      "note": "The usual informal hello, at any time of day. It is one syllable: the o is the full vowel and the i is a quick glide, like the 'oy' of 'boy'.",
+      "example": {
+        "pt": "Oi, Ana!",
+        "en": "Hi, Ana!"
+      }
+    },
+    {
+      "pt": "olá",
+      "en": "hello",
+      "pos": "interjection",
+      "note": "A little more careful than oi; common in writing and when speaking to a group. The accent is there because the stress is on the last syllable, which breaks the default for a word ending in a: o-LÁ, not O-la. The acute shows an open a, as in 'father'.",
+      "example": {
+        "pt": "Olá, eu sou o Carlos.",
+        "en": "Hello, I am Carlos.",
+        "literal": "Hello, I am the Carlos."
+      }
+    },
+    {
+      "pt": "bom dia",
+      "en": "good morning",
+      "literal": "good day",
+      "pos": "phrase",
+      "note": "Said from waking up until about noon. Bom is the masculine form of 'good' because dia, 'day', is a masculine noun even though it ends in a. The d of dia is said like the j of 'jeans' because it comes before the sound i.",
+      "example": {
+        "pt": "Bom dia, Ana!",
+        "en": "Good morning, Ana!"
+      }
+    },
+    {
+      "pt": "boa tarde",
+      "en": "good afternoon",
+      "pos": "phrase",
+      "note": "Said from noon until it gets dark. Boa is the feminine form of 'good' because tarde is a feminine noun. Boa has two syllables, bo-a, because two full vowels side by side never form a diphthong. The final e of tarde is weak and sounds like i, so the d before it is said like the j of 'jeans'.",
+      "example": {
+        "pt": "Boa tarde, senhor Lima.",
+        "en": "Good afternoon, Mr. Lima."
+      }
+    },
+    {
+      "pt": "boa noite",
+      "en": "good evening, good night",
+      "literal": "good night",
+      "pos": "phrase",
+      "note": "Works as a greeting after dark and as a goodbye. Portuguese has one word, noite, for both English 'evening' and 'night', so one phrase does the work of two. Noite is said NOY-chee: the t comes before the weak final e, which sounds like i.",
+      "example": {
+        "pt": "Boa noite, até amanhã!",
+        "en": "Good night, see you tomorrow!",
+        "literal": "Good night, until tomorrow!"
+      }
+    },
+    {
+      "pt": "tchau",
+      "en": "bye",
+      "pos": "interjection",
+      "note": "Said like English 'chow'; an informal goodbye. It is Italian ciao respelled: Portuguese reads ci as 'see', so the sound had to be written tch. The au is a diphthong, so the word has one syllable.",
+      "example": {
+        "pt": "Tchau, Carlos!",
+        "en": "Bye, Carlos!"
+      }
+    },
+    {
+      "pt": "até logo",
+      "en": "see you later",
+      "literal": "until soon",
+      "pos": "phrase",
+      "note": "Said when you expect to see the person again before long. Até means 'until' and logo means 'soon'. The accent on até shows that the stress is on the last syllable, which breaks the default for e, and that the e is open. The t stays a plain t, because it comes before an open é and not before the sound i.",
+      "example": {
+        "pt": "Até logo, Ana!",
+        "en": "See you later, Ana!",
+        "literal": "Until soon, Ana!"
+      }
+    },
+    {
+      "pt": "até amanhã",
+      "en": "see you tomorrow",
+      "literal": "until tomorrow",
+      "pos": "phrase",
+      "note": "In amanhã the nh is one sound, like the 'ny' of 'canyon', and the tilde makes the last vowel nasal. The ending ã already defaults to stress on the last syllable, so the tilde needs to do nothing more.",
+      "example": {
+        "pt": "Tchau, até amanhã!",
+        "en": "Bye, see you tomorrow!",
+        "literal": "Bye, until tomorrow!"
+      }
+    },
+    {
+      "pt": "tudo bem",
+      "en": "how's it going, all good",
+      "literal": "all well",
+      "pos": "phrase",
+      "note": "The same two words serve as the question, said with rising intonation, and as the answer. There is no verb. A common reply is Tudo bem, e você? or Tudo ótimo. The m of bem ends the syllable, so the vowel is nasal: bem is said roughly 'bay' through the nose, with no separate n or m sound and the lips left open.",
+      "example": {
+        "pt": "Oi, tudo bem?",
+        "en": "Hi, how's it going?",
+        "literal": "Hi, all well?"
+      }
+    },
+    {
+      "pt": "como vai",
+      "en": "how are you",
+      "literal": "how goes",
+      "pos": "phrase",
+      "note": "Vai is the third person singular of ir, 'to go', so the question literally asks how it goes. A little more formal than tudo bem. Answer with Bem, obrigado or Bem, obrigada, where bem means 'well'. The ai of vai is a diphthong, one syllable.",
+      "example": {
+        "pt": "Como vai, senhor Lima?",
+        "en": "How are you, Mr. Lima?",
+        "literal": "How goes, gentleman Lima?"
+      }
+    },
+    {
+      "pt": "muito prazer",
+      "en": "nice to meet you",
+      "literal": "much pleasure",
+      "pos": "phrase",
+      "note": "Often shortened to prazer. The reply can be prazer too, or o prazer é meu, 'the pleasure is mine'. Prazer is pra-ZER: it ends in r, so the stress is on the last syllable by default and no accent is written; the z between vowels is [z]. The ui of muito is said through the nose even though no mark shows it; learn it with the word.",
+      "example": {
+        "pt": "Muito prazer, eu sou a Ana.",
+        "en": "Nice to meet you, I am Ana.",
+        "literal": "Much pleasure, I am the Ana."
+      }
+    },
+    {
+      "pt": "por favor",
+      "en": "please",
+      "literal": "for favor",
+      "pos": "phrase",
+      "note": "Por is the small unstressed word 'by, for' and carries no accent; the accented pôr is a different word. Favor ends in r, so it is fa-VOR with no mark.",
+      "example": {
+        "pt": "Por favor, senhora Souza.",
+        "en": "Please, Mrs. Souza.",
+        "literal": "For favor, lady Souza."
+      }
+    },
+    {
+      "pt": "obrigado",
+      "en": "thank you",
+      "literal": "obliged",
+      "pos": "interjection",
+      "note": "Said by a man. It is an adjective, so it agrees with the person speaking, not with the person being thanked, because the speaker is the one who is obliged. The br is a tap r and the final o is weak, said 'oo'.",
+      "example": {
+        "pt": "Obrigado, Ana!",
+        "en": "Thank you, Ana!",
+        "literal": "Obliged, Ana!"
+      }
+    },
+    {
+      "pt": "obrigada",
+      "en": "thank you",
+      "literal": "obliged",
+      "pos": "interjection",
+      "note": "Said by a woman: the feminine form of obrigado, with the same agreement rule. Muito obrigada is literally 'much obliged'.",
+      "example": {
+        "pt": "Muito obrigada!",
+        "en": "Thank you very much!",
+        "literal": "Much obliged!"
+      }
+    },
+    {
+      "pt": "desculpa",
+      "en": "sorry",
+      "literal": "excuse",
+      "pos": "interjection",
+      "note": "An informal apology; the more formal form is desculpe. It comes from the verb desculpar, 'to excuse, to forgive', and is a command form of it (commands come later in the course). It is also a polite way to ask someone to repeat what they said. In des-CUL-pa the s ends a syllable, the c before u is [k] and the l that ends a syllable is [w]; in most of Brazil the unstressed e before that s is said like i, so the d sounds like the j of 'jeans'.",
+      "example": {
+        "pt": "Desculpa, Carlos!",
+        "en": "Sorry, Carlos!",
+        "literal": "Excuse, Carlos!"
+      }
+    },
+    {
+      "pt": "com licença",
+      "en": "excuse me",
+      "literal": "with license",
+      "pos": "phrase",
+      "note": "Licença means permission, so this phrase asks permission to pass someone, to enter a room or to interrupt politely. It does not apologize; for that you use desculpa. Com ends in m, so the o is nasal. In licença the c before e and the ç before a both say [s].",
+      "example": {
+        "pt": "Com licença, senhora.",
+        "en": "Excuse me, ma'am.",
+        "literal": "With license, lady."
+      }
+    },
+    {
+      "pt": "de nada",
+      "en": "you're welcome",
+      "literal": "of nothing",
+      "pos": "phrase",
+      "note": "The reply to obrigado or obrigada. The d of de is said like the j of 'jeans' because the weak final e sounds like i.",
+      "example": {
+        "pt": "Obrigada! De nada.",
+        "en": "Thank you! You're welcome.",
+        "literal": "Obliged! Of nothing."
+      }
+    },
+    {
+      "pt": "como você se chama",
+      "en": "what is your name",
+      "literal": "how you yourself call",
+      "pos": "phrase",
+      "note": "Chamar means 'to call' and se is a pronoun meaning 'yourself', so the question says 'how do you call yourself'. A verb used with such a pronoun is called reflexive. Chama is the third person singular, the same form as for ele and ela. Answer with Eu me chamo Ana, literally 'I myself call Ana', or with Meu nome é Ana, 'my name is Ana', where meu is 'my' before a masculine noun. The ch is [ʃ], like 'sh'.",
+      "example": {
+        "pt": "Oi, como você se chama?",
+        "en": "Hi, what is your name?",
+        "literal": "Hi, how you yourself call?"
+      }
+    },
+    {
+      "pt": "o Brasil",
+      "en": "Brazil",
+      "literal": "the Brazil",
+      "pos": "noun",
+      "note": "Most country names take the definite article. Brasil is bra-SIL: it ends in l, so the stress is on the last syllable by default and no accent is written. The s between vowels is [z] and the final l is [w], so it sounds like bra-ZEEW. In the example, do is de, 'of', fused with o, 'the'; a later note in this lesson explains the fusion.",
+      "example": {
+        "pt": "Eu sou do Brasil.",
+        "en": "I am from Brazil.",
+        "literal": "I am of-the Brazil."
+      }
+    },
+    {
+      "pt": "os Estados Unidos",
+      "en": "the United States",
+      "literal": "the States United",
+      "pos": "noun",
+      "note": "Plural, so it takes os, and as a subject it takes a plural verb. Literally 'the states united'. In es-TA-dos the s ends a syllable, and Unidos is u-NI-dos with a plain oral u. In the example, dos is de, 'of', fused with os, 'the'; a later note in this lesson explains the fusion.",
+      "example": {
+        "pt": "Ela é dos Estados Unidos.",
+        "en": "She is from the United States.",
+        "literal": "She is of-the States United."
+      }
+    },
+    {
+      "pt": "brasileiro",
+      "en": "Brazilian",
+      "pos": "adjective",
+      "note": "Feminine: brasileira. Nationalities are written with a lowercase letter. In bra-si-LEI-ro the s between vowels is [z], ei is a diphthong, and the final o is said 'oo'.",
+      "example": {
+        "pt": "Ele é brasileiro.",
+        "en": "He is Brazilian."
+      }
+    },
+    {
+      "pt": "americano",
+      "en": "American",
+      "pos": "adjective",
+      "note": "Feminine: americana. In Brazil americano usually means from the United States.",
+      "example": {
+        "pt": "Ela é americana.",
+        "en": "She is American."
+      }
+    },
+    {
+      "pt": "canadense",
+      "en": "Canadian",
+      "pos": "adjective",
+      "note": "The same form for men and women, because adjectives ending in -e have one form for both genders. The en is nasal: ca-na-DEN-se.",
+      "example": {
+        "pt": "Eu sou canadense.",
+        "en": "I am Canadian."
+      }
+    },
+    {
+      "pt": "argentino",
+      "en": "Argentinian",
+      "pos": "adjective",
+      "note": "Feminine: argentina. The g before e is [ʒ], like the s of 'measure'; the en is nasal; and the t before i is said like 'ch': ar-zhen-CHEE-noo.",
+      "example": {
+        "pt": "Elas são argentinas.",
+        "en": "They are Argentinian."
+      }
+    },
+    {
+      "pt": "português",
+      "en": "Portuguese",
+      "pos": "adjective",
+      "note": "From Portugal. Feminine: portuguesa. The accent disappears in the feminine and in the plural portugueses, because por-tu-GUE-sa follows the default for an ending in a. The u after g is silent before ê.",
+      "example": {
+        "pt": "Ele é português.",
+        "en": "He is Portuguese."
+      }
+    },
+    {
+      "pt": "francês",
+      "en": "French",
+      "pos": "adjective",
+      "note": "Feminine: francesa. The accent disappears in the feminine for the same reason as in portuguesa. The an is nasal.",
+      "example": {
+        "pt": "Ela é francesa.",
+        "en": "She is French."
+      }
+    },
+    {
+      "pt": "o amigo",
+      "en": "the friend",
+      "pos": "noun",
+      "note": "A male friend; a female friend is a amiga. The ending shows the gender: -o masculine, -a feminine. In the example, meu is 'my' before a masculine noun.",
+      "example": {
+        "pt": "Ele é meu amigo.",
+        "en": "He is my friend."
+      }
+    },
+    {
+      "pt": "este é",
+      "en": "this is",
+      "pos": "phrase",
+      "note": "Este means 'this' before a masculine noun or name; for a woman use esta é, as in Esta é a Ana. The accent on é separates it from the unmarked word e, 'and'. In este the t comes before the weak final e, so it is said like 'ch': ES-chee. In casual speech many Brazilians say esse é instead; that word comes in a later lesson.",
+      "example": {
+        "pt": "Este é o Carlos.",
+        "en": "This is Carlos.",
+        "literal": "This is the Carlos."
+      }
+    },
+    {
+      "pt": "legal",
+      "en": "cool",
+      "literal": "lawful",
+      "pos": "adjective",
+      "note": "Very common in everyday speech: Que legal! means 'How cool!'. Legal comes from the word for law, so it began as 'lawful' and came to mean pleasant or great. Le-GAL ends in l, so the stress is on the last syllable and no accent is written; the g before a is [g] and the final l is [w], so it sounds like leh-GOW.",
+      "example": {
+        "pt": "Que legal!",
+        "en": "How cool!",
+        "literal": "What lawful!"
+      }
+    },
+    {
+      "pt": "também",
+      "en": "also, too",
+      "pos": "adverb",
+      "note": "Built from tam, 'so', and bem, 'well'. Tam-BÉM is stressed on the last syllable, which breaks the default for an ending in em, so the acute accent is written. The em is nasal.",
+      "example": {
+        "pt": "Eu também sou brasileiro.",
+        "en": "I am Brazilian too."
+      }
+    },
+    {
+      "pt": "o senhor",
+      "en": "you, sir",
+      "literal": "the gentleman",
+      "pos": "pronoun",
+      "note": "The formal way to say 'you' to a man, used with older people, strangers in formal settings and customers. It takes the same verb form as ele. The nh is [ɲ], like 'ny' in 'canyon', and se-NHOR ends in r, so the stress is on the last syllable with no accent.",
+      "example": {
+        "pt": "O senhor é brasileiro?",
+        "en": "Are you Brazilian, sir?",
+        "literal": "The gentleman is Brazilian?"
+      }
+    },
+    {
+      "pt": "a senhora",
+      "en": "you, ma'am",
+      "literal": "the lady",
+      "pos": "pronoun",
+      "note": "The formal way to say 'you' to a woman. It takes the same verb form as ela.",
+      "example": {
+        "pt": "A senhora é de São Paulo?",
+        "en": "Are you from São Paulo, ma'am?",
+        "literal": "The lady is of São Paulo?"
+      }
+    },
+    {
+      "pt": "sim",
+      "en": "yes",
+      "pos": "adverb",
+      "note": "The m ends the syllable, so the i is nasal, [sĩ], and the lips do not close. Often paired with the verb: Sou, sim.",
+      "example": {
+        "pt": "Sim, eu sou brasileiro.",
+        "en": "Yes, I am Brazilian."
+      }
+    },
+    {
+      "pt": "não",
+      "en": "no",
+      "pos": "adverb",
+      "note": "Also the word placed before a verb to make it negative: Eu não sou argentino. The tilde makes the diphthong ão nasal and, with no other accent written, also marks the stress; the word has one syllable.",
+      "example": {
+        "pt": "Não, eu sou brasileiro.",
+        "en": "No, I am Brazilian."
+      }
+    },
+    {
+      "pt": "ótimo",
+      "en": "great",
+      "pos": "adjective",
+      "note": "Ó-ti-mo is stressed on the third to last syllable, which no ending predicts, so it always carries an accent; the o is open, so the accent is acute. The t before i is said like 'ch': OH-chee-moo.",
+      "example": {
+        "pt": "Tudo ótimo!",
+        "en": "Everything is great!",
+        "literal": "All great!"
+      }
+    }
   ],
   "dialogues": [
     {
@@ -54,176 +409,1498 @@
       "title": "Meeting at a party",
       "context": "Ana and Carlos meet for the first time at a friend's party in São Paulo.",
       "lines": [
-        {"speaker": "Carlos", "gender": "m", "pt": "Oi, tudo bem?", "en": "Hi, how's it going?"},
-        {"speaker": "Ana", "gender": "f", "pt": "Tudo bem, e você?", "en": "Fine, and you?"},
-        {"speaker": "Carlos", "gender": "m", "pt": "Tudo ótimo! Eu sou o Carlos.", "en": "Great! I am Carlos."},
-        {"speaker": "Ana", "gender": "f", "pt": "Muito prazer, Carlos. Eu sou a Ana.", "en": "Nice to meet you, Carlos. I am Ana."},
-        {"speaker": "Carlos", "gender": "m", "pt": "Prazer, Ana! Você é brasileira?", "en": "Nice to meet you, Ana! Are you Brazilian?"},
-        {"speaker": "Ana", "gender": "f", "pt": "Sou, sim. Sou de São Paulo. E você?", "en": "Yes, I am. I am from São Paulo. And you?"},
-        {"speaker": "Carlos", "gender": "m", "pt": "Eu sou do Rio de Janeiro.", "en": "I am from Rio de Janeiro."},
-        {"speaker": "Ana", "gender": "f", "pt": "Que legal!", "en": "How cool!"},
-        {"speaker": "Carlos", "gender": "m", "pt": "Bom, tchau, Ana. Até amanhã!", "en": "Well, bye, Ana. See you tomorrow!"},
-        {"speaker": "Ana", "gender": "f", "pt": "Tchau, Carlos!", "en": "Bye, Carlos!"}
+        {
+          "speaker": "Carlos",
+          "gender": "m",
+          "pt": "Oi, tudo bem?",
+          "en": "Hi, how's it going?",
+          "literal": "Hi, all well?"
+        },
+        {
+          "speaker": "Ana",
+          "gender": "f",
+          "pt": "Tudo bem, e você?",
+          "en": "Fine, and you?",
+          "literal": "All well, and you?"
+        },
+        {
+          "speaker": "Carlos",
+          "gender": "m",
+          "pt": "Tudo ótimo! Eu sou o Carlos.",
+          "en": "Great! I am Carlos.",
+          "literal": "All great! I am the Carlos."
+        },
+        {
+          "speaker": "Ana",
+          "gender": "f",
+          "pt": "Muito prazer, Carlos. Eu sou a Ana.",
+          "en": "Nice to meet you, Carlos. I am Ana.",
+          "literal": "Much pleasure, Carlos. I am the Ana."
+        },
+        {
+          "speaker": "Carlos",
+          "gender": "m",
+          "pt": "Prazer, Ana! Você é brasileira?",
+          "en": "Nice to meet you, Ana! Are you Brazilian?",
+          "literal": "Pleasure, Ana! You are Brazilian?"
+        },
+        {
+          "speaker": "Ana",
+          "gender": "f",
+          "pt": "Sou, sim. Sou de São Paulo. E você?",
+          "en": "Yes, I am. I am from São Paulo. And you?",
+          "literal": "I-am, yes. I-am of São Paulo. And you?"
+        },
+        {
+          "speaker": "Carlos",
+          "gender": "m",
+          "pt": "Eu sou do Rio de Janeiro.",
+          "en": "I am from Rio de Janeiro.",
+          "literal": "I am of-the Rio of January."
+        },
+        {
+          "speaker": "Ana",
+          "gender": "f",
+          "pt": "Que legal!",
+          "en": "How cool!",
+          "literal": "What lawful!"
+        },
+        {
+          "speaker": "Carlos",
+          "gender": "m",
+          "pt": "Tchau, Ana. Até logo!",
+          "en": "Bye, Ana. See you later!",
+          "literal": "Bye, Ana. Until soon!"
+        },
+        {
+          "speaker": "Ana",
+          "gender": "f",
+          "pt": "Tchau, Carlos!",
+          "en": "Bye, Carlos!"
+        }
       ]
     },
     {
       "id": "d2",
       "title": "A formal introduction",
-      "context": "Helena Souza and Paulo Lima meet at a business event in the afternoon. They use the formal o senhor and a senhora.",
+      "context": "Helena Souza and Paulo Lima meet at a business event in the afternoon. They use the formal o senhor and a senhora. At the end Paulo holds the door open for her.",
       "lines": [
-        {"speaker": "Helena", "gender": "f", "pt": "Boa tarde. Com licença, o senhor é o senhor Lima?", "en": "Good afternoon. Excuse me, are you Mr. Lima?"},
-        {"speaker": "Paulo", "gender": "m", "pt": "Sou, sim. Boa tarde! Muito prazer.", "en": "Yes, I am. Good afternoon! Nice to meet you."},
-        {"speaker": "Helena", "gender": "f", "pt": "O prazer é meu. Eu sou a Helena Souza.", "en": "The pleasure is mine. I am Helena Souza."},
-        {"speaker": "Paulo", "gender": "m", "pt": "Como vai, senhora Souza?", "en": "How are you, Mrs. Souza?"},
-        {"speaker": "Helena", "gender": "f", "pt": "Bem, obrigada. E o senhor?", "en": "Fine, thank you. And you, sir?"},
-        {"speaker": "Paulo", "gender": "m", "pt": "Bem, obrigado. A senhora é de Curitiba?", "en": "Fine, thank you. Are you from Curitiba, ma'am?"},
-        {"speaker": "Helena", "gender": "f", "pt": "Sou, sim. E o senhor, é de onde?", "en": "Yes, I am. And you, where are you from?"},
-        {"speaker": "Paulo", "gender": "m", "pt": "Eu sou de Salvador. Por favor, senhora Souza.", "en": "I am from Salvador. After you, Mrs. Souza."},
-        {"speaker": "Helena", "gender": "f", "pt": "Obrigada.", "en": "Thank you."},
-        {"speaker": "Paulo", "gender": "m", "pt": "De nada.", "en": "You're welcome."}
+        {
+          "speaker": "Helena",
+          "gender": "f",
+          "pt": "Boa tarde. Com licença, o senhor é o senhor Lima?",
+          "en": "Good afternoon. Excuse me, are you Mr. Lima?",
+          "literal": "Good afternoon. With license, the gentleman is the gentleman Lima?"
+        },
+        {
+          "speaker": "Paulo",
+          "gender": "m",
+          "pt": "Sou, sim. Boa tarde! Muito prazer.",
+          "en": "Yes, I am. Good afternoon! Nice to meet you.",
+          "literal": "I-am, yes. Good afternoon! Much pleasure."
+        },
+        {
+          "speaker": "Helena",
+          "gender": "f",
+          "pt": "O prazer é meu. Eu sou a Helena Souza.",
+          "en": "The pleasure is mine. I am Helena Souza."
+        },
+        {
+          "speaker": "Paulo",
+          "gender": "m",
+          "pt": "Como vai, senhora Souza?",
+          "en": "How are you, Mrs. Souza?",
+          "literal": "How goes, lady Souza?"
+        },
+        {
+          "speaker": "Helena",
+          "gender": "f",
+          "pt": "Bem, obrigada. E o senhor?",
+          "en": "Fine, thank you. And you, sir?",
+          "literal": "Well, obliged. And the gentleman?"
+        },
+        {
+          "speaker": "Paulo",
+          "gender": "m",
+          "pt": "Bem, obrigado. A senhora é de Curitiba?",
+          "en": "Fine, thank you. Are you from Curitiba, ma'am?",
+          "literal": "Well, obliged. The lady is of Curitiba?"
+        },
+        {
+          "speaker": "Helena",
+          "gender": "f",
+          "pt": "Sou, sim. E o senhor, é de onde?",
+          "en": "Yes, I am. And you, where are you from?",
+          "literal": "I-am, yes. And the gentleman, is of where?"
+        },
+        {
+          "speaker": "Paulo",
+          "gender": "m",
+          "pt": "Eu sou de Salvador. Por favor, senhora Souza.",
+          "en": "I am from Salvador. Please, Mrs. Souza.",
+          "literal": "I am of Salvador. For favor, lady Souza."
+        },
+        {
+          "speaker": "Helena",
+          "gender": "f",
+          "pt": "Obrigada.",
+          "en": "Thank you.",
+          "literal": "Obliged."
+        },
+        {
+          "speaker": "Paulo",
+          "gender": "m",
+          "pt": "De nada.",
+          "en": "You're welcome.",
+          "literal": "Of nothing."
+        }
       ]
     },
     {
       "id": "d3",
-      "title": "Three friends at a language school",
-      "context": "Lucas introduces his friend Diego to Emma, a new student, before class.",
+      "title": "Meeting at a language school",
+      "context": "Lucas introduces his friend Diego to Clara, a new student, before class.",
       "lines": [
-        {"speaker": "Lucas", "gender": "m", "pt": "Oi, Emma! Este é o Diego. Ele é meu amigo.", "en": "Hi, Emma! This is Diego. He is my friend."},
-        {"speaker": "Emma", "gender": "f", "pt": "Oi, Diego! Muito prazer. Eu sou a Emma.", "en": "Hi, Diego! Nice to meet you. I am Emma."},
-        {"speaker": "Diego", "gender": "m", "pt": "Prazer, Emma! Você é americana?", "en": "Nice to meet you, Emma! Are you American?"},
-        {"speaker": "Emma", "gender": "f", "pt": "Sou, sim. Sou dos Estados Unidos. E você?", "en": "Yes, I am. I am from the United States. And you?"},
-        {"speaker": "Diego", "gender": "m", "pt": "Eu sou argentino, de Buenos Aires.", "en": "I am Argentinian, from Buenos Aires."},
-        {"speaker": "Emma", "gender": "f", "pt": "E o Lucas também é argentino?", "en": "And is Lucas Argentinian too?"},
-        {"speaker": "Lucas", "gender": "m", "pt": "Não, eu sou brasileiro, de Belo Horizonte.", "en": "No, I am Brazilian, from Belo Horizonte."},
-        {"speaker": "Diego", "gender": "m", "pt": "Nós somos amigos!", "en": "We are friends!"},
-        {"speaker": "Emma", "gender": "f", "pt": "Que legal! Até amanhã, Diego. Até amanhã, Lucas.", "en": "How cool! See you tomorrow, Diego. See you tomorrow, Lucas."},
-        {"speaker": "Lucas", "gender": "m", "pt": "Tchau, Emma!", "en": "Bye, Emma!"}
+        {
+          "speaker": "Lucas",
+          "gender": "m",
+          "pt": "Oi, Clara! Este é o Diego. Ele é meu amigo.",
+          "en": "Hi, Clara! This is Diego. He is my friend.",
+          "literal": "Hi, Clara! This is the Diego. He is my friend."
+        },
+        {
+          "speaker": "Clara",
+          "gender": "f",
+          "pt": "Oi, Diego! Muito prazer. Eu sou a Clara.",
+          "en": "Hi, Diego! Nice to meet you. I am Clara.",
+          "literal": "Hi, Diego! Much pleasure. I am the Clara."
+        },
+        {
+          "speaker": "Diego",
+          "gender": "m",
+          "pt": "Prazer, Clara! Você é americana?",
+          "en": "Nice to meet you, Clara! Are you American?",
+          "literal": "Pleasure, Clara! You are American?"
+        },
+        {
+          "speaker": "Clara",
+          "gender": "f",
+          "pt": "Sou, sim. Sou dos Estados Unidos. E você?",
+          "en": "Yes, I am. I am from the United States. And you?",
+          "literal": "I-am, yes. I-am of-the States United. And you?"
+        },
+        {
+          "speaker": "Diego",
+          "gender": "m",
+          "pt": "Eu sou argentino, de Buenos Aires.",
+          "en": "I am Argentinian, from Buenos Aires.",
+          "literal": "I am Argentinian, of Buenos Aires."
+        },
+        {
+          "speaker": "Clara",
+          "gender": "f",
+          "pt": "E você, Lucas, também é argentino?",
+          "en": "And you, Lucas, are you Argentinian too?",
+          "literal": "And you, Lucas, also is Argentinian?"
+        },
+        {
+          "speaker": "Lucas",
+          "gender": "m",
+          "pt": "Não, eu sou brasileiro, de Belo Horizonte.",
+          "en": "No, I am Brazilian, from Belo Horizonte.",
+          "literal": "No, I am Brazilian, of Belo Horizonte."
+        },
+        {
+          "speaker": "Diego",
+          "gender": "m",
+          "pt": "Nós somos amigos!",
+          "en": "We are friends!"
+        },
+        {
+          "speaker": "Clara",
+          "gender": "f",
+          "pt": "Que legal! Até amanhã, Diego. Até amanhã, Lucas.",
+          "en": "How cool! See you tomorrow, Diego. See you tomorrow, Lucas.",
+          "literal": "What lawful! Until tomorrow, Diego. Until tomorrow, Lucas."
+        },
+        {
+          "speaker": "Lucas",
+          "gender": "m",
+          "pt": "Tchau, Clara!",
+          "en": "Bye, Clara!"
+        }
       ]
     }
   ],
   "grammar": [
     {
-      "title": "Subject pronouns",
-      "explanation": "Subject pronouns say who does the action. Brazilian Portuguese has a smaller everyday set than textbooks often show. For one person you say eu (I), você (you), ele (he) and ela (she). For more than one you say nós (we), vocês (you, plural), eles (they, masculine or mixed group) and elas (they, all female).\n\nIn everyday speech a gente (literally the people) replaces nós for we. It looks plural but takes the same verb form as você, ele and ela: a gente é brasileiro. Nós is still correct and is more common in writing.\n\nVocê is the normal word for you in most of Brazil, with friends, strangers and colleagues alike. The formal forms are o senhor (to a man) and a senhora (to a woman). In some regions, such as the far south, parts of the northeast and some areas of Rio, you will also hear tu for a close friend, but você is understood everywhere and is the safest choice. The forms tu and vós that you may see in European Portuguese grammar tables are not needed at this stage.\n\nPortuguese often drops the subject pronoun because the verb ending shows who is speaking. Eu sou brasileiro and Sou brasileiro are both normal. Keep the pronoun when you want emphasis or when it would be unclear.",
+      "title": "Spelling and sound: stress and accent marks in the words of this lesson",
+      "explanation": "This is the first lesson with real words, so it is where the rules of the previous three lessons start to be used. The principle to hold on to is that a written accent is never decoration. Every word has a stressed syllable, the one said louder and longer than the others, and Portuguese spelling lets you predict it from the last letters of the word. A mark is written only when a word breaks that prediction, or to show a vowel quality or a nasal sound. So when you meet an accent, ask two questions: where would the stress have fallen without it, and what does the mark add?\n\nTake você, the word that puzzles most beginners. Divide it into syllables: vo-cê. The stress is on the last syllable. The default for a word ending in e is the second to last syllable, which would give VO-ce, with a weak final e said 'ee'. Você breaks the default, so a mark must stand on the stressed vowel. The acute accent (´) and the circumflex (^) both mark stress, and they differ in vowel quality: on a, e and o the acute shows an open vowel and the circumflex a closed one (before a nasal m or n the mark is only a spelling convention, as in também, below). The e of você is closed, like the 'ay' of 'say' held steady without the glide, so it takes the circumflex: vo-SAY.\n\nThe same reasoning explains the other marked words of this lesson. Olá, até and Canadá are stressed on the last syllable, which breaks the default for a word ending in a or e, and their vowels are open, so they take the acute: o-LÁ, a-TÉ, ca-na-DÁ. Português and francês end in es, whose default is the second to last syllable; the stress is on the last syllable and the e is closed, so they take the circumflex: por-tu-GUÊS, fran-CÊS. Também ends in em, whose default is TAM-bem; the stress is on the last syllable, so the acute is written: tam-BÉM. The word é, 'is', is a stressed one-syllable word ending in e, and such words are always marked. The same rule marks nós, 'we', a stressed one-syllable word ending in os, with an open o. The unmarked word e, 'and', is unstressed and said 'ee', which is why é and e are different words.\n\nA second reason for an accent is stress on the third to last syllable. No ending predicts that position, so these words always carry a mark: ótimo (Ó-ti-mo) and México (MÉ-xi-co), both with open vowels and so both with the acute.\n\nThe tilde (~) does two jobs. It makes a vowel nasal, and when the word has no other accent it also marks the stress. In são and não the tilde stands over the diphthong ão, a nasal vowel that ends in a w sound, in a single syllable. In amanhã (a-ma-NHÃ) the ending ã already defaults to the last syllable, so the tilde only supplies the nasal sound.\n\nMany words here carry no accent because they follow the default and the ending is enough to read them. Prazer, senhor, favor, legal and Brasil end in r or l, so the stress is on the last syllable: pra-ZER, se-NHOR, fa-VOR, le-GAL, bra-SIL. Tarde, noite, logo, amigo and nome end in a vowel, so the stress is on the second to last syllable. The small word por in por favor is unstressed and unmarked, while pôr, 'to put', is a stressed word whose circumflex tells it apart.\n\nSpelling cannot show one thing: whether an unmarked stressed e or o is open or closed. Ele, 'he', has a closed e and ela, 'she', has an open e; you learn the vowel with the word.",
       "table": {
-        "headers": ["Pronoun", "Meaning", "Note"],
+        "headers": [
+          "Word",
+          "Syllables",
+          "What the ending predicts",
+          "Why it is written this way"
+        ],
         "rows": [
-          ["eu", "I", "singular"],
-          ["você", "you", "singular, neutral or informal"],
-          ["ele", "he", "singular"],
-          ["ela", "she", "singular"],
-          ["nós", "we", "more formal or written"],
-          ["a gente", "we", "everyday speech, verb like você"],
-          ["vocês", "you (plural)", "plural of você"],
-          ["eles", "they", "men or a mixed group"],
-          ["elas", "they", "women only"]
+          [
+            "você",
+            "vo-CÊ",
+            "VO-ce",
+            "stress on the last syllable breaks the default; closed e, so circumflex"
+          ],
+          [
+            "olá",
+            "o-LÁ",
+            "O-la",
+            "breaks the default; open a, so acute"
+          ],
+          [
+            "até",
+            "a-TÉ",
+            "A-te",
+            "breaks the default; open e, so acute"
+          ],
+          [
+            "Canadá",
+            "ca-na-DÁ",
+            "ca-NA-da",
+            "breaks the default; open a, so acute"
+          ],
+          [
+            "português",
+            "por-tu-GUÊS",
+            "por-TU-gues",
+            "breaks the default; closed e, so circumflex"
+          ],
+          [
+            "também",
+            "tam-BÉM",
+            "TAM-bem",
+            "breaks the default; acute on a stressed e before final m"
+          ],
+          [
+            "ótimo",
+            "Ó-ti-mo",
+            "o-TI-mo",
+            "third to last syllable, so always marked; open o, so acute"
+          ],
+          [
+            "México",
+            "MÉ-xi-co",
+            "me-XI-co",
+            "third to last syllable, so always marked; open e, so acute"
+          ],
+          [
+            "é",
+            "É",
+            "one syllable",
+            "a stressed one-syllable word ending in e is always marked; open e"
+          ],
+          [
+            "são",
+            "SÃO",
+            "one syllable",
+            "the tilde marks the nasal diphthong and the stress"
+          ],
+          [
+            "amanhã",
+            "a-ma-NHÃ",
+            "a-ma-NHÃ",
+            "follows the default; the tilde only marks the nasal vowel"
+          ],
+          [
+            "prazer",
+            "pra-ZER",
+            "pra-ZER",
+            "follows the default for r; no mark"
+          ],
+          [
+            "legal",
+            "le-GAL",
+            "le-GAL",
+            "follows the default for l; no mark"
+          ],
+          [
+            "tarde",
+            "TAR-de",
+            "TAR-de",
+            "follows the default for e; no mark"
+          ]
         ]
       },
       "examples": [
-        {"pt": "Eu sou brasileiro.", "en": "I am Brazilian."},
-        {"pt": "Você é americana?", "en": "Are you American?"},
-        {"pt": "Ela é argentina.", "en": "She is Argentinian."},
-        {"pt": "Nós somos amigos.", "en": "We are friends."},
-        {"pt": "A gente é de São Paulo.", "en": "We are from São Paulo."},
-        {"pt": "Vocês são canadenses.", "en": "You are Canadian."}
+        {
+          "pt": "Você é brasileiro?",
+          "en": "Are you Brazilian?",
+          "literal": "You are Brazilian?"
+        },
+        {
+          "pt": "Olá, até amanhã!",
+          "en": "Hello, see you tomorrow!",
+          "literal": "Hello, until tomorrow!"
+        },
+        {
+          "pt": "Eles são do Canadá.",
+          "en": "They are from Canada.",
+          "literal": "They are of-the Canada."
+        },
+        {
+          "pt": "A Ana também é brasileira.",
+          "en": "Ana is Brazilian too.",
+          "literal": "The Ana also is Brazilian."
+        },
+        {
+          "pt": "Ele é português e ela é francesa.",
+          "en": "He is Portuguese and she is French."
+        },
+        {
+          "pt": "Muito prazer, senhor.",
+          "en": "Nice to meet you, sir.",
+          "literal": "Much pleasure, gentleman."
+        }
+      ]
+    },
+    {
+      "title": "Spelling and sound: letters whose sound depends on their neighbours",
+      "explanation": "A letter's sound in Portuguese is chosen by something you can see: the letter after it, its position in the word, or an accent mark. This note collects every pattern that appears in the words of this lesson and gives the reason for each, so that none of the greetings, nationalities or names is a mystery. Sounds are compared with English, and the symbols in square brackets are phonetic symbols for readers who want to be exact; you can ignore them until they become useful.\n\nWeak final vowels. Most words here end in an unstressed a, e or o, and in Brazilian speech these vowels are weak: a is a short 'uh', o is 'oo' and e is 'ee'. So Ana is AH-nuh, Paulo is POW-loo and tarde is TAR-jee. You write the letter you see and say the weak sound, which is also why the small words a, o and e ('and') are said 'uh', 'oo' and 'ee'.\n\nT and d before i. In most of Brazil a t before the sound [i] is said [tʃ], like the 'ch' of 'cheese', and a d before [i] is said [dʒ], like the 'j' of 'jeans'. The sound [i] means an i and also a weak final e. So noite is NOY-chee, Curitiba has a chee in the middle, ótimo is OH-chee-moo, dia is JEE-uh, de is jee, onde is OHN-jee and tarde is TAR-jee. Before any other vowel t and d are plain: tudo, obrigado, até. Até shows the limit of the rule: its t comes before an open é, which is not the sound [i], so it stays plain. Some regions keep plain t and d everywhere, and you are understood either way.\n\nNasal vowels. A vowel followed by an m or n that ends the syllable is nasal, and the m or n is not said as a separate consonant. In sim, bom, com and bem the lips do not close at the end; the vowel simply flows through the nose. The same happens inside words: canadense, argentino, francês, onde and licença. The tilde does this job in são, não and amanhã. Muito is a special case: nothing in the spelling says so, but its ui is also said through the nose, [ˈmũj̃tu]; learn it with the word.\n\nC, ç, qu, g and gu. The letter c is [k] before a, o and u and [s] before e and i. To write [s] before a, o or u, Portuguese adds a cedilla, giving ç; in licença the c before e and the ç before a both say [s]. To write [k] before e or i, Portuguese writes qu and the u is silent: que is said 'kee'. In the same way gu before e or ê writes [g] with a silent u, as in português. The letter g alone is [g] before a, o and u (legal) and [ʒ], like the s of 'measure', before e and i (argentino). The letter j is always that same [ʒ] sound, whatever vowel follows, as in Janeiro and Rio de Janeiro; j exists so that [ʒ] can be written before a, o and u, where g would say [g].\n\nS. Between two vowels a single s is [z]: brasileiro is bra-zee-LAY-roo, and the z of Souza and prazer is also [z]. At the end of a syllable or word, as in desculpa, Estados, Carlos, nós and francês, the s is [s] in São Paulo and much of the south and [ʃ], 'sh', in the city of Rio de Janeiro.\n\nL at the end of a syllable is [w]: Brasil sounds like bra-ZEEW, legal like leh-GOW and Salvador like sow-va-DOR. An l before a vowel is the l of 'light': Lucas, Lima, Helena, Belo.\n\nR. A strong [h] sound, like a hard English 'h', is written r at the start of a word (Rio, Recife) and rr between vowels. A quick tap of the tongue, like the tt of American 'butter', is written r between vowels or after another consonant in the same syllable: obrigado, prazer. At the end of a syllable (Carlos, senhor, favor) the r depends on the region.\n\nDigraphs and the silent h. A digraph is a pair of letters that spells one sound. Ch is [ʃ], like 'sh' (chama). Nh is [ɲ], like the 'ny' of 'canyon' (amanhã, senhor, senhora). The letter h alone is always silent (Helena, Horizonte). Tchau is a borrowed word: Italian ciao respelled. Portuguese would read ci as 'see', and ch alone is already 'sh', so the sound of English 'ch' is written t plus ch.\n\nDiphthongs. The pairs oi, ai, ei, ou, au and eu are one syllable each, a full vowel followed by a quick glide: oi, vai, brasileiro, Souza, tchau, Paulo, meu. In everyday speech ou is often said as a plain closed o. Two full vowels side by side stay in separate syllables: boa is bo-a. Foreign names keep their own spelling: in Buenos Aires the u is a glide before the e, as if it were written bwe. The x of México is not covered by the pattern for x in the sounds lesson; learn the word, which is said MEH-shee-koo.",
+      "table": {
+        "headers": [
+          "Spelling",
+          "Where",
+          "Sound, compared with English",
+          "Words of this lesson"
+        ],
+        "rows": [
+          [
+            "a, e, o",
+            "unstressed at the end of a word",
+            "'uh', 'ee', 'oo'",
+            "Ana, tarde, Paulo"
+          ],
+          [
+            "t",
+            "before i or a weak final e",
+            "[tʃ], 'ch' in cheese",
+            "noite, Curitiba, ótimo"
+          ],
+          [
+            "d",
+            "before i or a weak final e",
+            "[dʒ], 'j' in jeans",
+            "dia, de nada, onde, tarde"
+          ],
+          [
+            "t, d",
+            "before any other vowel",
+            "plain [t], [d]",
+            "tudo, até, obrigado"
+          ],
+          [
+            "m, n",
+            "ending a syllable",
+            "the vowel is nasal; no lip closure",
+            "sim, bom, com, bem, canadense"
+          ],
+          [
+            "ão, ã",
+            "tilde",
+            "nasal vowel",
+            "são, não, amanhã"
+          ],
+          [
+            "c",
+            "before e, i",
+            "[s], 's' in sun",
+            "licença, Recife"
+          ],
+          [
+            "ç",
+            "before a, o, u",
+            "[s], always",
+            "licença, França"
+          ],
+          [
+            "qu, gu",
+            "before e, ê",
+            "[k], [g]; the u is silent",
+            "que, português"
+          ],
+          [
+            "g",
+            "before e, i",
+            "[ʒ], 's' in measure",
+            "argentino"
+          ],
+          [
+            "g",
+            "before a, o, u",
+            "[g], 'g' in go",
+            "legal"
+          ],
+          [
+            "j",
+            "anywhere",
+            "[ʒ], 's' in measure",
+            "Janeiro"
+          ],
+          [
+            "s",
+            "between vowels",
+            "[z], 'z' in zoo",
+            "brasileiro, Souza"
+          ],
+          [
+            "l",
+            "ending a syllable",
+            "[w], like the end of 'now'",
+            "Brasil, legal, Salvador"
+          ],
+          [
+            "ch",
+            "anywhere",
+            "[ʃ], 'sh' in shoe",
+            "chama"
+          ],
+          [
+            "nh",
+            "anywhere",
+            "[ɲ], 'ny' in canyon",
+            "amanhã, senhor"
+          ],
+          [
+            "tch",
+            "in a borrowed word",
+            "[tʃ], 'ch' in cheese",
+            "tchau"
+          ],
+          [
+            "h",
+            "anywhere",
+            "silent",
+            "Helena, Horizonte"
+          ],
+          [
+            "r",
+            "start of a word",
+            "strong [h]",
+            "Rio, Recife"
+          ],
+          [
+            "r",
+            "between vowels or after a consonant",
+            "tap, like 'tt' in butter",
+            "obrigado, prazer"
+          ],
+          [
+            "oi, ai, ei, ou, au, eu",
+            "anywhere",
+            "one syllable: full vowel plus glide",
+            "oi, vai, brasileiro, Souza, tchau, meu"
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "pt": "Tchau, até amanhã!",
+          "en": "Bye, see you tomorrow!",
+          "literal": "Bye, until tomorrow!"
+        },
+        {
+          "pt": "Boa noite, senhora Lima.",
+          "en": "Good evening, Mrs. Lima.",
+          "literal": "Good night, lady Lima."
+        },
+        {
+          "pt": "Que legal, ela é do Brasil!",
+          "en": "How cool, she is from Brazil!",
+          "literal": "What lawful, she is of-the Brazil!"
+        },
+        {
+          "pt": "Não, eu sou de Curitiba.",
+          "en": "No, I am from Curitiba.",
+          "literal": "No, I am of Curitiba."
+        },
+        {
+          "pt": "A Helena é do Rio de Janeiro.",
+          "en": "Helena is from Rio de Janeiro.",
+          "literal": "The Helena is of-the Rio of January."
+        },
+        {
+          "pt": "Ele é de Salvador e eu sou de Recife.",
+          "en": "He is from Salvador and I am from Recife.",
+          "literal": "He is of Salvador and I am of Recife."
+        }
+      ]
+    },
+    {
+      "title": "Subject pronouns: who is acting",
+      "explanation": "A pronoun is a word that stands in for a noun, and a subject pronoun stands in for the noun that performs the action of the verb or is described by it. Grammar sorts subject pronouns by person (the speaker, the listener, anyone else) and by number (one or several), which gives six slots. English fills them with I, you, he or she or it, we, you and they. Notice that English has one word, you, for one listener and for many, and has a word, it, for things. Brazilian Portuguese fills the six slots differently: the listener has a singular and a plural form (você and vocês), there is no word for 'it' as a subject, 'we' has two forms, and the pronoun for the listener behaves grammatically like a third person.\n\nThe forms. First person: eu, 'I', written with a lowercase letter unlike English 'I', and nós or a gente, 'we'. Second person, the listener: você for one person and vocês for several. Third person: ele, 'he', and ela, 'she', and in the plural eles and elas. Eles is used for a group of men or a mixed group and elas only for a group of women only, so a single man among a hundred women turns elas into eles. This is the agreement rule from the big-picture lesson: the masculine is the default form of a mixed group.\n\nThere is no 'it'. A thing is ele or ela according to its gender only when a pronoun is needed at all, and usually the subject is simply left out: É legal means 'It is cool'.\n\nWhy does você take the third person verb? Você began as a respectful way to address someone, Vossa Mercê, 'Your Mercy', a noun phrase about the listener spoken in the third person, like English 'Your Majesty is welcome'. It shrank over the centuries to você but kept its third person verb. So você names the person you are speaking to while being grammatically third person. The formal forms o senhor and a senhora literally mean 'the gentleman' and 'the lady', nouns that are plainly third person. The result is that ele, ela, você, o senhor, a senhora and a gente all take the same verb form.\n\nA gente literally means 'the people', a noun phrase, which is why it takes the third person singular verb even though it means 'we': A gente é de São Paulo. Nós is the careful or written form and takes its own verb form. In everyday speech the two are both common.\n\nChoosing 'you' is a choice about the relationship. Você is the neutral form for one person, used with friends, colleagues and strangers. O senhor and a senhora are more respectful and are used with older people, in service situations and in formal settings. Vocês is the plural in every register. In some regions, including parts of the south, the north and Rio de Janeiro, you will also hear tu for a close friend; you can understand it and never use it, because você is correct everywhere. The choice between você, o senhor and a senhora changes only the word and the tone; the verb stays in the third person in all of them.\n\nDropping the subject. Because a verb ending shows who is acting, Portuguese often leaves the pronoun out, where English cannot: Sou brasileiro is complete, while English 'am Brazilian' is not. The eu and nós forms have endings of their own (sou, somos), so eu and nós are dropped freely. But é fits six different subjects, so Brazilians usually keep ele, ela or você unless the context already makes it clear. Keep eu when you want to stress it: Eu sou brasileiro, e você?",
+      "table": {
+        "headers": [
+          "Person and number",
+          "Pronoun",
+          "Meaning",
+          "Note"
+        ],
+        "rows": [
+          [
+            "first singular",
+            "eu",
+            "I",
+            "lowercase, unlike English I"
+          ],
+          [
+            "second singular",
+            "você",
+            "you, one person",
+            "neutral; takes a third person verb"
+          ],
+          [
+            "second singular, formal",
+            "o senhor, a senhora",
+            "you, one man; you, one woman",
+            "literally 'the gentleman', 'the lady'"
+          ],
+          [
+            "third singular",
+            "ele, ela",
+            "he, she",
+            "no word for 'it' as a subject"
+          ],
+          [
+            "first plural",
+            "nós",
+            "we",
+            "careful or written speech"
+          ],
+          [
+            "first plural, everyday",
+            "a gente",
+            "we",
+            "literally 'the people'; verb like você"
+          ],
+          [
+            "second plural",
+            "vocês",
+            "you, several people",
+            "the plural of você"
+          ],
+          [
+            "third plural",
+            "eles, elas",
+            "they",
+            "eles for men or a mixed group; elas for women only"
+          ]
+        ]
+      },
+      "examples": [
+        {
+          "pt": "Eu sou brasileiro.",
+          "en": "I am Brazilian."
+        },
+        {
+          "pt": "Você é americana?",
+          "en": "Are you American?",
+          "literal": "You are American?"
+        },
+        {
+          "pt": "Ela é argentina.",
+          "en": "She is Argentinian."
+        },
+        {
+          "pt": "Nós somos amigos.",
+          "en": "We are friends."
+        },
+        {
+          "pt": "A gente é de São Paulo.",
+          "en": "We are from São Paulo.",
+          "literal": "The-people is of São Paulo."
+        },
+        {
+          "pt": "Vocês são canadenses.",
+          "en": "You are all Canadian."
+        },
+        {
+          "pt": "O senhor é brasileiro?",
+          "en": "Are you Brazilian, sir?",
+          "literal": "The gentleman is Brazilian?"
+        },
+        {
+          "pt": "A senhora é americana?",
+          "en": "Are you American, ma'am?",
+          "literal": "The lady is American?"
+        }
       ]
     },
     {
       "title": "The verb ser in the present",
-      "explanation": "Ser is one of the two Portuguese verbs for to be. In this unit you use it to say who someone is, where they are from and their nationality. It is irregular, so learn the forms as a block. Eu sou, você é, ele é, ela é, nós somos, a gente é, vocês são, eles são, elas são.\n\nNotice that você, ele, ela and a gente all share the form é, and vocês, eles and elas all share são. That means you only have to remember four different forms: sou, é, somos and são.\n\nTo ask a question you usually keep the same word order as a statement and raise your voice at the end: Você é brasileiro? There is no word like do or does. To answer yes you can repeat the verb instead of saying sim: Você é brasileira? Sou. Adding sim is also fine and very common: Sou, sim.\n\nThe pronunciation matters. Sou sounds like 'so' with a quick w glide at the end. The forms é and são are short and clear: é is like the e in 'bed' and são ends with a nasal sound that you will study in the sounds unit.",
+      "explanation": "Portuguese has two verbs for 'to be', ser and estar, where English has one. Ser says what something is: identity, origin, nationality and lasting characteristics. Estar, which comes in the next lessons, says how or where something is at the moment. In this lesson ser does three jobs: who someone is (Eu sou a Ana), where they are from (Ela é de Curitiba) and nationality (Ele é brasileiro). Ser is the infinitive, the dictionary form of the verb with no subject and no time. The present tense, shown in the table, is the set of forms for 'now'.\n\nSer is irregular, which means its forms cannot be built by removing the ending and adding the endings of a regular verb; they must be learned as a block. This is normal for the commonest verb of any language: English am, is and are look just as unrelated to one another. The Portuguese forms are worn-down descendants of the Latin sum, est, sumus and sunt.\n\nBecause você, ele, ela, a gente, o senhor and a senhora all take the third person singular, and vocês, eles and elas all take the third person plural, you only need four forms: sou, é, somos and são. English uses three (am, is, are). The form é also serves with no subject at all, where English needs 'it': É legal, 'It is cool'.\n\nQuestions. English builds a question by moving the verb ('Are you Brazilian?') or by adding 'do'. Portuguese does neither: the question has the same word order as the statement, said with rising intonation and written with a question mark. Você é brasileiro? and Você é brasileiro. use identical words. A question word goes first, and the verb usually stays where it is: De onde você é? Portuguese answers a yes-or-no question by repeating the verb, so Você é brasileira? Sou. means 'Yes, I am'. Adding sim is also normal: Sou, sim. For no, put não before the verb: Não, eu sou brasileiro.\n\nSound and spelling. Sou has the diphthong ou, in everyday speech often said as a plain closed o, 'so'. É is an open e, 'eh', and takes the acute accent because it is a stressed one-syllable word (see the first spelling note); the unmarked e means 'and' and is said 'ee': Você é brasileira e ela é americana. Somos is SOH-moos. São ends in the nasal diphthong ão, one syllable, with a w sound at the end.",
       "table": {
-        "headers": ["Pronoun", "ser", "Example"],
+        "headers": [
+          "Pronoun",
+          "ser",
+          "English",
+          "Example"
+        ],
         "rows": [
-          ["eu", "sou", "Eu sou a Ana."],
-          ["você", "é", "Você é brasileiro?"],
-          ["ele, ela", "é", "Ela é mexicana."],
-          ["nós", "somos", "Nós somos amigos."],
-          ["a gente", "é", "A gente é de Recife."],
-          ["vocês", "são", "Vocês são canadenses."],
-          ["eles, elas", "são", "Eles são argentinos."]
+          [
+            "eu",
+            "sou",
+            "am",
+            "Eu sou a Ana."
+          ],
+          [
+            "você",
+            "é",
+            "are",
+            "Você é brasileiro?"
+          ],
+          [
+            "ele, ela",
+            "é",
+            "is",
+            "Ela é mexicana."
+          ],
+          [
+            "nós",
+            "somos",
+            "are",
+            "Nós somos amigos."
+          ],
+          [
+            "a gente",
+            "é",
+            "is, meaning we are",
+            "A gente é de Recife."
+          ],
+          [
+            "vocês",
+            "são",
+            "are",
+            "Vocês são canadenses."
+          ],
+          [
+            "eles, elas",
+            "são",
+            "are",
+            "Eles são argentinos."
+          ]
         ]
       },
       "examples": [
-        {"pt": "Eu sou o Carlos.", "en": "I am Carlos."},
-        {"pt": "Você é americana?", "en": "Are you American?"},
-        {"pt": "Ele é meu amigo.", "en": "He is my friend."},
-        {"pt": "Nós somos de Salvador.", "en": "We are from Salvador."},
-        {"pt": "Elas são francesas.", "en": "They are French."},
-        {"pt": "Sou, sim.", "en": "Yes, I am."}
+        {
+          "pt": "Eu sou o Carlos.",
+          "en": "I am Carlos.",
+          "literal": "I am the Carlos."
+        },
+        {
+          "pt": "Você é americana?",
+          "en": "Are you American?",
+          "literal": "You are American?"
+        },
+        {
+          "pt": "Ele é meu amigo.",
+          "en": "He is my friend."
+        },
+        {
+          "pt": "Nós somos de Salvador.",
+          "en": "We are from Salvador.",
+          "literal": "We are of Salvador."
+        },
+        {
+          "pt": "Elas são francesas.",
+          "en": "They are French."
+        },
+        {
+          "pt": "Sou, sim.",
+          "en": "Yes, I am.",
+          "literal": "I-am, yes."
+        },
+        {
+          "pt": "Não, sou brasileiro.",
+          "en": "No, I am Brazilian."
+        }
       ]
     },
     {
       "title": "Saying where you are from and your nationality",
-      "explanation": "To say where you are from, use ser followed by de: Eu sou de São Paulo. With a city name, de stays as it is. Country names usually take an article, and de joins with it: de + o = do, de + a = da, de + os = dos. So you say Eu sou do Brasil, Ela é da Argentina, Eles são dos Estados Unidos. Portugal is an exception with no article: Ele é de Portugal. A few cities also take an article, such as Rio de Janeiro: Eu sou do Rio.\n\nTo ask the question, use De onde você é? or Você é de onde? Both are natural. To ask about the person's nationality you can just ask Você é brasileiro?\n\nNationalities are adjectives and agree with the person. Most end in -o for men and change to -a for women: brasileiro, brasileira. Words ending in -ense or -ista do not change: canadense. Words ending in a consonant such as português and francês add -a for the feminine and lose their written accent: portuguesa, francesa. Nationalities are not capitalized in Portuguese.\n\nNote that americano in Brazil almost always means from the United States, even though Brazilians are also from the Americas.",
+      "explanation": "To say where you are from, Portuguese uses ser with the preposition de. A preposition is a short word that links a noun to the rest of the sentence, and de means 'of' as well as 'from'. The idea is origin: Eu sou de São Paulo literally says 'I am of São Paulo'. English chooses 'from' for this meaning and Portuguese keeps 'of'.\n\nCountry names are nouns like any other, with a gender and a number, and most are used with the definite article, 'the': o Brasil, a Argentina, a França, o Canadá, o México, os Estados Unidos. English does this for only a few (the United States, the Netherlands). The ending often shows the gender (a Argentina, a França), but not always (o Brasil, o Canadá, o México), so learn each name with its article. When the preposition de meets the article the two fuse into one word, which is compulsory: de + o = do, de + a = da, de + os = dos. So you say Eu sou do Brasil, Ela é da Argentina and Eles são dos Estados Unidos, never 'de o Brasil'. Portugal has no article, and neither do most cities, so nothing fuses: Ele é de Portugal, Eu sou de Curitiba. A few cities have an article because the name is a common noun; o Rio de Janeiro is the River of January, and rio is masculine, so people say Eu sou do Rio. No rule says which places take an article, so learn each name with it.\n\nA nationality is an adjective, and an adjective agrees with the noun it describes. Here the noun is the person, so the form follows the person's gender, not the country's: a woman from Brazil is brasileira. Most nationalities end in -o for a man and -a for a woman: americano, americana. Those ending in -e, such as canadense, have one form for both. Those ending in a consonant, such as português and francês, usually add -a for the feminine. The accent then disappears, because the new ending a defaults to stress on the second to last syllable and that is where the stress already falls: portuguesa, francesa. The plural adds -s (-es after a consonant), and the accent disappears there too: portugueses, franceses. A mixed group takes the masculine plural. Nationalities are written with a lowercase letter, and in Brazil americano almost always means from the United States.\n\nTwo word orders are natural for the question: De onde você é? and Você é de onde?, literally 'Of where you are?' and 'You are of where?'. The verb usually stays in place and no helper word appears.",
       "table": {
-        "headers": ["Country", "Man", "Woman"],
+        "headers": [
+          "Country",
+          "Man",
+          "Woman",
+          "Men or mixed group"
+        ],
         "rows": [
-          ["o Brasil", "brasileiro", "brasileira"],
-          ["os Estados Unidos", "americano", "americana"],
-          ["o Canadá", "canadense", "canadense"],
-          ["o México", "mexicano", "mexicana"],
-          ["a Argentina", "argentino", "argentina"],
-          ["Portugal", "português", "portuguesa"],
-          ["a França", "francês", "francesa"],
-          ["a Inglaterra", "inglês", "inglesa"]
+          [
+            "o Brasil",
+            "brasileiro",
+            "brasileira",
+            "brasileiros"
+          ],
+          [
+            "os Estados Unidos",
+            "americano",
+            "americana",
+            "americanos"
+          ],
+          [
+            "o Canadá",
+            "canadense",
+            "canadense",
+            "canadenses"
+          ],
+          [
+            "o México",
+            "mexicano",
+            "mexicana",
+            "mexicanos"
+          ],
+          [
+            "a Argentina",
+            "argentino",
+            "argentina",
+            "argentinos"
+          ],
+          [
+            "Portugal",
+            "português",
+            "portuguesa",
+            "portugueses"
+          ],
+          [
+            "a França",
+            "francês",
+            "francesa",
+            "franceses"
+          ],
+          [
+            "a Inglaterra",
+            "inglês",
+            "inglesa",
+            "ingleses"
+          ]
         ]
       },
       "examples": [
-        {"pt": "De onde você é?", "en": "Where are you from?"},
-        {"pt": "Eu sou do Brasil.", "en": "I am from Brazil."},
-        {"pt": "Ela é da Argentina.", "en": "She is from Argentina."},
-        {"pt": "Eles são dos Estados Unidos.", "en": "They are from the United States."},
-        {"pt": "Ele é de Portugal.", "en": "He is from Portugal."},
-        {"pt": "Eu sou de Curitiba.", "en": "I am from Curitiba."}
+        {
+          "pt": "De onde você é?",
+          "en": "Where are you from?",
+          "literal": "Of where you are?"
+        },
+        {
+          "pt": "Eu sou do Brasil.",
+          "en": "I am from Brazil.",
+          "literal": "I am of-the Brazil."
+        },
+        {
+          "pt": "Ela é da Argentina.",
+          "en": "She is from Argentina.",
+          "literal": "She is of-the Argentina."
+        },
+        {
+          "pt": "Eles são dos Estados Unidos.",
+          "en": "They are from the United States.",
+          "literal": "They are of-the States United."
+        },
+        {
+          "pt": "Ele é de Portugal.",
+          "en": "He is from Portugal.",
+          "literal": "He is of Portugal."
+        },
+        {
+          "pt": "Eu sou de Curitiba.",
+          "en": "I am from Curitiba.",
+          "literal": "I am of Curitiba."
+        },
+        {
+          "pt": "Elas são portuguesas.",
+          "en": "They are Portuguese."
+        }
       ]
     },
     {
-      "title": "Greeting and politeness formulas",
-      "explanation": "Greetings depend on the time of day: bom dia until about noon, boa tarde in the afternoon and boa noite after dark. Boa noite also means good night when you leave. Oi works at any time and is the usual informal hello. Tchau and até logo are goodbyes, and até amanhã means see you tomorrow.\n\nTudo bem? is the most common way to ask how someone is. It works like how's it going in English, and the answer is also Tudo bem, usually followed by e você? Como vai? is slightly more formal. You can reply Bem, obrigado if you are a man and Bem, obrigada if you are a woman. The word obrigado agrees with the person who is speaking.\n\nWhen you meet someone, say Muito prazer or just Prazer. To introduce yourself, say Eu sou o Carlos or Meu nome é Carlos. Brazilians often put the article before a first name in casual speech: a Ana, o Carlos. To ask someone's name, say Como você se chama?\n\nFor manners: por favor means please, de nada means you're welcome, com licença is used to pass someone or interrupt politely, and desculpa is for apologies. Do not use desculpa to get past someone, because com licença is the correct phrase for that.",
+      "title": "Greetings and politeness: what the words literally say and how they are used",
+      "explanation": "Greetings and politeness phrases are fixed formulas. Speakers do not build them word by word, and their natural English equivalents often do not match their words. Two separate questions should be asked of every formula: what do the words literally say, and what do speakers use them for? The literal reading is worth keeping because it explains the grammar inside each formula, and the usage tells you when each one is right. The table gives both, with the natural English between them.\n\nAgreement inside the formulas. Bom dia, boa tarde and boa noite are literally 'good day', 'good afternoon' and 'good night'. Bom and boa are the masculine and feminine forms of the adjective 'good', and each agrees in gender with the noun after it. Dia is masculine even though it ends in a, one of the exceptions to the ending rule; tarde and noite are feminine. So the noun picks the form, not the speaker. Obrigado and obrigada work the other way: the word is the adjective 'obliged', and it agrees with the person speaking, because the speaker is the one who is obliged. A man says obrigado and a woman says obrigada, whoever is thanked. Muito obrigada is literally 'much obliged'.\n\nTimes of day. Bom dia is used from waking until about noon, boa tarde from noon until dark, and boa noite after dark, both as a hello and as a goodbye, because Portuguese has one word, noite, for English 'evening' and 'night'. Oi works at any time and olá is a little more careful. Tchau is a goodbye. Até means 'until', so até logo is 'until soon' and até amanhã is 'until tomorrow'.\n\nAsking how someone is. Tudo bem? is literally 'all well?', with no verb. A Portuguese sentence can leave out the verb when the meaning is clear, and the answer is the same two words, usually followed by e você? Como vai? is literally 'how goes?', with vai from ir, 'to go'; it is a little more formal, and you answer Bem, obrigado, where bem means 'well'.\n\nMeeting someone. Muito prazer is literally 'much pleasure', often shortened to prazer. The reply can be prazer or O prazer é meu, 'the pleasure is mine', where meu is 'my' or 'mine' in the masculine, agreeing with prazer. To give your name, say Eu sou o Carlos or Meu nome é Carlos. In many regions Brazilians put the article before a first name in casual speech (o Carlos, a Ana): names are treated like any noun with a gender, and the article adds no meaning. To ask a name, Como você se chama? literally says 'how you yourself call?'. Chamar means 'to call' and se is a pronoun meaning 'yourself', here standing for você. A verb used with such a pronoun, so that the action comes back to the subject, is called reflexive: Eu me chamo Ana is literally 'I myself call Ana'. Later lessons treat reflexive verbs fully; for now learn the formula. To introduce someone, Este é o Carlos: este means 'this' before a masculine noun, and esta before a feminine one.\n\nExcuse me. English uses one phrase, 'excuse me', for two different acts, and Portuguese separates them. Com licença is literally 'with license', where licença means permission: you ask permission to pass, to enter or to interrupt, which is why it is not an apology. Desculpa is literally 'excuse', from the verb desculpar, 'to excuse, to forgive': you say it after a mistake, or to ask someone to repeat. The formal form is desculpe. Por favor is literally 'for favor', and de nada is literally 'of nothing', a reply that means it was nothing. Que legal! is literally 'what lawful!'; legal began as 'lawful' and now means cool.",
+      "table": {
+        "headers": [
+          "Expression",
+          "Literal",
+          "Natural English",
+          "Used"
+        ],
+        "rows": [
+          [
+            "bom dia",
+            "good day",
+            "good morning",
+            "until about noon"
+          ],
+          [
+            "boa tarde",
+            "good afternoon",
+            "good afternoon",
+            "noon until dark"
+          ],
+          [
+            "boa noite",
+            "good night",
+            "good evening, good night",
+            "after dark, hello or goodbye"
+          ],
+          [
+            "tudo bem",
+            "all well",
+            "how's it going, all good",
+            "question and answer"
+          ],
+          [
+            "como vai",
+            "how goes",
+            "how are you",
+            "a little formal"
+          ],
+          [
+            "muito prazer",
+            "much pleasure",
+            "nice to meet you",
+            "first meeting"
+          ],
+          [
+            "obrigado, obrigada",
+            "obliged",
+            "thank you",
+            "man speaking, woman speaking"
+          ],
+          [
+            "de nada",
+            "of nothing",
+            "you're welcome",
+            "reply to thanks"
+          ],
+          [
+            "com licença",
+            "with license",
+            "excuse me",
+            "to pass, enter, interrupt"
+          ],
+          [
+            "desculpa",
+            "excuse",
+            "sorry",
+            "after a mistake"
+          ],
+          [
+            "por favor",
+            "for favor",
+            "please",
+            "with requests"
+          ],
+          [
+            "até logo",
+            "until soon",
+            "see you later",
+            "parting"
+          ],
+          [
+            "até amanhã",
+            "until tomorrow",
+            "see you tomorrow",
+            "parting"
+          ]
+        ]
+      },
       "examples": [
-        {"pt": "Bom dia, tudo bem?", "en": "Good morning, how are you?"},
-        {"pt": "Boa tarde, como vai?", "en": "Good afternoon, how are you?"},
-        {"pt": "Muito prazer, eu me chamo Ana.", "en": "Nice to meet you, my name is Ana."},
-        {"pt": "Obrigada! De nada.", "en": "Thank you! You're welcome."},
-        {"pt": "Com licença, por favor.", "en": "Excuse me, please."},
-        {"pt": "Desculpa, Carlos!", "en": "Sorry, Carlos!"}
+        {
+          "pt": "Bom dia, tudo bem?",
+          "en": "Good morning, how are you?",
+          "literal": "Good day, all well?"
+        },
+        {
+          "pt": "Boa tarde, como vai?",
+          "en": "Good afternoon, how are you?",
+          "literal": "Good afternoon, how goes?"
+        },
+        {
+          "pt": "Muito prazer, eu me chamo Ana.",
+          "en": "Nice to meet you, my name is Ana.",
+          "literal": "Much pleasure, I myself call Ana."
+        },
+        {
+          "pt": "Obrigada! De nada.",
+          "en": "Thank you! You're welcome.",
+          "literal": "Obliged! Of nothing."
+        },
+        {
+          "pt": "Com licença, por favor.",
+          "en": "Excuse me, please.",
+          "literal": "With license, for favor."
+        },
+        {
+          "pt": "Desculpa, Carlos!",
+          "en": "Sorry, Carlos!",
+          "literal": "Excuse, Carlos!"
+        },
+        {
+          "pt": "Bem, obrigado.",
+          "en": "Fine, thank you.",
+          "literal": "Well, obliged."
+        }
       ]
     }
   ],
   "culture": {
     "title": "How Brazilians greet each other",
-    "text": "Brazilians are warm and physical greeters. Friends and family greet with a hug, and women, and men and women together, often exchange kisses on the cheek. One kiss is common in São Paulo, two in Rio de Janeiro and in many other places, and in parts of Minas Gerais you may get three. Men shake hands or hug. In business settings a handshake is standard the first time you meet.\n\nFirst names are used almost everywhere, even with your boss or your doctor. Titles still appear with older people and in formal situations: senhor, senhora, and dona before a woman's first name, as in Dona Maria. In some regions you will also hear seu before a man's first name, as in seu João.\n\nTudo bem? works as a greeting even when you are not really asking a question. People often answer Tudo! or Tudo bem, e você? and keep walking. Arriving somewhere, it is polite to greet everyone in the room with a general bom dia or boa tarde before you say anything else.\n\nFinally, Brazilian Portuguese is spoken differently from the Portuguese of Portugal, and you will often hear both accents on the internet. In this course you learn Brazilian forms such as você and a gente."
+    "text": "Brazilians are warm and physical greeters. Friends and family greet with a hug, and women, and men and women together, often exchange kisses on the cheek. One kiss is common in São Paulo, two in Rio de Janeiro and in many other places, and in parts of Minas Gerais you may get three. Men shake hands or hug. In business settings a handshake is standard the first time you meet.\n\nFirst names are used almost everywhere, even with your boss or your doctor. Titles still appear with older people and in formal situations: senhor, senhora, and dona before a woman's first name, as in Dona Maria. In some regions you will also hear seu before a man's first name, as in seu João; seu is a short form of senhor.\n\nTudo bem? works as a greeting even when you are not really asking a question. People often answer Tudo! or Tudo bem, e você? and keep walking. Arriving somewhere, it is polite to greet everyone in the room with a general bom dia or boa tarde before you say anything else.\n\nThe choice between com licença and desculpa shows how Portuguese separates two acts that English joins. Asking permission to pass, to enter or to interrupt calls for com licença, while desculpa is for a mistake. A Brazilian who hears desculpa when you only wanted to pass will understand you, but com licença is what a native speaker says.\n\nFinally, Brazilian Portuguese is spoken differently from the Portuguese of Portugal, and you will often hear both accents on the internet. In this course you learn Brazilian forms such as você and a gente."
   },
   "exercises": [
-    {"type": "multiple_choice", "prompt": "How do you say 'good afternoon'?", "choices": ["Boa noite", "Boa tarde", "Bom dia"], "answer": 1, "explanation": "Boa tarde is used from noon until it gets dark."},
-    {"type": "multiple_choice", "prompt": "Which pronoun is the everyday spoken word for 'we' and takes the same verb form as você?", "choices": ["nós", "a gente", "vocês", "eles"], "answer": 1, "explanation": "A gente means we but uses the third person singular verb: a gente é."},
-    {"type": "multiple_choice", "prompt": "Someone says 'Tudo bem?' to you. What is a normal reply?", "choices": ["De nada.", "Com licença.", "Tudo bem, e você?", "Boa noite."], "answer": 2, "explanation": "Tudo bem is both the question and the usual answer."},
-    {"type": "multiple_choice", "prompt": "A woman wants to say 'thank you'. Which word does she use?", "choices": ["Obrigado", "Obrigada", "Obrigados"], "answer": 1, "explanation": "Obrigado and obrigada agree with the person speaking."},
-    {"type": "multiple_choice", "prompt": "You need to get past someone on a crowded bus. What do you say?", "choices": ["De nada", "Até logo", "Muito prazer", "Com licença"], "answer": 3, "explanation": "Com licença is used to pass someone. Desculpa is an apology."},
-    {"type": "multiple_choice", "prompt": "What does 'Eles são americanos' mean?", "choices": ["They are American.", "He is American.", "We are American.", "You are American."], "answer": 0, "explanation": "Eles is they and são is the plural form of ser."},
-    {"type": "multiple_choice", "prompt": "Which expression is the formal word for 'you' when speaking to a man?", "choices": ["o senhor", "a senhora", "a gente", "vocês"], "answer": 0, "explanation": "O senhor is formal you for a man and a senhora is formal you for a woman."},
-    {"type": "fill_blank", "prompt_pt": "Eu ___ brasileiro.", "answer": ["sou"], "hint_en": "I am Brazilian.", "explanation": "Sou is the eu form of ser."},
-    {"type": "fill_blank", "prompt_pt": "Nós ___ amigos.", "answer": ["somos"], "hint_en": "We are friends.", "explanation": "Somos is the nós form of ser."},
-    {"type": "fill_blank", "prompt_pt": "Ela ___ de Curitiba.", "answer": ["é"], "hint_en": "She is from Curitiba.", "explanation": "Ela, ele and você all use é."},
-    {"type": "fill_blank", "prompt_pt": "Eles ___ americanos.", "answer": ["são"], "hint_en": "They are American.", "explanation": "Vocês, eles and elas use são."},
-    {"type": "fill_blank", "prompt_pt": "Muito ___!", "answer": ["prazer"], "hint_en": "Nice to meet you!", "explanation": "Muito prazer is the standard phrase when meeting someone."},
-    {"type": "fill_blank", "prompt_pt": "Eu sou ___ Argentina.", "answer": ["da"], "hint_en": "I am from Argentina.", "explanation": "De + a becomes da before a feminine country name."},
-    {"type": "translate_to_pt", "prompt_en": "I am Marcos.", "answers": ["Eu sou o Marcos.", "Eu sou Marcos.", "Sou o Marcos.", "Sou Marcos."], "explanation": "The subject pronoun can be dropped, and the article before the name is optional."},
-    {"type": "translate_to_pt", "prompt_en": "Where are you from?", "answers": ["De onde você é?", "Você é de onde?"], "explanation": "Both word orders are natural."},
-    {"type": "translate_to_pt", "prompt_en": "Nice to meet you.", "answers": ["Muito prazer.", "Prazer.", "Muito prazer!", "Prazer!"]},
-    {"type": "translate_to_pt", "prompt_en": "We are Brazilian. (a group of men)", "answers": ["Nós somos brasileiros.", "Somos brasileiros.", "A gente é brasileiro."], "explanation": "A gente is singular in form, so the adjective stays singular."},
-    {"type": "order_words", "prompt_en": "My name is Ana.", "words": ["Meu", "nome", "é", "Ana."], "distractors": ["sou"]},
-    {"type": "order_words", "prompt_en": "Where is he from?", "words": ["De", "onde", "ele", "é?"], "distractors": ["são"]},
-    {"type": "order_words", "prompt_en": "They are from Mexico.", "words": ["Eles", "são", "do", "México."], "distractors": ["da", "somos"]},
-    {"type": "order_words", "prompt_en": "This is Carlos, my friend.", "words": ["Este", "é", "o", "Carlos,", "meu", "amigo."]},
-    {"type": "listening_choice", "audio_pt": "Boa tarde, tudo bem?", "choices": ["Good afternoon, how are you?", "Good morning, how are you?", "Good night, see you tomorrow."], "answer": 0},
-    {"type": "listening_choice", "audio_pt": "Eu sou da Argentina.", "choices": ["I am from Brazil.", "I am from Argentina.", "I am from Mexico."], "answer": 1},
-    {"type": "listening_choice", "audio_pt": "Ela é americana.", "choices": ["She is Canadian.", "She is Brazilian.", "She is American."], "answer": 2},
-    {"type": "listening_choice", "audio_pt": "Tchau, até amanhã!", "choices": ["Bye, see you tomorrow!", "Bye, see you later!", "Thank you, you're welcome!"], "answer": 0},
-    {"type": "dictation", "audio_pt": "Bom dia, tudo bem?", "hint_en": "Good morning, how are you?"},
-    {"type": "dictation", "audio_pt": "Eu sou de São Paulo.", "hint_en": "I am from São Paulo."},
-    {"type": "dictation", "audio_pt": "Muito prazer, eu sou a Ana.", "hint_en": "Nice to meet you, I am Ana."},
-    {"type": "match", "prompt": "Match the Portuguese with the English", "pairs": [{"pt": "bom dia", "en": "good morning"}, {"pt": "obrigado", "en": "thank you (said by a man)"}, {"pt": "de nada", "en": "you're welcome"}, {"pt": "com licença", "en": "excuse me (to get past)"}, {"pt": "até logo", "en": "see you later"}]},
-    {"type": "match", "prompt": "Match the pronoun with its meaning", "pairs": [{"pt": "eu", "en": "I"}, {"pt": "nós", "en": "we"}, {"pt": "vocês", "en": "you (plural)"}, {"pt": "elas", "en": "they (all women)"}, {"pt": "ele", "en": "he"}]}
+    {
+      "type": "multiple_choice",
+      "prompt": "How do you say 'good afternoon'?",
+      "choices": [
+        "Boa noite",
+        "Boa tarde",
+        "Bom dia"
+      ],
+      "answer": 1,
+      "explanation": "Boa tarde is used from noon until it gets dark."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "In você, why is there a circumflex on the e?",
+      "choices": [
+        "It makes the e nasal.",
+        "The word is a verb form.",
+        "The stress is on the last syllable, which breaks the default for a word ending in e, and the e is closed.",
+        "It shows that the v is silent."
+      ],
+      "answer": 2,
+      "explanation": "The default for an ending in e is the second to last syllable (VO-ce). Stress on the last syllable needs a mark, and a closed e takes the circumflex where an open e would take the acute."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "What does the tilde do in são?",
+      "choices": [
+        "It shows that the vowel is open.",
+        "It makes the vowel nasal and, since no other accent is written, also marks the stress.",
+        "It shows that the s is said [z].",
+        "It replaces a missing letter."
+      ],
+      "answer": 1,
+      "explanation": "The tilde marks nasality, and when no other accent is present it also marks the stressed syllable. In são there is only one syllable."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "What does com licença literally say, word for word?",
+      "choices": [
+        "With license",
+        "Excuse me",
+        "With apology",
+        "I ask pardon"
+      ],
+      "answer": 0,
+      "explanation": "Literally 'with license', where licença means permission. 'Excuse me' is the natural English equivalent, not the literal meaning."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "A woman wants to say 'thank you'. Which word does she use, and why?",
+      "choices": [
+        "Obrigado, because it is the default form.",
+        "Obrigado, because she is thanking a man.",
+        "Obrigada, because the adjective 'obliged' agrees with the person speaking.",
+        "Either one, because it never agrees."
+      ],
+      "answer": 2,
+      "explanation": "Obrigado literally means 'obliged' and agrees with the speaker, not with the person who is thanked."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why do we say bom dia but boa tarde?",
+      "choices": [
+        "Dia is a masculine noun and tarde is a feminine noun, and the adjective agrees with its noun.",
+        "Bom is for the morning and boa for later, by custom only.",
+        "Boa is more polite than bom.",
+        "The speaker's gender decides."
+      ],
+      "answer": 0,
+      "explanation": "Bom and boa are the masculine and feminine of 'good'. Dia is masculine even though it ends in a; tarde and noite are feminine."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "What sound does tch make in tchau?",
+      "choices": [
+        "The 'sh' of 'shoe'",
+        "The 'k' of 'kite'",
+        "The 'ch' of 'cheese'",
+        "Nothing: it is silent"
+      ],
+      "answer": 2,
+      "explanation": "Ch alone is [ʃ], like 'sh'. The t in front gives the 'ch' of English 'cheese'. The word is Italian ciao respelled, because Portuguese reads ci as 'see'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "How is the t of noite said, and why?",
+      "choices": [
+        "Like a plain English t, as in 'stop'.",
+        "Like the 'ch' of 'cheese', because it comes before the sound i, here the weak final e.",
+        "It is silent before e.",
+        "Like 'th', because it follows an i."
+      ],
+      "answer": 1,
+      "explanation": "In most of Brazil, t before the sound [i] is [tʃ]. A weak final e sounds like i, so noite is NOY-chee."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "The t of até is a plain t, although the word ends in e. Why?",
+      "choices": [
+        "Because the word is stressed on the last syllable, which switches the rule off.",
+        "Because this e is an open é and not the sound i; only i or a weak final e softens t.",
+        "Because t is never soft at the end of a word.",
+        "Because the accent is a cedilla."
+      ],
+      "answer": 1,
+      "explanation": "The rule depends on the vowel sound that follows. An open é is not the sound [i]."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why is the m of bom not pronounced as a consonant with the lips closed?",
+      "choices": [
+        "Because m is always silent.",
+        "Because an m that ends a syllable only makes the vowel before it nasal.",
+        "Because bom is a borrowed word.",
+        "Because the o is stressed."
+      ],
+      "answer": 1,
+      "explanation": "An m or n that ends a syllable only marks nasality: bom is said [bõ], with the lips open."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "You need to squeeze past a stranger in a narrow corridor. Which expression fits, and why?",
+      "choices": [
+        "Desculpa, because you have made a mistake.",
+        "De nada, because nothing happened.",
+        "Com licença, because you are asking permission to pass.",
+        "Até logo, because you are leaving."
+      ],
+      "answer": 2,
+      "explanation": "Com licença asks permission (literally 'with license'). Desculpa apologizes for a mistake."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why is ótimo written with an accent, while legal needs none?",
+      "choices": [
+        "Ótimo is longer than legal.",
+        "Ótimo is stressed on the third to last syllable, which no ending predicts; legal ends in l, so the default already puts the stress on the last syllable.",
+        "Legal is a borrowed word.",
+        "Ótimo is a noun and legal is an adjective."
+      ],
+      "answer": 1,
+      "explanation": "Stress on the third to last syllable is always marked. Words ending in l are stressed on the last syllable by default (le-GAL)."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why does português lose its accent in portuguesa?",
+      "choices": [
+        "The ending -a makes the vowel open.",
+        "Accents are never written on feminine words.",
+        "The new ending a defaults to stress on the second to last syllable, which is where the stress already falls.",
+        "The stress moves to the first syllable."
+      ],
+      "answer": 2,
+      "explanation": "Por-tu-GUE-sa: the default for an ending in a already gives the right syllable, so no mark is needed. The same happens in portugueses."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Eles são dos Estados Unidos. Why dos and not de os?",
+      "choices": [
+        "Dos is just the plural of de.",
+        "De must fuse with the article os, and Estados Unidos is plural and takes os.",
+        "Countries never take de.",
+        "It is only a spoken shortening and is written de os."
+      ],
+      "answer": 1,
+      "explanation": "A preposition and an article fuse into one word: de + os = dos. The fusion is compulsory in writing too."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Which pronoun takes the same form of ser as você?",
+      "choices": [
+        "nós",
+        "vocês",
+        "a gente",
+        "eu"
+      ],
+      "answer": 2,
+      "explanation": "A gente literally means 'the people', a third person noun phrase, so it takes é like você, ele and ela."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Eu ___ brasileiro.",
+      "answer": [
+        "sou"
+      ],
+      "hint_en": "I am Brazilian.",
+      "explanation": "Sou is the eu form of ser. Only eu takes sou."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Nós ___ amigos.",
+      "answer": [
+        "somos"
+      ],
+      "hint_en": "We are friends.",
+      "explanation": "Somos is the nós form of ser."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "A gente ___ de São Paulo.",
+      "answer": [
+        "é"
+      ],
+      "hint_en": "We are from São Paulo.",
+      "explanation": "A gente means 'we' but is grammatically third person singular, so the verb is é, not somos."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Eles ___ americanos.",
+      "answer": [
+        "são"
+      ],
+      "hint_en": "They are American.",
+      "explanation": "Vocês, eles and elas share the form são."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Eu sou ___ Brasil.",
+      "answer": [
+        "do"
+      ],
+      "hint_en": "I am from Brazil.",
+      "explanation": "De + o fuses into do, because o Brasil takes the article o."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Eu sou ___ Argentina.",
+      "answer": [
+        "da"
+      ],
+      "hint_en": "I am from Argentina.",
+      "explanation": "De + a fuses into da, because a Argentina takes the article a."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "A Ana é ___.",
+      "answer": [
+        "brasileira"
+      ],
+      "hint_en": "Ana is Brazilian.",
+      "explanation": "The nationality agrees with the person: a woman is brasileira."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Ela é ___.",
+      "answer": [
+        "francesa"
+      ],
+      "hint_en": "She is French.",
+      "explanation": "Francês adds -a for the feminine and loses its accent, because the ending a already puts the stress on the right syllable."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "O Carlos e a Ana são ___.",
+      "answer": [
+        "brasileiros"
+      ],
+      "hint_en": "Carlos and Ana are Brazilian.",
+      "explanation": "A mixed group takes the masculine plural."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "___ dia, Carlos!",
+      "answer": [
+        "bom"
+      ],
+      "hint_en": "Good morning, Carlos!",
+      "explanation": "Dia is masculine, so the adjective is bom. With tarde or noite it would be boa."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_pt": "Muito ___!",
+      "answer": [
+        "obrigada"
+      ],
+      "hint_en": "Thank you very much! (said by a woman)",
+      "explanation": "Obrigada is 'obliged' in the feminine, agreeing with the woman speaking."
+    },
+    {
+      "type": "translate_to_pt",
+      "prompt_en": "I am Marcos.",
+      "answers": [
+        "Eu sou o Marcos.",
+        "Eu sou Marcos.",
+        "Sou o Marcos.",
+        "Sou Marcos."
+      ],
+      "explanation": "The subject pronoun can be dropped, and the article before the name is optional."
+    },
+    {
+      "type": "translate_to_pt",
+      "prompt_en": "Where are you from? (to a friend)",
+      "answers": [
+        "De onde você é?",
+        "Você é de onde?",
+        "De onde é você?"
+      ],
+      "explanation": "These word orders are natural. No helper word is needed."
+    },
+    {
+      "type": "translate_to_pt",
+      "prompt_en": "She is from Argentina.",
+      "answers": [
+        "Ela é da Argentina.",
+        "É da Argentina."
+      ],
+      "explanation": "De + a fuses into da before a feminine country name."
+    },
+    {
+      "type": "translate_to_pt",
+      "prompt_en": "We are Brazilian. (a group of men)",
+      "answers": [
+        "Nós somos brasileiros.",
+        "Somos brasileiros.",
+        "A gente é brasileiro."
+      ],
+      "explanation": "Nós takes somos and the plural brasileiros. A gente is singular in form, so its verb is é, and in everyday speech the adjective usually stays singular."
+    },
+    {
+      "type": "translate_to_pt",
+      "prompt_en": "They are French. (all women)",
+      "answers": [
+        "Elas são francesas.",
+        "São francesas."
+      ],
+      "explanation": "Elas is for women only; francês becomes francesa, plural francesas."
+    },
+    {
+      "type": "order_words",
+      "prompt_en": "My name is Ana.",
+      "words": [
+        "Meu",
+        "nome",
+        "é",
+        "Ana."
+      ],
+      "distractors": [
+        "sou"
+      ]
+    },
+    {
+      "type": "order_words",
+      "prompt_en": "Where is he from?",
+      "words": [
+        "De",
+        "onde",
+        "ele",
+        "é?"
+      ],
+      "distractors": [
+        "são"
+      ]
+    },
+    {
+      "type": "order_words",
+      "prompt_en": "They are from Mexico.",
+      "words": [
+        "Eles",
+        "são",
+        "do",
+        "México."
+      ],
+      "distractors": [
+        "da",
+        "somos"
+      ],
+      "explanation": "México takes the masculine article o, so de + o gives do."
+    },
+    {
+      "type": "order_words",
+      "prompt_en": "We are from the United States.",
+      "words": [
+        "Nós",
+        "somos",
+        "dos",
+        "Estados",
+        "Unidos."
+      ],
+      "distractors": [
+        "do",
+        "da"
+      ],
+      "explanation": "Estados Unidos is plural and takes os, so de + os gives dos."
+    },
+    {
+      "type": "order_words",
+      "prompt_en": "This is Carlos, my friend.",
+      "words": [
+        "Este",
+        "é",
+        "o",
+        "Carlos,",
+        "meu",
+        "amigo."
+      ]
+    },
+    {
+      "type": "listening_choice",
+      "audio_pt": "Boa tarde, tudo bem?",
+      "choices": [
+        "Good afternoon, how are you?",
+        "Good morning, how are you?",
+        "Good night, see you tomorrow."
+      ],
+      "answer": 0
+    },
+    {
+      "type": "listening_choice",
+      "audio_pt": "Elas são francesas.",
+      "choices": [
+        "She is French.",
+        "They are French.",
+        "We are French."
+      ],
+      "answer": 1,
+      "explanation": "São is the plural form, and elas is the plural of ela."
+    },
+    {
+      "type": "listening_choice",
+      "audio_pt": "Ela é americana.",
+      "choices": [
+        "She is Canadian.",
+        "She is Brazilian.",
+        "She is American."
+      ],
+      "answer": 2
+    },
+    {
+      "type": "listening_choice",
+      "audio_pt": "Eu sou da Argentina.",
+      "choices": [
+        "I am from Brazil.",
+        "I am from Argentina.",
+        "I am from Mexico."
+      ],
+      "answer": 1
+    },
+    {
+      "type": "listening_choice",
+      "audio_pt": "Obrigada, de nada.",
+      "choices": [
+        "A woman says thank you and hears you're welcome.",
+        "A man says thank you and hears you're welcome.",
+        "Someone says sorry and hears it is fine."
+      ],
+      "answer": 0,
+      "explanation": "Obrigada is the feminine form, so the speaker is a woman."
+    },
+    {
+      "type": "dictation",
+      "audio_pt": "Bom dia, tudo bem?",
+      "hint_en": "Good morning, how are you?"
+    },
+    {
+      "type": "dictation",
+      "audio_pt": "Tchau, até amanhã!",
+      "hint_en": "Bye, see you tomorrow!",
+      "explanation": "Check the tch, the acute on até and the nh and tilde of amanhã."
+    },
+    {
+      "type": "dictation",
+      "audio_pt": "Você é português?",
+      "hint_en": "Are you Portuguese?",
+      "explanation": "Check the circumflex on você and on português."
+    },
+    {
+      "type": "match",
+      "prompt": "Match each expression with its literal, word-for-word meaning",
+      "pairs": [
+        {
+          "pt": "com licença",
+          "en": "with license"
+        },
+        {
+          "pt": "de nada",
+          "en": "of nothing"
+        },
+        {
+          "pt": "até logo",
+          "en": "until soon"
+        },
+        {
+          "pt": "tudo bem",
+          "en": "all well"
+        },
+        {
+          "pt": "obrigado",
+          "en": "obliged"
+        }
+      ],
+      "explanation": "The literal meaning shows the grammar inside each formula; the natural English equivalents are excuse me, you're welcome, see you later, how's it going and thank you."
+    },
+    {
+      "type": "match",
+      "prompt": "Match each word with the spelling rule that explains it",
+      "pairs": [
+        {
+          "pt": "você",
+          "en": "circumflex: stress on the last syllable, closed e"
+        },
+        {
+          "pt": "licença",
+          "en": "cedilla: ç says [s] before a"
+        },
+        {
+          "pt": "tchau",
+          "en": "tch spells the ch of cheese"
+        },
+        {
+          "pt": "amanhã",
+          "en": "nh spells the ny of canyon"
+        },
+        {
+          "pt": "bom",
+          "en": "final m makes the vowel nasal"
+        }
+      ],
+      "explanation": "Each mark or letter group has one fixed job."
+    },
+    {
+      "type": "match",
+      "prompt": "Match the pronoun with its meaning",
+      "pairs": [
+        {
+          "pt": "eu",
+          "en": "I"
+        },
+        {
+          "pt": "nós",
+          "en": "we"
+        },
+        {
+          "pt": "vocês",
+          "en": "you (plural)"
+        },
+        {
+          "pt": "elas",
+          "en": "they (all women)"
+        },
+        {
+          "pt": "ele",
+          "en": "he"
+        }
+      ]
+    }
   ]
 }
