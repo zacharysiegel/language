@@ -1,308 +1,1057 @@
 {
   "title": "Português do Brasil",
   "levels": [
-    {"code": "A1", "title": "Beginner"},
-    {"code": "A2", "title": "Elementary"},
-    {"code": "B1", "title": "Intermediate"},
-    {"code": "B2", "title": "Upper intermediate"}
+    {
+      "code": "A1",
+      "title": "Beginner"
+    },
+    {
+      "code": "A2",
+      "title": "Elementary"
+    },
+    {
+      "code": "B1",
+      "title": "Intermediate"
+    },
+    {
+      "code": "B2",
+      "title": "Upper intermediate"
+    }
   ],
   "units": [
     {
-      "id": "a1-01-greetings-introductions", "level": "A1", "order": 1,
+      "id": "a1-02-sounds-alphabet",
+      "level": "A1",
+      "order": 1,
+      "title": "Sounds, letters and the alphabet",
+      "goals": [
+        "Read any Portuguese word aloud from its spelling, because the spelling-to-sound rules are regular",
+        "Know every letter, its name, and the sound or sounds it can represent",
+        "Tell oral vowels from nasal vowels and recognize diphthongs",
+        "Know how letter combinations and position change a sound (c/ç/qu, g/gu/j, s, x, r/rr, lh, nh, ch, h, final l, t/d before i, final s)"
+      ],
+      "grammar": [
+        "The alphabet: 26 letters, their names, and the loan letters k, w, y",
+        "The seven oral vowels and the five nasal vowels, with the tilde and the m/n that nasalize",
+        "Diphthongs and triphthongs, and the ão/ães/õe endings",
+        "Consonants with more than one sound and the spelling rules that choose between them (c/ç/qu, g/gu/j, s/ss/z, x, r/rr, h, lh/nh/ch)",
+        "Sounds that depend on position in Brazilian Portuguese: final l, final s and z, t and d before i, unstressed final vowels"
+      ],
+      "vocabulary_themes": [
+        "words chosen only to illustrate each sound or spelling rule",
+        "letter names and spelling your own name aloud",
+        "minimal pairs that differ by one sound"
+      ]
+    },
+    {
+      "id": "a1-00-stress-and-diacritics",
+      "level": "A1",
+      "order": 2,
+      "title": "Stress and the accent marks",
+      "goals": [
+        "Know which syllable is stressed in a word without an accent mark",
+        "Know what each diacritic does: acute, circumflex, grave, tilde, cedilla",
+        "Explain why você, ônibus, avó, avô, café, português, está and pôde are written as they are",
+        "Read and write accents correctly, because they change pronunciation and sometimes meaning"
+      ],
+      "grammar": [
+        "Syllables and how to count them; the stressed syllable",
+        "The default stress rule by word ending, and why words that break it carry a written accent",
+        "The acute (open vowel or stress), the circumflex (closed vowel), the tilde (nasal), the grave (contraction only, crase) and the cedilla (ç)",
+        "Accent marks that distinguish pairs: pode/pôde, por/pôr, para/pára (old), avó/avô, é/e, está/esta",
+        "Accents in plurals and verb forms, and the post-2009 spelling reform (no trema, no accent in a few diphthongs and hiatus)"
+      ],
+      "vocabulary_themes": [
+        "words that show each accent mark and each stress pattern",
+        "minimal pairs that differ only by an accent or by stress",
+        "the vocabulary already seen in the previous lesson, now written with its accents explained"
+      ]
+    },
+    {
+      "id": "a1-00-how-portuguese-works",
+      "level": "A1",
+      "order": 3,
+      "title": "How Portuguese works: the big picture",
+      "goals": [
+        "See the structure of a Portuguese sentence and how it differs from English",
+        "Understand grammatical gender, number and agreement",
+        "Understand that verbs change for person and tense, and why subject pronouns are often dropped",
+        "Know the vocabulary of grammar used throughout this course: noun, article, adjective, verb, infinitive, conjugation, tense, mood, pronoun, preposition, contraction"
+      ],
+      "grammar": [
+        "Word order: subject, verb, object; adjectives usually after the noun; no \"do\" support for questions or negation",
+        "Nouns have gender (masculine or feminine) and number; articles and adjectives agree with them",
+        "Verbs: the infinitive (-ar, -er, -ir), conjugation by person and number, and the three regular patterns",
+        "Subject pronouns, the dropped subject, and the system of address in Brazil (você, a gente, tu, o senhor)",
+        "Prepositions and the contractions they form with articles (de+o = do, em+a = na)",
+        "Questions and negation: intonation, question words, and não before the verb"
+      ],
+      "vocabulary_themes": [
+        "the technical words for the parts of speech, in English and Portuguese",
+        "the very small set of function words used in every sentence (o, a, de, em, que, e, não)"
+      ]
+    },
+    {
+      "id": "a1-01-greetings-introductions",
+      "level": "A1",
+      "order": 4,
       "title": "Greetings and introductions",
-      "goals": ["Greet people at different times of day", "Introduce yourself and ask someone's name", "Say where you are from", "Use basic politeness expressions"],
-      "grammar": ["Subject pronouns: eu, você, ele, ela, nós, a gente, vocês, eles, elas", "Present of ser (eu sou, você é, ele é, nós somos, eles são)", "Fixed greeting formulas: tudo bem?, prazer, como vai?"],
-      "vocabulary_themes": ["greetings and farewells", "polite phrases (por favor, obrigado/obrigada, desculpa, com licença)", "countries and nationalities", "name and origin"]
+      "goals": [
+        "Greet people at different times of day",
+        "Introduce yourself and ask someone's name",
+        "Say where you are from",
+        "Use basic politeness expressions"
+      ],
+      "grammar": [
+        "Subject pronouns: eu, você, ele, ela, nós, a gente, vocês, eles, elas",
+        "Present of ser (eu sou, você é, ele é, nós somos, eles são)",
+        "Fixed greeting formulas: tudo bem?, prazer, como vai?"
+      ],
+      "vocabulary_themes": [
+        "greetings and farewells",
+        "polite phrases (por favor, obrigado/obrigada, desculpa, com licença)",
+        "countries and nationalities",
+        "name and origin"
+      ]
     },
     {
-      "id": "a1-02-sounds-alphabet", "level": "A1", "order": 2,
-      "title": "Sounds and the alphabet",
-      "goals": ["Pronounce Brazilian Portuguese vowels and consonants", "Recognize nasal vowels and diphthongs", "Spell your name aloud", "Place stress using written accents"],
-      "grammar": ["Oral vs nasal vowels (ã, õ, -m, -n, ão, ães, õe)", "Consonant digraphs: lh, nh, ch, rr, qu, gu", "Context-dependent sounds: r at start/end, s between vowels, final s as /s/ (Brazilian) , t/d before i (tchi, dji), final l as /w/", "Stress rules and accents: agudo, circunflexo, til, crase intro, cedilha"],
-      "vocabulary_themes": ["alphabet letter names", "words that illustrate each sound", "common first names and spelling them", "minimal pairs"]
-    },
-    {
-      "id": "a1-03-ser-estar-feelings", "level": "A1", "order": 3,
+      "id": "a1-03-ser-estar-feelings",
+      "level": "A1",
+      "order": 5,
       "title": "Ser, estar and how you feel",
-      "goals": ["Ask and answer 'Como você está?'", "Describe people with adjectives", "Distinguish permanent from temporary states in simple cases", "Describe how you feel"],
-      "grammar": ["Full present of ser and estar", "Ser vs estar: identity, origin, profession, characteristics vs location, temporary states, feelings", "Adjective agreement in gender and number", "Negation with não"],
-      "vocabulary_themes": ["adjectives for personality and appearance", "feelings and states (cansado, feliz, com fome, com sono)", "professions", "question words intro (quem, como, onde, o que)"]
+      "goals": [
+        "Ask and answer 'Como você está?'",
+        "Describe people with adjectives",
+        "Distinguish permanent from temporary states in simple cases",
+        "Describe how you feel"
+      ],
+      "grammar": [
+        "Full present of ser and estar",
+        "Ser vs estar: identity, origin, profession, characteristics vs location, temporary states, feelings",
+        "Adjective agreement in gender and number",
+        "Negation with não"
+      ],
+      "vocabulary_themes": [
+        "adjectives for personality and appearance",
+        "feelings and states (cansado, feliz, com fome, com sono)",
+        "professions",
+        "question words intro (quem, como, onde, o que)"
+      ]
     },
     {
-      "id": "a1-04-numbers-time", "level": "A1", "order": 4,
+      "id": "a1-04-numbers-time",
+      "level": "A1",
+      "order": 6,
       "title": "Numbers, time and dates",
-      "goals": ["Count from 0 to 100", "Say your age and phone number", "Tell the time", "Say days, months and dates"],
-      "grammar": ["Cardinal numbers 0-100", "Ter in the present and its use for age (tenho 30 anos)", "Telling time with 'É uma hora' vs 'São duas horas', 'meia', 'quinze', 'em ponto'", "Days of the week (feminine -feira), months, ordinal 'primeiro' for the first of the month"],
-      "vocabulary_themes": ["numbers", "days of the week", "months and seasons of the calendar", "time-of-day words (manhã, tarde, noite, meio-dia, meia-noite)"]
+      "goals": [
+        "Count from 0 to 100",
+        "Say your age and phone number",
+        "Tell the time",
+        "Say days, months and dates"
+      ],
+      "grammar": [
+        "Cardinal numbers 0-100",
+        "Ter in the present and its use for age (tenho 30 anos)",
+        "Telling time with 'É uma hora' vs 'São duas horas', 'meia', 'quinze', 'em ponto'",
+        "Days of the week (feminine -feira), months, ordinal 'primeiro' for the first of the month"
+      ],
+      "vocabulary_themes": [
+        "numbers",
+        "days of the week",
+        "months and seasons of the calendar",
+        "time-of-day words (manhã, tarde, noite, meio-dia, meia-noite)"
+      ]
     },
     {
-      "id": "a1-05-family-possessives", "level": "A1", "order": 5,
+      "id": "a1-05-family-possessives",
+      "level": "A1",
+      "order": 7,
       "title": "Family, articles and possessives",
-      "goals": ["Talk about your family", "Use definite and indefinite articles correctly", "Form plurals", "Express possession"],
-      "grammar": ["Definite (o, a, os, as) and indefinite (um, uma, uns, umas) articles; noun gender", "Regular plural formation including -ão, -l, -m endings", "Possessives meu/minha/seu/sua/nosso/nossa and dele/dela/deles/delas for clarity", "Ter in the present; 'de' for possession (o carro da Ana)"],
-      "vocabulary_themes": ["family members", "pets", "describing relatives (age, appearance)", "marital status"]
+      "goals": [
+        "Talk about your family",
+        "Use definite and indefinite articles correctly",
+        "Form plurals",
+        "Express possession"
+      ],
+      "grammar": [
+        "Definite (o, a, os, as) and indefinite (um, uma, uns, umas) articles; noun gender",
+        "Regular plural formation including -ão, -l, -m endings",
+        "Possessives meu/minha/seu/sua/nosso/nossa and dele/dela/deles/delas for clarity",
+        "Ter in the present; 'de' for possession (o carro da Ana)"
+      ],
+      "vocabulary_themes": [
+        "family members",
+        "pets",
+        "describing relatives (age, appearance)",
+        "marital status"
+      ]
     },
     {
-      "id": "a1-06-food-drinks-ordering", "level": "A1", "order": 6,
+      "id": "a1-06-food-drinks-ordering",
+      "level": "A1",
+      "order": 8,
       "title": "Food, drinks and ordering",
-      "goals": ["Order in a restaurant, padaria and lanchonete", "Say what you like and want", "Talk about meals", "Ask for the bill"],
-      "grammar": ["Regular present tense: -ar (falar), -er (comer), -ir (partir/abrir)", "Querer, gostar de, preferir, 'eu queria' for polite requests, 'me vê' / 'quero' in service contexts", "Questions with 'você quer/gosta de...?' and intonation questions", "Partitive usage: 'um pouco de', 'mais', 'menos'"],
-      "vocabulary_themes": ["Brazilian breakfast and everyday food (pão na chapa, café com leite, pão de queijo, arroz e feijão)", "fruits, vegetables, meat", "drinks (suco, refrigerante, cafezinho, cerveja)", "restaurant phrases (cardápio, a conta, por quilo, prato feito)"]
+      "goals": [
+        "Order in a restaurant, padaria and lanchonete",
+        "Say what you like and want",
+        "Talk about meals",
+        "Ask for the bill"
+      ],
+      "grammar": [
+        "Regular present tense: -ar (falar), -er (comer), -ir (partir/abrir)",
+        "Querer, gostar de, preferir, 'eu queria' for polite requests, 'me vê' / 'quero' in service contexts",
+        "Questions with 'você quer/gosta de...?' and intonation questions",
+        "Partitive usage: 'um pouco de', 'mais', 'menos'"
+      ],
+      "vocabulary_themes": [
+        "Brazilian breakfast and everyday food (pão na chapa, café com leite, pão de queijo, arroz e feijão)",
+        "fruits, vegetables, meat",
+        "drinks (suco, refrigerante, cafezinho, cerveja)",
+        "restaurant phrases (cardápio, a conta, por quilo, prato feito)"
+      ]
     },
     {
-      "id": "a1-07-daily-routine", "level": "A1", "order": 7,
+      "id": "a1-07-daily-routine",
+      "level": "A1",
+      "order": 9,
       "title": "Daily routine",
-      "goals": ["Describe a typical day", "Use time expressions and frequency adverbs", "Ask about someone's routine", "Talk about work and study schedules"],
-      "grammar": ["Reflexive verbs in the Brazilian pattern (eu me levanto, ele se veste), proclitic placement", "Irregular presents: fazer, ir, sair, ver, dar, ler, pôr", "Frequency adverbs: sempre, geralmente, às vezes, nunca, todo dia", "Prepositions of time: às, de manhã/à tarde/à noite, de segunda a sexta, por volta de"],
-      "vocabulary_themes": ["daily activities (acordar, tomar banho, escovar os dentes, trabalhar, estudar)", "meals and times", "commuting (ônibus, metrô, trem, carro)", "household chores"]
+      "goals": [
+        "Describe a typical day",
+        "Use time expressions and frequency adverbs",
+        "Ask about someone's routine",
+        "Talk about work and study schedules"
+      ],
+      "grammar": [
+        "Reflexive verbs in the Brazilian pattern (eu me levanto, ele se veste), proclitic placement",
+        "Irregular presents: fazer, ir, sair, ver, dar, ler, pôr",
+        "Frequency adverbs: sempre, geralmente, às vezes, nunca, todo dia",
+        "Prepositions of time: às, de manhã/à tarde/à noite, de segunda a sexta, por volta de"
+      ],
+      "vocabulary_themes": [
+        "daily activities (acordar, tomar banho, escovar os dentes, trabalhar, estudar)",
+        "meals and times",
+        "commuting (ônibus, metrô, trem, carro)",
+        "household chores"
+      ]
     },
     {
-      "id": "a1-08-places-directions", "level": "A1", "order": 8,
+      "id": "a1-08-places-directions",
+      "level": "A1",
+      "order": 10,
       "title": "Places and directions",
-      "goals": ["Name places in a city", "Ask for and give directions", "Say where things are", "Use ir and estar for movement and location"],
-      "grammar": ["Ir in the present; ir a/para; estar em", "Prepositional contractions: de+o=do, em+o=no, a+o=ao, por+o=pelo and with a/os/as", "Prepositions of place: perto de, longe de, ao lado de, em frente a, atrás de, entre, em cima de", "Imperative-like directions: vire, siga, atravesse, continue (você form)"],
-      "vocabulary_themes": ["city places (banco, farmácia, mercado, praça, rodoviária, ponto de ônibus)", "directions (direita, esquerda, em frente, esquina, quadra)", "ordinal numbers", "asking for help (Onde fica...?, Como chego...?)"]
+      "goals": [
+        "Name places in a city",
+        "Ask for and give directions",
+        "Say where things are",
+        "Use ir and estar for movement and location"
+      ],
+      "grammar": [
+        "Ir in the present; ir a/para; estar em",
+        "Prepositional contractions: de+o=do, em+o=no, a+o=ao, por+o=pelo and with a/os/as",
+        "Prepositions of place: perto de, longe de, ao lado de, em frente a, atrás de, entre, em cima de",
+        "Imperative-like directions: vire, siga, atravesse, continue (você form)"
+      ],
+      "vocabulary_themes": [
+        "city places (banco, farmácia, mercado, praça, rodoviária, ponto de ônibus)",
+        "directions (direita, esquerda, em frente, esquina, quadra)",
+        "ordinal numbers",
+        "asking for help (Onde fica...?, Como chego...?)"
+      ]
     },
     {
-      "id": "a1-09-shopping-colors-prices", "level": "A1", "order": 9,
+      "id": "a1-09-shopping-colors-prices",
+      "level": "A1",
+      "order": 11,
       "title": "Shopping, colors and prices",
-      "goals": ["Ask for prices and sizes", "Describe clothes and colors", "Bargain politely", "Use demonstratives"],
-      "grammar": ["Demonstratives este/esse/aquele and isto/isso/aquilo with the Brazilian everyday tendency to use esse/essa for both near and mid distance", "Numbers 100 to 1,000,000; reais and centavos", "Adjective placement and agreement for colors", "Questions: quanto custa/quanto é/quanto está, qual, quais"],
-      "vocabulary_themes": ["clothes and accessories", "colors", "sizes (P, M, G, número)", "payment (dinheiro, cartão, Pix, parcelado, desconto)"]
+      "goals": [
+        "Ask for prices and sizes",
+        "Describe clothes and colors",
+        "Bargain politely",
+        "Use demonstratives"
+      ],
+      "grammar": [
+        "Demonstratives este/esse/aquele and isto/isso/aquilo with the Brazilian everyday tendency to use esse/essa for both near and mid distance",
+        "Numbers 100 to 1,000,000; reais and centavos",
+        "Adjective placement and agreement for colors",
+        "Questions: quanto custa/quanto é/quanto está, qual, quais"
+      ],
+      "vocabulary_themes": [
+        "clothes and accessories",
+        "colors",
+        "sizes (P, M, G, número)",
+        "payment (dinheiro, cartão, Pix, parcelado, desconto)"
+      ]
     },
     {
-      "id": "a1-10-home-housing", "level": "A1", "order": 10,
+      "id": "a1-10-home-housing",
+      "level": "A1",
+      "order": 12,
       "title": "Home and housing",
-      "goals": ["Describe your home", "Say what exists in a place", "Rent or ask about an apartment", "Use location words for furniture"],
-      "grammar": ["Existential 'tem' (colloquial) and 'há' (formal): Tem um sofá na sala", "Muito/pouco/bastante/tanto as adjectives and adverbs", "Estar + location, ficar for location", "Adjectives for describing places (grande, pequeno, claro, barulhento)"],
-      "vocabulary_themes": ["rooms and parts of the house", "furniture and appliances", "apartment vs casa, condomínio, aluguel", "neighbourhood and utilities"]
+      "goals": [
+        "Describe your home",
+        "Say what exists in a place",
+        "Rent or ask about an apartment",
+        "Use location words for furniture"
+      ],
+      "grammar": [
+        "Existential 'tem' (colloquial) and 'há' (formal): Tem um sofá na sala",
+        "Muito/pouco/bastante/tanto as adjectives and adverbs",
+        "Estar + location, ficar for location",
+        "Adjectives for describing places (grande, pequeno, claro, barulhento)"
+      ],
+      "vocabulary_themes": [
+        "rooms and parts of the house",
+        "furniture and appliances",
+        "apartment vs casa, condomínio, aluguel",
+        "neighbourhood and utilities"
+      ]
     },
     {
-      "id": "a1-11-plans-weather-leisure", "level": "A1", "order": 11,
+      "id": "a1-11-plans-weather-leisure",
+      "level": "A1",
+      "order": 13,
       "title": "Plans, weather and leisure",
-      "goals": ["Talk about future plans with ir + infinitive", "Describe weather", "Invite someone and accept or decline", "Talk about hobbies"],
-      "grammar": ["Near future: ir + infinitive (eu vou viajar amanhã)", "Poder, querer, saber, precisar, dever + infinitive", "Weather expressions: está calor, faz frio, está chovendo, tem sol", "Invitations: 'Vamos...?', 'Que tal...?', 'Você topa?', declining politely"],
-      "vocabulary_themes": ["weather and seasons in Brazil", "hobbies and sports (futebol, praia, churrasco, academia)", "weekend activities", "invitations and plans"]
+      "goals": [
+        "Talk about future plans with ir + infinitive",
+        "Describe weather",
+        "Invite someone and accept or decline",
+        "Talk about hobbies"
+      ],
+      "grammar": [
+        "Near future: ir + infinitive (eu vou viajar amanhã)",
+        "Poder, querer, saber, precisar, dever + infinitive",
+        "Weather expressions: está calor, faz frio, está chovendo, tem sol",
+        "Invitations: 'Vamos...?', 'Que tal...?', 'Você topa?', declining politely"
+      ],
+      "vocabulary_themes": [
+        "weather and seasons in Brazil",
+        "hobbies and sports (futebol, praia, churrasco, academia)",
+        "weekend activities",
+        "invitations and plans"
+      ]
     },
     {
-      "id": "a1-12-consolidation", "level": "A1", "order": 12,
+      "id": "a1-12-consolidation",
+      "level": "A1",
+      "order": 14,
       "title": "A1 consolidation",
-      "goals": ["Combine A1 skills in realistic conversations", "Introduce yourself in detail", "Handle simple situations: cafe, shop, directions, small talk", "Review key grammar and vocabulary"],
-      "grammar": ["Review: pronouns, ser/estar/ter/ir, present regular and irregular, articles, contractions, ir + infinitive", "Question formation review", "Common beginner errors (ser vs estar, gender agreement, contractions, ter vs haver)", "Connecting sentences with e, mas, porque, então"],
-      "vocabulary_themes": ["mixed review of A1 vocabulary", "small talk", "self description", "survival phrases (não entendi, fala mais devagar, como se diz...?)"]
+      "goals": [
+        "Combine A1 skills in realistic conversations",
+        "Introduce yourself in detail",
+        "Handle simple situations: cafe, shop, directions, small talk",
+        "Review key grammar and vocabulary"
+      ],
+      "grammar": [
+        "Review: pronouns, ser/estar/ter/ir, present regular and irregular, articles, contractions, ir + infinitive",
+        "Question formation review",
+        "Common beginner errors (ser vs estar, gender agreement, contractions, ter vs haver)",
+        "Connecting sentences with e, mas, porque, então"
+      ],
+      "vocabulary_themes": [
+        "mixed review of A1 vocabulary",
+        "small talk",
+        "self description",
+        "survival phrases (não entendi, fala mais devagar, como se diz...?)"
+      ]
     },
-
     {
-      "id": "a2-01-past-regular", "level": "A2", "order": 13,
+      "id": "a2-01-past-regular",
+      "level": "A2",
+      "order": 15,
       "title": "The past: regular preterite",
-      "goals": ["Say what you did yesterday and last weekend", "Ask questions about past events", "Use past time markers"],
-      "grammar": ["Pretérito perfeito of regular -ar, -er, -ir verbs, all persons with the Brazilian a gente / eles usage", "Spelling changes: -car/-çar/-gar (toquei, comecei, paguei)", "Past time markers: ontem, anteontem, semana passada, há dois dias, faz um mês", "Past questions and negation"],
-      "vocabulary_themes": ["weekend and daily activities in the past", "time markers", "verbs of everyday action", "social events (festa, show, jantar, aniversário)"]
+      "goals": [
+        "Say what you did yesterday and last weekend",
+        "Ask questions about past events",
+        "Use past time markers"
+      ],
+      "grammar": [
+        "Pretérito perfeito of regular -ar, -er, -ir verbs, all persons with the Brazilian a gente / eles usage",
+        "Spelling changes: -car/-çar/-gar (toquei, comecei, paguei)",
+        "Past time markers: ontem, anteontem, semana passada, há dois dias, faz um mês",
+        "Past questions and negation"
+      ],
+      "vocabulary_themes": [
+        "weekend and daily activities in the past",
+        "time markers",
+        "verbs of everyday action",
+        "social events (festa, show, jantar, aniversário)"
+      ]
     },
     {
-      "id": "a2-02-irregular-preterite", "level": "A2", "order": 14,
+      "id": "a2-02-irregular-preterite",
+      "level": "A2",
+      "order": 16,
       "title": "The past: irregular preterite",
-      "goals": ["Use the most common irregular past forms", "Narrate a short story in sequence", "Talk about a trip or an event"],
-      "grammar": ["ser/ir (fui, foi, fomos, foram), ter, estar, fazer, dar, ver, vir, poder, querer, dizer, trazer, pôr, saber", "Stem-changing and vowel-change patterns in the preterite", "Sequencing words: primeiro, depois, em seguida, então, por fim", "Contrast preterite vs present perfect meaning (Brazilian prefers the simple past)"],
-      "vocabulary_themes": ["storytelling verbs", "sequence connectors", "life events", "holidays and trips"]
+      "goals": [
+        "Use the most common irregular past forms",
+        "Narrate a short story in sequence",
+        "Talk about a trip or an event"
+      ],
+      "grammar": [
+        "ser/ir (fui, foi, fomos, foram), ter, estar, fazer, dar, ver, vir, poder, querer, dizer, trazer, pôr, saber",
+        "Stem-changing and vowel-change patterns in the preterite",
+        "Sequencing words: primeiro, depois, em seguida, então, por fim",
+        "Contrast preterite vs present perfect meaning (Brazilian prefers the simple past)"
+      ],
+      "vocabulary_themes": [
+        "storytelling verbs",
+        "sequence connectors",
+        "life events",
+        "holidays and trips"
+      ]
     },
     {
-      "id": "a2-03-imperfect", "level": "A2", "order": 15,
+      "id": "a2-03-imperfect",
+      "level": "A2",
+      "order": 17,
       "title": "The imperfect: habits and descriptions",
-      "goals": ["Talk about childhood and past habits", "Describe past scenes and states", "Use 'costumava' and 'quando eu era...'"],
-      "grammar": ["Pretérito imperfeito: regular forms and irregulars ser, ter, vir, pôr", "Uses: habits, descriptions, ongoing background, ages, time and weather in the past", "Costumar + infinitive; 'sempre' with the imperfect", "Imperfect progressive: estava + gerund"],
-      "vocabulary_themes": ["childhood and school", "memories and nostalgia", "old vs modern life", "hometown descriptions"]
+      "goals": [
+        "Talk about childhood and past habits",
+        "Describe past scenes and states",
+        "Use 'costumava' and 'quando eu era...'"
+      ],
+      "grammar": [
+        "Pretérito imperfeito: regular forms and irregulars ser, ter, vir, pôr",
+        "Uses: habits, descriptions, ongoing background, ages, time and weather in the past",
+        "Costumar + infinitive; 'sempre' with the imperfect",
+        "Imperfect progressive: estava + gerund"
+      ],
+      "vocabulary_themes": [
+        "childhood and school",
+        "memories and nostalgia",
+        "old vs modern life",
+        "hometown descriptions"
+      ]
     },
     {
-      "id": "a2-04-preterite-vs-imperfect", "level": "A2", "order": 16,
+      "id": "a2-04-preterite-vs-imperfect",
+      "level": "A2",
+      "order": 18,
       "title": "Preterite versus imperfect",
-      "goals": ["Choose correctly between the two past tenses", "Tell a story with background and events", "Explain what was happening when something occurred"],
-      "grammar": ["Event vs background: while an action was ongoing when another happened (estava... quando...)", "Verbs that change meaning (saber, conhecer, querer, poder, ter) in the preterite vs imperfect", "Narrative structure: setting, trigger, result", "Time connectors: enquanto, quando, de repente, naquele dia"],
-      "vocabulary_themes": ["accidents and surprises", "news-style storytelling", "feelings in the past", "excuses and explanations (atrasei porque...)"]
+      "goals": [
+        "Choose correctly between the two past tenses",
+        "Tell a story with background and events",
+        "Explain what was happening when something occurred"
+      ],
+      "grammar": [
+        "Event vs background: while an action was ongoing when another happened (estava... quando...)",
+        "Verbs that change meaning (saber, conhecer, querer, poder, ter) in the preterite vs imperfect",
+        "Narrative structure: setting, trigger, result",
+        "Time connectors: enquanto, quando, de repente, naquele dia"
+      ],
+      "vocabulary_themes": [
+        "accidents and surprises",
+        "news-style storytelling",
+        "feelings in the past",
+        "excuses and explanations (atrasei porque...)"
+      ]
     },
     {
-      "id": "a2-05-health-body", "level": "A2", "order": 17,
+      "id": "a2-05-health-body",
+      "level": "A2",
+      "order": 19,
       "title": "Health and the body",
-      "goals": ["Name body parts", "Describe symptoms at the doctor or pharmacy", "Understand simple medical advice", "Express pain and need"],
-      "grammar": ["Doer: dói / doem with indirect objects (Dói a cabeça / Me dói a cabeça); 'estar com' + noun for symptoms", "Ter que/precisar/dever + infinitive for advice", "Affirmative and negative imperative forms for advice (tome, não coma)", "Reflexive and possessive with body parts (lavar as mãos, meu braço)"],
-      "vocabulary_themes": ["body parts", "illnesses and symptoms (gripe, febre, dor de cabeça, tosse)", "pharmacy and SUS / plano de saúde", "healthy habits"]
+      "goals": [
+        "Name body parts",
+        "Describe symptoms at the doctor or pharmacy",
+        "Understand simple medical advice",
+        "Express pain and need"
+      ],
+      "grammar": [
+        "Doer: dói / doem with indirect objects (Dói a cabeça / Me dói a cabeça); 'estar com' + noun for symptoms",
+        "Ter que/precisar/dever + infinitive for advice",
+        "Affirmative and negative imperative forms for advice (tome, não coma)",
+        "Reflexive and possessive with body parts (lavar as mãos, meu braço)"
+      ],
+      "vocabulary_themes": [
+        "body parts",
+        "illnesses and symptoms (gripe, febre, dor de cabeça, tosse)",
+        "pharmacy and SUS / plano de saúde",
+        "healthy habits"
+      ]
     },
     {
-      "id": "a2-06-travel-transport", "level": "A2", "order": 18,
+      "id": "a2-06-travel-transport",
+      "level": "A2",
+      "order": 20,
       "title": "Travel and transport",
-      "goals": ["Buy tickets and book accommodation", "Navigate airports and bus stations", "Ask about schedules", "Describe a trip"],
-      "grammar": ["Preposition use with transport (de ônibus, de avião, a pé, em casa) and destinations (ir a/para/em)", "Querer/gostar de/precisar in the conditional-polite 'eu queria/gostaria'", "Time and schedule expressions: sai às, chega às, demora, a partir de", "Review of past tenses in trip narratives"],
-      "vocabulary_themes": ["airport and bus station (passagem, embarque, bagagem, rodoviária)", "hotels and pousadas", "tourism in Brazil", "directions and transit (metrô, trem, Uber, táxi)"]
+      "goals": [
+        "Buy tickets and book accommodation",
+        "Navigate airports and bus stations",
+        "Ask about schedules",
+        "Describe a trip"
+      ],
+      "grammar": [
+        "Preposition use with transport (de ônibus, de avião, a pé, em casa) and destinations (ir a/para/em)",
+        "Querer/gostar de/precisar in the conditional-polite 'eu queria/gostaria'",
+        "Time and schedule expressions: sai às, chega às, demora, a partir de",
+        "Review of past tenses in trip narratives"
+      ],
+      "vocabulary_themes": [
+        "airport and bus station (passagem, embarque, bagagem, rodoviária)",
+        "hotels and pousadas",
+        "tourism in Brazil",
+        "directions and transit (metrô, trem, Uber, táxi)"
+      ]
     },
     {
-      "id": "a2-07-comparatives-superlatives", "level": "A2", "order": 19,
+      "id": "a2-07-comparatives-superlatives",
+      "level": "A2",
+      "order": 21,
       "title": "Comparing things and people",
-      "goals": ["Compare two things", "Say something is the best or the most", "Express equality and difference", "Give opinions about places and products"],
-      "grammar": ["mais/menos + adjective + (do) que; tão... quanto; tanto/tantos... quanto", "Irregular comparatives: melhor, pior, maior, menor, mais velho/mais novo", "Superlatives: o mais/menos... de; -íssimo", "Prefer and 'mais ou menos', 'igual', 'parecido com', 'diferente de'"],
-      "vocabulary_themes": ["adjectives for evaluation (caro, barato, rápido, confortável, divertido)", "cities and regions of Brazil", "products and brands", "ranking and opinions"]
+      "goals": [
+        "Compare two things",
+        "Say something is the best or the most",
+        "Express equality and difference",
+        "Give opinions about places and products"
+      ],
+      "grammar": [
+        "mais/menos + adjective + (do) que; tão... quanto; tanto/tantos... quanto",
+        "Irregular comparatives: melhor, pior, maior, menor, mais velho/mais novo",
+        "Superlatives: o mais/menos... de; -íssimo",
+        "Prefer and 'mais ou menos', 'igual', 'parecido com', 'diferente de'"
+      ],
+      "vocabulary_themes": [
+        "adjectives for evaluation (caro, barato, rápido, confortável, divertido)",
+        "cities and regions of Brazil",
+        "products and brands",
+        "ranking and opinions"
+      ]
     },
     {
-      "id": "a2-08-imperative-instructions", "level": "A2", "order": 20,
+      "id": "a2-08-imperative-instructions",
+      "level": "A2",
+      "order": 22,
       "title": "Instructions and the imperative",
-      "goals": ["Give and follow instructions", "Read and write simple recipes", "Make polite requests and prohibitions", "Give directions with the imperative"],
-      "grammar": ["Imperative with você/vocês (derived from the present subjunctive stem), affirmative and negative", "Irregular imperatives: seja, vá, dê, saiba, esteja", "Imperative with reflexive and object pronouns in Brazilian speech (me ajuda, me diz)", "Impersonal instructions with infinitive (Não fumar) and the use of 'dá pra' / 'pode'"],
-      "vocabulary_themes": ["recipe verbs and measures", "kitchen vocabulary", "signs and rules", "classroom and workplace instructions"]
+      "goals": [
+        "Give and follow instructions",
+        "Read and write simple recipes",
+        "Make polite requests and prohibitions",
+        "Give directions with the imperative"
+      ],
+      "grammar": [
+        "Imperative with você/vocês (derived from the present subjunctive stem), affirmative and negative",
+        "Irregular imperatives: seja, vá, dê, saiba, esteja",
+        "Imperative with reflexive and object pronouns in Brazilian speech (me ajuda, me diz)",
+        "Impersonal instructions with infinitive (Não fumar) and the use of 'dá pra' / 'pode'"
+      ],
+      "vocabulary_themes": [
+        "recipe verbs and measures",
+        "kitchen vocabulary",
+        "signs and rules",
+        "classroom and workplace instructions"
+      ]
     },
     {
-      "id": "a2-09-object-pronouns", "level": "A2", "order": 21,
+      "id": "a2-09-object-pronouns",
+      "level": "A2",
+      "order": 23,
       "title": "Object pronouns",
-      "goals": ["Replace nouns with pronouns", "Understand direct and indirect objects", "Use 'me', 'te', 'lhe', 'o/a' and the colloquial alternatives naturally"],
-      "grammar": ["Direct vs indirect objects; me, te, nos as both; o/a/os/as; lhe/lhes", "Brazilian colloquial pattern: ele/ela as object, dropping o/a, 'vi ele', 'te amo', 'me liga'", "Placement: before the verb in speech (me disse), after in formal writing (disse-me) and with ir + infinitive", "Pronouns with prepositions: para mim, comigo, contigo, conosco; o verbo 'dar' + indirect pronoun"],
-      "vocabulary_themes": ["giving and receiving (dar, emprestar, mandar, entregar)", "communication verbs (ligar, avisar, contar)", "shopping and service interactions", "relationships"]
+      "goals": [
+        "Replace nouns with pronouns",
+        "Understand direct and indirect objects",
+        "Use 'me', 'te', 'lhe', 'o/a' and the colloquial alternatives naturally"
+      ],
+      "grammar": [
+        "Direct vs indirect objects; me, te, nos as both; o/a/os/as; lhe/lhes",
+        "Brazilian colloquial pattern: ele/ela as object, dropping o/a, 'vi ele', 'te amo', 'me liga'",
+        "Placement: before the verb in speech (me disse), after in formal writing (disse-me) and with ir + infinitive",
+        "Pronouns with prepositions: para mim, comigo, contigo, conosco; o verbo 'dar' + indirect pronoun"
+      ],
+      "vocabulary_themes": [
+        "giving and receiving (dar, emprestar, mandar, entregar)",
+        "communication verbs (ligar, avisar, contar)",
+        "shopping and service interactions",
+        "relationships"
+      ]
     },
     {
-      "id": "a2-10-progressive-work", "level": "A2", "order": 22,
+      "id": "a2-10-progressive-work",
+      "level": "A2",
+      "order": 24,
       "title": "Work, jobs and the progressive",
-      "goals": ["Talk about your job and workplace", "Say what is happening now", "Handle simple phone calls and messages", "Use estar + gerund and ficar"],
-      "grammar": ["Present progressive: estar + gerund (-ando, -endo, -indo) and irregular gerunds (pondo, vindo, dizendo)", "Ficar: stay, become, be located, 'fiquei sabendo'", "Present vs progressive: habit vs ongoing action", "Time expressions: agora, neste momento, atualmente, ainda, já"],
-      "vocabulary_themes": ["jobs and workplaces", "office and phone phrases (alô, quem fala?, vou transferir, um momento)", "WhatsApp and messaging language", "meetings and schedules"]
+      "goals": [
+        "Talk about your job and workplace",
+        "Say what is happening now",
+        "Handle simple phone calls and messages",
+        "Use estar + gerund and ficar"
+      ],
+      "grammar": [
+        "Present progressive: estar + gerund (-ando, -endo, -indo) and irregular gerunds (pondo, vindo, dizendo)",
+        "Ficar: stay, become, be located, 'fiquei sabendo'",
+        "Present vs progressive: habit vs ongoing action",
+        "Time expressions: agora, neste momento, atualmente, ainda, já"
+      ],
+      "vocabulary_themes": [
+        "jobs and workplaces",
+        "office and phone phrases (alô, quem fala?, vou transferir, um momento)",
+        "WhatsApp and messaging language",
+        "meetings and schedules"
+      ]
     },
     {
-      "id": "a2-11-future-conditional", "level": "A2", "order": 23,
+      "id": "a2-11-future-conditional",
+      "level": "A2",
+      "order": 25,
       "title": "Future and polite requests",
-      "goals": ["Talk about the future in more than one way", "Make polite requests and suggestions", "Express wishes and hypotheticals lightly"],
-      "grammar": ["Simple future of regular and the irregular verbs (farei, direi, trarei) vs the colloquial ir + infinitive", "Conditional (futuro do pretérito) for politeness: gostaria, poderia, deveria, seria", "Suggestions and advice: 'Por que você não...?', 'Se eu fosse você...' (introduced as fixed phrases)", "Probability with the future and 'deve ser'"],
-      "vocabulary_themes": ["predictions and plans", "polite service language", "dreams and wishes", "making appointments"]
+      "goals": [
+        "Talk about the future in more than one way",
+        "Make polite requests and suggestions",
+        "Express wishes and hypotheticals lightly"
+      ],
+      "grammar": [
+        "Simple future of regular and the irregular verbs (farei, direi, trarei) vs the colloquial ir + infinitive",
+        "Conditional (futuro do pretérito) for politeness: gostaria, poderia, deveria, seria",
+        "Suggestions and advice: 'Por que você não...?', 'Se eu fosse você...' (introduced as fixed phrases)",
+        "Probability with the future and 'deve ser'"
+      ],
+      "vocabulary_themes": [
+        "predictions and plans",
+        "polite service language",
+        "dreams and wishes",
+        "making appointments"
+      ]
     },
     {
-      "id": "a2-12-consolidation", "level": "A2", "order": 24,
+      "id": "a2-12-consolidation",
+      "level": "A2",
+      "order": 26,
       "title": "A2 consolidation",
-      "goals": ["Tell a story using several past tenses", "Write a short email or message", "Handle extended everyday conversations", "Review key A2 structures"],
-      "grammar": ["Review: preterite, imperfect, progressive, comparatives, imperative, object pronouns, future", "Connectors: mas, porém, então, por isso, porque, quando, enquanto, embora (intro)", "Common A2 errors (pretérito vs imperfeito, pronoun placement, gender and number)", "Writing short messages and emails with simple structure"],
-      "vocabulary_themes": ["mixed review", "informal and formal messages", "storytelling", "everyday problem solving (reclamar, trocar, cancelar, remarcar)"]
+      "goals": [
+        "Tell a story using several past tenses",
+        "Write a short email or message",
+        "Handle extended everyday conversations",
+        "Review key A2 structures"
+      ],
+      "grammar": [
+        "Review: preterite, imperfect, progressive, comparatives, imperative, object pronouns, future",
+        "Connectors: mas, porém, então, por isso, porque, quando, enquanto, embora (intro)",
+        "Common A2 errors (pretérito vs imperfeito, pronoun placement, gender and number)",
+        "Writing short messages and emails with simple structure"
+      ],
+      "vocabulary_themes": [
+        "mixed review",
+        "informal and formal messages",
+        "storytelling",
+        "everyday problem solving (reclamar, trocar, cancelar, remarcar)"
+      ]
     },
-
     {
-      "id": "b1-01-present-perfect-participles", "level": "B1", "order": 25,
+      "id": "b1-01-present-perfect-participles",
+      "level": "B1",
+      "order": 27,
       "title": "Compound past and participles",
-      "goals": ["Use the Portuguese present perfect (ter + particípio) correctly", "Form regular and irregular participles", "Use 'acabar de' and 'já/ainda não'"],
-      "grammar": ["Pretérito perfeito composto: repeated or continuing action up to now (tenho estudado), unlike the English present perfect", "Regular and irregular participles (feito, dito, visto, aberto, escrito, posto, vindo; ganho/ganhado, pago/pagado)", "Acabar de + infinitive, ter + participle with já/ainda/nunca/ultimamente", "Participles as adjectives with agreement (cansado, aberta, escritos)"],
-      "vocabulary_themes": ["life experiences and achievements", "recent news", "habits and changes", "problems and solutions"]
+      "goals": [
+        "Use the Portuguese present perfect (ter + particípio) correctly",
+        "Form regular and irregular participles",
+        "Use 'acabar de' and 'já/ainda não'"
+      ],
+      "grammar": [
+        "Pretérito perfeito composto: repeated or continuing action up to now (tenho estudado), unlike the English present perfect",
+        "Regular and irregular participles (feito, dito, visto, aberto, escrito, posto, vindo; ganho/ganhado, pago/pagado)",
+        "Acabar de + infinitive, ter + participle with já/ainda/nunca/ultimamente",
+        "Participles as adjectives with agreement (cansado, aberta, escritos)"
+      ],
+      "vocabulary_themes": [
+        "life experiences and achievements",
+        "recent news",
+        "habits and changes",
+        "problems and solutions"
+      ]
     },
     {
-      "id": "b1-02-present-subjunctive", "level": "B1", "order": 26,
+      "id": "b1-02-present-subjunctive",
+      "level": "B1",
+      "order": 28,
       "title": "The present subjunctive",
-      "goals": ["Form the present subjunctive", "Use it after verbs of desire, request and emotion", "Use it after 'talvez', 'tomara' and similar expressions"],
-      "grammar": ["Formation from the eu form of the present (falar -> fale; fazer -> faça), irregulars (ser, estar, ir, ter, saber, querer, haver, dar)", "Triggers: querer que, esperar que, pedir que, desejar que, tomara que, talvez", "Same-subject infinitive vs different-subject que + subjunctive", "Fixed expressions: Que Deus te abençoe, Que bom!, Bom proveito!"],
-      "vocabulary_themes": ["wishes and requests", "emotions and reactions", "relationships and expectations", "greetings and blessings"]
+      "goals": [
+        "Form the present subjunctive",
+        "Use it after verbs of desire, request and emotion",
+        "Use it after 'talvez', 'tomara' and similar expressions"
+      ],
+      "grammar": [
+        "Formation from the eu form of the present (falar -> fale; fazer -> faça), irregulars (ser, estar, ir, ter, saber, querer, haver, dar)",
+        "Triggers: querer que, esperar que, pedir que, desejar que, tomara que, talvez",
+        "Same-subject infinitive vs different-subject que + subjunctive",
+        "Fixed expressions: Que Deus te abençoe, Que bom!, Bom proveito!"
+      ],
+      "vocabulary_themes": [
+        "wishes and requests",
+        "emotions and reactions",
+        "relationships and expectations",
+        "greetings and blessings"
+      ]
     },
     {
-      "id": "b1-03-subjunctive-opinion-doubt", "level": "B1", "order": 27,
+      "id": "b1-03-subjunctive-opinion-doubt",
+      "level": "B1",
+      "order": 29,
       "title": "Subjunctive: opinion, doubt and purpose",
-      "goals": ["Express doubt, opinion and necessity with the subjunctive", "Use conjunctions that require it", "Contrast indicative and subjunctive meaning"],
-      "grammar": ["Impersonal expressions: é importante/necessário/possível/provável que, é bom/pena que", "Doubt vs certainty: duvidar que, não acho que (subjunctive) vs acho que, tenho certeza que (indicative)", "Conjunctions: para que, caso, embora, a menos que, sem que, contanto que, antes que", "Negative and questioned opinion verbs"],
-      "vocabulary_themes": ["opinions and judgments", "social issues", "plans with conditions", "advice and recommendations"]
+      "goals": [
+        "Express doubt, opinion and necessity with the subjunctive",
+        "Use conjunctions that require it",
+        "Contrast indicative and subjunctive meaning"
+      ],
+      "grammar": [
+        "Impersonal expressions: é importante/necessário/possível/provável que, é bom/pena que",
+        "Doubt vs certainty: duvidar que, não acho que (subjunctive) vs acho que, tenho certeza que (indicative)",
+        "Conjunctions: para que, caso, embora, a menos que, sem que, contanto que, antes que",
+        "Negative and questioned opinion verbs"
+      ],
+      "vocabulary_themes": [
+        "opinions and judgments",
+        "social issues",
+        "plans with conditions",
+        "advice and recommendations"
+      ]
     },
     {
-      "id": "b1-04-future-subjunctive", "level": "B1", "order": 28,
+      "id": "b1-04-future-subjunctive",
+      "level": "B1",
+      "order": 30,
       "title": "The future subjunctive",
-      "goals": ["Use the future subjunctive in time and condition clauses", "Say 'when I arrive' and 'if you want'", "Contrast with the infinitive and indicative"],
-      "grammar": ["Formation from the third person plural of the preterite (falar -> falarem -> falar, falares, falar, falarmos, falarem)", "Irregular forms: for, fizer, tiver, estiver, vier, puder, quiser, disser, pôr -> puser", "Quando, assim que, depois que, logo que, enquanto, sempre que + future subjunctive for future events", "Se + future subjunctive for real conditions: Se você quiser, eu ajudo"],
-      "vocabulary_themes": ["future plans and conditions", "promises and agreements", "business and logistics", "weather and travel plans"]
+      "goals": [
+        "Use the future subjunctive in time and condition clauses",
+        "Say 'when I arrive' and 'if you want'",
+        "Contrast with the infinitive and indicative"
+      ],
+      "grammar": [
+        "Formation from the third person plural of the preterite (falar -> falarem -> falar, falares, falar, falarmos, falarem)",
+        "Irregular forms: for, fizer, tiver, estiver, vier, puder, quiser, disser, pôr -> puser",
+        "Quando, assim que, depois que, logo que, enquanto, sempre que + future subjunctive for future events",
+        "Se + future subjunctive for real conditions: Se você quiser, eu ajudo"
+      ],
+      "vocabulary_themes": [
+        "future plans and conditions",
+        "promises and agreements",
+        "business and logistics",
+        "weather and travel plans"
+      ]
     },
     {
-      "id": "b1-05-imperfect-subjunctive-conditionals", "level": "B1", "order": 29,
+      "id": "b1-05-imperfect-subjunctive-conditionals",
+      "level": "B1",
+      "order": 31,
       "title": "Imperfect subjunctive and hypotheticals",
-      "goals": ["Talk about unreal and hypothetical situations", "Give advice with 'se eu fosse você'", "Use the conditional with if-clauses"],
-      "grammar": ["Imperfect subjunctive formed from the third person plural of the preterite (falasse, comesse, partisse; fosse, tivesse, fizesse)", "Se + imperfect subjunctive + conditional: Se eu tivesse tempo, viajaria mais", "Pedir/querer in the past + que + imperfect subjunctive (Eu queria que você viesse)", "Wish expressions: Quem me dera, Tomara que, Quem dera"],
-      "vocabulary_themes": ["dreams and regrets", "hypothetical choices", "advice", "lifestyle and money"]
+      "goals": [
+        "Talk about unreal and hypothetical situations",
+        "Give advice with 'se eu fosse você'",
+        "Use the conditional with if-clauses"
+      ],
+      "grammar": [
+        "Imperfect subjunctive formed from the third person plural of the preterite (falasse, comesse, partisse; fosse, tivesse, fizesse)",
+        "Se + imperfect subjunctive + conditional: Se eu tivesse tempo, viajaria mais",
+        "Pedir/querer in the past + que + imperfect subjunctive (Eu queria que você viesse)",
+        "Wish expressions: Quem me dera, Tomara que, Quem dera"
+      ],
+      "vocabulary_themes": [
+        "dreams and regrets",
+        "hypothetical choices",
+        "advice",
+        "lifestyle and money"
+      ]
     },
     {
-      "id": "b1-06-relatives-connectors", "level": "B1", "order": 30,
+      "id": "b1-06-relatives-connectors",
+      "level": "B1",
+      "order": 32,
       "title": "Relative clauses and connectors",
-      "goals": ["Build longer sentences with relative pronouns", "Link ideas with connectors", "Write coherent paragraphs"],
-      "grammar": ["Relative pronouns: que, quem, onde, o que, o qual, cujo/cuja, com quem, em que, de que", "Prepositions before relatives (a pessoa com quem falei, o lugar de que gosto) and the colloquial 'que eu gosto'", "Connectors: porém, contudo, entretanto, no entanto, portanto, logo, apesar de, mesmo que, já que, visto que, uma vez que", "Conjunctions in the indicative vs subjunctive review"],
-      "vocabulary_themes": ["description of people and places in more detail", "written argument words", "cause and effect", "contrast and concession"]
+      "goals": [
+        "Build longer sentences with relative pronouns",
+        "Link ideas with connectors",
+        "Write coherent paragraphs"
+      ],
+      "grammar": [
+        "Relative pronouns: que, quem, onde, o que, o qual, cujo/cuja, com quem, em que, de que",
+        "Prepositions before relatives (a pessoa com quem falei, o lugar de que gosto) and the colloquial 'que eu gosto'",
+        "Connectors: porém, contudo, entretanto, no entanto, portanto, logo, apesar de, mesmo que, já que, visto que, uma vez que",
+        "Conjunctions in the indicative vs subjunctive review"
+      ],
+      "vocabulary_themes": [
+        "description of people and places in more detail",
+        "written argument words",
+        "cause and effect",
+        "contrast and concession"
+      ]
     },
     {
-      "id": "b1-07-passive-impersonal", "level": "B1", "order": 31,
+      "id": "b1-07-passive-impersonal",
+      "level": "B1",
+      "order": 33,
       "title": "Passive and impersonal constructions",
-      "goals": ["Use the passive voice", "Use the pronoun 'se' as passive and impersonal marker", "Read signs and announcements"],
-      "grammar": ["Passive with ser + participle + por (O livro foi escrito por...)", "Passive-reflexive 'se' (Vende-se casa, Aluga-se apartamento) and impersonal 'se' (Precisa-se de)", "Estar + participle for results (A porta está aberta)", "Indeterminate subject with third person plural (Falam que...) and 'a gente', 'você' in impersonal speech"],
-      "vocabulary_themes": ["news headlines and announcements", "signs and notices", "history and invention", "rules and regulations"]
+      "goals": [
+        "Use the passive voice",
+        "Use the pronoun 'se' as passive and impersonal marker",
+        "Read signs and announcements"
+      ],
+      "grammar": [
+        "Passive with ser + participle + por (O livro foi escrito por...)",
+        "Passive-reflexive 'se' (Vende-se casa, Aluga-se apartamento) and impersonal 'se' (Precisa-se de)",
+        "Estar + participle for results (A porta está aberta)",
+        "Indeterminate subject with third person plural (Falam que...) and 'a gente', 'você' in impersonal speech"
+      ],
+      "vocabulary_themes": [
+        "news headlines and announcements",
+        "signs and notices",
+        "history and invention",
+        "rules and regulations"
+      ]
     },
     {
-      "id": "b1-08-personal-infinitive", "level": "B1", "order": 32,
+      "id": "b1-08-personal-infinitive",
+      "level": "B1",
+      "order": 34,
       "title": "The personal infinitive",
-      "goals": ["Recognize and use the inflected infinitive", "Decide when it is needed or optional", "Understand it in formal and literary texts"],
-      "grammar": ["Formation: infinitive + -es, -mos, -em (falares, falarmos, falarem)", "Use when the infinitive's subject differs from the main clause (É melhor vocês irem; Para nós sairmos)", "After prepositions: antes de, depois de, sem, para, por (Depois de chegarmos...)", "Optional vs required; colloquial speech often uses the plain infinitive or the subjunctive"],
-      "vocabulary_themes": ["formal notices and requests", "teamwork and responsibilities", "reasons and purposes", "school and work obligations"]
+      "goals": [
+        "Recognize and use the inflected infinitive",
+        "Decide when it is needed or optional",
+        "Understand it in formal and literary texts"
+      ],
+      "grammar": [
+        "Formation: infinitive + -es, -mos, -em (falares, falarmos, falarem)",
+        "Use when the infinitive's subject differs from the main clause (É melhor vocês irem; Para nós sairmos)",
+        "After prepositions: antes de, depois de, sem, para, por (Depois de chegarmos...)",
+        "Optional vs required; colloquial speech often uses the plain infinitive or the subjunctive"
+      ],
+      "vocabulary_themes": [
+        "formal notices and requests",
+        "teamwork and responsibilities",
+        "reasons and purposes",
+        "school and work obligations"
+      ]
     },
     {
-      "id": "b1-09-work-bureaucracy", "level": "B1", "order": 33,
+      "id": "b1-09-work-bureaucracy",
+      "level": "B1",
+      "order": 35,
       "title": "Work, bureaucracy and formal register",
-      "goals": ["Write formal emails and messages", "Handle interviews and office situations", "Deal with documents and public services", "Use formal and informal registers appropriately"],
-      "grammar": ["Formal register: o senhor / a senhora, Prezado(a), Atenciosamente, Cordialmente", "Request formulas: Gostaria de solicitar, Poderia me informar, Venho por meio desta", "Formal vs informal verb choice and address (tu/você/o senhor and regional variation)", "Reported requests and polite refusals"],
-      "vocabulary_themes": ["documents (CPF, RG, CNH, certidão, comprovante de residência)", "jobs, CV and interviews", "banking and taxes", "public services (cartório, Receita Federal, prefeitura, INSS)"]
+      "goals": [
+        "Write formal emails and messages",
+        "Handle interviews and office situations",
+        "Deal with documents and public services",
+        "Use formal and informal registers appropriately"
+      ],
+      "grammar": [
+        "Formal register: o senhor / a senhora, Prezado(a), Atenciosamente, Cordialmente",
+        "Request formulas: Gostaria de solicitar, Poderia me informar, Venho por meio desta",
+        "Formal vs informal verb choice and address (tu/você/o senhor and regional variation)",
+        "Reported requests and polite refusals"
+      ],
+      "vocabulary_themes": [
+        "documents (CPF, RG, CNH, certidão, comprovante de residência)",
+        "jobs, CV and interviews",
+        "banking and taxes",
+        "public services (cartório, Receita Federal, prefeitura, INSS)"
+      ]
     },
     {
-      "id": "b1-10-opinions-debate", "level": "B1", "order": 34,
+      "id": "b1-10-opinions-debate",
+      "level": "B1",
+      "order": 36,
       "title": "Opinions, news and debate",
-      "goals": ["State and defend an opinion", "Agree and disagree politely", "Discuss news and current topics", "Summarize what someone said"],
-      "grammar": ["Opinion expressions: Na minha opinião, Eu acho que, Pra mim, Concordo/Discordo, Tenho a impressão de que", "Hedging and softening: de certa forma, até certo ponto, pelo menos", "Intro to reported speech: ele disse que, ela perguntou se, pediu para", "Review of subjunctive vs indicative in argument"],
-      "vocabulary_themes": ["media and news", "social topics (educação, saúde, trânsito, tecnologia, meio ambiente)", "agreement and disagreement phrases", "politics and society in neutral terms"]
+      "goals": [
+        "State and defend an opinion",
+        "Agree and disagree politely",
+        "Discuss news and current topics",
+        "Summarize what someone said"
+      ],
+      "grammar": [
+        "Opinion expressions: Na minha opinião, Eu acho que, Pra mim, Concordo/Discordo, Tenho a impressão de que",
+        "Hedging and softening: de certa forma, até certo ponto, pelo menos",
+        "Intro to reported speech: ele disse que, ela perguntou se, pediu para",
+        "Review of subjunctive vs indicative in argument"
+      ],
+      "vocabulary_themes": [
+        "media and news",
+        "social topics (educação, saúde, trânsito, tecnologia, meio ambiente)",
+        "agreement and disagreement phrases",
+        "politics and society in neutral terms"
+      ]
     },
-
     {
-      "id": "b2-01-reported-speech", "level": "B2", "order": 35,
+      "id": "b2-01-reported-speech",
+      "level": "B2",
+      "order": 37,
       "title": "Reported speech",
-      "goals": ["Report statements, questions and commands", "Handle tense shifts", "Summarize conversations accurately"],
-      "grammar": ["Tense backshift: presente -> imperfeito, perfeito -> mais-que-perfeito, futuro -> condicional, imperative -> subjunctive", "Reporting verbs: afirmar, declarar, sugerir, prometer, negar, avisar, pedir, mandar", "Indirect questions with se and question words; pronoun and time-reference changes (hoje -> naquele dia, aqui -> lá)", "Colloquial pattern: 'ele falou que vem' (present kept) vs formal backshift"],
-      "vocabulary_themes": ["reporting verbs", "news and interviews", "gossip and everyday retelling", "meetings and minutes"]
+      "goals": [
+        "Report statements, questions and commands",
+        "Handle tense shifts",
+        "Summarize conversations accurately"
+      ],
+      "grammar": [
+        "Tense backshift: presente -> imperfeito, perfeito -> mais-que-perfeito, futuro -> condicional, imperative -> subjunctive",
+        "Reporting verbs: afirmar, declarar, sugerir, prometer, negar, avisar, pedir, mandar",
+        "Indirect questions with se and question words; pronoun and time-reference changes (hoje -> naquele dia, aqui -> lá)",
+        "Colloquial pattern: 'ele falou que vem' (present kept) vs formal backshift"
+      ],
+      "vocabulary_themes": [
+        "reporting verbs",
+        "news and interviews",
+        "gossip and everyday retelling",
+        "meetings and minutes"
+      ]
     },
     {
-      "id": "b2-02-pluperfect-compound-tenses", "level": "B2", "order": 36,
+      "id": "b2-02-pluperfect-compound-tenses",
+      "level": "B2",
+      "order": 38,
       "title": "Pluperfect and other compound tenses",
-      "goals": ["Use the pluperfect to talk about earlier past actions", "Form compound subjunctive tenses", "Express regret and unfulfilled past hypotheticals"],
-      "grammar": ["Mais-que-perfeito composto (tinha feito) and simple (fizera, literary)", "Future perfect (terei feito) and conditional perfect (teria feito)", "Perfect subjunctive and pluperfect subjunctive: tenha feito, tivesse feito; Se eu tivesse sabido, teria ido", "Ter/haver as auxiliary; formal vs colloquial frequency"],
-      "vocabulary_themes": ["regret and missed opportunities", "life stories and biographies", "causes and consequences", "history and chronology"]
+      "goals": [
+        "Use the pluperfect to talk about earlier past actions",
+        "Form compound subjunctive tenses",
+        "Express regret and unfulfilled past hypotheticals"
+      ],
+      "grammar": [
+        "Mais-que-perfeito composto (tinha feito) and simple (fizera, literary)",
+        "Future perfect (terei feito) and conditional perfect (teria feito)",
+        "Perfect subjunctive and pluperfect subjunctive: tenha feito, tivesse feito; Se eu tivesse sabido, teria ido",
+        "Ter/haver as auxiliary; formal vs colloquial frequency"
+      ],
+      "vocabulary_themes": [
+        "regret and missed opportunities",
+        "life stories and biographies",
+        "causes and consequences",
+        "history and chronology"
+      ]
     },
     {
-      "id": "b2-03-idioms-slang-regional", "level": "B2", "order": 37,
+      "id": "b2-03-idioms-slang-regional",
+      "level": "B2",
+      "order": 39,
       "title": "Idioms, slang and regional speech",
-      "goals": ["Understand common Brazilian slang and idioms", "Recognize regional accents and vocabulary", "Use discourse markers naturally"],
-      "grammar": ["Discourse markers: tipo, né, então, aí, pô, cara, mano, tá, pois é, sei lá, é isso", "Regional variation: carioca, paulista, mineiro, nordestino, gaúcho (tu vs você, mandioca/aipim/macaxeira, bergamota/mexerica/tangerina)", "Idioms (dar um jeito, ficar de olho, pagar o pato, estar nas nuvens, ficar de boa, dar bola, cair a ficha)", "Register: gíria vs vulgaridade vs formal; informal contractions (tá, pra, cê, num, tô, né, vamo)"],
-      "vocabulary_themes": ["slang and fillers", "regional food and words", "idioms with body parts and animals", "reactions and interjections (nossa, caramba, putz, eita, uai, bah)"]
+      "goals": [
+        "Understand common Brazilian slang and idioms",
+        "Recognize regional accents and vocabulary",
+        "Use discourse markers naturally"
+      ],
+      "grammar": [
+        "Discourse markers: tipo, né, então, aí, pô, cara, mano, tá, pois é, sei lá, é isso",
+        "Regional variation: carioca, paulista, mineiro, nordestino, gaúcho (tu vs você, mandioca/aipim/macaxeira, bergamota/mexerica/tangerina)",
+        "Idioms (dar um jeito, ficar de olho, pagar o pato, estar nas nuvens, ficar de boa, dar bola, cair a ficha)",
+        "Register: gíria vs vulgaridade vs formal; informal contractions (tá, pra, cê, num, tô, né, vamo)"
+      ],
+      "vocabulary_themes": [
+        "slang and fillers",
+        "regional food and words",
+        "idioms with body parts and animals",
+        "reactions and interjections (nossa, caramba, putz, eita, uai, bah)"
+      ]
     },
     {
-      "id": "b2-04-pronoun-placement-advanced", "level": "B2", "order": 38,
+      "id": "b2-04-pronoun-placement-advanced",
+      "level": "B2",
+      "order": 40,
       "title": "Advanced pronouns and placement",
-      "goals": ["Control formal pronoun placement in writing", "Understand clitic combinations", "Use 'se' in all its roles"],
-      "grammar": ["Enclisis, proclisis and mesoclisis (disse-me, não me disse, dar-lhe-ei) rules and when each is triggered", "Combined pronouns (mo, to, lho, lha) in formal and literary Portuguese and their colloquial substitutes", "Functions of 'se': reflexive, reciprocal, passive, impersonal, inherent (arrepender-se), emphasis", "Pronouns with ir + infinitive and with compound tenses"],
-      "vocabulary_themes": ["formal writing and literature", "legal and administrative phrases", "pronominal verbs", "reciprocal actions"]
+      "goals": [
+        "Control formal pronoun placement in writing",
+        "Understand clitic combinations",
+        "Use 'se' in all its roles"
+      ],
+      "grammar": [
+        "Enclisis, proclisis and mesoclisis (disse-me, não me disse, dar-lhe-ei) rules and when each is triggered",
+        "Combined pronouns (mo, to, lho, lha) in formal and literary Portuguese and their colloquial substitutes",
+        "Functions of 'se': reflexive, reciprocal, passive, impersonal, inherent (arrepender-se), emphasis",
+        "Pronouns with ir + infinitive and with compound tenses"
+      ],
+      "vocabulary_themes": [
+        "formal writing and literature",
+        "legal and administrative phrases",
+        "pronominal verbs",
+        "reciprocal actions"
+      ]
     },
     {
-      "id": "b2-05-literature-poetry", "level": "B2", "order": 39,
+      "id": "b2-05-literature-poetry",
+      "level": "B2",
+      "order": 41,
       "title": "Reading literature and poetry",
-      "goals": ["Read short literary excerpts", "Understand figurative language", "Discuss a text's meaning"],
-      "grammar": ["Literary tenses and word order: inversion, mesoclisis, simple pluperfect", "Figures of speech: metáfora, comparação, ironia, personificação, hipérbole", "Reading strategies: context clues, word families, prefixes and suffixes", "Diminutives and augmentatives (-inho, -zinho, -ão, -ona) with affective meaning"],
-      "vocabulary_themes": ["literary vocabulary", "emotions and nature imagery", "Machado de Assis (public-domain excerpts)", "Gonçalves Dias 'Canção do exílio' and other public-domain poems"]
+      "goals": [
+        "Read short literary excerpts",
+        "Understand figurative language",
+        "Discuss a text's meaning"
+      ],
+      "grammar": [
+        "Literary tenses and word order: inversion, mesoclisis, simple pluperfect",
+        "Figures of speech: metáfora, comparação, ironia, personificação, hipérbole",
+        "Reading strategies: context clues, word families, prefixes and suffixes",
+        "Diminutives and augmentatives (-inho, -zinho, -ão, -ona) with affective meaning"
+      ],
+      "vocabulary_themes": [
+        "literary vocabulary",
+        "emotions and nature imagery",
+        "Machado de Assis (public-domain excerpts)",
+        "Gonçalves Dias 'Canção do exílio' and other public-domain poems"
+      ]
     },
     {
-      "id": "b2-06-formal-writing", "level": "B2", "order": 40,
+      "id": "b2-06-formal-writing",
+      "level": "B2",
+      "order": 42,
       "title": "Formal writing and registers",
-      "goals": ["Write structured essays and formal letters", "Adapt tone to context", "Use cohesive devices"],
-      "grammar": ["Essay structure: introdução, desenvolvimento, conclusão, with connectors (em primeiro lugar, ademais, por conseguinte, em suma)", "Formal address and closing formulas; avoiding colloquial contractions", "Nominalization and concise noun phrases", "Punctuation, crase, and spelling after the orthographic agreement (hífen rules, trema removal)"],
-      "vocabulary_themes": ["academic and professional vocabulary", "argumentation phrases", "cover letters and reports", "ENEM-style essay language"]
+      "goals": [
+        "Write structured essays and formal letters",
+        "Adapt tone to context",
+        "Use cohesive devices"
+      ],
+      "grammar": [
+        "Essay structure: introdução, desenvolvimento, conclusão, with connectors (em primeiro lugar, ademais, por conseguinte, em suma)",
+        "Formal address and closing formulas; avoiding colloquial contractions",
+        "Nominalization and concise noun phrases",
+        "Punctuation, crase, and spelling after the orthographic agreement (hífen rules, trema removal)"
+      ],
+      "vocabulary_themes": [
+        "academic and professional vocabulary",
+        "argumentation phrases",
+        "cover letters and reports",
+        "ENEM-style essay language"
+      ]
     },
     {
-      "id": "b2-07-brazilian-culture-history", "level": "B2", "order": 41,
+      "id": "b2-07-brazilian-culture-history",
+      "level": "B2",
+      "order": 43,
       "title": "Brazilian culture, regions and history",
-      "goals": ["Read and discuss texts about Brazil", "Talk about regions, festivals and traditions", "Understand major historical periods"],
-      "grammar": ["Reading comprehension strategies and extended texts", "Historical narration: preterite, imperfect, pluperfect, passive", "Expressing cause, consequence and chronology in written Portuguese", "Numbers, dates and percentages in formal texts"],
-      "vocabulary_themes": ["regions and states (Norte, Nordeste, Centro-Oeste, Sudeste, Sul)", "festivals (Carnaval, Festa Junina, Círio de Nazaré, Parintins)", "history: colonização, independência, república, imigração", "music and food culture (samba, choro, forró, MPB, feijoada, acarajé, moqueca)"]
+      "goals": [
+        "Read and discuss texts about Brazil",
+        "Talk about regions, festivals and traditions",
+        "Understand major historical periods"
+      ],
+      "grammar": [
+        "Reading comprehension strategies and extended texts",
+        "Historical narration: preterite, imperfect, pluperfect, passive",
+        "Expressing cause, consequence and chronology in written Portuguese",
+        "Numbers, dates and percentages in formal texts"
+      ],
+      "vocabulary_themes": [
+        "regions and states (Norte, Nordeste, Centro-Oeste, Sudeste, Sul)",
+        "festivals (Carnaval, Festa Junina, Círio de Nazaré, Parintins)",
+        "history: colonização, independência, república, imigração",
+        "music and food culture (samba, choro, forró, MPB, feijoada, acarajé, moqueca)"
+      ]
     },
     {
-      "id": "b2-08-capstone", "level": "B2", "order": 42,
+      "id": "b2-08-capstone",
+      "level": "B2",
+      "order": 44,
       "title": "B2 capstone: argument and nuance",
-      "goals": ["Argue a position with nuance", "Switch registers", "Combine all tenses and moods fluently", "Understand fast, natural speech"],
-      "grammar": ["Full review of indicative, subjunctive, conditional, personal infinitive and pronoun placement", "Nuance: concessive and adversative structures (por mais que, ainda que, mesmo assim, apesar disso)", "Emphasis structures: foi... que, é que, quem... é, o que... é", "Review of common B2 errors and advanced idiomatic usage"],
-      "vocabulary_themes": ["abstract topics (ética, identidade, tecnologia, desigualdade, sustentabilidade)", "idiomatic expressions in context", "debate phrases", "mixed advanced review"]
+      "goals": [
+        "Argue a position with nuance",
+        "Switch registers",
+        "Combine all tenses and moods fluently",
+        "Understand fast, natural speech"
+      ],
+      "grammar": [
+        "Full review of indicative, subjunctive, conditional, personal infinitive and pronoun placement",
+        "Nuance: concessive and adversative structures (por mais que, ainda que, mesmo assim, apesar disso)",
+        "Emphasis structures: foi... que, é que, quem... é, o que... é",
+        "Review of common B2 errors and advanced idiomatic usage"
+      ],
+      "vocabulary_themes": [
+        "abstract topics (ética, identidade, tecnologia, desigualdade, sustentabilidade)",
+        "idiomatic expressions in context",
+        "debate phrases",
+        "mixed advanced review"
+      ]
     }
   ]
 }
