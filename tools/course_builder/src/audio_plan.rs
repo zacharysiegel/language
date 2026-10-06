@@ -5,46 +5,40 @@ use shared::course::{
     Dialogue, Exercise, GrammarNote, PhrasePair, Reading, SpeakerGenderKind, Unit, VocabularyItem,
 };
 
-use crate::speech_engine::{PersonaKind, SpeechEngineKind, VoiceProfile};
+use crate::speech_engine::{LISTENING_PERSONA_COUNT, PersonaKind};
 
-const AUDIO_PATH_PREFIX: &str = "audio/";
 const FILE_NAME_HASH_CHARACTERS: usize = 20;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Utterance {
-    pub profile: VoiceProfile,
+    pub persona: PersonaKind,
     pub text: String,
 }
 
-/// Every distinct spoken clip of a compiled course, keyed by the file name it is stored under.
-#[derive(Debug)]
+/// Every distinct spoken clip of a compiled course, keyed by the file name it has in each engine's directory.
+#[derive(Debug, Default)]
 pub struct AudioPlan {
-    pub engine: SpeechEngineKind,
     pub utterances: BTreeMap<String, Utterance>,
 }
 
 impl AudioPlan {
-    pub fn new(engine: SpeechEngineKind) -> AudioPlan {
-        AudioPlan {
-            engine,
-            utterances: BTreeMap::new(),
-        }
+    pub fn new() -> AudioPlan {
+        AudioPlan::default()
     }
 
     fn audio_path_for(&mut self, text: &str, persona: PersonaKind) -> String {
-        let profile: VoiceProfile = self.engine.profile_for(persona);
-        let identity: String = format!("{}\n{}\n{:.2}\n{text}", self.engine.code(), profile.voice_id, profile.speed);
+        let identity: String = format!("{}\n{text}", persona.key());
         let file_name: String = format!("{}.m4a", &sha256_hex(&identity)[..FILE_NAME_HASH_CHARACTERS]);
 
         self.utterances.insert(
             file_name.clone(),
             Utterance {
-                profile,
+                persona,
                 text: text.to_string(),
             },
         );
 
-        format!("{AUDIO_PATH_PREFIX}{file_name}")
+        file_name
     }
 
     fn narrate(&mut self, text: &str) -> Option<String> {
@@ -52,7 +46,7 @@ impl AudioPlan {
     }
 
     fn voice_listening_exercise(&mut self, text: &str) -> Option<String> {
-        let voice_index: usize = hash_bucket(text, self.engine.listening_pool_size());
+        let voice_index: usize = hash_bucket(text, LISTENING_PERSONA_COUNT);
 
         Some(self.audio_path_for(text, PersonaKind::ListeningExercise(voice_index)))
     }
@@ -146,7 +140,7 @@ mod tests {
 
     #[test]
     fn audio_path_for_is_deterministic_and_voice_specific() {
-        let mut plan: AudioPlan = AudioPlan::new(SpeechEngineKind::Kokoro);
+        let mut plan: AudioPlan = AudioPlan::new();
 
         let first: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
         let repeated: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
@@ -155,18 +149,7 @@ mod tests {
         assert_eq!(first, repeated);
         assert_ne!(first, other_voice);
         assert_eq!(plan.utterances.len(), 2);
-        assert!(first.starts_with("audio/") && first.ends_with(".m4a"));
-    }
-
-    #[test]
-    fn audio_path_for_differs_between_engines() {
-        let mut kokoro_plan: AudioPlan = AudioPlan::new(SpeechEngineKind::Kokoro);
-        let mut say_plan: AudioPlan = AudioPlan::new(SpeechEngineKind::MacosSay);
-
-        assert_ne!(
-            kokoro_plan.audio_path_for("Olá", PersonaKind::Narrator),
-            say_plan.audio_path_for("Olá", PersonaKind::Narrator),
-        );
+        assert!(first.ends_with(".m4a"));
     }
 
     #[test]

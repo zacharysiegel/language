@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 
 use shared::AppError;
 
+use crate::speech_engine::SpeechEngineKind;
+
 const WORKSPACE_MANIFEST_TABLE: &str = "[workspace]";
 const CURRICULUM_PATH: &str = "data/curriculum.json";
 const UNITS_DIRECTORY: &str = "data/units";
@@ -39,6 +41,10 @@ impl WorkspacePaths {
 
     pub fn audio_directory(&self) -> PathBuf {
         self.compiled_course_directory.join("audio")
+    }
+
+    pub fn engine_audio_directory(&self, engine: SpeechEngineKind) -> PathBuf {
+        self.audio_directory().join(engine.code())
     }
 }
 

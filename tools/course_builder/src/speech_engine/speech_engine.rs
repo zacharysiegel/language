@@ -12,6 +12,13 @@ pub struct VoiceProfile {
     pub speed: f32,
 }
 
+/// What an engine is asked to speak: the text and the voice it has for the persona.
+#[derive(Debug, Clone, PartialEq)]
+pub struct ResolvedUtterance {
+    pub profile: VoiceProfile,
+    pub text: String,
+}
+
 /// Who is speaking a clip, independent of the engine that voices it.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PersonaKind {
@@ -54,6 +61,8 @@ const MACOS_MALE_SPEAKERS: [VoiceProfile; 3] = [
     profile("Eddy (Portuguese (Brazil))", 1.0),
     profile("Rocko (Portuguese (Brazil))", 1.0),
 ];
+pub const LISTENING_PERSONA_COUNT: usize = 6;
+
 const MACOS_LISTENING_POOL: [VoiceProfile; 7] = [
     profile("Luciana", 1.0),
     profile("Flo (Portuguese (Brazil))", 1.0),
@@ -64,11 +73,30 @@ const MACOS_LISTENING_POOL: [VoiceProfile; 7] = [
     profile("Rocko (Portuguese (Brazil))", 1.0),
 ];
 
+impl PersonaKind {
+    pub fn key(self) -> String {
+        match self {
+            PersonaKind::Narrator => "narrator".to_string(),
+            PersonaKind::FemaleSpeaker(index) => format!("female_{index}"),
+            PersonaKind::MaleSpeaker(index) => format!("male_{index}"),
+            PersonaKind::ListeningExercise(index) => format!("listening_{index}"),
+        }
+    }
+}
+
 impl SpeechEngineKind {
     pub fn code(self) -> &'static str {
         match self {
-            SpeechEngineKind::Kokoro => "kokoro_pipeline_3",
+            SpeechEngineKind::Kokoro => "kokoro",
             SpeechEngineKind::MacosSay => "macos_say",
+        }
+    }
+
+    /* Changes when the synthesis pipeline alters its output, which discards the engine's existing clips. */
+    pub fn pipeline_revision(self) -> u32 {
+        match self {
+            SpeechEngineKind::Kokoro => 3,
+            SpeechEngineKind::MacosSay => 1,
         }
     }
 
@@ -85,12 +113,6 @@ impl SpeechEngineKind {
         }
     }
 
-    pub fn listening_pool_size(self) -> usize {
-        match self {
-            SpeechEngineKind::Kokoro => KOKORO_LISTENING_POOL.len(),
-            SpeechEngineKind::MacosSay => MACOS_LISTENING_POOL.len(),
-        }
-    }
 }
 
 #[cfg(test)]

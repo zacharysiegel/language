@@ -10,7 +10,7 @@ A Brazilian Portuguese course for English speakers, from A1 to B2: 44 units that
 
 That compiles the course data and synthesizes the audio on the first run, then serves http://127.0.0.1:3000 with `cargo leptos watch`. The audio is spoken by the Kokoro neural voices, run locally through ONNX Runtime with eSpeak NG for the phonemes. The first run downloads about 370 MB of pinned model files into `models/` (checked against checksums) and synthesizes about 5,500 clips, which takes roughly 20 minutes. It needs `cmake` (eSpeak NG is built from source) and `ffmpeg`, and Apple silicon.
 
-To use the macOS system voices instead, which need no download: `cargo run --release --package course_builder -- build --engine macos-say`.
+The course is spoken by two voice sets, one in `web/static/course/audio/kokoro/` and one in `web/static/course/audio/macos_say/`, and the Voice menu in the app chooses between them: Auto (the macOS voice for clips of one or two words, where the neural voice is unreliable, and the neural voice for longer ones), Neural, or macOS. `cargo run --release --package course_builder -- build --engine macos-say` builds only the macOS set, which needs no download.
 
 ## Layout
 
