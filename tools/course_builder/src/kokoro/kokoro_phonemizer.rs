@@ -28,6 +28,27 @@ const TIED_PHONEME_SYMBOLS: [(&str, &str); 11] = [
     ("ɔ^ɪ", "Y"),
 ];
 
+/* eSpeak reads a lone letter or accented letter by its name or by the name of the accent, and Kokoro is unreliable for one or two sounds on their own, so a function word that cannot stand alone is spoken in a short natural phrase. */
+const ISOLATED_WORD_PHRASES: [(&str, &str); 17] = [
+    ("o", "o livro"),
+    ("a", "a casa"),
+    ("os", "os livros"),
+    ("as", "as casas"),
+    ("e", "e eu"),
+    ("é", "é bom"),
+    ("à", "à casa"),
+    ("às", "às casas"),
+    ("de", "de casa"),
+    ("do", "do livro"),
+    ("da", "da casa"),
+    ("no", "no livro"),
+    ("na", "na casa"),
+    ("em", "em casa"),
+    ("ao", "ao livro"),
+    ("um", "um livro"),
+    ("uns", "uns livros"),
+];
+
 // eSpeak keeps its voice and clause position in process-wide state.
 static ESPEAK_SESSION: Mutex<()> = Mutex::new(());
 static ESPEAK_INITIALIZATION: OnceLock<Result<(), String>> = OnceLock::new();
@@ -46,6 +67,12 @@ impl Phonemizer {
 
     /// Phonemes in the symbol set of Kokoro's vocabulary, with the punctuation of `text` kept in place.
     pub fn phonemize(&self, text: &str) -> String {
+        let bare_word: String = text.trim().trim_end_matches(|character: char| PUNCTUATION_CHARACTERS.contains(character)).to_lowercase();
+
+        if let Some((_, phrase)) = ISOLATED_WORD_PHRASES.iter().find(|(word, _)| *word == bare_word) {
+            return self.phonemize(phrase);
+        }
+
         let session: MutexGuard<'_, ()> = ESPEAK_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         let text: String = text.replace('«', "\u{201c}").replace('»', "\u{201d}");
         let mut phonemes: String = String::new();
@@ -248,6 +275,15 @@ mod tests {
         let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
 
         assert_eq!(phonemizer.phonemize("desejar"), "dˌezeʒˈar");
+    }
+
+    #[test]
+    fn phonemize_speaks_a_lone_function_word_as_part_of_a_phrase() {
+        let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
+
+        assert_eq!(phonemizer.phonemize("o"), phonemizer.phonemize("o livro"));
+        assert_eq!(phonemizer.phonemize("É."), phonemizer.phonemize("é bom"));
+        assert_ne!(phonemizer.phonemize("o"), "ˈɔ");
     }
 
     #[test]

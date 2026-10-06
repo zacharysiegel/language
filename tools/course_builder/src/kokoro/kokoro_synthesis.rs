@@ -7,15 +7,18 @@ use crate::audio_plan::Utterance;
 use crate::kokoro::kokoro_artifacts;
 use crate::kokoro::kokoro_models::{self, KokoroFiles};
 use crate::kokoro::kokoro_phonemizer::{Phonemizer, split_into_chunks};
+use crate::kokoro::kokoro_short_words::{self, CARRIER_PHONEMES};
 use crate::kokoro::kokoro_synthesizer::{self, KokoroSynthesizer, KokoroVocabulary, SAMPLE_RATE, VoiceTables};
 use crate::work_pool;
 
 const INFERENCE_WORKER_COUNT: usize = 4;
+const SHORT_INPUT_TOKEN_LIMIT: usize = 5;
 const INTRA_OP_THREADS_PER_WORKER: usize = 4;
 
 struct PreparedChunk {
     phonemes: String,
     tokens: Vec<i64>,
+    carrier_tokens: Option<Vec<i64>>,
 }
 
 struct PreparedClip<'a> {
@@ -65,7 +68,13 @@ fn prepare_clips<'a>(clips: &[(&'a String, &'a Utterance)], files: &KokoroFiles)
                 let phonemes: String = phonemizer.phonemize(chunk);
                 let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
 
-                PreparedChunk { phonemes, tokens }
+                let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT).then(|| {
+                    let bare_phonemes: &str = phonemes.trim_end_matches(|symbol: char| ".,!?;:…".contains(symbol));
+
+                    vocabulary.tokens_for(&format!("{bare_phonemes}, {CARRIER_PHONEMES}"))
+                });
+
+                PreparedChunk { phonemes, tokens, carrier_tokens }
             })
             .filter(|chunk| !chunk.tokens.is_empty())
             .collect();
@@ -95,6 +104,24 @@ fn distinct_voice_ids<'a>(prepared_clips: &[PreparedClip<'a>]) -> Vec<&'static s
     voice_ids
 }
 
+/* Kokoro is unreliable for one or two sounds on their own, so a very short input is spoken before a carrier word and cut out at the pause. */
+fn synthesize_chunk(
+    synthesizer: &mut KokoroSynthesizer,
+    voice_tables: &VoiceTables,
+    clip: &PreparedClip,
+    chunk: &PreparedChunk,
+) -> Result<Vec<f32>, AppError> {
+    if let Some(carrier_tokens) = &chunk.carrier_tokens {
+        let carrier_samples: Vec<f32> = synthesizer.synthesize(carrier_tokens, voice_tables, clip.voice_id, clip.speed)?;
+
+        if let Some(word_samples) = kokoro_short_words::leading_word_before_pause(&carrier_samples) {
+            return Ok(word_samples);
+        }
+    }
+
+    synthesizer.synthesize(&chunk.tokens, voice_tables, clip.voice_id, clip.speed)
+}
+
 fn synthesize_clip(
     synthesizer: &mut KokoroSynthesizer,
     voice_tables: &VoiceTables,
@@ -104,7 +131,7 @@ fn synthesize_clip(
     let mut samples: Vec<f32> = Vec::new();
 
     for chunk in &clip.chunks {
-        let chunk_samples: Vec<f32> = synthesizer.synthesize(&chunk.tokens, voice_tables, clip.voice_id, clip.speed)?;
+        let chunk_samples: Vec<f32> = synthesize_chunk(synthesizer, voice_tables, clip, chunk)?;
 
         samples.extend(kokoro_artifacts::remove_spurious_noise(&chunk_samples, &chunk.phonemes));
     }

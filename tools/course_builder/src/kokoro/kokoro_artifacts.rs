@@ -2,7 +2,7 @@ use std::f64::consts::{PI, SQRT_2};
 
 use crate::kokoro::kokoro_synthesizer::SAMPLE_RATE;
 
-const FRAME_SAMPLES: usize = 120;
+pub const FRAME_SAMPLES: usize = 120;
 const HIGH_PASS_CUTOFF_HERTZ: f64 = 3000.0;
 const NOISE_HIGH_FREQUENCY_PROPORTION: f64 = 0.7;
 const NOISE_LEVEL_FLOOR_DECIBELS: f64 = -30.0;
@@ -41,9 +41,15 @@ struct NoiseRun {
     position: RunPositionKind,
 }
 
-struct FrameFeatures {
+pub struct FrameFeatures {
     high_frequency_proportions: Vec<f64>,
     levels_decibels: Vec<f64>,
+}
+
+impl FrameFeatures {
+    pub fn levels_decibels(&self) -> &[f64] {
+        &self.levels_decibels
+    }
 }
 
 /// Cuts the hissing bursts Kokoro sometimes adds at the start, end or clause boundaries of a clip where the phonemes have no fricative.
@@ -63,7 +69,7 @@ pub fn remove_spurious_noise(samples: &[f32], phonemes: &str) -> Vec<f32> {
     cut_runs(samples, &features, &removals, first_active, end_active)
 }
 
-fn frame_features(samples: &[f32]) -> FrameFeatures {
+pub fn frame_features(samples: &[f32]) -> FrameFeatures {
     let high_passed: Vec<f64> = high_pass(samples);
     let frame_count: usize = samples.len() / FRAME_SAMPLES;
     let mut total_energies: Vec<f64> = Vec::with_capacity(frame_count);
@@ -112,7 +118,7 @@ fn high_pass(samples: &[f32]) -> Vec<f64> {
     filtered
 }
 
-fn active_frame_range(features: &FrameFeatures) -> Option<(usize, usize)> {
+pub fn active_frame_range(features: &FrameFeatures) -> Option<(usize, usize)> {
     let is_active = |level: &f64| *level > ACTIVE_LEVEL_FLOOR_DECIBELS;
     let first: usize = features.levels_decibels.iter().position(is_active)?;
     let last: usize = features.levels_decibels.iter().rposition(is_active)?;
