@@ -86,6 +86,8 @@ pub fn provide_progress_store() {
         }
     });
 
+    Effect::new(move |_| platform::set_audio_engine(progress.with(|current| current.settings.audio_engine)));
+
     provide_context(ProgressStore { progress });
 }
 

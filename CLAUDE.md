@@ -15,4 +15,4 @@ Follow `docs/conventions/` (type naming, log format, conditional compilation) an
 
 ## Running locally
 
-`./scripts/dev/serve.sh` needs only this machine. Audio is synthesized locally by Kokoro (ONNX Runtime and eSpeak NG, model files downloaded once into `models/`) or by the macOS voices (`--engine macos-say`); both are encoded with `ffmpeg`. Changing the engine or a voice changes the clip file names, and the build removes the clips no longer referenced.
+`./scripts/dev/serve.sh` needs only this machine. `course_builder build` synthesizes every clip with each engine (Kokoro through ONNX Runtime and eSpeak NG, with model files downloaded once into `models/`, and the macOS `say` voices), encodes with `ffmpeg`, and writes one directory per engine under `web/static/course/audio/`. Clip file names depend only on the persona and the text; a change to an engine's pipeline bumps `pipeline_revision`, which discards that engine's clips.

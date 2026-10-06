@@ -1,20 +1,19 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
 
-use crate::course_data::asset_url;
 use crate::platform::{self, AudioClip};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 pub fn audio_clip(audio: &Option<String>, fallback_text: &str) -> AudioClip {
     AudioClip {
-        url: audio.as_deref().map(asset_url).unwrap_or_default(),
+        file: audio.clone().unwrap_or_default(),
         fallback_text: fallback_text.to_string(),
     }
 }
 
 pub fn play_in_background(clip: AudioClip, slow: bool) {
     spawn_local(async move {
-        platform::play_clip(&clip.url, &clip.fallback_text, slow).await;
+        platform::play_clip(&clip.file, &clip.fallback_text, slow).await;
     });
 }
 

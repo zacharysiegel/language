@@ -16,6 +16,28 @@ pub enum ReviewDirectionKind {
     Mixed,
 }
 
+/// Which recorded voice set plays. `Auto` uses the macOS voice for one- and two-word clips and the neural voice for longer ones.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AudioEngineKind {
+    Auto,
+    Kokoro,
+    MacosSay,
+}
+
+const AUTO_SHORT_CLIP_WORD_LIMIT: usize = 2;
+
+impl AudioEngineKind {
+    pub fn directory_for(self, text: &str) -> &'static str {
+        match self {
+            AudioEngineKind::Kokoro => "kokoro",
+            AudioEngineKind::MacosSay => "macos_say",
+            AudioEngineKind::Auto if text.split_whitespace().count() <= AUTO_SHORT_CLIP_WORD_LIMIT => "macos_say",
+            AudioEngineKind::Auto => "kokoro",
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct Settings {
     #[serde(default = "default_show_translations")]
@@ -24,6 +46,12 @@ pub struct Settings {
     pub slow_audio: bool,
     #[serde(default = "default_review_direction")]
     pub review_direction: ReviewDirectionKind,
+    #[serde(default = "default_audio_engine")]
+    pub audio_engine: AudioEngineKind,
+}
+
+fn default_audio_engine() -> AudioEngineKind {
+    AudioEngineKind::Auto
 }
 
 fn default_show_translations() -> bool {
@@ -40,6 +68,7 @@ impl Default for Settings {
             show_translations: default_show_translations(),
             slow_audio: false,
             review_direction: default_review_direction(),
+            audio_engine: default_audio_engine(),
         }
     }
 }
@@ -239,6 +268,14 @@ mod tests {
         assert_eq!(progress.streak_days(date(2026, 10, 4)), 2);
         assert_eq!(progress.streak_days(date(2026, 10, 5)), 2);
         assert_eq!(progress.streak_days(date(2026, 10, 6)), 0);
+    }
+
+    #[test]
+    fn auto_engine_uses_the_macos_voice_for_short_clips_only() {
+        assert_eq!(AudioEngineKind::Auto.directory_for("o pé"), "macos_say");
+        assert_eq!(AudioEngineKind::Auto.directory_for("Oi, tudo bem?"), "kokoro");
+        assert_eq!(AudioEngineKind::Kokoro.directory_for("o"), "kokoro");
+        assert_eq!(AudioEngineKind::MacosSay.directory_for("Eu moro aqui agora."), "macos_say");
     }
 
     #[test]

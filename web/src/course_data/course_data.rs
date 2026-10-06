@@ -8,7 +8,6 @@ use shared::course::Course;
 use crate::platform;
 
 const COURSE_URL: &str = "/course/course.json";
-const COURSE_ASSET_PREFIX: &str = "/course/";
 
 #[derive(Debug, Clone)]
 pub enum CourseLoadState {
@@ -77,8 +76,4 @@ where
         .into_any(),
         CourseLoadState::Loaded(course) => render(course).into_any(),
     }
-}
-
-pub fn asset_url(audio_path: &str) -> String {
-    format!("{COURSE_ASSET_PREFIX}{audio_path}")
 }

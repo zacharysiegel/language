@@ -1,9 +1,10 @@
 use chrono::NaiveDate;
 use shared::AppError;
+use shared::progress::AudioEngineKind;
 
 #[derive(Debug, Clone)]
 pub struct AudioClip {
-    pub url: String,
+    pub file: String,
     pub fallback_text: String,
 }
 
@@ -39,6 +40,7 @@ mod browser {
     }
 
     thread_local! {
+        static SELECTED_ENGINE: Cell<AudioEngineKind> = const { Cell::new(AudioEngineKind::Auto) };
         static ACTIVE_CLIP: RefCell<Option<ActiveClip>> = const { RefCell::new(None) };
         static PLAYBACK_GENERATION: Cell<u64> = const { Cell::new(0) };
     }
@@ -130,9 +132,21 @@ mod browser {
         }
     }
 
-    pub async fn play_clip(url: &str, fallback_text: &str, slow: bool) {
+    pub fn set_audio_engine(engine: AudioEngineKind) {
+        SELECTED_ENGINE.with(|selected| selected.set(engine));
+    }
+
+    fn clip_url(file: &str, text: &str) -> String {
+        if file.is_empty() {
+            return String::new();
+        }
+
+        format!("/course/audio/{}/{file}", SELECTED_ENGINE.with(Cell::get).directory_for(text))
+    }
+
+    pub async fn play_clip(file: &str, fallback_text: &str, slow: bool) {
         stop_audio();
-        play_without_stopping(url, fallback_text, playback_rate(slow)).await;
+        play_without_stopping(&clip_url(file, fallback_text), fallback_text, playback_rate(slow)).await;
     }
 
     pub async fn play_sequence(clips: Vec<AudioClip>, slow: bool) {
@@ -147,7 +161,7 @@ mod browser {
                 return;
             }
 
-            play_without_stopping(&clip.url, &clip.fallback_text, playback_rate(slow)).await;
+            play_without_stopping(&clip_url(&clip.file, &clip.fallback_text), &clip.fallback_text, playback_rate(slow)).await;
         }
     }
 
@@ -265,7 +279,9 @@ mod server {
 
     pub fn stop_audio() {}
 
-    pub async fn play_clip(_url: &str, _fallback_text: &str, _slow: bool) {}
+    pub fn set_audio_engine(_engine: AudioEngineKind) {}
+
+    pub async fn play_clip(_file: &str, _fallback_text: &str, _slow: bool) {}
 
     pub async fn play_sequence(_clips: Vec<AudioClip>, _slow: bool) {}
 }

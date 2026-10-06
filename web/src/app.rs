@@ -10,6 +10,7 @@ use crate::progress_state::{ProgressStore, provide_progress_store, use_progress_
 use crate::progress_view::ProgressPage;
 use crate::review::ReviewPage;
 use crate::unit::UnitPage;
+use shared::progress::AudioEngineKind;
 
 #[cfg(feature = "ssr")] // the wasm32 client never renders the document shell
 pub use ssr::shell;
@@ -83,6 +84,7 @@ fn NavigationBar() -> impl IntoView {
         })
     };
     let slow_audio = move || progress_store.read(|progress| progress.settings.slow_audio);
+    let audio_engine = move || progress_store.read(|progress| progress.settings.audio_engine);
 
     view! {
         <nav class="top">
@@ -97,6 +99,22 @@ fn NavigationBar() -> impl IntoView {
             </A>
             <A href="/glossary">"Glossary"</A>
             <A href="/progress">"Progress"</A>
+            <label class="toggle">
+                "Voice "
+                <select on:change:target=move |event| {
+                    let engine: AudioEngineKind = match event.target().value().as_str() {
+                        "kokoro" => AudioEngineKind::Kokoro,
+                        "macos_say" => AudioEngineKind::MacosSay,
+                        _ => AudioEngineKind::Auto,
+                    };
+
+                    progress_store.update(|progress| progress.settings.audio_engine = engine);
+                }>
+                    <option value="auto" selected=move || audio_engine() == AudioEngineKind::Auto>"Auto (best for each clip)"</option>
+                    <option value="kokoro" selected=move || audio_engine() == AudioEngineKind::Kokoro>"Neural (Kokoro)"</option>
+                    <option value="macos_say" selected=move || audio_engine() == AudioEngineKind::MacosSay>"macOS (Luciana)"</option>
+                </select>
+            </label>
             <label class="toggle">
                 <input
                     type="checkbox"

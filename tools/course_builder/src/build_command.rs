@@ -11,7 +11,7 @@ use crate::speech_engine::SpeechEngineKind;
 use crate::validate_command::{self, UnitValidationReport};
 use crate::workspace::WorkspacePaths;
 
-pub fn run_build(paths: &WorkspacePaths, engine: SpeechEngineKind, skip_audio: bool, allow_missing: bool) -> Result<bool, AppError> {
+pub fn run_build(paths: &WorkspacePaths, engines: &[SpeechEngineKind], skip_audio: bool, allow_missing: bool) -> Result<bool, AppError> {
     let curriculum: Curriculum = course_source::read_curriculum(paths)?;
     let all_units: Vec<&CurriculumUnit> = curriculum.units.iter().collect();
     let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &all_units, !allow_missing)?;
@@ -23,7 +23,7 @@ pub fn run_build(paths: &WorkspacePaths, engine: SpeechEngineKind, skip_audio: b
         return Ok(false);
     }
 
-    let mut plan: AudioPlan = AudioPlan::new(engine);
+    let mut plan: AudioPlan = AudioPlan::new();
     let compiled_units: Vec<Unit> = report
         .loaded_units
         .iter()
@@ -45,7 +45,9 @@ pub fn run_build(paths: &WorkspacePaths, engine: SpeechEngineKind, skip_audio: b
 
     let audio_directory: PathBuf = paths.audio_directory();
 
-    audio_synthesis::synthesize_missing_audio(&plan, paths)?;
+    for engine in engines {
+        audio_synthesis::synthesize_missing_audio(&plan, paths, *engine)?;
+    }
 
     let removed_count: usize = audio_synthesis::remove_unreferenced_audio(&plan, &audio_directory)?;
 

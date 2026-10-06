@@ -44,9 +44,9 @@ struct ValidateArguments {
 
 #[derive(Args)]
 struct BuildArguments {
-    /// The engine that speaks the course.
-    #[arg(long, value_enum, default_value_t = SpeechEngineKind::Kokoro)]
-    engine: SpeechEngineKind,
+    /// An engine that speaks the course; repeat for several. Every engine is used when none is named.
+    #[arg(long = "engine", value_enum)]
+    engines: Vec<SpeechEngineKind>,
 
     /// Write the compiled course without synthesizing audio.
     #[arg(long)]
@@ -73,11 +73,19 @@ fn main() -> ExitCode {
     }
 }
 
+fn chosen_engines(named: Vec<SpeechEngineKind>) -> Vec<SpeechEngineKind> {
+    if named.is_empty() {
+        return vec![SpeechEngineKind::Kokoro, SpeechEngineKind::MacosSay];
+    }
+
+    named
+}
+
 fn run(command: CommandKind) -> Result<bool, AppError> {
     let paths: WorkspacePaths = WorkspacePaths::locate()?;
 
     match command {
         CommandKind::Validate(arguments) => validate_command::run_validate(&paths, &arguments.unit_ids, arguments.all),
-        CommandKind::Build(arguments) => build_command::run_build(&paths, arguments.engine, arguments.skip_audio, arguments.allow_missing),
+        CommandKind::Build(arguments) => build_command::run_build(&paths, &chosen_engines(arguments.engines), arguments.skip_audio, arguments.allow_missing),
     }
 }

@@ -3,12 +3,12 @@ use std::path::Path;
 use shared::AppError;
 
 use crate::audio_encoding;
-use crate::audio_plan::Utterance;
 use crate::kokoro::kokoro_artifacts;
 use crate::kokoro::kokoro_models::{self, KokoroFiles};
 use crate::kokoro::kokoro_phonemizer::{Phonemizer, split_into_chunks};
 use crate::kokoro::kokoro_short_words::{self, CARRIER_PHONEMES};
 use crate::kokoro::kokoro_synthesizer::{self, KokoroSynthesizer, KokoroVocabulary, SAMPLE_RATE, VoiceTables};
+use crate::speech_engine::{ResolvedUtterance, spoken_text_for};
 use crate::work_pool;
 
 const INFERENCE_WORKER_COUNT: usize = 4;
@@ -30,7 +30,7 @@ struct PreparedClip<'a> {
 }
 
 pub fn synthesize_clips(
-    clips: &[(&String, &Utterance)],
+    clips: &[(String, ResolvedUtterance)],
     audio_directory: &Path,
     models_directory: &Path,
 ) -> Result<(), AppError> {
@@ -56,19 +56,19 @@ pub fn synthesize_clips(
 }
 
 /* eSpeak keeps process-wide state, so every clip is phonemized here on one thread before inference fans out. */
-fn prepare_clips<'a>(clips: &[(&'a String, &'a Utterance)], files: &KokoroFiles) -> Result<Vec<PreparedClip<'a>>, AppError> {
+fn prepare_clips<'a>(clips: &'a [(String, ResolvedUtterance)], files: &KokoroFiles) -> Result<Vec<PreparedClip<'a>>, AppError> {
     let phonemizer: Phonemizer = Phonemizer::initialize()?;
     let vocabulary: KokoroVocabulary = KokoroVocabulary::load(&files.config)?;
     let mut prepared_clips: Vec<PreparedClip> = Vec::with_capacity(clips.len());
 
     for (file_name, utterance) in clips {
-        let chunks: Vec<PreparedChunk> = split_into_chunks(&utterance.text)
+        let chunks: Vec<PreparedChunk> = split_into_chunks(&spoken_text_for(&utterance.text))
             .iter()
             .map(|chunk| {
                 let phonemes: String = phonemizer.phonemize(chunk);
                 let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
 
-                let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT).then(|| {
+                let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT && !phonemes.contains(' ')).then(|| {
                     let bare_phonemes: &str = phonemes.trim_end_matches(|symbol: char| ".,!?;:…".contains(symbol));
 
                     vocabulary.tokens_for(&format!("{bare_phonemes}, {CARRIER_PHONEMES}"))

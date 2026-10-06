@@ -9,7 +9,7 @@ use shared::AppError;
 use crate::audio_encoding::{self, AUDIO_FILE_EXTENSION, PARTIAL_FILE_EXTENSION};
 use crate::audio_plan::{AudioPlan, Utterance};
 use crate::kokoro::kokoro_synthesis;
-use crate::speech_engine::SpeechEngineKind;
+use crate::speech_engine::{ResolvedUtterance, SpeechEngineKind, spoken_text_for};
 use crate::work_pool;
 use crate::workspace::WorkspacePaths;
 
@@ -17,47 +17,71 @@ const SAY_WORKER_COUNT: usize = 6;
 const MINIMUM_VALID_FILE_BYTES: u64 = 500;
 const SAY_TIMEOUT: Duration = Duration::from_secs(120);
 const SAY_POLL_INTERVAL: Duration = Duration::from_millis(50);
+const REVISION_FILE_NAME: &str = ".pipeline_revision";
 
-pub fn synthesize_missing_audio(plan: &AudioPlan, paths: &WorkspacePaths) -> Result<(), AppError> {
-    let audio_directory: PathBuf = paths.audio_directory();
+pub fn synthesize_missing_audio(plan: &AudioPlan, paths: &WorkspacePaths, engine: SpeechEngineKind) -> Result<(), AppError> {
+    let engine_directory: PathBuf = paths.engine_audio_directory(engine);
 
-    fs::create_dir_all(&audio_directory)?;
-    remove_partial_files(&audio_directory)?;
+    prepare_engine_directory(&engine_directory, engine)?;
 
-    let missing_entries: Vec<(&String, &Utterance)> = plan
+    let missing_clips: Vec<(String, ResolvedUtterance)> = plan
         .utterances
         .iter()
-        .filter(|(file_name, _)| !is_valid_audio_file(&audio_directory.join(file_name)))
+        .filter(|(file_name, _)| !is_valid_audio_file(&engine_directory.join(file_name)))
+        .map(|(file_name, utterance)| (file_name.clone(), resolve(engine, utterance)))
         .collect();
 
     log::info!(
         "audio plan; [engine={} distinct_clips={} to_synthesize={}]",
-        plan.engine.code(),
+        engine.code(),
         plan.utterances.len(),
-        missing_entries.len(),
+        missing_clips.len(),
     );
 
-    match plan.engine {
-        SpeechEngineKind::Kokoro => kokoro_synthesis::synthesize_clips(&missing_entries, &audio_directory, &paths.speech_models_directory),
-        SpeechEngineKind::MacosSay => synthesize_with_macos_say(&missing_entries, &audio_directory),
+    match engine {
+        SpeechEngineKind::Kokoro => kokoro_synthesis::synthesize_clips(&missing_clips, &engine_directory, &paths.speech_models_directory),
+        SpeechEngineKind::MacosSay => synthesize_with_macos_say(&missing_clips, &engine_directory),
     }
+}
+
+fn resolve(engine: SpeechEngineKind, utterance: &Utterance) -> ResolvedUtterance {
+    ResolvedUtterance {
+        profile: engine.profile_for(utterance.persona),
+        text: utterance.text.clone(),
+    }
+}
+
+/* Clips made by an older version of the pipeline are discarded, because they carry the same file names. */
+fn prepare_engine_directory(engine_directory: &Path, engine: SpeechEngineKind) -> Result<(), AppError> {
+    let revision_path: PathBuf = engine_directory.join(REVISION_FILE_NAME);
+    let expected_revision: String = engine.pipeline_revision().to_string();
+    let stored_revision: Option<String> = fs::read_to_string(&revision_path).ok();
+
+    if engine_directory.exists() && stored_revision.as_deref() != Some(expected_revision.as_str()) {
+        log::info!("discarding clips from another pipeline revision; [engine={}]", engine.code());
+        fs::remove_dir_all(engine_directory)?;
+    }
+
+    fs::create_dir_all(engine_directory)?;
+    fs::write(&revision_path, &expected_revision)?;
+    remove_partial_files(engine_directory)
 }
 
 fn is_valid_audio_file(path: &Path) -> bool {
     fs::metadata(path).is_ok_and(|metadata| metadata.len() >= MINIMUM_VALID_FILE_BYTES)
 }
 
-fn synthesize_with_macos_say(entries: &[(&String, &Utterance)], audio_directory: &Path) -> Result<(), AppError> {
+fn synthesize_with_macos_say(clips: &[(String, ResolvedUtterance)], engine_directory: &Path) -> Result<(), AppError> {
     work_pool::run_work_pool(
-        entries,
+        clips,
         SAY_WORKER_COUNT,
         |(_, utterance)| format!("{} [{}]", utterance.text, utterance.profile.voice_id),
         || Ok(()),
-        |(), (file_name, utterance)| say_utterance(&audio_directory.join(file_name), utterance),
+        |(), (file_name, utterance)| say_utterance(&engine_directory.join(file_name), utterance),
     )
 }
 
-fn say_utterance(destination: &Path, utterance: &Utterance) -> Result<(), AppError> {
+fn say_utterance(destination: &Path, utterance: &ResolvedUtterance) -> Result<(), AppError> {
     let temporary_path: PathBuf = std::env::temp_dir().join(format!(
         "portuguese-course-{}-{}.aiff",
         std::process::id(),
@@ -73,12 +97,12 @@ fn say_utterance(destination: &Path, utterance: &Utterance) -> Result<(), AppErr
     speech_result
 }
 
-fn run_say(output_path: &Path, utterance: &Utterance) -> Result<(), AppError> {
+fn run_say(output_path: &Path, utterance: &ResolvedUtterance) -> Result<(), AppError> {
     let mut child: Child = Command::new("say")
         .args(["-v", utterance.profile.voice_id, "-o"])
         .arg(output_path)
         .arg("--")
-        .arg(&utterance.text)
+        .arg(spoken_text_for(&utterance.text))
         .spawn()?;
     let started: Instant = Instant::now();
 
@@ -104,15 +128,16 @@ fn run_say(output_path: &Path, utterance: &Utterance) -> Result<(), AppError> {
     Ok(())
 }
 
+/// Removes, in every engine's directory and in the audio root, the clips the plan no longer names.
 pub fn remove_unreferenced_audio(plan: &AudioPlan, audio_directory: &Path) -> Result<usize, AppError> {
     let mut removed_count: usize = 0;
 
     for directory_entry in fs::read_dir(audio_directory)? {
         let path: PathBuf = directory_entry?.path();
-        let is_audio_file: bool = path.extension().and_then(|extension| extension.to_str()) == Some(AUDIO_FILE_EXTENSION);
-        let file_name: String = path.file_name().and_then(|name| name.to_str()).unwrap_or_default().to_string();
 
-        if is_audio_file && !plan.utterances.contains_key(&file_name) {
+        if path.is_dir() {
+            removed_count += remove_unreferenced_files(plan, &path)?;
+        } else if is_audio_file(&path) {
             fs::remove_file(&path)?;
             removed_count += 1;
         }
@@ -121,8 +146,28 @@ pub fn remove_unreferenced_audio(plan: &AudioPlan, audio_directory: &Path) -> Re
     Ok(removed_count)
 }
 
-fn remove_partial_files(audio_directory: &Path) -> Result<(), AppError> {
-    for directory_entry in fs::read_dir(audio_directory)? {
+fn remove_unreferenced_files(plan: &AudioPlan, directory: &Path) -> Result<usize, AppError> {
+    let mut removed_count: usize = 0;
+
+    for directory_entry in fs::read_dir(directory)? {
+        let path: PathBuf = directory_entry?.path();
+        let file_name: String = path.file_name().and_then(|name| name.to_str()).unwrap_or_default().to_string();
+
+        if is_audio_file(&path) && !plan.utterances.contains_key(&file_name) {
+            fs::remove_file(&path)?;
+            removed_count += 1;
+        }
+    }
+
+    Ok(removed_count)
+}
+
+fn is_audio_file(path: &Path) -> bool {
+    path.extension().and_then(|extension| extension.to_str()) == Some(AUDIO_FILE_EXTENSION)
+}
+
+fn remove_partial_files(directory: &Path) -> Result<(), AppError> {
+    for directory_entry in fs::read_dir(directory)? {
         let path: PathBuf = directory_entry?.path();
         let is_partial_file: bool = path.to_string_lossy().ends_with(PARTIAL_FILE_EXTENSION);
 
