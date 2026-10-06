@@ -67,7 +67,7 @@ const MACOS_LISTENING_POOL: [VoiceProfile; 7] = [
 impl SpeechEngineKind {
     pub fn code(self) -> &'static str {
         match self {
-            SpeechEngineKind::Kokoro => "kokoro_pipeline_2",
+            SpeechEngineKind::Kokoro => "kokoro_pipeline_3",
             SpeechEngineKind::MacosSay => "macos_say",
         }
     }
