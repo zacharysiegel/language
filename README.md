@@ -1,6 +1,6 @@
 # Português do Brasil
 
-A Brazilian Portuguese course for English speakers, from A1 to B2: 42 units of vocabulary, dialogues, grammar, readings and exercises, with spoken audio for every Portuguese sentence and a spaced-repetition review deck. Progress is kept in the browser.
+A Brazilian Portuguese course for English speakers, from A1 to B2: 44 units that teach the principles first (sounds and spelling, stress and accents, the structure of the language, then grammar), with dialogues, readings, exercises and vocabulary, with spoken audio for every Portuguese sentence and a spaced-repetition review deck. Progress is kept in the browser.
 
 ## Run it
 
