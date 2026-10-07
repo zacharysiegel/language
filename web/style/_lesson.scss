@@ -1,0 +1,163 @@
+.lesson-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-xs) var(--space-md);
+    border-bottom: var(--border-rule);
+}
+
+.tab {
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    padding: var(--space-xs) 0;
+    margin-bottom: -1px;
+    border-bottom: var(--border-width-hairline) solid transparent;
+}
+
+.tab:hover,
+.tab:focus-visible {
+    color: var(--color-accent-hover);
+}
+
+.tab.active {
+    color: var(--color-accent-active);
+    border-bottom-color: var(--color-accent-active);
+}
+
+.unit-navigation {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-md);
+    padding-top: var(--space-md);
+    border-top: var(--border-rule);
+    font-size: var(--type-size-data);
+}
+
+.lesson-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+// Running explanation: generous leading, a readable measure.
+.grammar-note,
+.reading,
+.dialogue {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+}
+
+.grammar-note p,
+.lesson-section p {
+    line-height: var(--type-line-height-prose);
+}
+
+.grammar-note h3 {
+    padding-bottom: var(--space-xs);
+    border-bottom: var(--border-rule);
+}
+
+ul.vocabulary {
+    display: flex;
+    flex-direction: column;
+}
+
+.vocabulary-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-sm) 0;
+    border-bottom: var(--border-rule);
+}
+
+.vocabulary-main {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
+.vocabulary-main .pt {
+    font-weight: 600;
+}
+
+.vocabulary-main .en {
+    color: var(--color-ink);
+}
+
+.vocabulary-item .example {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+    margin-left: calc(var(--size-button-icon) + var(--space-sm));
+}
+
+.vocabulary-item .example .pt {
+    font-size: var(--type-size-body);
+}
+
+.vocabulary-item .note,
+.vocabulary-item > .literal {
+    margin-left: calc(var(--size-button-icon) + var(--space-sm));
+}
+
+.note {
+    color: var(--color-ink-muted);
+    font-size: var(--type-size-data);
+    max-width: var(--width-measure);
+}
+
+.literal {
+    color: var(--color-ink-muted);
+    font-style: italic;
+    font-size: var(--type-size-data);
+}
+
+ul.lines {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.phrase {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-xs) var(--space-sm);
+}
+
+.phrase .en {
+    color: var(--color-ink-muted);
+}
+
+.dialogue-line {
+    display: grid;
+    grid-template-columns: 5.5rem 1fr;
+    gap: var(--space-sm);
+    align-items: baseline;
+}
+
+.speaker {
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+}
+
+.field-toggle {
+    display: flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--type-size-data);
+}

@@ -107,8 +107,8 @@ fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<Ex
 
     view! {
         <div class="row">
-            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="▶ Play" />
-            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true label="Slow" />
+            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="Play" />
+            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true />
         </div>
         {choice_buttons(&exercise.choices, exercise.answer, answer_text, on_submit)}
     }
@@ -234,8 +234,8 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
             submit_typed_answer(typed, answered, &accepted_answers, &answer_text, on_submit);
         }>
             <div class="row">
-                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="▶ Play" />
-                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true label="Slow" />
+                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="Play" />
+                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true />
             </div>
             <TypedInput typed answered />
             <CheckButton answered />

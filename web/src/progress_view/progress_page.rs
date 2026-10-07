@@ -35,16 +35,14 @@ fn ProgressSummary(course: Arc<Course>) -> impl IntoView {
             let unit_label: String = format!("{} {}: {}", unit.level.code(), unit.order, unit.title);
             let status = move || {
                 let unit_progress = progress_store.read(|progress| progress.unit_progress(&unit_id));
+                let percent: u32 = (unit_progress.best_proportion * 100.0).round() as u32;
 
-                if unit_progress.attempt_count == 0 {
-                    "Not started".to_string()
+                if unit_progress.completed {
+                    view! { <span class="tag tag-ink">"Completed"</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
+                } else if unit_progress.attempt_count > 0 {
+                    view! { <span class="tag tag-active">"In progress"</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
                 } else {
-                    format!(
-                        "{} {}% ({} attempt(s))",
-                        if unit_progress.completed { "Completed" } else { "In progress" },
-                        (unit_progress.best_proportion * 100.0).round(),
-                        unit_progress.attempt_count,
-                    )
+                    view! { <span class="tag">"Not started"</span> }.into_any()
                 }
             };
 
@@ -63,7 +61,7 @@ fn ProgressSummary(course: Arc<Course>) -> impl IntoView {
         counts
             .into_iter()
             .enumerate()
-            .map(|(box_index, count)| view! { <tr><td>{box_label(box_index)}</td><td>{count}</td></tr> })
+            .map(|(box_index, count)| view! { <tr><td>{box_label(box_index)}</td><td class="numeric">{count}</td></tr> })
             .collect_view()
     };
 
@@ -73,7 +71,10 @@ fn ProgressSummary(course: Arc<Course>) -> impl IntoView {
 
     view! {
         <h1>"Progress"</h1>
-        <p>{move || format!("{} of {unit_count} units completed. Study streak: {} day(s).", completed_count(), streak_days())}</p>
+        <div class="course-summary">
+            <span class="numeric muted">{move || format!("{} / {unit_count} units completed", completed_count())}</span>
+            <span class="numeric muted">{move || format!("Study streak {} day(s)", streak_days())}</span>
+        </div>
         <h2>"Units"</h2>
         <table class="grid"><tbody>{unit_rows}</tbody></table>
         <h2>"Review deck"</h2>
@@ -124,17 +125,17 @@ fn DataTransfer() -> impl IntoView {
     view! {
         <h2>"Back up or move your progress"</h2>
         <p class="muted">"Progress is saved in this browser only. Copy the text below to keep a backup, or paste a backup to restore it."</p>
-        <p class="row">
+        <div class="row">
             <button type="button" on:click=export_progress>"Export"</button>
             <button type="button" on:click=import_progress>"Import from the text box"</button>
-        </p>
+        </div>
         <textarea
             rows="8"
             placeholder="Exported progress appears here. Paste a backup here to import it."
             prop:value=move || transfer_text.get()
             on:input:target=move |event| transfer_text.set(event.target().value())
         ></textarea>
-        <p>{move || message.get()}</p>
+        <p class="muted">{move || message.get()}</p>
         <h2>"Reset"</h2>
         <button type="button" on:click=reset_progress>
             {move || if reset_requested.get() { "Click again to erase all progress" } else { "Reset all progress" }}

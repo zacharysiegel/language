@@ -61,14 +61,14 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
                             <td class="pt">{item.pt.clone()}</td>
                             <td>{item.en.clone()}</td>
                             <td class="literal">{item.literal.clone().unwrap_or_default()}</td>
-                            <td><A href=unit_href>{unit_label}</A></td>
+                            <td class="numeric"><A href=unit_href>{unit_label}</A></td>
                         </tr>
                     }
                 })
                 .collect();
 
             view! {
-                <p class="muted">{format!("{total_matches} match(es)")}</p>
+                <span class="page-caption">{format!("{total_matches} entries")}</span>
                 <table class="grid">
                     <thead><tr><th></th><th>"Portuguese"</th><th>"English"</th><th>"Literally"</th><th>"Unit"</th></tr></thead>
                     <tbody>{rows}</tbody>
@@ -79,7 +79,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
 
     view! {
         <h1>"Glossary"</h1>
-        <p class="row">
+        <div class="row">
             <input
                 type="search"
                 placeholder="Search Portuguese or English"
@@ -90,7 +90,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
                 <option value=ALL_LEVELS_CODE>"All levels"</option>
                 {level_options}
             </select>
-        </p>
+        </div>
         {matches}
     }
 }

@@ -102,7 +102,7 @@ pub fn PracticeSection(unit: Unit) -> impl IntoView {
 
                 view! {
                     <p>{best_summary.clone()}</p>
-                    <p>{format!("Pass mark: {}%.", (PASS_PROPORTION * 100.0).round())}</p>
+                    <p class="muted">{format!("Pass mark: {}%.", (PASS_PROPORTION * 100.0).round())}</p>
                     <div class="row">
                         <button type="button" class="primary" on:click=move |_| start_full(PracticeModeKind::Full)>
                             {format!("Full practice ({exercise_count} exercises)")}

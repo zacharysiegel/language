@@ -1,0 +1,162 @@
+.session {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-md);
+}
+
+.session-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: var(--space-md);
+    font-size: var(--type-size-label);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+}
+
+.exercise-type {
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink);
+}
+
+.prompt {
+    font-size: var(--type-size-title);
+    line-height: 1.4;
+}
+
+.hint {
+    color: var(--color-ink-muted);
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-sm);
+}
+
+input.typed {
+    width: 100%;
+    max-width: 30rem;
+    font-size: var(--type-size-title);
+}
+
+input.typed.inline {
+    width: 10rem;
+    margin: 0 var(--space-xs);
+}
+
+.choices {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+button.choice {
+    text-align: left;
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--type-size-body);
+}
+
+// Red is "the one you are on": the pair half currently held.
+button.choice.selected {
+    border-color: var(--color-accent-active);
+    color: var(--color-accent-active);
+}
+
+// Correct is the ink border with a check; incorrect is the red border with a cross.
+button.choice.right,
+button.choice.right:disabled {
+    border-color: var(--color-ink);
+    color: var(--color-ink);
+    font-weight: 600;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.5l2.5 2.5L11 4' fill='none' stroke='%23000000' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-md) center;
+}
+
+button.choice.wrong,
+button.choice.wrong:disabled {
+    border-color: var(--color-accent-active);
+    color: var(--color-accent-active);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3.5 3.5l7 7M10.5 3.5l-7 7' fill='none' stroke='%23d50000' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-md) center;
+}
+
+.match-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-md);
+}
+
+.tokens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+    min-height: 2.5rem;
+    padding: var(--space-sm) 0;
+}
+
+// The sentence being built sits on a rule, like a line to write on.
+.tokens.answer-area {
+    border-bottom: var(--border-ink);
+}
+
+button.token {
+    font-size: var(--type-size-title);
+    padding: var(--space-xs) var(--space-sm);
+}
+
+.feedback {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    padding: var(--space-md);
+    border: var(--border-ink);
+    border-radius: var(--radius-default);
+}
+
+.feedback.bad {
+    border-color: var(--color-accent-active);
+}
+
+.feedback > strong {
+    font-size: var(--type-size-label);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.feedback.bad > strong {
+    color: var(--color-accent-active);
+}
+
+.explanation {
+    color: var(--color-ink-muted);
+}
+
+ul.missed {
+    display: flex;
+    flex-direction: column;
+}
+
+ul.missed li {
+    padding: var(--space-sm) 0;
+    border-bottom: var(--border-rule);
+}
+
+ul.missed .answer {
+    color: var(--color-ink-muted);
+}
+
+.good-text {
+    color: var(--color-ink);
+}
+
+.bad-text {
+    color: var(--color-accent-active);
+}

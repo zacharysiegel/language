@@ -20,13 +20,13 @@ pub fn TranslationToggle() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
 
     view! {
-        <label class="toggle">
+        <label class="field">
             <input
                 type="checkbox"
                 prop:checked=move || progress_store.read(|progress| progress.settings.show_translations)
                 on:change=move |_| progress_store.update(|progress| progress.settings.show_translations = !progress.settings.show_translations)
             />
-            " Show English"
+            <span class="field-label">"Show English"</span>
         </label>
     }
 }
@@ -68,9 +68,10 @@ pub fn OverviewSection(unit: Unit) -> impl IntoView {
         .collect();
 
     view! {
+        <section class="lesson-section">
         <h2>"You will learn to"</h2>
         <ul>{objectives}</ul>
-        <p>
+        <div class="row">
             <button
                 type="button"
                 on:click=move |_| {
@@ -83,16 +84,19 @@ pub fn OverviewSection(unit: Unit) -> impl IntoView {
             >
                 {format!("Add the {vocabulary_count} words to my review deck")}
             </button>
-            " "{move || added_message.get()}
-        </p>
-        <h2>{unit.culture.title.clone()}</h2>
-        {paragraphs(&unit.culture.text)}
+            <span class="muted">{move || added_message.get()}</span>
+        </div>
+        </section>
+        <section class="lesson-section">
+            <h2>{unit.culture.title.clone()}</h2>
+            {paragraphs(&unit.culture.text)}
+        </section>
     }
 }
 
 #[component]
 fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
-    let part_of_speech = item.pos.clone().map(|pos| view! { <span class="muted">" "{pos}</span> });
+    let part_of_speech = item.pos.clone().map(|pos| view! { <span class="tag">{pos}</span> });
     let note = item.note.clone().map(|note| view! { <div class="note">{note}</div> });
     let literal = item.literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> });
 
@@ -102,7 +106,7 @@ fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
                 <PlayButton audio=item.audio.clone() text=item.pt.clone() />
                 <strong class="pt">{item.pt.clone()}</strong>
                 {part_of_speech}
-                <span class="en">" — "{item.en.clone()}</span>
+                <span class="en">{item.en.clone()}</span>
             </div>
             {literal}
             <div class="example">
@@ -141,7 +145,7 @@ fn DialogueView(dialogue: Dialogue) -> impl IntoView {
         .collect();
 
     view! {
-        <article class="dialogue">
+        <article class="dialogue panel">
             <h3>{dialogue.title.clone()}</h3>
             <p class="muted">{dialogue.context.clone()}</p>
             <PlayAllButton clips />
@@ -159,7 +163,7 @@ pub fn DialoguesSection(unit: Unit) -> impl IntoView {
         .collect();
 
     view! {
-        <p><TranslationToggle /></p>
+        <div class="row"><TranslationToggle /></div>
         {dialogues}
     }
 }
@@ -179,7 +183,7 @@ fn GrammarNoteView(note: GrammarNote) -> impl IntoView {
             .collect();
 
         view! {
-            <table class="grid">
+            <table class="grid paradigm">
                 <thead><tr>{header_cells}</tr></thead>
                 <tbody>{body_rows}</tbody>
             </table>
@@ -188,7 +192,7 @@ fn GrammarNoteView(note: GrammarNote) -> impl IntoView {
     let examples: Vec<_> = note.examples.iter().map(|example| view! { <PhraseRow pair=example.clone() /> }).collect();
 
     view! {
-        <article class="grammar-note">
+        <article class="grammar-note panel">
             <h3>{note.title.clone()}</h3>
             {paragraphs(&note.explanation)}
             {table}
@@ -202,7 +206,7 @@ pub fn GrammarSection(unit: Unit) -> impl IntoView {
     let notes: Vec<_> = unit.grammar.iter().map(|note| view! { <GrammarNoteView note=note.clone() /> }).collect();
 
     view! {
-        <p><TranslationToggle /></p>
+        <div class="row"><TranslationToggle /></div>
         {notes}
     }
 }
@@ -220,7 +224,7 @@ fn ReadingView(reading: Reading) -> impl IntoView {
     let title: String = reading.title.clone();
 
     view! {
-        <article class="reading">
+        <article class="reading panel">
             <h3>{reading.title.clone()}</h3>
             <PlayAllButton clips />
             <ul class="lines paragraphs">{paragraph_rows}</ul>
@@ -253,7 +257,7 @@ pub fn ReadingsSection(unit: Unit) -> impl IntoView {
     let readings: Vec<_> = unit.readings.iter().map(|reading| view! { <ReadingView reading=reading.clone() /> }).collect();
 
     view! {
-        <p><TranslationToggle /></p>
+        <div class="row"><TranslationToggle /></div>
         {readings}
     }
 }

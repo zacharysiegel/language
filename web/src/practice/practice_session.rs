@@ -98,7 +98,7 @@ pub fn ExerciseSession(
     let session_title: String = title.clone();
 
     view! {
-        <section class="session">
+        <section class="session panel">
             {move || {
                 let exercises_in_session: Arc<Vec<Exercise>> = active_exercises.get();
                 let index: usize = current_index.get();
@@ -186,7 +186,7 @@ fn feedback_view(
             {shows_answer.then(|| view! { <p>"Answer: "{result.answer_text.clone()}</p> })}
             {exercise.explanation().map(|explanation| view! { <p class="explanation">{explanation.to_string()}</p> })}
             <div class="row">
-                {spoken_text.map(|text| view! { <PlayButton audio=audio_path.clone() text label="▶ Hear it" /> })}
+                {spoken_text.map(|text| view! { <PlayButton audio=audio_path.clone() text label="Hear it" /> })}
                 <button type="button" class="primary" on:click=move |_| advance()>"Continue"</button>
             </div>
         </div>

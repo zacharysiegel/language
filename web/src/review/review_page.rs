@@ -78,16 +78,17 @@ fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
             .into_any(),
             None => view! {
                 <h1>"Review"</h1>
-                <p>
-                    <strong>{move || due_count()}</strong>" words are ready to review now. "
-                    {move || total_count().saturating_sub(due_count())}" more are scheduled for later."
-                </p>
+                <div class="review-count">
+                    <span class="review-figure numeric">{move || due_count()}</span>
+                    <span>"words ready to review now"</span>
+                    <span class="muted numeric">{move || total_count().saturating_sub(due_count())}" scheduled for later"</span>
+                </div>
                 <p class="muted">
                     "A word is ready when its next review time has come. Words you remember come back after a longer wait each time; words you forget come back in a minute. The number next to Review in the menu is the count of words ready now."
                 </p>
-                <p>
-                    <label>
-                        "Direction "
+                <div class="row">
+                    <label class="field">
+                        <span class="field-label">"Direction"</span>
                         <select
                             on:change:target=move |event| {
                                 let direction: ReviewDirectionKind = direction_from_code(&event.target().value());
@@ -104,7 +105,7 @@ fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
                             <option value="mixed" selected=move || current_direction() == ReviewDirectionKind::Mixed>"Mixed"</option>
                         </select>
                     </label>
-                </p>
+                </div>
                 {move || {
                     if due_count() == 0 {
                         view! { <p class="muted">"No words are ready. Add a unit's words to your deck from its overview page, or pass its practice; words you have already reviewed return when their wait is over."</p> }.into_any()
