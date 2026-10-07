@@ -1,70 +1,53 @@
-use std::fs;
 use std::path::{Path, PathBuf};
 
 use shared::AppError;
+use shared::filesystem;
 
 use crate::speech_engine::SpeechEngineKind;
 
-const WORKSPACE_MANIFEST_TABLE: &str = "[workspace]";
 const CURRICULUM_PATH: &str = "data/curriculum.json";
 const UNITS_DIRECTORY: &str = "data/units";
-const COMPILED_COURSE_DIRECTORY: &str = "web/static/course";
 const SPEECH_MODELS_DIRECTORY: &str = "models";
+const CLIP_STORE_DIRECTORY: &str = "build/clips";
+const BUNDLES_DIRECTORY: &str = "build/artifacts";
+const LOCAL_REPOSITORY_DIRECTORY: &str = "build/repository";
+const EMBEDDED_BUNDLE_DIRECTORY: &str = "web/static/embedded";
 
 pub struct WorkspacePaths {
     pub curriculum_path: PathBuf,
     pub units_directory: PathBuf,
-    pub compiled_course_directory: PathBuf,
     pub speech_models_directory: PathBuf,
+    pub clip_store_directory: PathBuf,
+    pub bundles_directory: PathBuf,
+    pub local_repository_directory: PathBuf,
+    pub embedded_bundle_directory: PathBuf,
 }
 
 impl WorkspacePaths {
     pub fn locate() -> Result<WorkspacePaths, AppError> {
         let current_directory: PathBuf = std::env::current_dir()?;
-        let root: PathBuf = find_workspace_root(&current_directory)?;
+        let root: PathBuf = filesystem::find_workspace_root(&current_directory)?;
 
-        Ok(WorkspacePaths {
+        Ok(WorkspacePaths::at_root(&root))
+    }
+
+    pub fn at_root(root: &Path) -> WorkspacePaths {
+        WorkspacePaths {
             curriculum_path: root.join(CURRICULUM_PATH),
             units_directory: root.join(UNITS_DIRECTORY),
-            compiled_course_directory: root.join(COMPILED_COURSE_DIRECTORY),
             speech_models_directory: root.join(SPEECH_MODELS_DIRECTORY),
-        })
+            clip_store_directory: root.join(CLIP_STORE_DIRECTORY),
+            bundles_directory: root.join(BUNDLES_DIRECTORY),
+            local_repository_directory: root.join(LOCAL_REPOSITORY_DIRECTORY),
+            embedded_bundle_directory: root.join(EMBEDDED_BUNDLE_DIRECTORY),
+        }
     }
 
     pub fn unit_path(&self, unit_id: &str) -> PathBuf {
         self.units_directory.join(format!("{unit_id}.json"))
     }
 
-    pub fn compiled_course_path(&self) -> PathBuf {
-        self.compiled_course_directory.join("course.json")
+    pub fn engine_clip_directory(&self, engine: SpeechEngineKind) -> PathBuf {
+        self.clip_store_directory.join(engine.code())
     }
-
-    pub fn audio_directory(&self) -> PathBuf {
-        self.compiled_course_directory.join("audio")
-    }
-
-    pub fn engine_audio_directory(&self, engine: SpeechEngineKind) -> PathBuf {
-        self.audio_directory().join(engine.code())
-    }
-}
-
-fn find_workspace_root(start_directory: &Path) -> Result<PathBuf, AppError> {
-    let mut directory: Option<&Path> = Some(start_directory);
-
-    while let Some(candidate) = directory {
-        // A directory with no readable manifest is the ordinary case while searching upward.
-        let manifest_text: Option<String> = fs::read_to_string(candidate.join("Cargo.toml")).ok();
-        let is_workspace_root: bool = manifest_text.is_some_and(|text| text.contains(WORKSPACE_MANIFEST_TABLE));
-
-        if is_workspace_root {
-            return Ok(candidate.to_path_buf());
-        }
-
-        directory = candidate.parent();
-    }
-
-    Err(AppError::from(format!(
-        "no Cargo.toml declaring a workspace at or above the starting directory; [start={}]",
-        start_directory.display(),
-    )))
 }
