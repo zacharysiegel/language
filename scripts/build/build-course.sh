@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 
-# Validates the course data, compiles it into web/static/course/course.json and synthesizes any missing
-# audio with the macOS Brazilian Portuguese voices. Audio that already exists is kept, so a re-run only
-# speaks the clips that changed.
+# Validates the course data, synthesizes any missing audio with every speech engine, and writes a bundle of
+# SQLite shards, recordings and a manifest under build/artifacts/. Recordings that already exist are kept, so
+# a re-run only speaks the clips that changed.
 #
 # Usage:
 #   ./scripts/build/build-course.sh
 #   ./scripts/build/build-course.sh --skip-audio
+#   ./scripts/build/build-course.sh --engine kokoro
 
 set -euo pipefail
 
