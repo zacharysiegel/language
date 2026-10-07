@@ -47,6 +47,27 @@ pub enum SpeakerGenderKind {
     Male,
 }
 
+impl SpeakerGenderKind {
+    pub fn code(self) -> &'static str {
+        match self {
+            SpeakerGenderKind::Female => "f",
+            SpeakerGenderKind::Male => "m",
+        }
+    }
+}
+
+impl TryFrom<&str> for SpeakerGenderKind {
+    type Error = AppError;
+
+    fn try_from(code: &str) -> Result<SpeakerGenderKind, AppError> {
+        match code {
+            "f" => Ok(SpeakerGenderKind::Female),
+            "m" => Ok(SpeakerGenderKind::Male),
+            unrecognized => Err(AppError::from(format!("unknown speaker gender code; [code={unrecognized}]"))),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct LevelSummary {
@@ -108,7 +129,7 @@ pub struct Unit {
     pub exercises: Vec<Exercise>,
 }
 
-/// Portuguese text with its English translation; `audio` is filled in when the course is compiled.
+/// Portuguese text with its English translation.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PhrasePair {
@@ -117,7 +138,7 @@ pub struct PhrasePair {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -133,7 +154,7 @@ pub struct VocabularyItem {
     pub note: Option<String>,
     pub example: PhrasePair,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -155,7 +176,7 @@ pub struct DialogueLine {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -238,6 +259,17 @@ impl ExerciseKind {
     }
 }
 
+impl TryFrom<&str> for ExerciseKind {
+    type Error = AppError;
+
+    fn try_from(code: &str) -> Result<ExerciseKind, AppError> {
+        ExerciseKind::ALL
+            .into_iter()
+            .find(|kind| kind.code() == code)
+            .ok_or_else(|| AppError::from(format!("unknown exercise kind code; [code={code}]")))
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "type")]
 pub enum Exercise {
@@ -276,7 +308,7 @@ pub struct FillBlankExercise {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 impl FillBlankExercise {
@@ -297,7 +329,7 @@ pub struct TranslateToPortugueseExercise {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -310,7 +342,7 @@ pub struct OrderWordsExercise {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 impl OrderWordsExercise {
@@ -328,7 +360,7 @@ pub struct ListeningChoiceExercise {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -339,7 +371,7 @@ pub struct DictationExercise {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub audio: Option<String>,
+    pub clip_key: Option<String>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -379,20 +411,20 @@ impl Exercise {
         explanation.as_deref()
     }
 
-    pub fn audio(&self) -> Option<&str> {
-        let audio: &Option<String> = match self {
-            Exercise::FillBlank(exercise) => &exercise.audio,
-            Exercise::TranslateToPortuguese(exercise) => &exercise.audio,
-            Exercise::OrderWords(exercise) => &exercise.audio,
-            Exercise::ListeningChoice(exercise) => &exercise.audio,
-            Exercise::Dictation(exercise) => &exercise.audio,
+    pub fn clip_key(&self) -> Option<&str> {
+        let clip_key: &Option<String> = match self {
+            Exercise::FillBlank(exercise) => &exercise.clip_key,
+            Exercise::TranslateToPortuguese(exercise) => &exercise.clip_key,
+            Exercise::OrderWords(exercise) => &exercise.clip_key,
+            Exercise::ListeningChoice(exercise) => &exercise.clip_key,
+            Exercise::Dictation(exercise) => &exercise.clip_key,
             Exercise::MultipleChoice(_) | Exercise::Match(_) => return None,
         };
 
-        audio.as_deref()
+        clip_key.as_deref()
     }
 
-    /// The Portuguese sentence that `audio` speaks.
+    /// The Portuguese sentence that the exercise's clip speaks.
     pub fn spoken_text(&self) -> Option<String> {
         match self {
             Exercise::FillBlank(exercise) => Some(exercise.completed_sentence()),
@@ -462,7 +494,7 @@ mod tests {
             answer: vec!["sou".to_string()],
             hint_en: "I am Brazilian.".to_string(),
             explanation: None,
-            audio: None,
+            clip_key: None,
         };
 
         assert_eq!(exercise.completed_sentence(), "Eu sou brasileiro.");

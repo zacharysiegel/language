@@ -16,3 +16,6 @@ pub fn render_error_chain(error: &dyn Error) -> String {
 
     rendered
 }
+
+#[cfg(not(target_arch = "wasm32"))] // rusqlite does not build for wasm32
+minimer::impl_from_error!(AppError, rusqlite::Error);

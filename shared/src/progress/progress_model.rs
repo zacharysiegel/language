@@ -4,6 +4,7 @@ use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::AppError;
+use crate::course_shard::VoiceEngineKind;
 use crate::review::ReviewCard;
 
 const DATE_KEY_FORMAT: &str = "%Y-%m-%d";
@@ -28,12 +29,12 @@ pub enum AudioEngineKind {
 const AUTO_SHORT_CLIP_WORD_LIMIT: usize = 2;
 
 impl AudioEngineKind {
-    pub fn directory_for(self, text: &str) -> &'static str {
+    pub fn voice_engine_for(self, text: &str) -> VoiceEngineKind {
         match self {
-            AudioEngineKind::Kokoro => "kokoro",
-            AudioEngineKind::MacosSay => "macos_say",
-            AudioEngineKind::Auto if text.split_whitespace().count() <= AUTO_SHORT_CLIP_WORD_LIMIT => "macos_say",
-            AudioEngineKind::Auto => "kokoro",
+            AudioEngineKind::Kokoro => VoiceEngineKind::Kokoro,
+            AudioEngineKind::MacosSay => VoiceEngineKind::MacosSay,
+            AudioEngineKind::Auto if text.split_whitespace().count() <= AUTO_SHORT_CLIP_WORD_LIMIT => VoiceEngineKind::MacosSay,
+            AudioEngineKind::Auto => VoiceEngineKind::Kokoro,
         }
     }
 }
@@ -272,10 +273,10 @@ mod tests {
 
     #[test]
     fn auto_engine_uses_the_macos_voice_for_short_clips_only() {
-        assert_eq!(AudioEngineKind::Auto.directory_for("o pé"), "macos_say");
-        assert_eq!(AudioEngineKind::Auto.directory_for("Oi, tudo bem?"), "kokoro");
-        assert_eq!(AudioEngineKind::Kokoro.directory_for("o"), "kokoro");
-        assert_eq!(AudioEngineKind::MacosSay.directory_for("Eu moro aqui agora."), "macos_say");
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for("o pé"), VoiceEngineKind::MacosSay);
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for("Oi, tudo bem?"), VoiceEngineKind::Kokoro);
+        assert_eq!(AudioEngineKind::Kokoro.voice_engine_for("o"), VoiceEngineKind::Kokoro);
+        assert_eq!(AudioEngineKind::MacosSay.voice_engine_for("Eu moro aqui agora."), VoiceEngineKind::MacosSay);
     }
 
     #[test]

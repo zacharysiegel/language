@@ -19,6 +19,16 @@ minimer = "2.1.*"
 chrono = { version = "0.4.*", features = ["serde"] }
 tempfile = "3.27.*"
 espeak-rs-sys = { version = "0.2.*", features = ["compile-espeak-intonations"] }
+brotli = "8.0.*"
+futures-util = { version = "0.3.*", default-features = false }
+rusqlite = { version = "0.32.*", features = ["bundled"] }
+sqlite-wasm-rs = { version = "0.4.*", default-features = false, features = ["precompiled"] }
+aws-sdk-s3 = "1.152.*"
+aws-config = "1.12.*"
+dotenvy = "0.15.*"
+secr = "1.2.*"
+base64 = "0.22.*"
+tower-http = { version = "0.6.*", default-features = false, features = ["fs"] }
 ort = { version = "=2.0.0-rc.13", default-features = false, features = ["std", "ndarray", "load-dynamic"] }
 
 # web client (Leptos/WASM); consumed by the web/ crate
@@ -41,3 +51,7 @@ opt-level = "z"
 lto = true
 codegen-units = 1
 strip = true
+
+# Shard compression runs at brotli's highest quality, which is impractically slow unoptimized.
+[profile.dev.package.brotli]
+opt-level = 3

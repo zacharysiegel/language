@@ -10,8 +10,13 @@ target/
 # Per-machine Claude Code settings
 .claude/settings.local.json
 
-# Output of `course_builder build`: the compiled course and its synthesized audio
-/web/static/course/
+# Output of `course_builder build` and `publish local`: the clip store, bundles, the local repository, and the
+# embedded bundle the web app serves
+/build/
+/web/static/embedded/
+
+# Per-developer environment and its secrets bootstrap
+.env
 
 # Speech model files and the ONNX Runtime library downloaded by `course_builder build`
 /models/
