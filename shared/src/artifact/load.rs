@@ -36,7 +36,7 @@ pub async fn discover_latest_manifest(
         log::warn!("discovery unavailable, using the static repository; [error={error}]");
     }
 
-    let sunset: Option<String> = require_supported_client(&discovery_document)?;
+    let sunset: Option<String> = read_client_support(&discovery_document);
     let authoritative_base: AuthoritativeBase = discovery::authoritative_repository_base(static_base_url, &discovery_document);
 
     let (repository_base_url, manifest_bytes): (String, Vec<u8>) = match authoritative_base {
@@ -58,20 +58,22 @@ pub async fn discover_latest_manifest(
     })
 }
 
-fn require_supported_client(discovery_document: &Result<DiscoveryDocument, AppError>) -> Result<Option<String>, AppError> {
-    let Ok(document) = discovery_document else {
-        return Ok(None);
+/// The contract's sunset date; a client below `minimum_client_version` is logged and still served.
+fn read_client_support(discovery_document: &Result<DiscoveryDocument, AppError>) -> Option<String> {
+    let Ok(document) = discovery_document
+    else {
+        return None;
     };
 
     if !discovery::client_version_is_supported(discovery::CLIENT_VERSION, &document.minimum_client_version) {
-        return Err(AppError::from(format!(
-            "this app is out of date; [client_version={} minimum_client_version={}]",
+        log::warn!(
+            "this client is older than the repository supports; [client_version={} minimum_client_version={}]",
             discovery::CLIENT_VERSION,
             document.minimum_client_version,
-        )));
+        );
     }
 
-    Ok(document.sunset.clone())
+    document.sunset.clone()
 }
 
 /// The manifest of the bundle shipped with the app, read when no repository can be reached.
@@ -251,16 +253,16 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn discover_latest_manifest_rejects_a_client_below_the_minimum_version() {
+    async fn discover_latest_manifest_still_serves_a_client_below_the_minimum_version() {
         let sha256: String = sha256_hex(b"abc");
         let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::from([
             ("/discovery".to_string(), discovery_json("/repository", "99.0.0")),
             ("/repository/latest/manifest.json".to_string(), manifest_json(&sha256).into_bytes()),
         ]));
 
-        let error: AppError = discover_latest_manifest(&http_fetch, "/discovery", "/repository").await.unwrap_err();
+        let source: ManifestSource = discover_latest_manifest(&http_fetch, "/discovery", "/repository").await.unwrap();
 
-        assert!(error.to_string().contains("out of date"));
+        assert_eq!(source.repository_base_url, "/repository");
     }
 
     #[tokio::test]
