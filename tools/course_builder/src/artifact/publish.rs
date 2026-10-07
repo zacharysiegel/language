@@ -45,6 +45,12 @@ pub async fn publish_bundle(bundle_directory: &Path, repository: &ArtifactReposi
     let referenced_audio_sha256s: BTreeSet<String> = artifact_bundle::referenced_audio_sha256s(bundle_directory, &bundle_manifest)?;
     let version: &str = &bundle_manifest.version;
 
+    let existing_version_keys: BTreeSet<String> = repository.existing_keys(version).await?;
+
+    if !existing_version_keys.is_empty() {
+        return Err(AppError::from(format!("the repository already has this version; aborting publish; [version={version}]")));
+    }
+
     log::info!("publishing; [version={version} shards={} recordings={}]", bundle_manifest.units.len() + 1, referenced_audio_sha256s.len());
 
     let (audio_published, audio_already_present): (usize, usize) =
@@ -176,7 +182,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn publish_bundle_writes_every_file_and_points_latest_at_the_version() {
+    async fn publish_bundle_writes_every_file_points_latest_at_the_version_and_reuses_recordings() {
         let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
         let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
         let clip_directory: PathBuf = workspace_directory.path().join("clips");
@@ -185,18 +191,19 @@ mod tests {
         let mut plan: AudioPlan = AudioPlan::new();
         let course: Course = read_keyed_course(&mut plan);
         let recordings: ClipRecordings = recordings_in(&clip_directory, &course);
-        let bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
         let repository_root: PathBuf = workspace_directory.path().join("repository");
         let repository: ArtifactRepositoryKind =
             ArtifactRepositoryKind::Local(LocalArtifactRepository::new(repository_root.clone(), "/repository".to_string()));
-
-        let first_report: PublishReport = publish_bundle(&bundle.directory, &repository).await.unwrap();
-        let second_report: PublishReport = publish_bundle(&bundle.directory, &repository).await.unwrap();
+        let first_bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let first_report: PublishReport = publish_bundle(&first_bundle.directory, &repository).await.unwrap();
+        let second_bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let second_report: PublishReport = publish_bundle(&second_bundle.directory, &repository).await.unwrap();
 
         let latest_bytes: Vec<u8> = fs::read(repository_root.join(manifest::MANIFEST_LATEST_KEY)).unwrap();
         let latest_manifest: Manifest = manifest::parse_manifest(&latest_bytes).unwrap();
 
-        assert_eq!(latest_manifest.version, bundle.manifest.version);
+        assert_ne!(first_bundle.manifest.version, second_bundle.manifest.version);
+        assert_eq!(latest_manifest.version, second_bundle.manifest.version);
         assert!(repository_root.join(manifest::schema_pointer_key(manifest::MANIFEST_SCHEMA_VERSION)).exists());
 
         for entry in latest_manifest.file_entries() {
@@ -207,5 +214,26 @@ mod tests {
         assert_eq!(first_report.audio_published, RECORDED_CLIP_COUNT);
         assert_eq!(second_report.audio_published, 0);
         assert_eq!(second_report.audio_already_present, RECORDED_CLIP_COUNT);
+    }
+
+    #[tokio::test]
+    async fn publish_bundle_refuses_a_version_the_repository_already_has() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
+        let mut plan: AudioPlan = AudioPlan::new();
+        let course: Course = read_keyed_course(&mut plan);
+        let recordings: ClipRecordings = ClipRecordings {
+            audio_index: BTreeMap::new(),
+            file_by_audio_sha256: BTreeMap::new(),
+            pipeline_revision_by_engine_code: BTreeMap::new(),
+        };
+        let bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let repository: ArtifactRepositoryKind =
+            ArtifactRepositoryKind::Local(LocalArtifactRepository::new(workspace_directory.path().join("repository"), "/repository".to_string()));
+
+        publish_bundle(&bundle.directory, &repository).await.unwrap();
+        let republished: Result<PublishReport, AppError> = publish_bundle(&bundle.directory, &repository).await;
+
+        assert!(republished.unwrap_err().to_string().contains("already has this version"));
     }
 }

@@ -24,7 +24,7 @@ impl LocalArtifactRepository {
 
     /// Removes all but the newest versions, then the recordings none of the kept versions name.
     pub fn retain_newest_versions(&self) -> Result<(), AppError> {
-        let version_names: Vec<String> = self.read_version_directory_names()?;
+        let version_names: Vec<String> = artifact_bundle::list_versions_oldest_first(&self.root)?;
         let removable_count: usize = version_names.len().saturating_sub(LOCAL_VERSIONS_KEPT);
 
         for version_name in &version_names[..removable_count] {
@@ -40,27 +40,6 @@ impl LocalArtifactRepository {
         }
 
         Ok(())
-    }
-
-    /* Version names are UTC timestamps, so name order is creation order; `latest/` and `audio/` are not versions. */
-    fn read_version_directory_names(&self) -> Result<Vec<String>, AppError> {
-        let mut version_names: Vec<String> = Vec::new();
-
-        for directory_entry in fs::read_dir(&self.root)? {
-            let directory_entry: fs::DirEntry = directory_entry?;
-            let name: String = directory_entry.file_name().to_string_lossy().into_owned();
-            let is_version: bool = directory_entry.file_type()?.is_dir()
-                && name != manifest::LATEST_POINTER_DIRECTORY
-                && name != manifest::SUBDIR_AUDIO;
-
-            if is_version {
-                version_names.push(name);
-            }
-        }
-
-        version_names.sort();
-
-        Ok(version_names)
     }
 
     fn read_referenced_audio_sha256s(&self, version_names: &[String]) -> Result<BTreeSet<String>, AppError> {
