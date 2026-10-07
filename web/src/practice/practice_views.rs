@@ -101,14 +101,14 @@ fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<Exer
 #[component]
 fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
     let answer_text: String = format!("{} = {}", exercise.audio_pt, exercise.choices[exercise.answer]);
-    let autoplay_clip: AudioClip = audio_clip(&exercise.audio, &exercise.audio_pt);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_pt);
 
     Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
 
     view! {
         <div class="row">
-            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="Play" />
-            <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true />
+            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_pt.clone() label="Play" />
+            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_pt.clone() slow=true />
         </div>
         {choice_buttons(&exercise.choices, exercise.answer, answer_text, on_submit)}
     }
@@ -224,7 +224,7 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = format!("{} = {}", exercise.audio_pt, exercise.hint_en);
     let accepted_answers: Vec<String> = vec![exercise.audio_pt.clone()];
-    let autoplay_clip: AudioClip = audio_clip(&exercise.audio, &exercise.audio_pt);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_pt);
 
     Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
 
@@ -234,8 +234,8 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
             submit_typed_answer(typed, answered, &accepted_answers, &answer_text, on_submit);
         }>
             <div class="row">
-                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() label="Play" />
-                <PlayButton audio=exercise.audio.clone() text=exercise.audio_pt.clone() slow=true />
+                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_pt.clone() label="Play" />
+                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_pt.clone() slow=true />
             </div>
             <TypedInput typed answered />
             <CheckButton answered />
@@ -374,7 +374,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
         .map(|pair_index| {
             let pair = pairs.pairs[pair_index].clone();
             let resolve_selection = resolve_selection.clone();
-            let clip = audio_clip(&pair.audio, &pair.pt);
+            let clip = audio_clip(&pair.clip_key, &pair.pt);
 
             view! {
                 <button

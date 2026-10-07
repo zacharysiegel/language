@@ -172,7 +172,7 @@ fn feedback_view(
     let feedback_class: &str = if result.is_correct() { "feedback good" } else { "feedback bad" };
     let shows_answer: bool = result.status != shared::practice::AnswerStatus::Correct;
     let spoken_text: Option<String> = exercise.spoken_text();
-    let audio_path: Option<String> = exercise.audio().map(str::to_string);
+    let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
 
     if SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
         if let Some(text) = &spoken_text {
@@ -186,7 +186,7 @@ fn feedback_view(
             {shows_answer.then(|| view! { <p>"Answer: "{result.answer_text.clone()}</p> })}
             {exercise.explanation().map(|explanation| view! { <p class="explanation">{explanation.to_string()}</p> })}
             <div class="row">
-                {spoken_text.map(|text| view! { <PlayButton audio=audio_path.clone() text label="Hear it" /> })}
+                {spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text label="Hear it" /> })}
                 <button type="button" class="primary" on:click=move |_| advance()>"Continue"</button>
             </div>
         </div>

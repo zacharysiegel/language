@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use leptos::prelude::*;
 use leptos_router::components::A;
-use shared::course::{Course, LevelKind, Unit, VocabularyItem};
+use shared::course::{CourseOutline, LevelKind, UnitOutline, VocabularyItem};
 use shared::practice::normalize_answer_ignoring_accents;
 
 use crate::audio_player::PlayButton;
@@ -12,7 +12,7 @@ const ALL_LEVELS_CODE: &str = "all";
 
 #[component]
 pub fn GlossaryPage() -> impl IntoView {
-    course_gate(|course: Arc<Course>| view! { <Glossary course /> })
+    course_gate(|course: Arc<CourseOutline>| view! { <Glossary course /> })
 }
 
 fn level_from_code(code: &str) -> Option<LevelKind> {
@@ -20,7 +20,7 @@ fn level_from_code(code: &str) -> Option<LevelKind> {
 }
 
 #[component]
-fn Glossary(course: Arc<Course>) -> impl IntoView {
+fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
     let search_text: RwSignal<String> = RwSignal::new(String::new());
     let level_code: RwSignal<String> = RwSignal::new(ALL_LEVELS_CODE.to_string());
     let level_options: Vec<_> = course
@@ -30,12 +30,12 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
         .collect();
 
     let matches = {
-        let course: Arc<Course> = course.clone();
+        let course: Arc<CourseOutline> = course.clone();
 
         move || {
             let query: String = normalize_answer_ignoring_accents(&search_text.get());
             let level_filter: Option<LevelKind> = level_from_code(&level_code.get());
-            let matching_entries: Vec<(&Unit, &VocabularyItem)> = course
+            let matching_entries: Vec<(&UnitOutline, &VocabularyItem)> = course
                 .units
                 .iter()
                 .filter(|unit| level_filter.is_none_or(|level| unit.level == level))
@@ -57,7 +57,7 @@ fn Glossary(course: Arc<Course>) -> impl IntoView {
 
                     view! {
                         <tr>
-                            <td><PlayButton audio=item.audio.clone() text=item.pt.clone() /></td>
+                            <td><PlayButton clip_key=item.clip_key.clone() text=item.pt.clone() /></td>
                             <td class="pt">{item.pt.clone()}</td>
                             <td>{item.en.clone()}</td>
                             <td class="literal">{item.literal.clone().unwrap_or_default()}</td>
