@@ -9,6 +9,7 @@ const REPORTED_FAILURE_LIMIT: usize = 10;
 
 /// Runs `process` on every item across `worker_count` threads, each with state from `create_state`.
 pub fn run_work_pool<Item, State>(
+    label: &str,
     items: &[Item],
     worker_count: usize,
     describe: impl Fn(&Item) -> String + Sync,
@@ -47,7 +48,7 @@ where
                     let completed: usize = completed_count.fetch_add(1, Ordering::SeqCst) + 1;
 
                     if completed % PROGRESS_LOG_INTERVAL == 0 {
-                        log::info!("audio synthesis progress; [completed={completed} total={}]", items.len());
+                        log::info!("progress; [work={label} completed={completed} total={}]", items.len());
                     }
                 }
             });
@@ -61,10 +62,10 @@ where
     }
 
     for failure in failures.iter().take(REPORTED_FAILURE_LIMIT) {
-        log::error!("audio synthesis failed; [detail={failure}]");
+        log::error!("work item failed; [work={label} detail={failure}]");
     }
 
-    Err(AppError::from(format!("audio synthesis failed; [failures={}]", failures.len())))
+    Err(AppError::from(format!("work items failed; [work={label} failures={}]", failures.len())))
 }
 
 fn record_failure(failure_messages: &Mutex<Vec<String>>, message: String) {

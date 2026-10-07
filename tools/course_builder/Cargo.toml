@@ -15,6 +15,14 @@ log = { workspace = true }
 env_logger = { workspace = true }
 espeak-rs-sys = { workspace = true }
 ort = { workspace = true }
+chrono = { workspace = true }
+rusqlite = { workspace = true }
+tokio = { workspace = true, features = ["rt-multi-thread", "macros", "fs"] }
+aws-sdk-s3 = { workspace = true }
+aws-config = { workspace = true }
+dotenvy = { workspace = true }
+secr = { workspace = true }
+base64 = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }

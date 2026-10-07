@@ -7,7 +7,7 @@ use shared::course::{
 
 use crate::speech_engine::{LISTENING_PERSONA_COUNT, PersonaKind};
 
-const FILE_NAME_HASH_CHARACTERS: usize = 20;
+const CLIP_KEY_HASH_CHARACTERS: usize = 20;
 
 #[derive(Debug, Clone, PartialEq)]
 pub struct Utterance {
@@ -15,7 +15,7 @@ pub struct Utterance {
     pub text: String,
 }
 
-/// Every distinct spoken clip of a compiled course, keyed by the file name it has in each engine's directory.
+/// Every distinct spoken clip of the course, by clip key.
 #[derive(Debug, Default)]
 pub struct AudioPlan {
     pub utterances: BTreeMap<String, Utterance>,
@@ -26,29 +26,34 @@ impl AudioPlan {
         AudioPlan::default()
     }
 
-    fn audio_path_for(&mut self, text: &str, persona: PersonaKind) -> String {
+    /* A clip's identity is its persona and text only, so an unchanged sentence keeps its recordings across builds. */
+    fn clip_key_for(&mut self, text: &str, persona: PersonaKind) -> String {
         let identity: String = format!("{}\n{text}", persona.key());
-        let file_name: String = format!("{}.m4a", &sha256_hex(&identity)[..FILE_NAME_HASH_CHARACTERS]);
+        let clip_key: String = sha256_hex(&identity)[..CLIP_KEY_HASH_CHARACTERS].to_string();
 
         self.utterances.insert(
-            file_name.clone(),
+            clip_key.clone(),
             Utterance {
                 persona,
                 text: text.to_string(),
             },
         );
 
-        file_name
+        clip_key
     }
 
     fn narrate(&mut self, text: &str) -> Option<String> {
-        Some(self.audio_path_for(text, PersonaKind::Narrator))
+        Some(self.clip_key_for(text, PersonaKind::Narrator))
     }
 
     fn voice_listening_exercise(&mut self, text: &str) -> Option<String> {
         let voice_index: usize = hash_bucket(text, LISTENING_PERSONA_COUNT);
 
-        Some(self.audio_path_for(text, PersonaKind::ListeningExercise(voice_index)))
+        Some(self.clip_key_for(text, PersonaKind::ListeningExercise(voice_index)))
+    }
+
+    pub fn utterance(&self, clip_key: &str) -> Option<&Utterance> {
+        self.utterances.get(clip_key)
     }
 }
 
@@ -65,38 +70,38 @@ fn hash_bucket(text: &str, bucket_count: usize) -> usize {
     leading_value as usize % bucket_count
 }
 
-/// Returns `unit` with an audio path on every clip the learner can play, registering each clip in `plan`.
-pub fn compile_unit(unit: &Unit, plan: &mut AudioPlan) -> Unit {
-    let mut compiled: Unit = unit.clone();
+/// Returns `unit` with a clip key on everything the learner can play, registering each clip in `plan`.
+pub fn assign_clip_keys(unit: &Unit, plan: &mut AudioPlan) -> Unit {
+    let mut keyed: Unit = unit.clone();
 
-    compiled.vocabulary.iter_mut().for_each(|item| compile_vocabulary_item(item, plan));
-    compiled.dialogues.iter_mut().for_each(|dialogue| compile_dialogue(dialogue, plan));
-    compiled.grammar.iter_mut().for_each(|note| compile_grammar_note(note, plan));
-    compiled.readings.iter_mut().for_each(|reading| compile_reading(reading, plan));
-    compiled.exercises.iter_mut().for_each(|exercise| compile_exercise(exercise, plan));
+    keyed.vocabulary.iter_mut().for_each(|item| key_vocabulary_item(item, plan));
+    keyed.dialogues.iter_mut().for_each(|dialogue| key_dialogue(dialogue, plan));
+    keyed.grammar.iter_mut().for_each(|note| key_grammar_note(note, plan));
+    keyed.readings.iter_mut().for_each(|reading| key_reading(reading, plan));
+    keyed.exercises.iter_mut().for_each(|exercise| key_exercise(exercise, plan));
 
-    compiled
+    keyed
 }
 
-fn compile_pair(pair: &mut PhrasePair, plan: &mut AudioPlan) {
-    pair.audio = plan.narrate(&pair.pt);
+fn key_pair(pair: &mut PhrasePair, plan: &mut AudioPlan) {
+    pair.clip_key = plan.narrate(&pair.pt);
 }
 
-fn compile_vocabulary_item(item: &mut VocabularyItem, plan: &mut AudioPlan) {
-    item.audio = plan.narrate(&item.pt);
-    compile_pair(&mut item.example, plan);
+fn key_vocabulary_item(item: &mut VocabularyItem, plan: &mut AudioPlan) {
+    item.clip_key = plan.narrate(&item.pt);
+    key_pair(&mut item.example, plan);
 }
 
-fn compile_grammar_note(note: &mut GrammarNote, plan: &mut AudioPlan) {
-    note.examples.iter_mut().for_each(|example| compile_pair(example, plan));
+fn key_grammar_note(note: &mut GrammarNote, plan: &mut AudioPlan) {
+    note.examples.iter_mut().for_each(|example| key_pair(example, plan));
 }
 
-fn compile_reading(reading: &mut Reading, plan: &mut AudioPlan) {
-    reading.paragraphs.iter_mut().for_each(|paragraph| compile_pair(paragraph, plan));
-    reading.questions.iter_mut().for_each(|question| compile_exercise(question, plan));
+fn key_reading(reading: &mut Reading, plan: &mut AudioPlan) {
+    reading.paragraphs.iter_mut().for_each(|paragraph| key_pair(paragraph, plan));
+    reading.questions.iter_mut().for_each(|question| key_exercise(question, plan));
 }
 
-fn compile_dialogue(dialogue: &mut Dialogue, plan: &mut AudioPlan) {
+fn key_dialogue(dialogue: &mut Dialogue, plan: &mut AudioPlan) {
     let mut persona_by_speaker: BTreeMap<String, PersonaKind> = BTreeMap::new();
     let mut female_speaker_count: usize = 0;
     let mut male_speaker_count: usize = 0;
@@ -116,20 +121,20 @@ fn compile_dialogue(dialogue: &mut Dialogue, plan: &mut AudioPlan) {
             persona_by_speaker.insert(line.speaker.clone(), persona);
         }
 
-        line.audio = Some(plan.audio_path_for(&line.pt, persona_by_speaker[&line.speaker]));
+        line.clip_key = Some(plan.clip_key_for(&line.pt, persona_by_speaker[&line.speaker]));
     }
 }
 
-fn compile_exercise(exercise: &mut Exercise, plan: &mut AudioPlan) {
+fn key_exercise(exercise: &mut Exercise, plan: &mut AudioPlan) {
     match exercise {
-        Exercise::ListeningChoice(listening) => listening.audio = plan.voice_listening_exercise(&listening.audio_pt),
-        Exercise::Dictation(dictation) => dictation.audio = plan.voice_listening_exercise(&dictation.audio_pt),
-        Exercise::OrderWords(order_words) => order_words.audio = plan.narrate(&order_words.sentence()),
-        Exercise::FillBlank(fill_blank) => fill_blank.audio = plan.narrate(&fill_blank.completed_sentence()),
+        Exercise::ListeningChoice(listening) => listening.clip_key = plan.voice_listening_exercise(&listening.audio_pt),
+        Exercise::Dictation(dictation) => dictation.clip_key = plan.voice_listening_exercise(&dictation.audio_pt),
+        Exercise::OrderWords(order_words) => order_words.clip_key = plan.narrate(&order_words.sentence()),
+        Exercise::FillBlank(fill_blank) => fill_blank.clip_key = plan.narrate(&fill_blank.completed_sentence()),
         Exercise::TranslateToPortuguese(translate) => {
-            translate.audio = translate.answers.first().and_then(|answer| plan.narrate(answer));
+            translate.clip_key = translate.answers.first().and_then(|answer| plan.narrate(answer));
         },
-        Exercise::Match(matching) => matching.pairs.iter_mut().for_each(|pair| compile_pair(pair, plan)),
+        Exercise::Match(matching) => matching.pairs.iter_mut().for_each(|pair| key_pair(pair, plan)),
         Exercise::MultipleChoice(_) => {},
     }
 }
@@ -139,17 +144,17 @@ mod tests {
     use super::*;
 
     #[test]
-    fn audio_path_for_is_deterministic_and_voice_specific() {
+    fn clip_key_for_is_deterministic_and_voice_specific() {
         let mut plan: AudioPlan = AudioPlan::new();
 
-        let first: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
-        let repeated: String = plan.audio_path_for("Olá", PersonaKind::Narrator);
-        let other_voice: String = plan.audio_path_for("Olá", PersonaKind::MaleSpeaker(0));
+        let first: String = plan.clip_key_for("Olá", PersonaKind::Narrator);
+        let repeated: String = plan.clip_key_for("Olá", PersonaKind::Narrator);
+        let other_voice: String = plan.clip_key_for("Olá", PersonaKind::MaleSpeaker(0));
 
         assert_eq!(first, repeated);
         assert_ne!(first, other_voice);
         assert_eq!(plan.utterances.len(), 2);
-        assert!(first.ends_with(".m4a"));
+        assert_eq!(first.len(), CLIP_KEY_HASH_CHARACTERS);
     }
 
     #[test]

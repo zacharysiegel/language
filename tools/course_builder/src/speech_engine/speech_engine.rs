@@ -1,4 +1,5 @@
 use clap::ValueEnum;
+use shared::course_shard::VoiceEngineKind;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum SpeechEngineKind {
@@ -85,11 +86,17 @@ impl PersonaKind {
 }
 
 impl SpeechEngineKind {
-    pub fn code(self) -> &'static str {
+    pub const ALL: [SpeechEngineKind; 2] = [SpeechEngineKind::Kokoro, SpeechEngineKind::MacosSay];
+
+    pub fn voice_engine(self) -> VoiceEngineKind {
         match self {
-            SpeechEngineKind::Kokoro => "kokoro",
-            SpeechEngineKind::MacosSay => "macos_say",
+            SpeechEngineKind::Kokoro => VoiceEngineKind::Kokoro,
+            SpeechEngineKind::MacosSay => VoiceEngineKind::MacosSay,
         }
+    }
+
+    pub fn code(self) -> &'static str {
+        self.voice_engine().code()
     }
 
     /* Changes when the synthesis pipeline alters its output, which discards the engine's existing clips. */

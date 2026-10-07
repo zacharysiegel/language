@@ -47,6 +47,7 @@ pub fn synthesize_clips(
     let voice_tables: VoiceTables = VoiceTables::load(&files, &voice_ids)?;
 
     work_pool::run_work_pool(
+        "kokoro synthesis",
         &prepared_clips,
         INFERENCE_WORKER_COUNT,
         |clip| format!("{} [{}]", clip.text, clip.voice_id),

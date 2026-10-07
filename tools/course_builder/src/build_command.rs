@@ -1,9 +1,7 @@
-use std::fs;
-use std::path::PathBuf;
-
 use shared::AppError;
 use shared::course::{Course, Curriculum, CurriculumUnit, Unit};
 
+use crate::artifact::{self, BuiltBundle, ClipRecordings};
 use crate::audio_plan::{self, AudioPlan};
 use crate::audio_synthesis;
 use crate::course_source;
@@ -11,10 +9,16 @@ use crate::speech_engine::SpeechEngineKind;
 use crate::validate_command::{self, UnitValidationReport};
 use crate::workspace::WorkspacePaths;
 
-pub fn run_build(paths: &WorkspacePaths, engines: &[SpeechEngineKind], skip_audio: bool, allow_missing: bool) -> Result<bool, AppError> {
+pub struct BuildOptions {
+    pub engines: Vec<SpeechEngineKind>,
+    pub skip_audio: bool,
+    pub allow_missing: bool,
+}
+
+pub fn run_build(paths: &WorkspacePaths, options: &BuildOptions) -> Result<bool, AppError> {
     let curriculum: Curriculum = course_source::read_curriculum(paths)?;
     let all_units: Vec<&CurriculumUnit> = curriculum.units.iter().collect();
-    let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &all_units, !allow_missing)?;
+    let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &all_units, !options.allow_missing)?;
 
     validate_command::print_issues(&report);
 
@@ -24,51 +28,47 @@ pub fn run_build(paths: &WorkspacePaths, engines: &[SpeechEngineKind], skip_audi
     }
 
     let mut plan: AudioPlan = AudioPlan::new();
-    let compiled_units: Vec<Unit> = report
+    let keyed_units: Vec<Unit> = report
         .loaded_units
         .iter()
-        .map(|unit| audio_plan::compile_unit(unit, &mut plan))
+        .map(|unit| audio_plan::assign_clip_keys(unit, &mut plan))
         .collect();
-
     let course: Course = Course {
         title: curriculum.title.clone(),
         levels: curriculum.levels.clone(),
-        units: compiled_units,
+        units: keyed_units,
     };
 
-    write_course(paths, &course)?;
-
-    if skip_audio {
-        log::info!("audio skipped; [distinct_clips={}]", plan.utterances.len());
-        return Ok(true);
+    if options.skip_audio {
+        log::info!("audio synthesis skipped; [distinct_clips={}]", plan.utterances.len());
+    } else {
+        synthesize_audio(paths, &plan, &options.engines)?;
     }
 
-    let audio_directory: PathBuf = paths.audio_directory();
+    let recordings: ClipRecordings = audio_synthesis::collect_clip_recordings(&plan, paths)?;
+    let bundle: BuiltBundle = artifact::write_bundle(paths, &course, &plan, &recordings)?;
 
-    for engine in engines {
-        audio_synthesis::synthesize_missing_audio(&plan, paths, *engine)?;
-    }
+    artifact::refresh_embedded_bundle(paths, &bundle)?;
+    artifact::prune_bundles(paths)?;
 
-    let removed_count: usize = audio_synthesis::remove_unreferenced_audio(&plan, &audio_directory)?;
-
-    if removed_count > 0 {
-        log::info!("removed unreferenced audio; [count={removed_count}]");
-    }
-
-    log::info!("build complete; [units={} distinct_clips={}]", course.units.len(), plan.utterances.len());
+    log::info!(
+        "build complete; [version={} units={} distinct_clips={}]",
+        bundle.manifest.version,
+        course.units.len(),
+        plan.utterances.len(),
+    );
 
     Ok(true)
 }
 
-fn write_course(paths: &WorkspacePaths, course: &Course) -> Result<(), AppError> {
-    fs::create_dir_all(&paths.compiled_course_directory)?;
+fn synthesize_audio(paths: &WorkspacePaths, plan: &AudioPlan, engines: &[SpeechEngineKind]) -> Result<(), AppError> {
+    audio_synthesis::synthesize_missing_audio(plan, paths, engines)?;
 
-    let course_text: String = serde_json::to_string(course)?;
-    let course_path: PathBuf = paths.compiled_course_path();
+    let removed_count: usize = audio_synthesis::remove_unreferenced_clips(plan, paths)?;
 
-    fs::write(&course_path, format!("{course_text}\n"))?;
-
-    log::info!("wrote course; [path={} units={} bytes={}]", course_path.display(), course.units.len(), course_text.len());
+    if removed_count > 0 {
+        log::info!("removed clips no unit uses; [count={removed_count}]");
+    }
 
     Ok(())
 }
