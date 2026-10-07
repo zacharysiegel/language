@@ -25,6 +25,7 @@ const DEFAULT_LOCAL_REPOSITORY_ROOT: &str = "build/repository";
 const CACHE_CONTROL_IMMUTABLE: &str = "public, max-age=31536000, immutable";
 const CACHE_CONTROL_POINTER: &str = "public, max-age=300";
 const CACHE_CONTROL_REVALIDATE: &str = "no-cache";
+const CACHE_CONTROL_DISCOVERY: &str = "public, max-age=3600";
 
 pub async fn serve() -> Result<(), AppError> {
     let configuration: ConfFile = get_configuration(None)
@@ -82,7 +83,7 @@ async fn serve_discovery(discovery_text: String) -> Response {
     (
         [
             (header::CONTENT_TYPE, HeaderValue::from_static("application/json")),
-            (header::CACHE_CONTROL, HeaderValue::from_static(CACHE_CONTROL_REVALIDATE)),
+            (header::CACHE_CONTROL, HeaderValue::from_static(CACHE_CONTROL_DISCOVERY)),
         ],
         discovery_text,
     )
