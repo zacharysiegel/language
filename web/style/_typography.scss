@@ -1,0 +1,92 @@
+body {
+    font-family: var(--font-sans);
+    font-size: var(--type-size-body);
+    line-height: var(--type-line-height-body);
+    color: var(--color-ink);
+    background: var(--color-paper);
+}
+
+a {
+    color: var(--color-accent-link);
+    text-decoration: none;
+}
+
+// Focus looks exactly like hover, so the interface has one way of saying "this control is the one you are on".
+a:hover,
+a:focus-visible {
+    color: var(--color-accent-hover);
+    outline: none;
+}
+
+h1 {
+    font-size: var(--type-size-heading);
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
+}
+
+h3 {
+    font-size: var(--type-size-title);
+    font-weight: 600;
+    line-height: 1.3;
+}
+
+h4 {
+    font-size: var(--type-size-body);
+    font-weight: 600;
+}
+
+/* A section divider is a single line of capitalised type over a 1px rule; type is the structure, so there is
+   no header bar. */
+h2 {
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding-bottom: var(--space-xs);
+    border-bottom: var(--border-ink);
+}
+
+p {
+    max-width: var(--width-measure);
+}
+
+code {
+    font-family: var(--font-mono);
+    font-size: var(--type-size-data);
+}
+
+strong {
+    font-weight: 600;
+}
+
+.numeric {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    font-size: var(--type-size-data);
+    line-height: var(--type-line-height-data);
+}
+
+.muted {
+    color: var(--color-ink-muted);
+}
+
+/* The Portuguese itself: the thing being studied reads one step larger than the English around it. */
+.pt {
+    font-size: 1rem;
+    color: var(--color-ink);
+}
+
+.hidden {
+    visibility: hidden;
+}
+
+.status {
+    padding: var(--space-lg) 0;
+    color: var(--color-ink-muted);
+}
+
+.status.error {
+    color: var(--color-accent-active);
+}

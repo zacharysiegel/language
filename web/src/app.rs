@@ -87,42 +87,44 @@ fn NavigationBar() -> impl IntoView {
     let audio_engine = move || progress_store.read(|progress| progress.settings.audio_engine);
 
     view! {
-        <nav class="top">
-            <A href="/" attr:class="brand">"Português"</A>
-            <A href="/">"Course"</A>
+        <nav class="chrome">
+            <A href="/" attr:class="chrome-brand">"Português"</A>
+            <A href="/" exact=true>"Course"</A>
             <A href="/review">
                 "Review"
                 {move || {
                     (due_count() > 0)
-                        .then(|| view! { <span class="badge" title="Words ready to review now">{due_count()}</span> })
+                        .then(|| view! { <span class="chrome-count numeric" title="Words ready to review now">{due_count()}</span> })
                 }}
             </A>
             <A href="/glossary">"Glossary"</A>
             <A href="/progress">"Progress"</A>
-            <label class="toggle">
-                "Voice "
-                <select on:change:target=move |event| {
-                    let engine: AudioEngineKind = match event.target().value().as_str() {
-                        "kokoro" => AudioEngineKind::Kokoro,
-                        "macos_say" => AudioEngineKind::MacosSay,
-                        _ => AudioEngineKind::Auto,
-                    };
+            <div class="chrome-settings">
+                <label class="field">
+                    <span class="field-label">"Voice"</span>
+                    <select on:change:target=move |event| {
+                        let engine: AudioEngineKind = match event.target().value().as_str() {
+                            "kokoro" => AudioEngineKind::Kokoro,
+                            "macos_say" => AudioEngineKind::MacosSay,
+                            _ => AudioEngineKind::Auto,
+                        };
 
-                    progress_store.update(|progress| progress.settings.audio_engine = engine);
-                }>
-                    <option value="auto" selected=move || audio_engine() == AudioEngineKind::Auto>"Auto (best for each clip)"</option>
-                    <option value="kokoro" selected=move || audio_engine() == AudioEngineKind::Kokoro>"Neural (Kokoro)"</option>
-                    <option value="macos_say" selected=move || audio_engine() == AudioEngineKind::MacosSay>"macOS (Luciana)"</option>
-                </select>
-            </label>
-            <label class="toggle">
-                <input
-                    type="checkbox"
-                    prop:checked=slow_audio
-                    on:change=move |_| progress_store.update(|progress| progress.settings.slow_audio = !progress.settings.slow_audio)
-                />
-                " Slow audio"
-            </label>
+                        progress_store.update(|progress| progress.settings.audio_engine = engine);
+                    }>
+                        <option value="auto" selected=move || audio_engine() == AudioEngineKind::Auto>"Auto"</option>
+                        <option value="kokoro" selected=move || audio_engine() == AudioEngineKind::Kokoro>"Neural (Kokoro)"</option>
+                        <option value="macos_say" selected=move || audio_engine() == AudioEngineKind::MacosSay>"macOS (Luciana)"</option>
+                    </select>
+                </label>
+                <label class="field">
+                    <input
+                        type="checkbox"
+                        prop:checked=slow_audio
+                        on:change=move |_| progress_store.update(|progress| progress.settings.slow_audio = !progress.settings.slow_audio)
+                    />
+                    <span class="field-label">"Slow audio"</span>
+                </label>
+            </div>
         </nav>
     }
 }

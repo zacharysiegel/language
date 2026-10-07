@@ -113,7 +113,8 @@ fn unit_view(course: &Course, unit: Unit, active_tab: UnitTabKind) -> impl IntoV
     let previous_link = previous_target.map(|(href, label)| view! { <A href=href>{label}</A> });
     let next_link = next_target.map(|(href, label)| view! { <A href=href>{label}</A> });
 
-    let heading: String = format!("{} {}: {}", unit.level.code(), unit.order, unit.title);
+    let caption: String = format!("{} · {}", unit.level.code(), unit.order);
+    let title: String = unit.title.clone();
     let section = match active_tab {
         UnitTabKind::Overview => view! { <OverviewSection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Vocabulary => view! { <VocabularySection unit=unit.clone() /> }.into_any(),
@@ -124,7 +125,10 @@ fn unit_view(course: &Course, unit: Unit, active_tab: UnitTabKind) -> impl IntoV
     };
 
     view! {
-        <h1>{heading}</h1>
+        <div class="lesson-header">
+            <span class="page-caption">{caption}</span>
+            <h1>{title}</h1>
+        </div>
         <div class="tabs">{tab_links}</div>
         {section}
         <div class="unit-navigation">

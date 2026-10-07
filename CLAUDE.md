@@ -6,6 +6,10 @@ A Brazilian Portuguese course (A1 to B2) for English speakers. A Rust workspace:
 
 Follow `docs/conventions/` (type naming, log format, conditional compilation) and the owner's global `~/.claude/CLAUDE.md`. Scripts in `scripts/` wrap the tools; use them.
 
+## Visual design
+
+Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`, no raw colors or sizes elsewhere, no shadows, no rounded corners, no animation.
+
 ## Course data
 
 - Author units to the format in `docs/authoring.md`, then run `cargo run --package course_builder -- validate <unit-id>`. The validator is the authority on structure; `shared/tests/course_data.rs` fails `cargo test` if any unit is invalid.

@@ -1,0 +1,87 @@
+input[type="text"],
+input[type="search"],
+textarea {
+    background: var(--color-paper);
+    border: var(--border-ink);
+    border-radius: var(--radius-input);
+    padding: var(--space-xs) var(--space-sm);
+}
+
+input[type="text"]:focus-visible,
+input[type="search"]:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+    outline: var(--border-active);
+    outline-offset: -1px;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--color-ink-muted);
+}
+
+input[type="search"] {
+    flex: 1 1 16rem;
+    min-width: 12rem;
+}
+
+textarea {
+    width: 100%;
+    font-family: var(--font-mono);
+    font-size: var(--type-size-data);
+    line-height: var(--type-line-height-data);
+}
+
+select {
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--color-paper);
+    border: var(--border-ink);
+    border-radius: var(--radius-default);
+    padding: var(--space-xs) var(--space-lg) var(--space-xs) var(--space-sm);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%23d50000' stroke-width='1.4'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right var(--space-sm) center;
+    cursor: pointer;
+}
+
+// Square checkbox with a red-ink check when on.
+input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    flex: none;
+    width: var(--size-check);
+    height: var(--size-check);
+    background: var(--color-paper);
+    border: var(--border-ink);
+    border-radius: var(--radius-default);
+    cursor: pointer;
+    vertical-align: middle;
+}
+
+input[type="checkbox"]:checked {
+    border-color: var(--color-accent-active);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 14 14'%3E%3Cpath d='M3 7.5l2.5 2.5L11 4' fill='none' stroke='%23d50000' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
+input[type="checkbox"]:focus-visible {
+    outline: none;
+    border-color: var(--color-accent-hover);
+}
+
+// A label and its value, with no frame around the pair.
+.field {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-sm);
+    font-size: var(--type-size-data);
+}
+
+.field-label {
+    font-size: var(--type-size-label);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+}

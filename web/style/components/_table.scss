@@ -1,0 +1,27 @@
+table.grid {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--type-size-data);
+}
+
+table.grid th {
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: left;
+    color: var(--color-ink-muted);
+    padding: var(--space-xs) var(--space-sm) var(--space-xs) 0;
+    border-bottom: var(--border-ink);
+}
+
+table.grid td {
+    padding: var(--space-xs) var(--space-sm) var(--space-xs) 0;
+    border-bottom: var(--border-rule);
+    vertical-align: baseline;
+}
+
+// A paradigm: the first column names the row.
+table.grid.paradigm td:first-child {
+    color: var(--color-ink-muted);
+}
