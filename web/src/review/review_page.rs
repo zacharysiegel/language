@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use chrono::NaiveDate;
 use leptos::prelude::*;
-use shared::course::{Course, Unit, VocabularyItem};
+use shared::course::{CourseOutline, UnitOutline, VocabularyItem};
 use shared::progress::ReviewDirectionKind;
 use shared::review::{ReviewCard, select_due_cards};
 
@@ -22,7 +22,7 @@ struct ReviewItem {
 
 #[component]
 pub fn ReviewPage() -> impl IntoView {
-    course_gate(|course: Arc<Course>| view! { <ReviewSetup course /> })
+    course_gate(|course: Arc<CourseOutline>| view! { <ReviewSetup course /> })
 }
 
 fn direction_from_code(code: &str) -> ReviewDirectionKind {
@@ -54,7 +54,7 @@ fn build_session_items(progress_store: ProgressStore) -> Vec<ReviewItem> {
 }
 
 #[component]
-fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
+fn ReviewSetup(course: Arc<CourseOutline>) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let session_items: RwSignal<Option<Vec<ReviewItem>>> = RwSignal::new(None);
 
@@ -129,7 +129,7 @@ fn ReviewSetup(course: Arc<Course>) -> impl IntoView {
 }
 
 #[component]
-fn ReviewSession(course: Arc<Course>, items: Vec<ReviewItem>, on_exit: Callback<()>) -> impl IntoView {
+fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Callback<()>) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let items: Arc<Vec<ReviewItem>> = Arc::new(items);
     let current_index: RwSignal<usize> = RwSignal::new(0);
@@ -167,7 +167,7 @@ fn ReviewSession(course: Arc<Course>, items: Vec<ReviewItem>, on_exit: Callback<
     };
 
     let card_items: Arc<Vec<ReviewItem>> = items.clone();
-    let card_course: Arc<Course> = course.clone();
+    let card_course: Arc<CourseOutline> = course.clone();
 
     view! {
         <h1>"Review"</h1>
@@ -206,7 +206,7 @@ struct CardProgress {
 }
 
 fn card_view(
-    unit: &Unit,
+    unit: &UnitOutline,
     item: &VocabularyItem,
     prompt_is_portuguese: bool,
     index: usize,
@@ -216,7 +216,7 @@ fn card_view(
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let card_progress: CardProgress = CardProgress { index, total_count };
-    let autoplay_clip: AudioClip = audio_clip(&item.audio, &item.pt);
+    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.pt);
 
     Effect::new(move |_| {
         if prompt_is_portuguese || revealed.get() {
@@ -227,9 +227,9 @@ fn card_view(
     let prompt_text: String = if prompt_is_portuguese { item.pt.clone() } else { item.en.clone() };
     let answer_text: String = if prompt_is_portuguese { item.en.clone() } else { item.pt.clone() };
     let unit_title: String = unit.title.clone();
-    let item_audio: Option<String> = item.audio.clone();
+    let item_audio: Option<String> = item.clip_key.clone();
     let item_portuguese: String = item.pt.clone();
-    let example_audio: Option<String> = item.example.audio.clone();
+    let example_audio: Option<String> = item.example.clip_key.clone();
     let example_portuguese: String = item.example.pt.clone();
     let example_english: String = item.example.en.clone();
     let note: Option<String> = item.note.clone();
@@ -253,12 +253,12 @@ fn card_view(
 
                     view! {
                         <div class="flashcard-answer">
-                            <PlayButton audio=item_audio.clone() text=item_portuguese.clone() />
+                            <PlayButton clip_key=item_audio.clone() text=item_portuguese.clone() />
                             {answer_text.clone()}
                         </div>
                         {literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> })}
                         <div class="example">
-                            <PlayButton audio=example_audio.clone() text=example_portuguese.clone() />
+                            <PlayButton clip_key=example_audio.clone() text=example_portuguese.clone() />
                             {example_portuguese.clone()}" "<span class="muted">{example_english.clone()}</span>
                         </div>
                         {note.map(|note| view! { <div class="note">{note}</div> })}

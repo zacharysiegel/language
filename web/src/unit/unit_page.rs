@@ -3,9 +3,9 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::{use_params_map, use_query_map};
-use shared::course::{Course, Unit};
+use shared::course::{CourseOutline, Unit};
 
-use crate::course_data::course_gate;
+use crate::course_data::{CourseLoadState, CourseStore, UnitLoadState, course_gate, use_course_store};
 use crate::unit::{
     DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, VocabularySection,
 };
@@ -72,23 +72,40 @@ impl TryFrom<&str> for UnitTabKind {
 pub fn UnitPage() -> impl IntoView {
     let params = use_params_map();
     let query = use_query_map();
+    let course_store: CourseStore = use_course_store();
+    let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
+    let unit_state: Memo<Option<UnitLoadState>> = Memo::new(move |_| course_store.unit_state(&unit_id.get()));
 
-    course_gate(move |course: Arc<Course>| {
-        let unit_id: String = params.read().get(UNIT_ID_PARAM).unwrap_or_default();
+    Effect::new(move |_| {
+        let course_loaded: bool = matches!(course_store.state(), CourseLoadState::Loaded(_));
+
+        if course_loaded {
+            course_store.ensure_unit_loaded(&unit_id.get());
+        }
+    });
+
+    course_gate(move |course: Arc<CourseOutline>| {
         let active_tab: UnitTabKind = query
             .read()
             .get(TAB_QUERY_KEY)
             .and_then(|code| UnitTabKind::try_from(code.as_str()).ok())
             .unwrap_or(UnitTabKind::Overview);
 
-        match course.find_unit(&unit_id) {
-            Some(unit) => unit_view(&course, unit.clone(), active_tab).into_any(),
-            None => view! { <p class="status">"That unit does not exist."</p> }.into_any(),
+        if course.find_unit(&unit_id.get()).is_none() {
+            return view! { <p class="status">"That unit does not exist."</p> }.into_any();
+        }
+
+        match unit_state.get() {
+            Some(UnitLoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
+            Some(UnitLoadState::Failed(message)) => {
+                view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any()
+            },
+            Some(UnitLoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
         }
     })
 }
 
-fn unit_view(course: &Course, unit: Unit, active_tab: UnitTabKind) -> impl IntoView + use<> {
+fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> impl IntoView + use<> {
     let tab_links: Vec<_> = UnitTabKind::ALL
         .into_iter()
         .filter(|tab| tab.available_for(&unit))

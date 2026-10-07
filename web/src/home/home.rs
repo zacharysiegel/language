@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use leptos::prelude::*;
 use leptos_router::components::A;
-use shared::course::{Course, LevelSummary, Unit};
+use shared::course::{CourseOutline, LevelSummary, UnitOutline};
 use shared::progress::UnitProgress;
 
 use crate::course_data::course_gate;
@@ -12,7 +12,7 @@ use crate::progress_state::{ProgressStore, use_progress_store};
 pub fn HomePage() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
 
-    course_gate(move |course: Arc<Course>| {
+    course_gate(move |course: Arc<CourseOutline>| {
         let next_unit_id: Option<String> = next_incomplete_unit_id(&course, progress_store);
         let level_sections: Vec<_> = course
             .levels
@@ -38,7 +38,7 @@ pub fn HomePage() -> impl IntoView {
     })
 }
 
-fn next_incomplete_unit_id(course: &Course, progress_store: ProgressStore) -> Option<String> {
+fn next_incomplete_unit_id(course: &CourseOutline, progress_store: ProgressStore) -> Option<String> {
     progress_store.read(|progress| {
         course
             .units
@@ -48,7 +48,7 @@ fn next_incomplete_unit_id(course: &Course, progress_store: ProgressStore) -> Op
     })
 }
 
-fn level_section(course: &Course, level: &LevelSummary, progress_store: ProgressStore) -> impl IntoView + use<> {
+fn level_section(course: &CourseOutline, level: &LevelSummary, progress_store: ProgressStore) -> impl IntoView + use<> {
     let unit_items: Vec<_> = course
         .units_at_level(level.code)
         .map(|unit| unit_item(unit, progress_store))
@@ -62,7 +62,7 @@ fn level_section(course: &Course, level: &LevelSummary, progress_store: Progress
     }
 }
 
-fn unit_item(unit: &Unit, progress_store: ProgressStore) -> impl IntoView + use<> {
+fn unit_item(unit: &UnitOutline, progress_store: ProgressStore) -> impl IntoView + use<> {
     let unit_id: String = unit.id.clone();
     let href: String = format!("/unit/{unit_id}");
     let unit_order: u32 = unit.order;

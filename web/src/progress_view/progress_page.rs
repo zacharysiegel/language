@@ -3,7 +3,7 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use shared::AppError;
-use shared::course::Course;
+use shared::course::CourseOutline;
 use shared::progress::Progress;
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
 
@@ -13,7 +13,7 @@ use crate::progress_state::{ProgressStore, use_progress_store};
 
 #[component]
 pub fn ProgressPage() -> impl IntoView {
-    course_gate(|course: Arc<Course>| view! { <ProgressSummary course /> })
+    course_gate(|course: Arc<CourseOutline>| view! { <ProgressSummary course /> })
 }
 
 fn box_label(box_index: usize) -> String {
@@ -24,7 +24,7 @@ fn box_label(box_index: usize) -> String {
 }
 
 #[component]
-fn ProgressSummary(course: Arc<Course>) -> impl IntoView {
+fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let unit_rows: Vec<_> = course
         .units

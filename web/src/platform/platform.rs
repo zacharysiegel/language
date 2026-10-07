@@ -1,10 +1,11 @@
 use chrono::NaiveDate;
-use shared::AppError;
+use shared::course_shard::ClipAudioEntry;
 use shared::progress::AudioEngineKind;
 
+/// Something to play: the recording of a clip, or the text spoken by the browser's voice when it has none.
 #[derive(Debug, Clone)]
 pub struct AudioClip {
-    pub file: String,
+    pub clip_key: Option<String>,
     pub fallback_text: String,
 }
 
@@ -16,12 +17,15 @@ pub use server::*;
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 mod browser {
     use std::cell::{Cell, RefCell};
+    use std::collections::BTreeMap;
 
     use js_sys::{Function, Promise};
     use wasm_bindgen::closure::Closure;
     use wasm_bindgen::{JsCast, JsValue};
     use wasm_bindgen_futures::JsFuture;
-    use web_sys::{HtmlAudioElement, SpeechSynthesisUtterance, Storage, Window};
+    use shared::artifact::{self, fetch};
+    use shared::course_shard::VoiceEngineKind;
+    use web_sys::{HtmlAudioElement, SpeechSynthesisUtterance, Storage};
 
     use super::*;
 
@@ -39,45 +43,30 @@ mod browser {
         finish: Function,
     }
 
+    /// The recordings of the shown version.
+    #[derive(Default)]
+    struct ClipAudioRegistry {
+        audio_base_url: String,
+        audio_sha256_by_clip: BTreeMap<String, BTreeMap<VoiceEngineKind, String>>,
+    }
+
     thread_local! {
+        static CLIP_AUDIO: RefCell<ClipAudioRegistry> = RefCell::new(ClipAudioRegistry::default());
         static SELECTED_ENGINE: Cell<AudioEngineKind> = const { Cell::new(AudioEngineKind::Auto) };
         static ACTIVE_CLIP: RefCell<Option<ActiveClip>> = const { RefCell::new(None) };
         static PLAYBACK_GENERATION: Cell<u64> = const { Cell::new(0) };
-    }
-
-    fn js_error(value: JsValue) -> AppError {
-        AppError::from(value.as_string().unwrap_or_else(|| format!("{value:?}")))
-    }
-
-    fn get_window() -> Result<Window, AppError> {
-        web_sys::window().ok_or_else(|| AppError::from("no window".to_string()))
     }
 
     fn local_storage() -> Option<Storage> {
         web_sys::window()?.local_storage().ok()?
     }
 
-    pub async fn fetch_text(url: &str) -> Result<String, AppError> {
-        let window: Window = get_window()?;
-        let response_value: JsValue = JsFuture::from(window.fetch_with_str(url)).await.map_err(js_error)?;
-        let response: web_sys::Response = response_value
-            .dyn_into()
-            .map_err(|value| AppError::from(format!("unexpected fetch result; [value={value:?}]")))?;
-
-        if !response.ok() {
-            return Err(AppError::from(format!("request failed; [url={url} status={}]", response.status())));
-        }
-
-        let text_promise: Promise = response.text().map_err(js_error)?;
-        let text_value: JsValue = JsFuture::from(text_promise).await.map_err(js_error)?;
-
-        text_value
-            .as_string()
-            .ok_or_else(|| AppError::from(format!("response body was not text; [url={url}]")))
+    pub fn read_stored_text(key: &str) -> Option<String> {
+        local_storage()?.get_item(key).ok()?
     }
 
     pub fn read_stored_progress() -> Option<String> {
-        local_storage()?.get_item(PROGRESS_STORAGE_KEY).ok()?
+        read_stored_text(PROGRESS_STORAGE_KEY)
     }
 
     pub fn write_stored_progress(text: &str) {
@@ -88,7 +77,7 @@ mod browser {
         store_text(UNREADABLE_PROGRESS_STORAGE_KEY, text);
     }
 
-    fn store_text(key: &str, text: &str) {
+    pub fn store_text(key: &str, text: &str) {
         let Some(storage) = local_storage() else {
             return;
         };
@@ -136,17 +125,49 @@ mod browser {
         SELECTED_ENGINE.with(|selected| selected.set(engine));
     }
 
-    fn clip_url(file: &str, text: &str) -> String {
-        if file.is_empty() {
-            return String::new();
-        }
+    pub fn reset_clip_audio(audio_base_url: &str, entries: &[ClipAudioEntry]) {
+        CLIP_AUDIO.with(|registry| {
+            *registry.borrow_mut() = ClipAudioRegistry {
+                audio_base_url: audio_base_url.to_string(),
+                audio_sha256_by_clip: BTreeMap::new(),
+            };
+        });
 
-        format!("/course/audio/{}/{file}", SELECTED_ENGINE.with(Cell::get).directory_for(text))
+        register_clip_audio(entries);
     }
 
-    pub async fn play_clip(file: &str, fallback_text: &str, slow: bool) {
+    pub fn register_clip_audio(entries: &[ClipAudioEntry]) {
+        CLIP_AUDIO.with(|registry| {
+            let mut registry = registry.borrow_mut();
+
+            for entry in entries {
+                registry
+                    .audio_sha256_by_clip
+                    .entry(entry.clip_key.clone())
+                    .or_default()
+                    .insert(entry.engine, entry.audio_sha256.clone());
+            }
+        });
+    }
+
+    /* The chosen voice's recording, else any other voice's, so a clip one engine lacks still plays a recording. */
+    fn clip_url(clip_key: &str, text: &str) -> Option<String> {
+        let preferred_engine: VoiceEngineKind = SELECTED_ENGINE.with(Cell::get).voice_engine_for(text);
+
+        CLIP_AUDIO.with(|registry| {
+            let registry = registry.borrow();
+            let audio_sha256_by_engine: &BTreeMap<VoiceEngineKind, String> = registry.audio_sha256_by_clip.get(clip_key)?;
+            let audio_sha256: &String = audio_sha256_by_engine
+                .get(&preferred_engine)
+                .or_else(|| audio_sha256_by_engine.values().next())?;
+
+            Some(fetch::join_url(&registry.audio_base_url, &artifact::audio_key(audio_sha256)))
+        })
+    }
+
+    pub async fn play_clip(clip: &AudioClip, slow: bool) {
         stop_audio();
-        play_without_stopping(&clip_url(file, fallback_text), fallback_text, playback_rate(slow)).await;
+        play_without_stopping(clip, playback_rate(slow)).await;
     }
 
     pub async fn play_sequence(clips: Vec<AudioClip>, slow: bool) {
@@ -161,18 +182,25 @@ mod browser {
                 return;
             }
 
-            play_without_stopping(&clip_url(&clip.file, &clip.fallback_text), &clip.fallback_text, playback_rate(slow)).await;
+            play_without_stopping(clip, playback_rate(slow)).await;
         }
     }
 
-    async fn play_without_stopping(url: &str, fallback_text: &str, rate: f64) {
+    async fn play_without_stopping(clip: &AudioClip, rate: f64) {
+        let url: Option<String> = clip.clip_key.as_deref().and_then(|clip_key| clip_url(clip_key, &clip.fallback_text));
+        let Some(url) = url
+        else {
+            speak_with_browser_voice(&clip.fallback_text, rate).await;
+            return;
+        };
+
         let starting_generation: u64 = PLAYBACK_GENERATION.with(Cell::get);
-        let outcome: String = play_audio_file(url, rate).await;
+        let outcome: String = play_audio_file(&url, rate).await;
         let stopped_meanwhile: bool = PLAYBACK_GENERATION.with(Cell::get) != starting_generation;
 
         // A pause while play() is pending rejects it, which is a stop and not a load failure.
         if outcome == CLIP_FAILED && !stopped_meanwhile {
-            speak_with_browser_voice(fallback_text, rate).await;
+            speak_with_browser_voice(&clip.fallback_text, rate).await;
         }
     }
 
@@ -253,9 +281,11 @@ mod server {
     use super::*;
 
     // The server renders a static shell; nothing below runs before the client attaches.
-    pub async fn fetch_text(_url: &str) -> Result<String, AppError> {
-        Err(AppError::from("fetching is only available in the browser".to_string()))
+    pub fn read_stored_text(_key: &str) -> Option<String> {
+        None
     }
+
+    pub fn store_text(_key: &str, _text: &str) {}
 
     pub fn read_stored_progress() -> Option<String> {
         None
@@ -281,7 +311,11 @@ mod server {
 
     pub fn set_audio_engine(_engine: AudioEngineKind) {}
 
-    pub async fn play_clip(_file: &str, _fallback_text: &str, _slow: bool) {}
+    pub fn reset_clip_audio(_audio_base_url: &str, _entries: &[ClipAudioEntry]) {}
+
+    pub fn register_clip_audio(_entries: &[ClipAudioEntry]) {}
+
+    pub async fn play_clip(_clip: &AudioClip, _slow: bool) {}
 
     pub async fn play_sequence(_clips: Vec<AudioClip>, _slow: bool) {}
 }

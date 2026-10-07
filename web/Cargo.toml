@@ -20,7 +20,20 @@ wasm-bindgen-futures = { workspace = true, optional = true }
 js-sys = { workspace = true, optional = true }
 web-sys = { workspace = true, optional = true, features = [
     "Window",
+    "Navigator",
     "Storage",
+    "StorageManager",
+    "FileSystemDirectoryHandle",
+    "FileSystemFileHandle",
+    "FileSystemWritableFileStream",
+    "FileSystemGetDirectoryOptions",
+    "FileSystemGetFileOptions",
+    "WritableStream",
+    "File",
+    "Blob",
+    "DomException",
+    "RequestInit",
+    "RequestCache",
     "Response",
     "HtmlAudioElement",
     "HtmlMediaElement",
@@ -31,6 +44,7 @@ console_log = { workspace = true, optional = true }
 console_error_panic_hook = { workspace = true, optional = true }
 leptos_axum = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
+tower-http = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
@@ -52,6 +66,7 @@ ssr = [
     "leptos_meta/ssr",
     "dep:leptos_axum",
     "dep:axum",
+    "dep:tower-http",
     "tokio/rt",
     "tokio/rt-multi-thread",
     "tokio/net",

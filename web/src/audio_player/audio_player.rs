@@ -4,16 +4,16 @@ use leptos::task::spawn_local;
 use crate::platform::{self, AudioClip};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-pub fn audio_clip(audio: &Option<String>, fallback_text: &str) -> AudioClip {
+pub fn audio_clip(clip_key: &Option<String>, fallback_text: &str) -> AudioClip {
     AudioClip {
-        file: audio.clone().unwrap_or_default(),
+        clip_key: clip_key.clone(),
         fallback_text: fallback_text.to_string(),
     }
 }
 
 pub fn play_in_background(clip: AudioClip, slow: bool) {
     spawn_local(async move {
-        platform::play_clip(&clip.file, &clip.fallback_text, slow).await;
+        platform::play_clip(&clip, slow).await;
     });
 }
 
@@ -37,7 +37,7 @@ fn StopIcon() -> impl IntoView {
 
 #[component]
 pub fn PlayButton(
-    audio: Option<String>,
+    clip_key: Option<String>,
     #[prop(into)] text: String,
     #[prop(optional)] slow: bool,
     #[prop(optional, into)] label: Option<String>,
@@ -59,7 +59,7 @@ pub fn PlayButton(
             on:click=move |event| {
                 event.stop_propagation();
                 let use_slow: bool = slow || progress_store.read(|progress| progress.settings.slow_audio);
-                play_in_background(audio_clip(&audio, &text), use_slow);
+                play_in_background(audio_clip(&clip_key, &text), use_slow);
             }
         >
             {if slow { view! { "0.7×" }.into_any() } else { view! { <PlayIcon /> }.into_any() }}

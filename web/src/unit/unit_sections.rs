@@ -44,7 +44,7 @@ fn PhraseRow(pair: PhrasePair) -> impl IntoView {
 
     view! {
         <li class="phrase">
-            <PlayButton audio=pair.audio.clone() text=pair.pt.clone() />
+            <PlayButton clip_key=pair.clip_key.clone() text=pair.pt.clone() />
             <span class="pt">{pair.pt.clone()}</span>
             <span class="en" class:hidden=move || !progress_store.read(|progress| progress.settings.show_translations)>
                 {pair.en.clone()}
@@ -103,14 +103,14 @@ fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
     view! {
         <li class="vocabulary-item">
             <div class="vocabulary-main">
-                <PlayButton audio=item.audio.clone() text=item.pt.clone() />
+                <PlayButton clip_key=item.clip_key.clone() text=item.pt.clone() />
                 <strong class="pt">{item.pt.clone()}</strong>
                 {part_of_speech}
                 <span class="en">{item.en.clone()}</span>
             </div>
             {literal}
             <div class="example">
-                <PlayButton audio=item.example.audio.clone() text=item.example.pt.clone() />
+                <PlayButton clip_key=item.example.clip_key.clone() text=item.example.pt.clone() />
                 <span class="pt">{item.example.pt.clone()}</span>
                 <span class="en muted">" "{item.example.en.clone()}</span>
             </div>
@@ -128,7 +128,7 @@ pub fn VocabularySection(unit: Unit) -> impl IntoView {
 
 #[component]
 fn DialogueView(dialogue: Dialogue) -> impl IntoView {
-    let clips: Vec<AudioClip> = dialogue.lines.iter().map(|line| audio_clip(&line.audio, &line.pt)).collect();
+    let clips: Vec<AudioClip> = dialogue.lines.iter().map(|line| audio_clip(&line.clip_key, &line.pt)).collect();
     let lines: Vec<_> = dialogue
         .lines
         .iter()
@@ -138,7 +138,7 @@ fn DialogueView(dialogue: Dialogue) -> impl IntoView {
             view! {
                 <li class="dialogue-line">
                     <span class="speaker">{speaker}</span>
-                    <PhraseRow pair=PhrasePair { pt: line.pt.clone(), en: line.en.clone(), literal: line.literal.clone(), audio: line.audio.clone() } />
+                    <PhraseRow pair=PhrasePair { pt: line.pt.clone(), en: line.en.clone(), literal: line.literal.clone(), clip_key: line.clip_key.clone() } />
                 </li>
             }
         })
@@ -214,7 +214,7 @@ pub fn GrammarSection(unit: Unit) -> impl IntoView {
 #[component]
 fn ReadingView(reading: Reading) -> impl IntoView {
     let questions_open: RwSignal<bool> = RwSignal::new(false);
-    let clips: Vec<AudioClip> = reading.paragraphs.iter().map(|paragraph| audio_clip(&paragraph.audio, &paragraph.pt)).collect();
+    let clips: Vec<AudioClip> = reading.paragraphs.iter().map(|paragraph| audio_clip(&paragraph.clip_key, &paragraph.pt)).collect();
     let paragraph_rows: Vec<_> = reading
         .paragraphs
         .iter()
