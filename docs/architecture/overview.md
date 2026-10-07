@@ -27,7 +27,7 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 
 ## Artifact contract
 
-- A version is a directory `<version>/` (a UTC timestamp, `YYYYMMDDTHHMMSSZ`) holding `manifest.json` and the shards. Shard names end in the SHA-256 of their bytes.
+- A version is a directory `<version>/` named `<UTC date>+<city>` (a random United States city not already used that day, for uniqueness and for people to tell versions apart), holding `manifest.json` and the shards. Versions are ordered by the manifest's `artifact_created`. Shard names end in the SHA-256 of their bytes.
 - Recordings are named by the SHA-256 of their bytes and sit outside every version, so a publish uploads only the ones the repository lacks. They are not stored in SQLite.
 - `manifest.json` leads with `manifest_schema_version`, then `version`, `artifact_created`, the course shard, the unit shards by unit id, and each voice engine's pipeline revision. Paths are relative to the version directory. `shared::artifact::Manifest` is the canonical type for producer and clients.
 - A shard is SQLite with `application_id` `PTCR` and `user_version` set to the shard schema version, compressed with brotli because neither R2 nor a static file server compresses a generic binary type. The manifest hash covers the compressed bytes.
@@ -35,13 +35,14 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 - Headers: shards, recordings and versioned manifests are `public, max-age=31536000, immutable`; `latest/` pointers are `public, max-age=300`, and clients fetch them bypassing the HTTP cache.
 - Publish order: recordings, shards, `<version>/manifest.json`, `latest/manifest.<schema>.json`, then `latest/manifest.json`. A client that reads the latest pointer finds every file it names.
 - A client that cannot read the schema of `latest/manifest.json` falls back to `latest/manifest.<its schema>.json`.
-- Discovery: the app's origin serves `/discovery` with `schema_version`, `repository_base_url`, `minimum_client_version` and `sunset`. The client requests the static repository's manifest (`/repository`) in parallel and reuses it when discovery agrees.
+- Discovery: the app's origin serves `/discovery` (`public, max-age=3600`) with `schema_version`, `repository_base_url`, `minimum_client_version` and `sunset`. A document with an unknown `schema_version` is ignored in favor of the static repository (`/repository`), whose manifest the client requests in parallel and reuses when discovery agrees. `minimum_client_version` is informational: an older client logs it and continues.
+- Versioning, as in Eafora: every reader accepts exactly its own manifest, discovery and shard schema versions, and reports whether a mismatched document is older or newer than itself.
 
 ## Producer
 
 - Authoring source stays JSON in git; there is no canonical database. The data is hand-authored and small, so a database would add nothing. This is the deliberate deviation from Eafora.
 - `course_builder build` validates, synthesizes each engine's missing clips with the engines running at the same time, writes the bundle, refreshes `web/static/embedded/`, and keeps the two newest bundles.
-- `course_builder publish` has three targets, as in Eafora: `local` copies into a directory (default `build/repository/`) and keeps the two newest versions and the recordings they name; `cloudflare-r2` uploads through the S3 API with credentials from `.env` and the secret access key from `secrets.yaml` (decrypted with `secr`); `dry` logs each upload.
+- `course_builder publish` refuses a version the repository already has. It has three targets, as in Eafora: `local` copies into a directory (default `build/repository/`) and keeps the two newest versions and the recordings they name; `cloudflare-r2` uploads through the S3 API with credentials from `.env` and the secret access key from `secrets.yaml` (decrypted with `secr`); `dry` logs each upload.
 
 ## Consumer
 
@@ -53,14 +54,15 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 ## Hosting
 
 - Local (the Mac mini): `cargo leptos serve --release` (or `serve.sh` for development) serves the app, `/discovery` and `build/repository/` at `/repository`. Nothing else is needed.
-- R2: publish with `cloudflare-r2`, and set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` on the app's server to the bucket's public URL. The bucket needs a CORS rule allowing `GET` from the app's origin.
+- R2: the bucket, token and public domain are set up by hand in the Cloudflare dashboard, as for Eafora. `course_builder set-artifact-cors` applies `tools/course_builder/r2-cors.json` to the bucket (the token needs bucket admin permission), then publish with `cloudflare-r2` and set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` on the app's server to the bucket's public URL.
 
 ## Deviations from the original proposal
 
 - One course shard (outline and vocabulary) replaced the proposed separate index and glossary shards; both pages need the same records.
 - Shards are brotli-compressed, as Eafora's are.
 - Recordings sit outside the version directories, keyed by hash, rather than under `audio/<engine>/` per version, so an unchanged recording is uploaded once.
-- Versions are UTC timestamps rather than `YYYY-MM-DD+<label>`.
+- Versions are `<date>+<city>` rather than `<date>+<Nobel laureate>`, and uniqueness is checked against local bundles and the local repository, since there is no database.
+- The CORS policy is applied through the S3 API by `course_builder set-artifact-cors` rather than by a `wrangler` script.
 - `build` synthesizes; there is no separate `synthesize` command.
 - The local repository is `build/repository/`, served by the app's server, rather than `web/static/repository/`.
 - The embedded bundle holds every shard and no recordings, rather than three foundation units.

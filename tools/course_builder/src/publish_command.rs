@@ -46,6 +46,19 @@ pub fn run_publish(paths: &WorkspacePaths, target: PublishTargetKind, bundle: Op
     Ok(true)
 }
 
+/// The R2 repository named by `.env`, with the secret access key from `secrets.yaml`.
+pub async fn create_cloudflare_r2_repository() -> Result<CloudflareR2ArtifactRepository, AppError> {
+    let config: CloudflareR2Config = CloudflareR2Config {
+        account_id: secrets::read_environment(ENV_R2_ACCOUNT_ID)?,
+        bucket: secrets::read_environment(ENV_R2_ARTIFACT_BUCKET)?,
+        access_key_id: secrets::read_environment(ENV_R2_PUBLISH_ACCESS_KEY_ID)?,
+        secret_access_key: secrets::master_decrypt_utf8(SECRET_R2_PUBLISH_SECRET_ACCESS_KEY)?,
+        public_base_url: secrets::read_environment(ENV_R2_ARTIFACT_PUBLIC_BASE_URL)?,
+    };
+
+    Ok(CloudflareR2ArtifactRepository::create(config).await)
+}
+
 async fn create_repository(paths: &WorkspacePaths, target: PublishTargetKind) -> Result<ArtifactRepositoryKind, AppError> {
     match target {
         PublishTargetKind::Local { root, public_base_url } => {
@@ -56,17 +69,7 @@ async fn create_repository(paths: &WorkspacePaths, target: PublishTargetKind) ->
 
             Ok(ArtifactRepositoryKind::Local(LocalArtifactRepository::new(root, public_base_url)))
         },
-        PublishTargetKind::CloudflareR2 => {
-            let config: CloudflareR2Config = CloudflareR2Config {
-                account_id: secrets::read_environment(ENV_R2_ACCOUNT_ID)?,
-                bucket: secrets::read_environment(ENV_R2_ARTIFACT_BUCKET)?,
-                access_key_id: secrets::read_environment(ENV_R2_PUBLISH_ACCESS_KEY_ID)?,
-                secret_access_key: secrets::master_decrypt_utf8(SECRET_R2_PUBLISH_SECRET_ACCESS_KEY)?,
-                public_base_url: secrets::read_environment(ENV_R2_ARTIFACT_PUBLIC_BASE_URL)?,
-            };
-
-            Ok(ArtifactRepositoryKind::CloudflareR2(CloudflareR2ArtifactRepository::create(config).await))
-        },
+        PublishTargetKind::CloudflareR2 => Ok(ArtifactRepositoryKind::CloudflareR2(create_cloudflare_r2_repository().await?)),
         PublishTargetKind::Dry => Ok(ArtifactRepositoryKind::Dry(DryArtifactRepository::new())),
     }
 }

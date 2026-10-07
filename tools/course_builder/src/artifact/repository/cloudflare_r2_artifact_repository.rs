@@ -3,12 +3,15 @@ use std::path::Path;
 
 use aws_sdk_s3::Client;
 use aws_sdk_s3::config::{BehaviorVersion, Credentials, Region};
+use aws_sdk_s3::operation::get_bucket_cors::GetBucketCorsOutput;
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Output;
 use aws_sdk_s3::primitives::ByteStream;
+use aws_sdk_s3::types::{CorsConfiguration, CorsRule};
 use shared::AppError;
 use shared::error::render_error_chain;
 
 use crate::artifact::repository::artifact_repository::{ArtifactRepository, ObjectHeaders};
+use crate::artifact::repository::cors_policy::CorsPolicy;
 
 /* R2 ignores the region but the S3 client requires one; "auto" is the value Cloudflare documents. */
 const R2_REGION_PLACEHOLDER: &str = "auto";
@@ -53,6 +56,59 @@ impl CloudflareR2ArtifactRepository {
             public_base_url: config.public_base_url,
         }
     }
+}
+
+impl CloudflareR2ArtifactRepository {
+    /// Replaces the bucket's CORS configuration with `policy`; needs a token with bucket admin permission.
+    pub async fn apply_cors_policy(&self, policy: &CorsPolicy) -> Result<(), AppError> {
+        let configuration: CorsConfiguration = cors_configuration(policy)?;
+
+        self.client
+            .put_bucket_cors()
+            .bucket(&self.bucket)
+            .cors_configuration(configuration)
+            .send()
+            .await
+            .map_err(|error| AppError::from(format!("put_bucket_cors failed; [bucket={} error={}]", self.bucket, render_error_chain(&error))))?;
+
+        Ok(())
+    }
+
+    pub async fn read_cors_policies(&self) -> Result<Vec<CorsPolicy>, AppError> {
+        let output: GetBucketCorsOutput = self
+            .client
+            .get_bucket_cors()
+            .bucket(&self.bucket)
+            .send()
+            .await
+            .map_err(|error| AppError::from(format!("get_bucket_cors failed; [bucket={} error={}]", self.bucket, render_error_chain(&error))))?;
+
+        let policies: Vec<CorsPolicy> = output
+            .cors_rules()
+            .iter()
+            .map(|rule| CorsPolicy {
+                allowed_origins: rule.allowed_origins().to_vec(),
+                allowed_methods: rule.allowed_methods().to_vec(),
+                max_age_seconds: rule.max_age_seconds().unwrap_or_default(),
+            })
+            .collect();
+
+        Ok(policies)
+    }
+}
+
+fn cors_configuration(policy: &CorsPolicy) -> Result<CorsConfiguration, AppError> {
+    let rule: CorsRule = CorsRule::builder()
+        .set_allowed_origins(Some(policy.allowed_origins.clone()))
+        .set_allowed_methods(Some(policy.allowed_methods.clone()))
+        .max_age_seconds(policy.max_age_seconds)
+        .build()
+        .map_err(|error| AppError::from(format!("invalid CORS rule; [error={error}]")))?;
+
+    CorsConfiguration::builder()
+        .cors_rules(rule)
+        .build()
+        .map_err(|error| AppError::from(format!("invalid CORS configuration; [error={error}]")))
 }
 
 impl ArtifactRepository for CloudflareR2ArtifactRepository {
