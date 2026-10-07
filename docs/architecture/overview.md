@@ -54,3 +54,14 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 
 - Local (the Mac mini): `cargo leptos serve --release` (or `serve.sh` for development) serves the app, `/discovery` and `build/repository/` at `/repository`. Nothing else is needed.
 - R2: publish with `cloudflare-r2`, and set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` on the app's server to the bucket's public URL. The bucket needs a CORS rule allowing `GET` from the app's origin.
+
+## Deviations from the original proposal
+
+- One course shard (outline and vocabulary) replaced the proposed separate index and glossary shards; both pages need the same records.
+- Shards are brotli-compressed, as Eafora's are.
+- Recordings sit outside the version directories, keyed by hash, rather than under `audio/<engine>/` per version, so an unchanged recording is uploaded once.
+- Versions are UTC timestamps rather than `YYYY-MM-DD+<label>`.
+- `build` synthesizes; there is no separate `synthesize` command.
+- The local repository is `build/repository/`, served by the app's server, rather than `web/static/repository/`.
+- The embedded bundle holds every shard and no recordings, rather than three foundation units.
+- The repository trait gained `existing_keys`, which Eafora's lacks, to skip recordings already published.
