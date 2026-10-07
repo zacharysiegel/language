@@ -1,6 +1,8 @@
 use std::net::SocketAddr;
 
 use axum::Router;
+use axum::http::{HeaderValue, header};
+use axum::response::Response;
 use leptos::logging::log;
 use leptos::prelude::*;
 use leptos_axum::LeptosRoutes;
@@ -21,6 +23,7 @@ pub async fn serve() -> Result<(), AppError> {
             move || shell(leptos_options.clone())
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
+        .layer(axum::middleware::map_response(require_revalidation))
         .with_state(leptos_options);
 
     let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind(&address)
@@ -31,4 +34,12 @@ pub async fn serve() -> Result<(), AppError> {
     axum::serve(listener, router.into_make_service())
         .await
         .map_err(|error| AppError::from(format!("the server stopped; [error={error}]")))
+}
+
+/* The bundle and the data keep their names across rebuilds, so a browser applying its own freshness guess can pair a
+   cached script with a newer module or data file and never start. */
+async fn require_revalidation(mut response: Response) -> Response {
+    response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+
+    response
 }
