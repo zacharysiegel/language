@@ -10,9 +10,9 @@ use shared::course_shard::{self, ClipAudioEntry};
 
 use crate::artifact::course_shard_writer::{self, ClipAudioIndex, ClipCatalog};
 use crate::audio_plan::AudioPlan;
+use crate::version_label;
 use crate::workspace::WorkspacePaths;
 
-const VERSION_TIMESTAMP_FORMAT: &str = "%Y%m%dT%H%M%SZ";
 const PARTIAL_BUNDLE_PREFIX: &str = ".partial-";
 const PARTIAL_SHARD_FILE_NAME: &str = ".shard.part";
 const BUNDLES_KEPT: usize = 2;
@@ -37,7 +37,8 @@ pub fn write_bundle(
     recordings: &ClipRecordings,
 ) -> Result<BuiltBundle, AppError> {
     let artifact_created: DateTime<Utc> = Utc::now();
-    let version: String = artifact_created.format(VERSION_TIMESTAMP_FORMAT).to_string();
+    let taken_versions: BTreeSet<String> = read_taken_versions(paths)?;
+    let version: String = version_label::generate(artifact_created, &taken_versions)?;
     let partial_directory: PathBuf = paths.bundles_directory.join(format!("{PARTIAL_BUNDLE_PREFIX}{version}"));
     let bundle_directory: PathBuf = paths.bundles_directory.join(&version);
 
@@ -82,6 +83,15 @@ pub fn write_bundle(
         directory: bundle_directory,
         manifest: built_manifest,
     })
+}
+
+/// Every version a local bundle or the local repository already uses.
+fn read_taken_versions(paths: &WorkspacePaths) -> Result<BTreeSet<String>, AppError> {
+    let mut taken_versions: BTreeSet<String> = list_version_names(&paths.bundles_directory)?.into_iter().collect();
+
+    taken_versions.extend(list_version_names(&paths.local_repository_directory)?);
+
+    Ok(taken_versions)
 }
 
 fn write_course_shard(bundle_directory: &Path, course: &Course, clip_catalog: &ClipCatalog) -> Result<ManifestEntry, AppError> {
@@ -151,7 +161,7 @@ pub fn read_bundle_manifest(bundle_directory: &Path) -> Result<Manifest, AppErro
 
 /// The newest finished bundle in the bundles directory.
 pub fn find_newest_bundle(paths: &WorkspacePaths) -> Result<PathBuf, AppError> {
-    let bundle_names: Vec<String> = list_bundle_names(&paths.bundles_directory)?;
+    let bundle_names: Vec<String> = list_versions_oldest_first(&paths.bundles_directory)?;
     let newest_name: &String = bundle_names.last().ok_or_else(|| {
         AppError::from(format!(
             "no bundle has been built; run `course_builder build` first; [directory={}]",
@@ -162,32 +172,59 @@ pub fn find_newest_bundle(paths: &WorkspacePaths) -> Result<PathBuf, AppError> {
     Ok(paths.bundles_directory.join(newest_name))
 }
 
-/* Version names are UTC timestamps, so name order is creation order. */
-fn list_bundle_names(bundles_directory: &Path) -> Result<Vec<String>, AppError> {
-    if !bundles_directory.exists() {
+/// The versions under `parent`, oldest first by their manifests' creation time; a version whose manifest cannot
+/// be read sorts first.
+pub fn list_versions_oldest_first(parent: &Path) -> Result<Vec<String>, AppError> {
+    let mut versions_by_creation: Vec<(Option<DateTime<Utc>>, String)> = list_version_names(parent)?
+        .into_iter()
+        .map(|version_name| (read_artifact_created(&parent.join(&version_name)), version_name))
+        .collect();
+
+    versions_by_creation.sort();
+
+    Ok(versions_by_creation.into_iter().map(|(_, version_name)| version_name).collect())
+}
+
+fn read_artifact_created(version_directory: &Path) -> Option<DateTime<Utc>> {
+    let read_manifest: Result<Manifest, AppError> = read_bundle_manifest(version_directory);
+
+    match read_manifest {
+        Ok(version_manifest) => Some(version_manifest.artifact_created),
+        Err(error) => {
+            log::warn!("a version's manifest is unreadable; [path={} error={error}]", version_directory.display());
+
+            None
+        },
+    }
+}
+
+/* A version is any directory except the pointers, the shared recordings, and a bundle still being written. */
+fn list_version_names(parent: &Path) -> Result<Vec<String>, AppError> {
+    if !parent.exists() {
         return Ok(Vec::new());
     }
 
-    let mut bundle_names: Vec<String> = Vec::new();
+    let mut version_names: Vec<String> = Vec::new();
 
-    for directory_entry in fs::read_dir(bundles_directory)? {
+    for directory_entry in fs::read_dir(parent)? {
         let directory_entry: fs::DirEntry = directory_entry?;
         let name: String = directory_entry.file_name().to_string_lossy().into_owned();
-        let is_finished_bundle: bool = directory_entry.file_type()?.is_dir() && !name.starts_with('.');
+        let is_version: bool = directory_entry.file_type()?.is_dir()
+            && !name.starts_with('.')
+            && name != manifest::LATEST_POINTER_DIRECTORY
+            && name != manifest::SUBDIR_AUDIO;
 
-        if is_finished_bundle {
-            bundle_names.push(name);
+        if is_version {
+            version_names.push(name);
         }
     }
 
-    bundle_names.sort();
-
-    Ok(bundle_names)
+    Ok(version_names)
 }
 
 /// Removes all but the newest bundles, and any bundle left partial by an interrupted build.
 pub fn prune_bundles(paths: &WorkspacePaths) -> Result<(), AppError> {
-    let bundle_names: Vec<String> = list_bundle_names(&paths.bundles_directory)?;
+    let bundle_names: Vec<String> = list_versions_oldest_first(&paths.bundles_directory)?;
     let removable_count: usize = bundle_names.len().saturating_sub(BUNDLES_KEPT);
 
     for bundle_name in &bundle_names[..removable_count] {

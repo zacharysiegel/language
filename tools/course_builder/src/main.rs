@@ -3,12 +3,14 @@ mod audio_encoding;
 mod audio_plan;
 mod audio_synthesis;
 mod build_command;
+mod cors_command;
 mod course_source;
 mod kokoro;
 mod publish_command;
 mod secrets;
 mod speech_engine;
 mod validate_command;
+mod version_label;
 mod work_pool;
 mod workspace;
 
@@ -19,6 +21,7 @@ use clap::{Args, Parser, Subcommand};
 use shared::AppError;
 
 use crate::build_command::BuildOptions;
+use crate::cors_command::CorsActionKind;
 use crate::publish_command::PublishTargetKind;
 use crate::speech_engine::SpeechEngineKind;
 use crate::workspace::WorkspacePaths;
@@ -38,6 +41,15 @@ enum CommandKind {
     Build(BuildArguments),
     /// Upload a bundle to a repository, the latest-manifest pointer last.
     Publish(PublishArguments),
+    /// Apply `tools/course_builder/r2-cors.json` to the R2 bucket so the app's origin may read it.
+    SetArtifactCors(SetArtifactCorsArguments),
+}
+
+#[derive(Args)]
+struct SetArtifactCorsArguments {
+    /// Report the bucket's policy without changing it.
+    #[arg(long)]
+    list: bool,
 }
 
 #[derive(Args)]
@@ -138,6 +150,11 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
             };
 
             publish_command::run_publish(&paths, target, arguments.bundle)
+        },
+        CommandKind::SetArtifactCors(arguments) => {
+            let action: CorsActionKind = if arguments.list { CorsActionKind::List } else { CorsActionKind::Apply };
+
+            cors_command::run_set_artifact_cors(action)
         },
     }
 }
