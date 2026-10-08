@@ -24,7 +24,6 @@ struct ProgressPage: View {
         VStack(alignment: .leading, spacing: .spaceXs) {
             PageHeader(caption: nil, title: "Progress")
             Text("\(progressStore.completedUnitCount(courseId: outline.id)) / \(outline.units.count) units completed").font(.dataText).foregroundStyle(Color.inkMuted)
-            Text("Study streak \(progressStore.streakDays()) day(s)").font(.dataText).foregroundStyle(Color.inkMuted)
         }
     }
 

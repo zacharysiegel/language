@@ -1,6 +1,5 @@
 use std::sync::Arc;
 
-use chrono::NaiveDate;
 use leptos::prelude::*;
 use shared::course::{self, CourseOutline, UnitOutline, VocabularyItem};
 use shared::progress::ReviewDirectionKind;
@@ -156,7 +155,6 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
                 return;
             };
             let now_milliseconds: i64 = platform::now_milliseconds();
-            let today: NaiveDate = platform::today();
 
             progress_store.update(|progress| {
                 let course_progress = progress.course_progress_mut(&course_id);
@@ -165,8 +163,6 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
                 if let Some(graded) = graded {
                     course_progress.cards.insert(item.card_id.clone(), graded);
                 }
-
-                progress.record_review_activity(today, 1);
             });
 
             if remembered {

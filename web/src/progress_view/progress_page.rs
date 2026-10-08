@@ -8,7 +8,6 @@ use shared::progress::Progress;
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
 
 use crate::course_data::{self, course_gate, use_route_course_id};
-use crate::platform;
 use crate::progress_state::{self, ProgressStore, remember_route_course, use_progress_store};
 
 #[component]
@@ -65,7 +64,6 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
     };
 
     let unit_count: usize = course.units.len();
-    let streak_days = move || progress_store.read(|progress| progress.streak_days(platform::today()));
     let completed_course_id: String = course.id.clone();
     let completed_count = move || progress_store.read(|progress| progress.course_progress(&completed_course_id).completed_unit_count());
 
@@ -73,7 +71,6 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
         <h1>"Progress"</h1>
         <div class="course-summary">
             <span class="numeric muted">{move || format!("{} / {unit_count} units completed", completed_count())}</span>
-            <span class="numeric muted">{move || format!("Study streak {} day(s)", streak_days())}</span>
         </div>
         <h2>"Units"</h2>
         <table class="grid"><tbody>{unit_rows}</tbody></table>

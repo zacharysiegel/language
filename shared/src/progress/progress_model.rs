@@ -1,14 +1,11 @@
 use std::collections::BTreeMap;
 
-use chrono::NaiveDate;
 use serde::{Deserialize, Serialize};
 
 use crate::AppError;
 use crate::course_shard::VoiceEngineKind;
 use crate::practice::{PASS_PROPORTION, PracticeModeKind, SessionScore};
 use crate::review::ReviewCard;
-
-const DATE_KEY_FORMAT: &str = "%Y-%m-%d";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -87,14 +84,6 @@ pub struct UnitProgress {
     pub best_proportion: f64,
     #[serde(default)]
     pub attempt_count: u32,
-}
-
-#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct DailyActivity {
-    #[serde(default)]
-    pub exercise_count: u32,
-    #[serde(default)]
-    pub review_count: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -182,7 +171,7 @@ impl CourseProgress {
     }
 }
 
-/// Everything the learner has done, across every course; study activity counts toward one streak.
+/// Everything the learner has done, in every course.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct Progress {
     /// Each course's progress, by course id.
@@ -190,12 +179,6 @@ pub struct Progress {
     pub courses: BTreeMap<String, CourseProgress>,
     #[serde(default)]
     pub settings: Settings,
-    #[serde(default)]
-    pub activity: BTreeMap<String, DailyActivity>,
-}
-
-pub fn date_key(date: NaiveDate) -> String {
-    date.format(DATE_KEY_FORMAT).to_string()
 }
 
 impl Progress {
@@ -220,8 +203,8 @@ impl Progress {
         self.courses.entry(course_id.to_string()).or_default()
     }
 
-    /// Counts the session's exercises as today's activity; a full practice also records an attempt at the unit and,
-    /// when passed, adds the unit's words to the course's review deck.
+    /// A full practice records an attempt at the unit and, when passed, adds the unit's words to the course's review
+    /// deck; a quick practice records nothing.
     pub fn record_practice_session(
         &mut self,
         course_id: &str,
@@ -229,11 +212,8 @@ impl Progress {
         mode: PracticeModeKind,
         score: SessionScore,
         vocabulary_count: usize,
-        today: NaiveDate,
         now_milliseconds: i64,
     ) -> PracticeOutcome {
-        self.record_exercise_activity(today, score.total_count as u32);
-
         if mode == PracticeModeKind::Quick {
             return PracticeOutcome {
                 passed: score.passed(),
@@ -258,31 +238,6 @@ impl Progress {
             words_added_count,
         }
     }
-
-    pub fn record_exercise_activity(&mut self, today: NaiveDate, exercise_count: u32) {
-        self.activity.entry(date_key(today)).or_default().exercise_count += exercise_count;
-    }
-
-    pub fn record_review_activity(&mut self, today: NaiveDate, review_count: u32) {
-        self.activity.entry(date_key(today)).or_default().review_count += review_count;
-    }
-
-    pub fn streak_days(&self, today: NaiveDate) -> u32 {
-        let today_active: bool = self.activity.contains_key(&date_key(today));
-        let mut cursor: Option<NaiveDate> = if today_active { Some(today) } else { today.pred_opt() };
-        let mut streak: u32 = 0;
-
-        while let Some(date) = cursor {
-            if !self.activity.contains_key(&date_key(date)) {
-                break;
-            }
-
-            streak += 1;
-            cursor = date.pred_opt();
-        }
-
-        streak
-    }
 }
 
 #[cfg(test)]
@@ -290,10 +245,6 @@ mod tests {
     use super::*;
 
     const COURSE_ID: &str = "pt_br.en.foundations";
-
-    fn date(year: i32, month: u32, day: u32) -> NaiveDate {
-        NaiveDate::from_ymd_opt(year, month, day).unwrap()
-    }
 
     #[test]
     fn record_unit_attempt_keeps_best_proportion_and_completion() {
@@ -343,27 +294,15 @@ mod tests {
         let passing: SessionScore = SessionScore { correct_count: 9, total_count: 10 };
         let failing: SessionScore = SessionScore { correct_count: 2, total_count: 10 };
 
-        let quick: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Quick, passing, 3, date(2026, 10, 3), 0);
-        let failed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, failing, 3, date(2026, 10, 3), 0);
-        let passed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, passing, 3, date(2026, 10, 3), 0);
+        let quick: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Quick, passing, 3, 0);
+        let failed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, failing, 3, 0);
+        let passed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, passing, 3, 0);
 
         assert_eq!(quick.words_added_count, 0);
         assert_eq!(failed, PracticeOutcome { passed: false, words_added_count: 0 });
         assert_eq!(passed, PracticeOutcome { passed: true, words_added_count: 3 });
         assert_eq!(progress.course_progress(COURSE_ID).unit_progress("u").attempt_count, 2);
         assert!(progress.course_progress("es.en.foundations").cards.is_empty());
-        assert_eq!(progress.activity[&date_key(date(2026, 10, 3))].exercise_count, 30);
-    }
-
-    #[test]
-    fn streak_days_counts_consecutive_days_ending_today_or_yesterday() {
-        let mut progress: Progress = Progress::default();
-        progress.record_exercise_activity(date(2026, 10, 3), 5);
-        progress.record_review_activity(date(2026, 10, 4), 5);
-
-        assert_eq!(progress.streak_days(date(2026, 10, 4)), 2);
-        assert_eq!(progress.streak_days(date(2026, 10, 5)), 2);
-        assert_eq!(progress.streak_days(date(2026, 10, 6)), 0);
     }
 
     #[test]
