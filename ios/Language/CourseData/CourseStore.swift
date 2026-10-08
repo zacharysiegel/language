@@ -34,7 +34,7 @@ final class CourseStore {
             library = try CourseLibrary(configuration: environment.configuration)
         } catch {
             library = nil
-            state = .failed(String(describing: error))
+            state = .failed(CoreErrorReport.record(error, while: "opening the course library"))
         }
     }
 
@@ -112,7 +112,7 @@ final class CourseStore {
             do {
                 loaded = .loaded(try await version.loadCourse(courseId: courseId))
             } catch {
-                loaded = .failed(String(describing: error))
+                loaded = .failed(CoreErrorReport.record(error, while: "loading course \(courseId)"))
             }
 
             if shownVersion() === version {
@@ -140,7 +140,7 @@ final class CourseStore {
             do {
                 loaded = .loaded(unitOutline, try await version.loadUnit(courseId: courseId, unitId: unitId))
             } catch {
-                loaded = .failed(String(describing: error))
+                loaded = .failed(CoreErrorReport.record(error, while: "loading unit \(unitId) of \(courseId)"))
             }
 
             if shownVersion() === version {
@@ -165,6 +165,7 @@ final class CourseStore {
                 updateMessage = "You have the latest version."
             }
         } catch {
+            _ = CoreErrorReport.record(error, while: "fetching the latest version")
             updateMessage = "The course server could not be reached."
 
             if !hasShownVersion {
@@ -177,7 +178,8 @@ final class CourseStore {
         do {
             show(try await library.loadEmbeddedCourse())
         } catch {
-            state = .failed("\(error) (the course server: \(latestError))")
+            let message: String = CoreErrorReport.record(error, while: "opening the embedded version")
+            state = .failed("\(message) (the course server: \(CoreErrorReport.record(latestError, while: "fetching the latest version")))")
         }
     }
 

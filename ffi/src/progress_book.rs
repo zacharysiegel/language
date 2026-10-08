@@ -221,7 +221,7 @@ impl ProgressBook {
 
         outcome
             .map(PracticeOutcomeRecord::from)
-            .ok_or_else(|| CoreError::Failure { message: "the practice session was not recorded".to_string() })
+            .ok_or_else(|| CoreError::arising("the practice session was not recorded".to_string()))
     }
 
     pub fn queue_unit_vocabulary(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<QueuedCardsRecord, CoreError> {
@@ -232,7 +232,7 @@ impl ProgressBook {
 
         queued
             .map(QueuedCardsRecord::from)
-            .ok_or_else(|| CoreError::Failure { message: "the words were not queued".to_string() })
+            .ok_or_else(|| CoreError::arising("the words were not queued".to_string()))
     }
 
     pub fn due_card_count(&self, course_id: String) -> u32 {

@@ -83,7 +83,12 @@ final class AudioPlayer {
             return nil
         }
 
-        return try? await version.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text)
+        do {
+            return try await version.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text)
+        } catch {
+            _ = CoreErrorReport.record(error, while: "finding the recording of clip \(clipKey)")
+            return nil
+        }
     }
 
     private func playFile(path: String, slow: Bool) async -> Bool {
