@@ -20,8 +20,8 @@ pub use server::*;
 
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 mod browser {
-    use shared::AppError;
     use shared::artifact::{self, ManifestEntry, ManifestSource, discovery};
+    use shared::{AppError, AppErrorStatic};
     use shared::course_shard::{self, CourseShardContents, UnitShardContents};
 
     use super::LoadedVersion;
@@ -86,7 +86,7 @@ mod browser {
         course_shard::read_unit_shard(&bytes)
     }
 
-    async fn load_shard(version: &LoadedVersion, entry: &ManifestEntry) -> Result<Vec<u8>, AppError> {
+    async fn load_shard(version: &LoadedVersion, entry: &ManifestEntry) -> Result<Vec<u8>, AppErrorStatic> {
         let artifact_cache: OpfsArtifactCache = OpfsArtifactCache::open().await;
 
         artifact::load_shard(&BrowserFetch, &artifact_cache, &version.source, entry).await
@@ -103,7 +103,7 @@ mod browser {
 
         let kept_paths: Vec<String> = source.manifest.file_entries().map(|entry| entry.relative_path.clone()).collect();
         let artifact_cache: OpfsArtifactCache = OpfsArtifactCache::open().await;
-        let trimmed: Result<(), AppError> = shared::artifact::ArtifactCache::retain(&artifact_cache, &kept_paths).await;
+        let trimmed: Result<(), AppErrorStatic> = shared::artifact::ArtifactCache::retain(&artifact_cache, &kept_paths).await;
 
         if let Err(error) = trimmed {
             log::warn!("could not trim the artifact cache; [error={error}]");

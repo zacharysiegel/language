@@ -2,7 +2,7 @@ use std::fs;
 use std::io::ErrorKind;
 use std::path::PathBuf;
 
-use crate::AppError;
+use crate::AppErrorStatic;
 use crate::artifact::ArtifactCache;
 use crate::filesystem;
 
@@ -26,31 +26,31 @@ impl FilesystemArtifactCache {
 }
 
 impl ArtifactCache for FilesystemArtifactCache {
-    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppError> {
+    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppErrorStatic> {
         fs::create_dir_all(&self.root)
-            .map_err(|error| AppError::from(format!("creating the cache directory failed; [path={} error={error}]", self.root.display())))?;
+            .map_err(|error| AppErrorStatic::from(format!("creating the cache directory failed; [path={} error={error}]", self.root.display())))?;
 
-        filesystem::write_atomically(&self.entry_path(relative_path), bytes)
+        Ok(filesystem::write_atomically(&self.entry_path(relative_path), bytes)?)
     }
 
-    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppError> {
+    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppErrorStatic> {
         let path: PathBuf = self.entry_path(relative_path);
         let read: Result<Vec<u8>, std::io::Error> = fs::read(&path);
 
         match read {
             Ok(bytes) => Ok(Some(bytes)),
             Err(error) if error.kind() == ErrorKind::NotFound => Ok(None),
-            Err(error) => Err(AppError::from(format!("reading a cached file failed; [path={} error={error}]", path.display()))),
+            Err(error) => Err(AppErrorStatic::from(format!("reading a cached file failed; [path={} error={error}]", path.display()))),
         }
     }
 
-    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppError> {
+    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppErrorStatic> {
         let kept_paths: Vec<PathBuf> = relative_paths_to_keep.iter().map(|relative_path| self.entry_path(relative_path)).collect();
         let read_directory: Result<fs::ReadDir, std::io::Error> = fs::read_dir(&self.root);
         let entries: fs::ReadDir = match read_directory {
             Ok(entries) => entries,
             Err(error) if error.kind() == ErrorKind::NotFound => return Ok(()),
-            Err(error) => return Err(AppError::from(format!("listing the cache failed; [path={} error={error}]", self.root.display()))),
+            Err(error) => return Err(AppErrorStatic::from(format!("listing the cache failed; [path={} error={error}]", self.root.display()))),
         };
 
         for entry in entries {

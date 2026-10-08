@@ -1,6 +1,6 @@
 use futures_util::future;
 
-use crate::AppError;
+use crate::{AppError, AppErrorStatic};
 use crate::artifact::cache::ArtifactCache;
 use crate::artifact::discovery::{self, AuthoritativeBase, DiscoveryDocument};
 use crate::artifact::manifest::{self, Manifest, ManifestEntry};
@@ -22,28 +22,16 @@ pub async fn discover_latest_manifest(
     http_fetch: &impl HttpFetch,
     discovery_url: &str,
     static_base_url: &str,
-) -> Result<ManifestSource, AppError> {
-    let (discovery_bytes, speculative_manifest_bytes): (Result<Vec<u8>, AppError>, Result<Vec<u8>, AppError>) = future::join(
+) -> Result<ManifestSource, AppErrorStatic> {
+    let (discovery_bytes, speculative_manifest_bytes): (Result<Vec<u8>, AppErrorStatic>, Result<Vec<u8>, AppErrorStatic>) = future::join(
         fetch::fetch_bytes(http_fetch, discovery_url, HttpCacheMode::Reload),
         fetch::fetch_latest_manifest(http_fetch, static_base_url),
     )
     .await;
 
-    let discovery_document: Result<DiscoveryDocument, AppError> = discovery_bytes
-        .and_then(|bytes| discovery::parse_discovery_document(&bytes))
-        .map(|document| DiscoveryDocument {
-            schema_version: document.schema_version,
-            repository_base_url: fetch::resolve_reference(discovery_url, &document.repository_base_url),
-            minimum_client_version: document.minimum_client_version,
-            sunset: document.sunset,
-        });
-
-    if let Err(error) = &discovery_document {
-        log::warn!("discovery unavailable, using the static repository; [error={error}]");
-    }
-
-    let sunset: Option<String> = read_client_support(&discovery_document);
-    let authoritative_base: AuthoritativeBase = discovery::authoritative_repository_base(static_base_url, &discovery_document);
+    let discovery_document: Option<DiscoveryDocument> = read_discovery_document(discovery_url, discovery_bytes);
+    let sunset: Option<String> = read_client_support(discovery_document.as_ref());
+    let authoritative_base: AuthoritativeBase = discovery::authoritative_repository_base(static_base_url, discovery_document.as_ref());
 
     let (repository_base_url, manifest_bytes): (String, Vec<u8>) = match authoritative_base {
         AuthoritativeBase::Static => (static_base_url.to_string(), speculative_manifest_bytes?),
@@ -64,9 +52,29 @@ pub async fn discover_latest_manifest(
     })
 }
 
+/// The discovery document with its repository address made absolute; `None`, logged, when it cannot be read.
+fn read_discovery_document(discovery_url: &str, discovery_bytes: Result<Vec<u8>, AppErrorStatic>) -> Option<DiscoveryDocument> {
+    let parsed: Result<DiscoveryDocument, AppError> = discovery_bytes
+        .map_err(AppError::from)
+        .and_then(|bytes| discovery::parse_discovery_document(&bytes));
+
+    match parsed {
+        Ok(document) => Some(DiscoveryDocument {
+            schema_version: document.schema_version,
+            repository_base_url: fetch::resolve_reference(discovery_url, &document.repository_base_url),
+            minimum_client_version: document.minimum_client_version,
+            sunset: document.sunset,
+        }),
+        Err(error) => {
+            log::warn!("discovery unavailable, using the static repository; [error={error}]");
+            None
+        },
+    }
+}
+
 /// The contract's sunset date; a client below `minimum_client_version` is logged and still served.
-fn read_client_support(discovery_document: &Result<DiscoveryDocument, AppError>) -> Option<String> {
-    let Ok(document) = discovery_document
+fn read_client_support(discovery_document: Option<&DiscoveryDocument>) -> Option<String> {
+    let Some(document) = discovery_document
     else {
         return None;
     };
@@ -83,7 +91,7 @@ fn read_client_support(discovery_document: &Result<DiscoveryDocument, AppError>)
 }
 
 /// The manifest of the bundle shipped with the app, read when no repository can be reached.
-pub async fn load_embedded_manifest(http_fetch: &impl HttpFetch, embedded_base_url: &str) -> Result<ManifestSource, AppError> {
+pub async fn load_embedded_manifest(http_fetch: &impl HttpFetch, embedded_base_url: &str) -> Result<ManifestSource, AppErrorStatic> {
     let manifest_bytes: Vec<u8> = fetch::fetch_embedded_manifest(http_fetch, embedded_base_url).await?;
     let manifest: Manifest = manifest::parse_manifest(&manifest_bytes)?;
 
@@ -112,10 +120,10 @@ pub async fn load_shard(
     artifact_cache: &impl ArtifactCache,
     source: &ManifestSource,
     entry: &ManifestEntry,
-) -> Result<Vec<u8>, AppError> {
+) -> Result<Vec<u8>, AppErrorStatic> {
     let compressed_bytes: Vec<u8> = load_shard_bytes(http_fetch, artifact_cache, source, entry).await?;
 
-    compression::decompress(&compressed_bytes)
+    Ok(compression::decompress(&compressed_bytes)?)
 }
 
 /// A shard's verified bytes, as published, from the cache, else fetched from the repository and cached. A cached copy whose
@@ -125,7 +133,7 @@ pub async fn load_shard_bytes(
     artifact_cache: &impl ArtifactCache,
     source: &ManifestSource,
     entry: &ManifestEntry,
-) -> Result<Vec<u8>, AppError> {
+) -> Result<Vec<u8>, AppErrorStatic> {
     let cached_bytes: Option<Vec<u8>> = read_verified_cache_entry(artifact_cache, entry).await;
 
     if let Some(bytes) = cached_bytes {
@@ -137,7 +145,7 @@ pub async fn load_shard_bytes(
 
     content_address::verify_sha256(&entry.relative_path, &bytes, &entry.sha256)?;
 
-    let cache_write: Result<(), AppError> = artifact_cache.put(&entry.relative_path, &bytes).await;
+    let cache_write: Result<(), AppErrorStatic> = artifact_cache.put(&entry.relative_path, &bytes).await;
 
     if let Err(error) = cache_write {
         log::warn!("could not cache a shard; [relative_path={} error={error}]", entry.relative_path);
@@ -147,7 +155,7 @@ pub async fn load_shard_bytes(
 }
 
 async fn read_verified_cache_entry(artifact_cache: &impl ArtifactCache, entry: &ManifestEntry) -> Option<Vec<u8>> {
-    let cache_read: Result<Option<Vec<u8>>, AppError> = artifact_cache.get(&entry.relative_path).await;
+    let cache_read: Result<Option<Vec<u8>>, AppErrorStatic> = artifact_cache.get(&entry.relative_path).await;
     let cached_bytes: Option<Vec<u8>> = match cache_read {
         Ok(bytes) => bytes,
         Err(error) => {
@@ -340,9 +348,48 @@ mod tests {
         let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::from([(url, b"tampered".to_vec())]));
         let cache: MockArtifactCache = MockArtifactCache::new();
 
-        let result: Result<Vec<u8>, AppError> = load_shard_bytes(&http_fetch, &cache, &source_at("/repository"), &entry).await;
+        let result: Result<Vec<u8>, AppErrorStatic> = load_shard_bytes(&http_fetch, &cache, &source_at("/repository"), &entry).await;
 
         assert!(result.is_err());
         assert!(cache.paths().await.is_empty());
+    }
+}
+
+/* The iOS FFI exports these loads through `#[uniffi::export(async_runtime = "tokio")]`, which requires a `Send`
+   future, so this pins the bound against the concrete implementations a native client uses. */
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod send_bound {
+    use super::*;
+    use crate::artifact::{FilesystemArtifactCache, fetch};
+    use crate::http::{DirectoryFetch, HttpCacheMode, ReqwestHttpFetch};
+
+    fn assert_send<T: Send>(_value: T) {}
+
+    fn manifest_source() -> ManifestSource {
+        let sha256: String = crate::artifact::sha256_hex(b"abc");
+        let manifest_json: String = format!(
+            r#"{{"manifest_schema_version": {}, "version": "v1", "artifact_created": "2026-10-07T12:00:00Z",
+                "courses": {{"c": {{"title": "t", "target_language": "pt-BR", "source_language": "en",
+                "outline": {{"relative_path": "data/c/course-{sha256}.sqlite.br", "size_bytes": 3, "sha256": "{sha256}"}}, "units": {{}}}}}},
+                "voice_pipeline_revisions": {{}}}}"#,
+            manifest::MANIFEST_SCHEMA_VERSION,
+        );
+
+        parse_cached_manifest(manifest_json.into_bytes(), "/repository").unwrap()
+    }
+
+    #[test]
+    fn the_loads_the_native_client_awaits_are_send() {
+        let http_fetch: ReqwestHttpFetch = ReqwestHttpFetch::create().unwrap();
+        let cache: FilesystemArtifactCache = FilesystemArtifactCache::create(std::path::PathBuf::from("/tmp/send-bound"));
+        let source: ManifestSource = manifest_source();
+        let entry: ManifestEntry = source.manifest.courses["c"].outline.clone();
+
+        assert_send(discover_latest_manifest(&http_fetch, "http://127.0.0.1/discovery", "http://127.0.0.1/repository"));
+        assert_send(load_embedded_manifest(&DirectoryFetch, "/embedded"));
+        assert_send(load_shard(&http_fetch, &cache, &source, &entry));
+        assert_send(load_shard(&DirectoryFetch, &cache, &source, &entry));
+        assert_send(fetch::fetch_bytes(&http_fetch, "http://127.0.0.1/audio/a.m4a", HttpCacheMode::Default));
+        assert_send(crate::artifact::ArtifactCache::retain(&cache, &[]));
     }
 }

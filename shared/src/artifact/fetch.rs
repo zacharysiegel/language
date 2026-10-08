@@ -1,4 +1,4 @@
-use crate::AppError;
+use crate::AppErrorStatic;
 use crate::artifact::manifest;
 use crate::http::{HttpCacheMode, HttpFetch, HttpRequest, HttpResponse};
 
@@ -26,7 +26,7 @@ pub fn resolve_reference(base_url: &str, reference: &str) -> String {
     }
 }
 
-pub async fn fetch_bytes(http_fetch: &impl HttpFetch, url: &str, cache_mode: HttpCacheMode) -> Result<Vec<u8>, AppError> {
+pub async fn fetch_bytes(http_fetch: &impl HttpFetch, url: &str, cache_mode: HttpCacheMode) -> Result<Vec<u8>, AppErrorStatic> {
     let response: HttpResponse = http_fetch
         .get(&HttpRequest {
             url: url.to_string(),
@@ -35,14 +35,14 @@ pub async fn fetch_bytes(http_fetch: &impl HttpFetch, url: &str, cache_mode: Htt
         .await?;
 
     if !response.is_success() {
-        return Err(AppError::from(format!("fetch failed; [url={url} status={}]", response.status)));
+        return Err(AppErrorStatic::from(format!("fetch failed; [url={url} status={}]", response.status)));
     }
 
     Ok(response.bytes)
 }
 
 /* Pointers change on every publish, so they bypass the HTTP cache; every other file is content-addressed. */
-pub async fn fetch_pointer(http_fetch: &impl HttpFetch, base_url: &str, key: &str) -> Result<Vec<u8>, AppError> {
+pub async fn fetch_pointer(http_fetch: &impl HttpFetch, base_url: &str, key: &str) -> Result<Vec<u8>, AppErrorStatic> {
     fetch_bytes(http_fetch, &join_url(base_url, key), HttpCacheMode::Reload).await
 }
 
@@ -51,7 +51,7 @@ pub async fn fetch_versioned_file(
     base_url: &str,
     version: &str,
     relative_path: &str,
-) -> Result<Vec<u8>, AppError> {
+) -> Result<Vec<u8>, AppErrorStatic> {
     let key: String = manifest::versioned_file_key(version, relative_path);
 
     fetch_bytes(http_fetch, &join_url(base_url, &key), HttpCacheMode::Default).await
@@ -59,7 +59,7 @@ pub async fn fetch_versioned_file(
 
 /// The latest manifest's bytes, falling back to this reader's own schema pointer when `latest/manifest.json`
 /// has been published by a newer schema version.
-pub async fn fetch_latest_manifest(http_fetch: &impl HttpFetch, base_url: &str) -> Result<Vec<u8>, AppError> {
+pub async fn fetch_latest_manifest(http_fetch: &impl HttpFetch, base_url: &str) -> Result<Vec<u8>, AppErrorStatic> {
     let latest_bytes: Vec<u8> = fetch_pointer(http_fetch, base_url, manifest::MANIFEST_LATEST_KEY).await?;
     let fallback_key: Option<String> = manifest::schema_fallback_key(&latest_bytes);
 
@@ -69,7 +69,7 @@ pub async fn fetch_latest_manifest(http_fetch: &impl HttpFetch, base_url: &str) 
     }
 }
 
-pub async fn fetch_embedded_manifest(http_fetch: &impl HttpFetch, embedded_base_url: &str) -> Result<Vec<u8>, AppError> {
+pub async fn fetch_embedded_manifest(http_fetch: &impl HttpFetch, embedded_base_url: &str) -> Result<Vec<u8>, AppErrorStatic> {
     fetch_pointer(http_fetch, embedded_base_url, manifest::MANIFEST_FILENAME).await
 }
 
@@ -132,7 +132,7 @@ mod tests {
     async fn fetch_bytes_reports_a_non_success_status() {
         let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::new());
 
-        let error: AppError = fetch_pointer(&http_fetch, "/repository", "latest/manifest.json").await.unwrap_err();
+        let error: AppErrorStatic = fetch_pointer(&http_fetch, "/repository", "latest/manifest.json").await.unwrap_err();
 
         assert!(error.to_string().contains("status=404"));
     }

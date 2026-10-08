@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 
-use shared::AppError;
+use shared::AppErrorStatic;
 use shared::artifact::{self, FilesystemArtifactCache, ManifestEntry, ManifestSource, content_address, discovery, fetch, manifest};
 use shared::course;
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
@@ -47,8 +47,8 @@ impl CourseLibrary {
     }
 
     /// The version this device last loaded from a repository, read from its cache; `None` when there is none.
-    pub async fn load_cached_course(self: Arc<Self>) -> Option<Arc<CourseVersion>> {
-        let loaded: Result<Option<Arc<CourseVersion>>, CoreError> = run_detached(move || block_on(self.open_cached_course())).await;
+    pub async fn load_cached_course(&self) -> Option<Arc<CourseVersion>> {
+        let loaded: Result<Option<Arc<CourseVersion>>, AppErrorStatic> = self.open_cached_course().await;
 
         loaded.unwrap_or_else(|error| {
             log::warn!("could not open the cached course; [error={error}]");
@@ -58,30 +58,18 @@ impl CourseLibrary {
     }
 
     /// The version the repository publishes now; remembered, and the cache trimmed to it.
-    pub async fn load_latest_course(self: Arc<Self>) -> Result<Arc<CourseVersion>, CoreError> {
-        run_detached(move || block_on(self.open_latest_course())).await
+    pub async fn load_latest_course(&self) -> Result<Arc<CourseVersion>, CoreError> {
+        Ok(self.open_latest_course().await?)
     }
 
     /// The bundle shipped inside the app; its recordings come from the static repository.
-    pub async fn load_embedded_course(self: Arc<Self>) -> Result<Arc<CourseVersion>, CoreError> {
-        run_detached(move || block_on(self.open_embedded_course())).await
+    pub async fn load_embedded_course(&self) -> Result<Arc<CourseVersion>, CoreError> {
+        Ok(self.open_embedded_course().await?)
     }
 }
 
-/* The shared loader's futures hold `AppError`, which is not `Send`, so they run to completion on a blocking thread
-   and only their `Send` results cross back to the exported future. */
-async fn run_detached<T: Send + 'static>(work: impl FnOnce() -> Result<T, CoreError> + Send + 'static) -> Result<T, CoreError> {
-    let joined: Result<Result<T, CoreError>, tokio::task::JoinError> = tokio::task::spawn_blocking(work).await;
-
-    joined.unwrap_or_else(|error| Err(CoreError::arising(format!("a core task stopped; [error={error}]"))))
-}
-
-fn block_on<T>(work: impl std::future::Future<Output = Result<T, AppError>>) -> Result<T, CoreError> {
-    tokio::runtime::Handle::current().block_on(work).map_err(CoreError::from)
-}
-
 impl CourseLibrary {
-    async fn open_latest_course(&self) -> Result<Arc<CourseVersion>, AppError> {
+    async fn open_latest_course(&self) -> Result<Arc<CourseVersion>, AppErrorStatic> {
         let discovery_url: String = fetch::join_url(&self.configuration.app_origin, discovery::DISCOVERY_PATH.trim_start_matches('/'));
         let static_base_url: String = self.static_repository_base_url();
         let source: ManifestSource = artifact::discover_latest_manifest(self.http_fetch.as_ref(), &discovery_url, &static_base_url).await?;
@@ -93,7 +81,7 @@ impl CourseLibrary {
         Ok(version)
     }
 
-    async fn open_embedded_course(&self) -> Result<Arc<CourseVersion>, AppError> {
+    async fn open_embedded_course(&self) -> Result<Arc<CourseVersion>, AppErrorStatic> {
         let source: ManifestSource = artifact::load_embedded_manifest(&DirectoryFetch, &self.configuration.embedded_bundle_directory).await?;
         let audio_base_url: String = self.static_repository_base_url();
 
@@ -108,7 +96,7 @@ impl CourseLibrary {
         PathBuf::from(&self.configuration.cache_directory)
     }
 
-    async fn open_cached_course(&self) -> Result<Option<Arc<CourseVersion>>, AppError> {
+    async fn open_cached_course(&self) -> Result<Option<Arc<CourseVersion>>, AppErrorStatic> {
         let manifest_path: PathBuf = self.cache_directory().join(CURRENT_MANIFEST_FILE);
         let base_url_path: PathBuf = self.cache_directory().join(CURRENT_REPOSITORY_BASE_URL_FILE);
         let (Ok(manifest_bytes), Ok(repository_base_url)) = (fs::read(&manifest_path), fs::read_to_string(&base_url_path))
@@ -123,7 +111,7 @@ impl CourseLibrary {
         Ok(Some(version))
     }
 
-    async fn open_version(&self, source: ManifestSource, audio_base_url: String, origin: ShardOriginKind) -> Result<Arc<CourseVersion>, AppError> {
+    async fn open_version(&self, source: ManifestSource, audio_base_url: String, origin: ShardOriginKind) -> Result<Arc<CourseVersion>, AppErrorStatic> {
         let shard_loader: ShardLoader = ShardLoader {
             origin,
             cache_directory: self.cache_directory(),
@@ -138,7 +126,7 @@ impl CourseLibrary {
         }))
     }
 
-    async fn remember_version(&self, source: &ManifestSource) -> Result<(), AppError> {
+    async fn remember_version(&self, source: &ManifestSource) -> Result<(), AppErrorStatic> {
         let cache_directory: PathBuf = self.cache_directory();
 
         fs::create_dir_all(&cache_directory)?;
@@ -166,7 +154,7 @@ struct ShardLoader {
 }
 
 impl ShardLoader {
-    async fn load_shard_bytes(&self, source: &ManifestSource, entry: &ManifestEntry) -> Result<Vec<u8>, AppError> {
+    async fn load_shard_bytes(&self, source: &ManifestSource, entry: &ManifestEntry) -> Result<Vec<u8>, AppErrorStatic> {
         let shard_cache: FilesystemArtifactCache = FilesystemArtifactCache::create(self.cache_directory.join(SHARD_CACHE_DIRECTORY));
 
         match self.origin {
@@ -213,23 +201,23 @@ impl CourseVersion {
             .collect()
     }
 
-    pub async fn load_course(self: Arc<Self>, course_id: String) -> Result<CourseOutlineRecord, CoreError> {
-        run_detached(move || block_on(self.open_course(&course_id))).await
+    pub async fn load_course(&self, course_id: String) -> Result<CourseOutlineRecord, CoreError> {
+        Ok(self.open_course(&course_id).await?)
     }
 
-    pub async fn load_unit(self: Arc<Self>, course_id: String, unit_id: String) -> Result<UnitLessonRecord, CoreError> {
-        run_detached(move || block_on(self.open_unit(&course_id, &unit_id))).await
+    pub async fn load_unit(&self, course_id: String, unit_id: String) -> Result<UnitLessonRecord, CoreError> {
+        Ok(self.open_unit(&course_id, &unit_id).await?)
     }
 
     /// A local file holding the clip's recording in the voice `engine` picks for `spoken_text`, else in any voice,
     /// downloaded and verified on first use; `None` when the clip has no recording.
-    pub async fn recording_path(self: Arc<Self>, clip_key: String, engine: AudioEngineRecord, spoken_text: String) -> Result<Option<String>, CoreError> {
-        run_detached(move || block_on(self.find_recording(&clip_key, engine, &spoken_text))).await
+    pub async fn recording_path(&self, clip_key: String, engine: AudioEngineRecord, spoken_text: String) -> Result<Option<String>, CoreError> {
+        Ok(self.find_recording(&clip_key, engine, &spoken_text).await?)
     }
 }
 
 impl CourseVersion {
-    async fn open_course(&self, course_id: &str) -> Result<CourseOutlineRecord, AppError> {
+    async fn open_course(&self, course_id: &str) -> Result<CourseOutlineRecord, AppErrorStatic> {
         let entry: &ManifestEntry = &self.source.manifest.find_course(course_id)?.outline;
         let bytes: Vec<u8> = self.shard_loader.load_shard_bytes(&self.source, entry).await?;
         let contents: CourseShardContents = course_shard::read_course_shard(&bytes)?;
@@ -239,7 +227,7 @@ impl CourseVersion {
         Ok((&contents.outline).into())
     }
 
-    async fn open_unit(&self, course_id: &str, unit_id: &str) -> Result<UnitLessonRecord, AppError> {
+    async fn open_unit(&self, course_id: &str, unit_id: &str) -> Result<UnitLessonRecord, AppErrorStatic> {
         let entry: &ManifestEntry = self.source.manifest.find_course(course_id)?.find_unit(unit_id)?;
         let bytes: Vec<u8> = self.shard_loader.load_shard_bytes(&self.source, entry).await?;
         let contents: UnitShardContents = course_shard::read_unit_shard(&bytes)?;
@@ -249,7 +237,7 @@ impl CourseVersion {
         Ok((&contents.lesson).into())
     }
 
-    async fn find_recording(&self, clip_key: &str, engine: AudioEngineRecord, spoken_text: &str) -> Result<Option<String>, AppError> {
+    async fn find_recording(&self, clip_key: &str, engine: AudioEngineRecord, spoken_text: &str) -> Result<Option<String>, AppErrorStatic> {
         let preferred_engine: VoiceEngineKind = shared::progress::AudioEngineKind::from(engine).voice_engine_for(spoken_text);
         let Some(audio_sha256) = self.audio_sha256_for(clip_key, preferred_engine)
         else {
@@ -283,7 +271,7 @@ impl CourseVersion {
             .cloned()
     }
 
-    async fn cached_recording(&self, audio_sha256: &str) -> Result<PathBuf, AppError> {
+    async fn cached_recording(&self, audio_sha256: &str) -> Result<PathBuf, AppErrorStatic> {
         let audio_directory: PathBuf = self.shard_loader.cache_directory.join(AUDIO_CACHE_DIRECTORY);
         let path: PathBuf = audio_directory.join(format!("{audio_sha256}.{}", manifest::AUDIO_FILE_EXTENSION));
 
@@ -315,7 +303,7 @@ mod tests {
     }
 
     /* The embedded bundle is build output; without it there is nothing to open. */
-    #[tokio::test(flavor = "multi_thread")]
+    #[tokio::test]
     async fn load_embedded_course_opens_the_outline_and_a_unit_and_caches_their_shards() {
         let Some(embedded_directory) = embedded_bundle_directory()
         else {
@@ -345,7 +333,7 @@ mod tests {
         assert!(library.load_cached_course().await.is_none());
     }
 
-    #[tokio::test(flavor = "multi_thread")]
+    #[tokio::test]
     async fn load_latest_course_reports_an_unreachable_repository() {
         let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
         let library: Arc<CourseLibrary> = CourseLibrary::new(CoreConfiguration {

@@ -1,5 +1,5 @@
 use js_sys::{ArrayBuffer, AsyncIterator, IteratorNext, Promise, Uint8Array};
-use shared::AppError;
+use shared::AppErrorStatic;
 use shared::artifact::ArtifactCache;
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
@@ -17,7 +17,7 @@ pub struct OpfsArtifactCache {
 
 impl OpfsArtifactCache {
     pub async fn open() -> OpfsArtifactCache {
-        let opened: Result<FileSystemDirectoryHandle, AppError> = open_cache_directory().await;
+        let opened: Result<FileSystemDirectoryHandle, AppErrorStatic> = open_cache_directory().await;
 
         match opened {
             Ok(directory) => OpfsArtifactCache { directory: Some(directory) },
@@ -35,7 +35,7 @@ fn entry_name(relative_path: &str) -> &str {
     relative_path.rsplit('/').next().unwrap_or(relative_path)
 }
 
-async fn open_cache_directory() -> Result<FileSystemDirectoryHandle, AppError> {
+async fn open_cache_directory() -> Result<FileSystemDirectoryHandle, AppErrorStatic> {
     let window: web_sys::Window = js_interop::get_window()?;
     let root: FileSystemDirectoryHandle = js_interop::await_and_cast(window.navigator().storage().get_directory()).await?;
     let options: FileSystemGetDirectoryOptions = FileSystemGetDirectoryOptions::new();
@@ -46,7 +46,7 @@ async fn open_cache_directory() -> Result<FileSystemDirectoryHandle, AppError> {
 }
 
 impl ArtifactCache for OpfsArtifactCache {
-    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppError> {
+    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppErrorStatic> {
         let Some(directory) = &self.directory
         else {
             return Ok(());
@@ -62,7 +62,7 @@ impl ArtifactCache for OpfsArtifactCache {
         write_file(&file_handle, bytes).await
     }
 
-    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppError> {
+    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppErrorStatic> {
         let Some(directory) = &self.directory
         else {
             return Ok(None);
@@ -72,14 +72,14 @@ impl ArtifactCache for OpfsArtifactCache {
         let file_handle: FileSystemFileHandle = match lookup {
             Ok(value) => js_interop::dyn_into(value)?,
             Err(error) if js_interop::is_dom_exception_named(&error, "NotFoundError") => return Ok(None),
-            Err(error) => return Err(js_interop::error(error)),
+            Err(error) => return Err(js_interop::error(error).into()),
         };
         let file: File = js_interop::await_and_cast(file_handle.get_file()).await?;
 
         read_file_bytes(&file).await.map(Some)
     }
 
-    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppError> {
+    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppErrorStatic> {
         let Some(directory) = &self.directory
         else {
             return Ok(());
@@ -99,7 +99,7 @@ impl ArtifactCache for OpfsArtifactCache {
     }
 }
 
-async fn write_file(file_handle: &FileSystemFileHandle, bytes: &[u8]) -> Result<(), AppError> {
+async fn write_file(file_handle: &FileSystemFileHandle, bytes: &[u8]) -> Result<(), AppErrorStatic> {
     let writable: FileSystemWritableFileStream = js_interop::await_and_cast(file_handle.create_writable()).await?;
     let data: Uint8Array = js_interop::owned_uint8_array(bytes);
     let write_promise: Promise = writable.write_with_js_u8_array(&data).map_err(js_interop::error)?;
@@ -110,14 +110,14 @@ async fn write_file(file_handle: &FileSystemFileHandle, bytes: &[u8]) -> Result<
     Ok(())
 }
 
-async fn read_file_bytes(file: &File) -> Result<Vec<u8>, AppError> {
+async fn read_file_bytes(file: &File) -> Result<Vec<u8>, AppErrorStatic> {
     let array_buffer: ArrayBuffer = js_interop::await_and_cast(file.array_buffer()).await?;
 
     Ok(Uint8Array::new(&array_buffer).to_vec())
 }
 
 /* `keys()` returns a JS async iterator, so each step's `{ value, done }` arrives through a promise. */
-async fn list_directory_names(directory: &FileSystemDirectoryHandle) -> Result<Vec<String>, AppError> {
+async fn list_directory_names(directory: &FileSystemDirectoryHandle) -> Result<Vec<String>, AppErrorStatic> {
     let iterator: AsyncIterator = directory.keys();
     let mut names: Vec<String> = Vec::new();
 
@@ -133,7 +133,7 @@ async fn list_directory_names(directory: &FileSystemDirectoryHandle) -> Result<V
         let name: String = next
             .value()
             .as_string()
-            .ok_or_else(|| AppError::from("a directory key is not a string".to_string()))?;
+            .ok_or_else(|| AppErrorStatic::from("a directory key is not a string"))?;
 
         names.push(name);
     }

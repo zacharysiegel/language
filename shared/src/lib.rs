@@ -9,4 +9,4 @@ pub mod progress;
 pub mod review;
 pub mod sqlite;
 
-pub use error::AppError;
+pub use error::{AppError, AppErrorStatic};

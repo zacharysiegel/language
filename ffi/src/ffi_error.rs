@@ -1,8 +1,6 @@
 use std::backtrace::Backtrace;
-use std::error::Error;
 
-use shared::AppError;
-use shared::error::render_error_chain;
+use shared::{AppError, AppErrorStatic};
 
 /// A failure in the core. `message` names what failed and why; `backtrace` is the Rust call stack where the error
 /// arose, for logs rather than for the learner.
@@ -31,16 +29,19 @@ impl std::fmt::Display for CoreError {
 
 impl std::error::Error for CoreError {}
 
+/* `AppErrorStatic` keeps the source error's chain as text in its message. */
 impl From<AppError> for CoreError {
     fn from(error: AppError) -> CoreError {
-        let underlying: &minimer::AppError = &error.0;
-        let message: String = match &underlying.sub_error {
-            Some(sub_error) => format!("{} -> {}", underlying.message, render_error_chain(sub_error.as_ref() as &dyn Error)),
-            None => underlying.message.clone(),
-        };
+        CoreError::from(AppErrorStatic::from(error))
+    }
+}
+
+impl From<AppErrorStatic> for CoreError {
+    fn from(error: AppErrorStatic) -> CoreError {
+        let underlying: &minimer::AppErrorStatic = &error.0;
 
         CoreError::Failure {
-            message,
+            message: underlying.message.clone(),
             backtrace: underlying.backtrace.to_string(),
         }
     }

@@ -11,7 +11,6 @@ crate-type = ["staticlib", "lib"]
 [dependencies]
 shared = { workspace = true }
 uniffi = { workspace = true, features = ["tokio"] }
-tokio = { workspace = true, features = ["rt-multi-thread", "sync"] }
 chrono = { workspace = true }
 log = { workspace = true }
 minimer = { workspace = true }

@@ -1,4 +1,4 @@
-use crate::AppError;
+use crate::AppErrorStatic;
 
 pub enum HttpCacheMode {
     Default,
@@ -37,7 +37,7 @@ impl std::fmt::Debug for HttpResponse {
 #[allow(async_fn_in_trait)]
 pub trait HttpFetch {
     /// Errors only on a transport failure; a non-2xx status is returned for the caller to judge.
-    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppError>;
+    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppErrorStatic>;
 }
 
 #[cfg(test)]
@@ -66,7 +66,7 @@ pub(crate) mod tests {
     }
 
     impl HttpFetch for MockHttpFetch {
-        async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppError> {
+        async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppErrorStatic> {
             self.requested_urls.lock().await.push(request.url.clone());
 
             match self.bodies_by_url.get(&request.url) {
