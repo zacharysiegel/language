@@ -93,10 +93,10 @@ fn NavigationBar() -> impl IntoView {
     let location = use_location();
     let course_id = move || active_course_id(&location.pathname.get(), progress_store);
 
-    let course_title_link = move || {
+    let course_title = move || {
         let course_title: Option<String> = course_id().and_then(|course_id| published_course_title(course_store, &course_id));
 
-        course_title.map(|course_title| view! { <A href="/" attr:class="chrome-course" attr:title="All courses" exact=true>{course_title}</A> })
+        course_title.map(|course_title| view! { <span class="chrome-course">{course_title}</span> })
     };
 
     let due_count = move |course_id: &str| {
@@ -124,8 +124,10 @@ fn NavigationBar() -> impl IntoView {
 
     view! {
         <nav class="chrome">
-            <A href="/" attr:class="chrome-brand" exact=true>"Language"</A>
-            {course_title_link}
+            <A href="/" attr:class="chrome-brand" attr:title="All courses" exact=true>
+                <span class="chrome-brand-name">"Language"</span>
+                {course_title}
+            </A>
             {course_links}
             <div class="chrome-settings">
                 <label class="field">

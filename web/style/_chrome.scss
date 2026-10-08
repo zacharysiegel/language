@@ -1,4 +1,4 @@
-// The navigation is one line of type over a rule, aligned to the page's measure.
+// The navigation is a row of type over a rule, aligned to the page's measure.
 nav.chrome {
     display: flex;
     flex-wrap: wrap;
@@ -9,19 +9,22 @@ nav.chrome {
 }
 
 .chrome-brand {
-    font-weight: 600;
-    letter-spacing: 0.1em;
-    text-transform: uppercase;
-    font-size: var(--type-size-data);
+    display: flex;
+    flex-direction: column;
     color: var(--color-ink);
     margin-right: var(--space-sm);
 }
 
-nav.chrome a.chrome-course {
+.chrome-brand-name {
     font-weight: 600;
-    margin-right: var(--space-sm);
-    padding-right: var(--space-md);
-    border-right: var(--border-rule);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-size: var(--type-size-data);
+}
+
+.chrome-course {
+    font-size: var(--type-size-caption);
+    color: var(--color-ink-muted);
 }
 
 nav.chrome a:not(.chrome-brand) {
@@ -37,7 +40,7 @@ nav.chrome a:focus-visible {
 }
 
 // Red is the single active mark: the page you are on.
-nav.chrome a[aria-current="page"]:not(.chrome-brand):not(.chrome-course) {
+nav.chrome a[aria-current="page"]:not(.chrome-brand) {
     color: var(--color-accent-active);
     border-bottom-color: var(--color-accent-active);
 }
