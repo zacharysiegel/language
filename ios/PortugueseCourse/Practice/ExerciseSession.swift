@@ -18,7 +18,7 @@ extension ExerciseRecord {
     func clipKey() -> String? {
         switch self {
         case .fillBlank(_, _, _, _, let clipKey),
-             .translateToPortuguese(_, _, _, let clipKey),
+             .translateToTarget(_, _, _, let clipKey),
              .orderWords(_, _, _, _, let clipKey),
              .listeningChoice(_, _, _, _, let clipKey),
              .dictation(_, _, _, let clipKey):
@@ -32,7 +32,7 @@ extension ExerciseRecord {
         switch self {
         case .multipleChoice(_, _, _, let explanation),
              .fillBlank(_, _, _, let explanation, _),
-             .translateToPortuguese(_, _, let explanation, _),
+             .translateToTarget(_, _, let explanation, _),
              .orderWords(_, _, _, let explanation, _),
              .listeningChoice(_, _, _, let explanation, _),
              .dictation(_, _, let explanation, _),
@@ -41,10 +41,10 @@ extension ExerciseRecord {
         }
     }
 
-    /* Kinds whose answer is a Portuguese sentence the learner did not just hear, played once the answer is checked. */
+    /* Kinds whose answer is a target-language sentence the learner did not just hear, played once the answer is checked. */
     func speaksAfterAnswer() -> Bool {
         switch self {
-        case .fillBlank, .translateToPortuguese, .orderWords:
+        case .fillBlank, .translateToTarget, .orderWords:
             return true
         case .multipleChoice, .listeningChoice, .dictation, .match:
             return false

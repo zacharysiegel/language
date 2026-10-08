@@ -1,26 +1,26 @@
 import SwiftUI
 
 struct HomePage: View {
+    let outline: CourseOutlineRecord
+
     @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
-        if let outline = courseStore.outline() {
-            ScrollView {
-                VStack(alignment: .leading, spacing: .spaceLg) {
-                    header(outline)
+        ScrollView {
+            VStack(alignment: .leading, spacing: .spaceLg) {
+                header(outline)
 
-                    ForEach(outline.levels, id: \.code) { level in
-                        levelSection(level, units: outline.units.filter { unit in unit.level == level.level })
-                    }
+                ForEach(outline.levels, id: \.code) { level in
+                    levelSection(level, units: outline.units.filter { unit in unit.levelCode == level.code })
                 }
-                .padding(.spaceMd)
-                .readableWidth()
             }
-            .refreshable { await courseStore.refresh() }
-            .navigationTitle("Course")
-            .navigationBarTitleDisplayMode(.inline)
+            .padding(.spaceMd)
+            .readableWidth()
         }
+        .refreshable { await courseStore.refresh() }
+        .navigationTitle("Course")
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private func header(_ outline: CourseOutlineRecord) -> some View {
@@ -28,14 +28,14 @@ struct HomePage: View {
             PageHeader(caption: "\(outline.units.count) units", title: outline.title)
 
             HStack {
-                Text("\(progressStore.completedUnitCount()) / \(outline.units.count) units completed")
+                Text("\(progressStore.completedUnitCount(courseId: outline.id)) / \(outline.units.count) units completed")
                     .font(.dataText)
                     .foregroundStyle(Color.inkMuted)
 
                 Spacer()
 
                 if let nextUnit = nextIncompleteUnit(outline) {
-                    NavigationLink(value: UnitDestination(unitId: nextUnit.id, tab: .overview)) {
+                    NavigationLink(value: UnitDestination(courseId: outline.id, unitId: nextUnit.id, tab: .overview)) {
                         Text("Continue")
                     }
                     .buttonStyle(SquareButtonStyle(isPrimary: true))
@@ -46,10 +46,10 @@ struct HomePage: View {
     }
 
     private func nextIncompleteUnit(_ outline: CourseOutlineRecord) -> UnitOutlineRecord? {
-        outline.units.first { unit in !progressStore.unitProgress(unitId: unit.id).completed }
+        outline.units.first { unit in !progressStore.unitProgress(courseId: outline.id, unitId: unit.id).completed }
     }
 
-    private func levelSection(_ level: LevelSummaryRecord, units: [UnitOutlineRecord]) -> some View {
+    private func levelSection(_ level: CourseLevelRecord, units: [UnitOutlineRecord]) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             Text("\(level.code) · \(level.title)")
                 .font(.titleText)
@@ -58,7 +58,7 @@ struct HomePage: View {
             HairlineRule()
 
             ForEach(units, id: \.id) { unit in
-                NavigationLink(value: UnitDestination(unitId: unit.id, tab: .overview)) {
+                NavigationLink(value: UnitDestination(courseId: outline.id, unitId: unit.id, tab: .overview)) {
                     unitRow(unit)
                 }
                 .buttonStyle(.plain)
@@ -82,7 +82,7 @@ struct HomePage: View {
                     .foregroundStyle(Color.accentLink)
                     .multilineTextAlignment(.leading)
 
-                UnitStatusTag(unitProgress: progressStore.unitProgress(unitId: unit.id))
+                UnitStatusTag(unitProgress: progressStore.unitProgress(courseId: outline.id, unitId: unit.id))
             }
 
             Spacer()

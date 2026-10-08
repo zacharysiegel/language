@@ -6,7 +6,8 @@ final class CourseUITests: XCTestCase {
         .deletingLastPathComponent()
         .deletingLastPathComponent()
         .deletingLastPathComponent()
-    static let screenshotDirectory: String = "/tmp/portuguese-course-ios-screenshots"
+    static let screenshotDirectory: String = "/tmp/language-ios-screenshots"
+    static let courseId: String = "pt_br.en.foundations"
     static let practicedUnitId: String = "a1-01-greetings-introductions"
     static let readingUnitId: String = "b1-01-present-perfect-participles"
 
@@ -135,14 +136,14 @@ final class CourseUITests: XCTestCase {
         switch kind {
         case "multiple_choice", "listening_choice":
             let choices: [String] = exercise["choices"] as? [String] ?? []
-            let answer: Int = exercise["answer"] as? Int ?? 0
+            let answer: Int = exercise["answer_index"] as? Int ?? 0
             tapEnabledButton(identifier: "choice", label: choices[answer])
         case "fill_blank":
-            typeAnswer((exercise["answer"] as? [String] ?? []).first ?? "")
-        case "translate_to_pt":
+            typeAnswer((exercise["answers"] as? [String] ?? []).first ?? "")
+        case "translate_to_target":
             typeAnswer((exercise["answers"] as? [String] ?? []).first ?? "")
         case "dictation":
-            typeAnswer(exercise["audio_pt"] as? String ?? "")
+            typeAnswer(exercise["audio_target"] as? String ?? "")
         case "order_words":
             for word in exercise["words"] as? [String] ?? [] {
                 tapEnabledButton(identifier: "bank-token", label: word)
@@ -151,8 +152,8 @@ final class CourseUITests: XCTestCase {
             app.buttons["check"].tap()
         case "match":
             for pair in exercise["pairs"] as? [[String: Any]] ?? [] {
-                tapEnabledButton(identifier: "match-left", label: pair["pt"] as? String ?? "")
-                tapEnabledButton(identifier: "match-right", label: pair["en"] as? String ?? "")
+                tapEnabledButton(identifier: "match-left", label: pair["target"] as? String ?? "")
+                tapEnabledButton(identifier: "match-right", label: pair["source"] as? String ?? "")
             }
         default:
             XCTFail("unknown exercise kind \(kind)")
@@ -201,7 +202,7 @@ final class CourseUITests: XCTestCase {
     }
 
     private static func readUnit(_ unitId: String) throws -> [String: Any] {
-        let path: URL = repositoryRoot.appendingPathComponent("data/units/\(unitId).json")
+        let path: URL = repositoryRoot.appendingPathComponent("data/courses/\(courseId)/units/\(unitId).json")
         let data: Data = try Data(contentsOf: path)
 
         return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]

@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct OverviewSection: View {
+    let courseId: String
     let unit: UnitOutlineRecord
     let lesson: UnitLessonRecord
 
@@ -20,7 +21,7 @@ struct OverviewSection: View {
                 }
 
                 Button("Add the \(unit.vocabulary.count) words to my review deck") {
-                    let queued: QueuedCardsRecord? = progressStore.queueUnitVocabulary(unitId: unit.id, vocabularyCount: unit.vocabulary.count)
+                    let queued: QueuedCardsRecord? = progressStore.queueUnitVocabulary(courseId: courseId, unitId: unit.id, vocabularyCount: unit.vocabulary.count)
 
                     if let queued {
                         addedMessage = "\(queued.addedCount) new word(s) added and \(queued.madeDueCount) word(s) queued for review again."
@@ -63,8 +64,8 @@ struct VocabularyRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceXs) {
             HStack(alignment: .center, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.pt))
-                Text(item.pt).font(.portugueseText).bold()
+                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target))
+                Text(item.target).font(.targetText).bold()
 
                 if let partOfSpeech = item.partOfSpeech {
                     TagView(text: partOfSpeech)
@@ -73,18 +74,18 @@ struct VocabularyRow: View {
                 Spacer(minLength: 0)
             }
 
-            Text(item.en).font(.bodyText)
+            Text(item.source).font(.bodyText)
 
-            if let literal = item.literal {
+            if let literal = item.sourceLiteral {
                 Text("literally: \(literal)").font(.captionText).italic().foregroundStyle(Color.inkMuted)
             }
 
             HStack(alignment: .top, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.pt))
+                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.example.pt).font(.bodyText).fixedSize(horizontal: false, vertical: true)
-                    Text(item.example.en).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
+                    Text(item.example.target).font(.bodyText).fixedSize(horizontal: false, vertical: true)
+                    Text(item.example.source).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
                 }
             }
             .padding(.top, .spaceXs)
@@ -108,7 +109,7 @@ struct DialoguesSection: View {
                 VStack(alignment: .leading, spacing: .spaceSm) {
                     Text(dialogue.title).font(.titleText)
                     Text(dialogue.context).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
-                    PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.pt) })
+                    PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target) })
 
                     ForEach(Array(dialogue.lines.enumerated()), id: \.offset) { _, line in
                         PhraseRow(pair: line.phrase, speaker: line.speaker)
@@ -202,7 +203,7 @@ struct ReadingPanel: View {
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             Text(reading.title).font(.titleText)
-            PlayAllButton(clips: reading.paragraphs.map { paragraph in AudioClip(clipKey: paragraph.clipKey, text: paragraph.pt) })
+            PlayAllButton(clips: reading.paragraphs.map { paragraph in AudioClip(clipKey: paragraph.clipKey, text: paragraph.target) })
 
             ForEach(Array(reading.paragraphs.enumerated()), id: \.offset) { _, paragraph in
                 PhraseRow(pair: paragraph)

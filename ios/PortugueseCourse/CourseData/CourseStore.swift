@@ -1,9 +1,15 @@
 import Foundation
 import Observation
 
-enum CourseLoadState {
+enum VersionLoadState {
     case loading
-    case loaded(CourseVersion, CourseOutlineRecord)
+    case loaded(CourseVersion)
+    case failed(String)
+}
+
+enum OutlineLoadState {
+    case loading
+    case loaded(CourseOutlineRecord)
     case failed(String)
 }
 
@@ -13,12 +19,13 @@ enum UnitLoadState {
     case failed(String)
 }
 
-/// The course version on screen and the lessons opened from it.
+/// The version of the courses on screen, and the outlines and lessons opened from it.
 @MainActor
 @Observable
 final class CourseStore {
     private let library: CourseLibrary?
-    private var state: CourseLoadState = .loading
+    private var state: VersionLoadState = .loading
+    private var outlineStates: [String: OutlineLoadState] = [:]
     private var unitStates: [String: UnitLoadState] = [:]
     private var updateMessage: String?
 
@@ -31,28 +38,36 @@ final class CourseStore {
         }
     }
 
-    func loadState() -> CourseLoadState {
+    func loadState() -> VersionLoadState {
         state
     }
 
     func shownVersion() -> CourseVersion? {
-        if case .loaded(let version, _) = state {
+        if case .loaded(let version) = state {
             return version
         }
 
         return nil
     }
 
-    func outline() -> CourseOutlineRecord? {
-        if case .loaded(_, let outline) = state {
+    func courses() -> [CourseSummaryRecord] {
+        shownVersion()?.courses() ?? []
+    }
+
+    func outlineState(courseId: String) -> OutlineLoadState? {
+        outlineStates[courseId]
+    }
+
+    func outline(courseId: String) -> CourseOutlineRecord? {
+        if case .loaded(let outline) = outlineStates[courseId] {
             return outline
         }
 
         return nil
     }
 
-    func unitState(unitId: String) -> UnitLoadState? {
-        unitStates[unitId]
+    func unitState(courseId: String, unitId: String) -> UnitLoadState? {
+        unitStates[Self.unitKey(courseId: courseId, unitId: unitId)]
     }
 
     func lastUpdateMessage() -> String? {
@@ -84,37 +99,58 @@ final class CourseStore {
         await checkForLatest(library: library, hasShownVersion: shownVersion() != nil)
     }
 
-    func ensureUnitLoaded(unitId: String) {
-        guard case .loaded(let version, let outline) = state, unitStates[unitId] == nil else {
+    func ensureOutlineLoaded(courseId: String) {
+        guard let version = shownVersion(), outlineStates[courseId] == nil else {
             return
         }
 
-        guard let unitOutline = outline.units.first(where: { unit in unit.id == unitId }) else {
-            return
-        }
-
-        unitStates[unitId] = .loading
+        outlineStates[courseId] = .loading
 
         Task {
-            await loadUnit(version: version, unitOutline: unitOutline)
+            let loaded: OutlineLoadState
+
+            do {
+                loaded = .loaded(try await version.loadCourse(courseId: courseId))
+            } catch {
+                loaded = .failed(String(describing: error))
+            }
+
+            if shownVersion() === version {
+                outlineStates[courseId] = loaded
+            }
         }
     }
 
-    private func loadUnit(version: CourseVersion, unitOutline: UnitOutlineRecord) async {
-        let loaded: UnitLoadState
+    func ensureUnitLoaded(courseId: String, unitId: String) {
+        let key: String = Self.unitKey(courseId: courseId, unitId: unitId)
 
-        do {
-            let lesson: UnitLessonRecord = try await version.loadUnit(unitId: unitOutline.id)
-            loaded = .loaded(unitOutline, lesson)
-        } catch {
-            loaded = .failed(String(describing: error))
-        }
-
-        guard shownVersion() === version else {
+        guard let version = shownVersion(), unitStates[key] == nil else {
             return
         }
 
-        unitStates[unitOutline.id] = loaded
+        guard let unitOutline = outline(courseId: courseId)?.units.first(where: { unit in unit.id == unitId }) else {
+            return
+        }
+
+        unitStates[key] = .loading
+
+        Task {
+            let loaded: UnitLoadState
+
+            do {
+                loaded = .loaded(unitOutline, try await version.loadUnit(courseId: courseId, unitId: unitId))
+            } catch {
+                loaded = .failed(String(describing: error))
+            }
+
+            if shownVersion() === version {
+                unitStates[key] = loaded
+            }
+        }
+    }
+
+    private static func unitKey(courseId: String, unitId: String) -> String {
+        "\(courseId)/\(unitId)"
     }
 
     private func checkForLatest(library: CourseLibrary, hasShownVersion: Bool) async {
@@ -146,7 +182,8 @@ final class CourseStore {
     }
 
     private func show(_ version: CourseVersion) {
+        outlineStates = [:]
         unitStates = [:]
-        state = .loaded(version, version.outline())
+        state = .loaded(version)
     }
 }
