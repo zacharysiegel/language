@@ -5,13 +5,14 @@ use leptos_router::components::A;
 use leptos_router::hooks::{use_params_map, use_query_map};
 use shared::course::{CourseOutline, Unit};
 
-use crate::course_data::{CourseLoadState, CourseStore, UnitLoadState, course_gate, use_course_store};
+use crate::course_data::{
+    self, CourseStore, ShardLoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
+};
+use crate::progress_state::{remember_route_course, use_progress_store};
 use crate::unit::{
     DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, VocabularySection,
 };
 
-const TAB_QUERY_KEY: &str = "tab";
-const UNIT_ID_PARAM: &str = "unit_id";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum UnitTabKind {
@@ -73,18 +74,21 @@ pub fn UnitPage() -> impl IntoView {
     let params = use_params_map();
     let query = use_query_map();
     let course_store: CourseStore = use_course_store();
+    let course_id: Memo<String> = use_route_course_id();
     let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
-    let unit_state: Memo<Option<UnitLoadState>> = Memo::new(move |_| course_store.unit_state(&unit_id.get()));
+    let unit_state: Memo<Option<ShardLoadState<Unit>>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()));
+
+    remember_route_course(use_progress_store(), course_id);
 
     Effect::new(move |_| {
-        let course_loaded: bool = matches!(course_store.state(), CourseLoadState::Loaded(_));
+        let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(ShardLoadState::Loaded(_)));
 
-        if course_loaded {
-            course_store.ensure_unit_loaded(&unit_id.get());
+        if outline_loaded {
+            course_store.ensure_unit_loaded(&course_id.get(), &unit_id.get());
         }
     });
 
-    course_gate(move |course: Arc<CourseOutline>| {
+    course_gate(move || course_id.get(), move |course: Arc<CourseOutline>| {
         let active_tab: UnitTabKind = query
             .read()
             .get(TAB_QUERY_KEY)
@@ -96,11 +100,11 @@ pub fn UnitPage() -> impl IntoView {
         }
 
         match unit_state.get() {
-            Some(UnitLoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
-            Some(UnitLoadState::Failed(message)) => {
+            Some(ShardLoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
+            Some(ShardLoadState::Failed(message)) => {
                 view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any()
             },
-            Some(UnitLoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
+            Some(ShardLoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
         }
     })
 }
@@ -111,7 +115,7 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
         .filter(|tab| tab.available_for(&unit))
         .map(|tab| {
             view! {
-                <A href=format!("/unit/{}?{TAB_QUERY_KEY}={}", unit.id, tab.code()) attr:class=if tab == active_tab { "tab active" } else { "tab" }>
+                <A href=course_data::unit_tab_path(&course.id, &unit.id, tab.code()) attr:class=if tab == active_tab { "tab active" } else { "tab" }>
                     {tab.label()}
                 </A>
             }
@@ -122,23 +126,23 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
     let previous_target: Option<(String, String)> = unit_position
         .checked_sub(1)
         .and_then(|position| course.units.get(position))
-        .map(|previous| (format!("/unit/{}", previous.id), format!("← {}", previous.title)));
+        .map(|previous| (course_data::unit_path(&course.id, &previous.id), format!("← {}", previous.title)));
     let next_target: Option<(String, String)> = course
         .units
         .get(unit_position + 1)
-        .map(|next| (format!("/unit/{}", next.id), format!("{} →", next.title)));
+        .map(|next| (course_data::unit_path(&course.id, &next.id), format!("{} →", next.title)));
     let previous_link = previous_target.map(|(href, label)| view! { <A href=href>{label}</A> });
     let next_link = next_target.map(|(href, label)| view! { <A href=href>{label}</A> });
 
-    let caption: String = format!("{} · {}", unit.level.code(), unit.order);
+    let caption: String = format!("{} · {}", unit.level, unit.order);
     let title: String = unit.title.clone();
     let section = match active_tab {
-        UnitTabKind::Overview => view! { <OverviewSection unit=unit.clone() /> }.into_any(),
+        UnitTabKind::Overview => view! { <OverviewSection course_id=course.id.clone() unit=unit.clone() /> }.into_any(),
         UnitTabKind::Vocabulary => view! { <VocabularySection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Dialogues => view! { <DialoguesSection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Grammar => view! { <GrammarSection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Readings => view! { <ReadingsSection unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Practice => view! { <PracticeSection unit=unit.clone() /> }.into_any(),
+        UnitTabKind::Practice => view! { <PracticeSection course_id=course.id.clone() unit=unit.clone() /> }.into_any(),
     };
 
     view! {

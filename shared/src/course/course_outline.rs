@@ -1,22 +1,24 @@
 use serde::{Deserialize, Serialize};
 
 use crate::course::{
-    Course, CultureNote, Dialogue, Exercise, GrammarNote, LevelKind, LevelSummary, Reading, Unit, VocabularyItem,
-    parse_vocabulary_card_id,
+    Course, CourseLevel, CultureNote, Dialogue, Exercise, GrammarNote, Reading, Unit, VocabularyItem, parse_vocabulary_card_id,
 };
 
 /// The course without its lessons: what the learner browses, reviews and searches before opening a unit.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct CourseOutline {
+    pub id: String,
     pub title: String,
-    pub levels: Vec<LevelSummary>,
+    pub target_language: String,
+    pub source_language: String,
+    pub levels: Vec<CourseLevel>,
     pub units: Vec<UnitOutline>,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct UnitOutline {
     pub id: String,
-    pub level: LevelKind,
+    pub level: String,
     pub order: u32,
     pub title: String,
     pub objectives: Vec<String>,
@@ -46,8 +48,8 @@ impl CourseOutline {
         Some((unit, item))
     }
 
-    pub fn units_at_level(&self, level: LevelKind) -> impl Iterator<Item = &UnitOutline> {
-        self.units.iter().filter(move |unit| unit.level == level)
+    pub fn units_at_level<'outline>(&'outline self, level_code: &'outline str) -> impl Iterator<Item = &'outline UnitOutline> {
+        self.units.iter().filter(move |unit| unit.level == level_code)
     }
 }
 
@@ -55,7 +57,7 @@ impl UnitOutline {
     pub fn with_lesson(&self, lesson: UnitLesson) -> Unit {
         Unit {
             id: self.id.clone(),
-            level: self.level,
+            level: self.level.clone(),
             order: self.order,
             title: self.title.clone(),
             objectives: self.objectives.clone(),
@@ -73,7 +75,7 @@ impl Unit {
     pub fn outline(&self) -> UnitOutline {
         UnitOutline {
             id: self.id.clone(),
-            level: self.level,
+            level: self.level.clone(),
             order: self.order,
             title: self.title.clone(),
             objectives: self.objectives.clone(),
@@ -95,7 +97,10 @@ impl Unit {
 impl Course {
     pub fn outline(&self) -> CourseOutline {
         CourseOutline {
+            id: self.id.clone(),
             title: self.title.clone(),
+            target_language: self.target_language.clone(),
+            source_language: self.source_language.clone(),
             levels: self.levels.clone(),
             units: self.units.iter().map(Unit::outline).collect(),
         }

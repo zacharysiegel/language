@@ -4,9 +4,7 @@ use std::path::Path;
 
 use rusqlite::{Connection, Transaction, params};
 use shared::AppError;
-use shared::course::{
-    Course, Dialogue, Exercise, GrammarNote, LevelSummary, PhrasePair, Reading, Unit, VocabularyItem,
-};
+use shared::course::{Course, CourseLevel, Dialogue, Exercise, GrammarNote, PhrasePair, Reading, Unit, VocabularyItem};
 use shared::course_shard::{self, ClipAudioEntry};
 
 use crate::audio_plan::{AudioPlan, Utterance};
@@ -142,7 +140,10 @@ fn insert_clips(transaction: &Transaction, clip_keys: &BTreeSet<String>, clip_ca
 }
 
 fn insert_course(transaction: &Transaction, course: &Course) -> Result<(), AppError> {
-    transaction.execute("insert into course (title) values (?1);", params![course.title])?;
+    transaction.execute(
+        "insert into course (course_id, title, target_language, source_language) values (?1, ?2, ?3, ?4);",
+        params![course.id, course.title, course.target_language, course.source_language],
+    )?;
 
     insert_levels(transaction, &course.levels)?;
 
@@ -153,12 +154,12 @@ fn insert_course(transaction: &Transaction, course: &Course) -> Result<(), AppEr
     Ok(())
 }
 
-fn insert_levels(transaction: &Transaction, levels: &[LevelSummary]) -> Result<(), AppError> {
+fn insert_levels(transaction: &Transaction, levels: &[CourseLevel]) -> Result<(), AppError> {
     let mut statement: rusqlite::Statement<'_> =
-        transaction.prepare("insert into level (level_code, position, title) values (?1, ?2, ?3);")?;
+        transaction.prepare("insert into level (level_code, position, title, requires_readings) values (?1, ?2, ?3, ?4);")?;
 
     for (position, level) in levels.iter().enumerate() {
-        statement.execute(params![level.code.code(), position, level.title])?;
+        statement.execute(params![level.code, position, level.title, level.requires_readings])?;
     }
 
     Ok(())
@@ -167,7 +168,7 @@ fn insert_levels(transaction: &Transaction, levels: &[LevelSummary]) -> Result<(
 fn insert_unit_outline(transaction: &Transaction, unit: &Unit) -> Result<(), AppError> {
     transaction.execute(
         "insert into unit (unit_id, level_code, ordinal, title) values (?1, ?2, ?3, ?4);",
-        params![unit.id, unit.level.code(), unit.order, unit.title],
+        params![unit.id, unit.level, unit.order, unit.title],
     )?;
 
     let mut objective_statement: rusqlite::Statement<'_> =
@@ -178,8 +179,8 @@ fn insert_unit_outline(transaction: &Transaction, unit: &Unit) -> Result<(), App
     }
 
     let mut vocabulary_statement: rusqlite::Statement<'_> = transaction.prepare(
-        "insert into vocabulary_item (unit_id, position, pt, en, literal, part_of_speech, note, clip_key, \
-         example_pt, example_en, example_literal, example_clip_key) \
+        "insert into vocabulary_item (unit_id, position, target_text, source_text, source_literal, part_of_speech, note, clip_key, \
+         example_target_text, example_source_text, example_source_literal, example_clip_key) \
          values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12);",
     )?;
 
@@ -187,15 +188,15 @@ fn insert_unit_outline(transaction: &Transaction, unit: &Unit) -> Result<(), App
         vocabulary_statement.execute(params![
             unit.id,
             position,
-            item.pt,
-            item.en,
-            item.literal,
-            item.pos,
+            item.target,
+            item.source,
+            item.source_literal,
+            item.part_of_speech,
             item.note,
             item.clip_key,
-            item.example.pt,
-            item.example.en,
-            item.example.literal,
+            item.example.target,
+            item.example.source,
+            item.example.source_literal,
             item.example.clip_key,
         ])?;
     }
@@ -232,7 +233,7 @@ fn insert_dialogues(transaction: &Transaction, dialogues: &[Dialogue]) -> Result
     let mut dialogue_statement: rusqlite::Statement<'_> =
         transaction.prepare("insert into dialogue (position, dialogue_id, title, context) values (?1, ?2, ?3, ?4);")?;
     let mut line_statement: rusqlite::Statement<'_> = transaction.prepare(
-        "insert into dialogue_line (dialogue_position, position, speaker, speaker_gender, pt, en, literal, clip_key) \
+        "insert into dialogue_line (dialogue_position, position, speaker, speaker_gender, target_text, source_text, source_literal, clip_key) \
          values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8);",
     )?;
 
@@ -245,9 +246,9 @@ fn insert_dialogues(transaction: &Transaction, dialogues: &[Dialogue]) -> Result
                 position,
                 line.speaker,
                 line.gender.code(),
-                line.pt,
-                line.en,
-                line.literal,
+                line.target,
+                line.source,
+                line.source_literal,
                 line.clip_key,
             ])?;
         }
@@ -265,7 +266,7 @@ fn insert_grammar_notes(transaction: &Transaction, notes: &[GrammarNote]) -> Res
         "insert into grammar_table_cell (note_position, row_position, column_position, cell_text) values (?1, ?2, ?3, ?4);",
     )?;
     let mut example_statement: rusqlite::Statement<'_> = transaction.prepare(
-        "insert into grammar_example (note_position, position, pt, en, literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
+        "insert into grammar_example (note_position, position, target_text, source_text, source_literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
     )?;
 
     for (note_position, note) in notes.iter().enumerate() {
@@ -284,7 +285,7 @@ fn insert_grammar_notes(transaction: &Transaction, notes: &[GrammarNote]) -> Res
         }
 
         for (position, example) in note.examples.iter().enumerate() {
-            example_statement.execute(params![note_position, position, example.pt, example.en, example.literal, example.clip_key])?;
+            example_statement.execute(params![note_position, position, example.target, example.source, example.source_literal, example.clip_key])?;
         }
     }
 
@@ -295,7 +296,7 @@ fn insert_readings(transaction: &Transaction, readings: &[Reading]) -> Result<()
     let mut reading_statement: rusqlite::Statement<'_> =
         transaction.prepare("insert into reading (position, reading_id, title) values (?1, ?2, ?3);")?;
     let mut paragraph_statement: rusqlite::Statement<'_> = transaction.prepare(
-        "insert into reading_paragraph (reading_position, position, pt, en, literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
+        "insert into reading_paragraph (reading_position, position, target_text, source_text, source_literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
     )?;
 
     for (reading_position, reading) in readings.iter().enumerate() {
@@ -305,9 +306,9 @@ fn insert_readings(transaction: &Transaction, readings: &[Reading]) -> Result<()
             paragraph_statement.execute(params![
                 reading_position,
                 position,
-                paragraph.pt,
-                paragraph.en,
-                paragraph.literal,
+                paragraph.target,
+                paragraph.source,
+                paragraph.source_literal,
                 paragraph.clip_key,
             ])?;
         }
@@ -320,7 +321,7 @@ fn insert_readings(transaction: &Transaction, readings: &[Reading]) -> Result<()
 struct ExerciseColumns<'a> {
     prompt: Option<&'a str>,
     correct_choice_index: Option<usize>,
-    hint_en: Option<&'a str>,
+    hint_source: Option<&'a str>,
 }
 
 struct ExerciseWriter<'transaction> {
@@ -338,7 +339,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
             next_exercise_id: 0,
             exercise_statement: transaction.prepare(
                 "insert into exercise (exercise_id, reading_position, position, exercise_kind, prompt, correct_choice_index, \
-                 hint_en, explanation, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);",
+                 hint_source, explanation, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);",
             )?,
             choice_statement: transaction
                 .prepare("insert into exercise_choice (exercise_id, position, choice_text) values (?1, ?2, ?3);")?,
@@ -348,7 +349,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
                 "insert into exercise_word (exercise_id, position, word_text, is_distractor) values (?1, ?2, ?3, ?4);",
             )?,
             pair_statement: transaction.prepare(
-                "insert into exercise_pair (exercise_id, position, pt, en, literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
+                "insert into exercise_pair (exercise_id, position, target_text, source_text, source_literal, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6);",
             )?,
         })
     }
@@ -365,7 +366,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
             exercise.kind().code(),
             columns.prompt,
             columns.correct_choice_index,
-            columns.hint_en,
+            columns.hint_source,
             exercise.explanation(),
             exercise.clip_key(),
         ])?;
@@ -377,8 +378,8 @@ impl<'transaction> ExerciseWriter<'transaction> {
         match exercise {
             Exercise::MultipleChoice(multiple_choice) => self.insert_choices(exercise_id, &multiple_choice.choices),
             Exercise::ListeningChoice(listening) => self.insert_choices(exercise_id, &listening.choices),
-            Exercise::FillBlank(fill_blank) => self.insert_answers(exercise_id, &fill_blank.answer),
-            Exercise::TranslateToPortuguese(translate) => self.insert_answers(exercise_id, &translate.answers),
+            Exercise::FillBlank(fill_blank) => self.insert_answers(exercise_id, &fill_blank.answers),
+            Exercise::TranslateToTarget(translate) => self.insert_answers(exercise_id, &translate.answers),
             Exercise::OrderWords(order_words) => self.insert_words(exercise_id, &order_words.words, &order_words.distractors),
             Exercise::Match(matching) => self.insert_pairs(exercise_id, &matching.pairs),
             Exercise::Dictation(_) => Ok(()),
@@ -413,7 +414,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
 
     fn insert_pairs(&mut self, exercise_id: i64, pairs: &[PhrasePair]) -> Result<(), AppError> {
         for (position, pair) in pairs.iter().enumerate() {
-            self.pair_statement.execute(params![exercise_id, position, pair.pt, pair.en, pair.literal, pair.clip_key])?;
+            self.pair_statement.execute(params![exercise_id, position, pair.target, pair.source, pair.source_literal, pair.clip_key])?;
         }
 
         Ok(())
@@ -424,38 +425,38 @@ fn exercise_columns(exercise: &Exercise) -> ExerciseColumns<'_> {
     match exercise {
         Exercise::MultipleChoice(multiple_choice) => ExerciseColumns {
             prompt: Some(&multiple_choice.prompt),
-            correct_choice_index: Some(multiple_choice.answer),
-            hint_en: None,
+            correct_choice_index: Some(multiple_choice.answer_index),
+            hint_source: None,
         },
         Exercise::FillBlank(fill_blank) => ExerciseColumns {
-            prompt: Some(&fill_blank.prompt_pt),
+            prompt: Some(&fill_blank.prompt_target),
             correct_choice_index: None,
-            hint_en: Some(&fill_blank.hint_en),
+            hint_source: Some(&fill_blank.hint_source),
         },
-        Exercise::TranslateToPortuguese(translate) => ExerciseColumns {
-            prompt: Some(&translate.prompt_en),
+        Exercise::TranslateToTarget(translate) => ExerciseColumns {
+            prompt: Some(&translate.prompt_source),
             correct_choice_index: None,
-            hint_en: None,
+            hint_source: None,
         },
         Exercise::OrderWords(order_words) => ExerciseColumns {
-            prompt: Some(&order_words.prompt_en),
+            prompt: Some(&order_words.prompt_source),
             correct_choice_index: None,
-            hint_en: None,
+            hint_source: None,
         },
         Exercise::ListeningChoice(listening) => ExerciseColumns {
-            prompt: Some(&listening.audio_pt),
-            correct_choice_index: Some(listening.answer),
-            hint_en: None,
+            prompt: Some(&listening.audio_target),
+            correct_choice_index: Some(listening.answer_index),
+            hint_source: None,
         },
         Exercise::Dictation(dictation) => ExerciseColumns {
-            prompt: Some(&dictation.audio_pt),
+            prompt: Some(&dictation.audio_target),
             correct_choice_index: None,
-            hint_en: Some(&dictation.hint_en),
+            hint_source: Some(&dictation.hint_source),
         },
         Exercise::Match(matching) => ExerciseColumns {
             prompt: matching.prompt.as_deref(),
             correct_choice_index: None,
-            hint_en: None,
+            hint_source: None,
         },
     }
 }
@@ -464,30 +465,11 @@ fn exercise_columns(exercise: &Exercise) -> ExerciseColumns<'_> {
 mod tests {
     use std::path::PathBuf;
 
-    use shared::course::{CourseOutline, Curriculum, UnitLesson};
+    use shared::course::{CourseOutline, UnitLesson};
     use shared::course_shard::{CourseShardContents, UnitShardContents, VoiceEngineKind};
 
     use super::*;
-    use crate::audio_plan;
-    use crate::course_source;
-    use crate::workspace::WorkspacePaths;
-
-    fn read_keyed_course(plan: &mut AudioPlan) -> Course {
-        let paths: WorkspacePaths = WorkspacePaths::locate().unwrap();
-        let curriculum: Curriculum = course_source::read_curriculum(&paths).unwrap();
-        let units: Vec<Unit> = curriculum
-            .units
-            .iter()
-            .filter_map(|curriculum_unit| course_source::read_unit(&paths, &curriculum_unit.id).unwrap())
-            .map(|unit| audio_plan::assign_clip_keys(&unit, plan))
-            .collect();
-
-        Course {
-            title: curriculum.title,
-            levels: curriculum.levels,
-            units,
-        }
-    }
+    use crate::test_courses;
 
     /* One recording per engine for every clip, with a hash derived from the key so each is distinct. */
     fn synthetic_audio_index(plan: &AudioPlan) -> ClipAudioIndex {
@@ -512,7 +494,7 @@ mod tests {
     #[test]
     fn every_unit_round_trips_through_its_shards() {
         let mut plan: AudioPlan = AudioPlan::new();
-        let course: Course = read_keyed_course(&mut plan);
+        let course: Course = test_courses::read_keyed_courses(&mut plan).remove(0);
         let audio_index: ClipAudioIndex = synthetic_audio_index(&plan);
         let clip_catalog: ClipCatalog = ClipCatalog {
             plan: &plan,
@@ -548,7 +530,7 @@ mod tests {
     #[test]
     fn a_unit_shard_carries_every_engine_recording_of_its_clips() {
         let mut plan: AudioPlan = AudioPlan::new();
-        let course: Course = read_keyed_course(&mut plan);
+        let course: Course = test_courses::read_keyed_courses(&mut plan).remove(0);
         let audio_index: ClipAudioIndex = synthetic_audio_index(&plan);
         let clip_catalog: ClipCatalog = ClipCatalog {
             plan: &plan,

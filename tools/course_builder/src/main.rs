@@ -8,6 +8,8 @@ mod course_source;
 mod kokoro;
 mod publish_command;
 mod secrets;
+#[cfg(test)] // a helper only tests use
+mod test_courses;
 mod speech_engine;
 mod validate_command;
 mod version_label;
@@ -54,6 +56,10 @@ struct SetArtifactCorsArguments {
 
 #[derive(Args)]
 struct ValidateArguments {
+    /// The course to check; every course when omitted.
+    #[arg(long = "course")]
+    course_id: Option<String>,
+
     /// Units to check; every existing unit file when omitted.
     unit_ids: Vec<String>,
 
@@ -64,6 +70,10 @@ struct ValidateArguments {
 
 #[derive(Args)]
 struct BuildArguments {
+    /// The course to build; every course when omitted.
+    #[arg(long = "course")]
+    course_id: Option<String>,
+
     /// An engine that speaks the course; repeat for several. Every engine is used when none is named.
     #[arg(long = "engine", value_enum)]
     engines: Vec<SpeechEngineKind>,
@@ -133,10 +143,11 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
     let paths: WorkspacePaths = WorkspacePaths::locate()?;
 
     match command {
-        CommandKind::Validate(arguments) => validate_command::run_validate(&paths, &arguments.unit_ids, arguments.all),
+        CommandKind::Validate(arguments) => validate_command::run_validate(&paths, arguments.course_id.as_deref(), &arguments.unit_ids, arguments.all),
         CommandKind::Build(arguments) => build_command::run_build(
             &paths,
             &BuildOptions {
+                course_id: arguments.course_id,
                 engines: chosen_engines(arguments.engines),
                 skip_audio: arguments.skip_audio,
                 allow_missing: arguments.allow_missing,

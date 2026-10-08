@@ -1,12 +1,16 @@
 use serde::{Deserialize, Serialize};
 
-use crate::course::{LevelKind, LevelSummary};
+use crate::course::CourseLevel;
 
+/// A course's plan: its identity and languages, its levels, and the units each level holds.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Curriculum {
+    pub id: String,
     pub title: String,
-    pub levels: Vec<LevelSummary>,
+    pub target_language: String,
+    pub source_language: String,
+    pub levels: Vec<CourseLevel>,
     pub units: Vec<CurriculumUnit>,
 }
 
@@ -14,7 +18,7 @@ pub struct Curriculum {
 #[serde(deny_unknown_fields)]
 pub struct CurriculumUnit {
     pub id: String,
-    pub level: LevelKind,
+    pub level: String,
     pub order: u32,
     pub title: String,
     pub goals: Vec<String>,

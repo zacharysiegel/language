@@ -5,8 +5,9 @@ use shared::filesystem;
 
 use crate::speech_engine::SpeechEngineKind;
 
-const CURRICULUM_PATH: &str = "data/curriculum.json";
-const UNITS_DIRECTORY: &str = "data/units";
+const COURSES_DIRECTORY: &str = "data/courses";
+const CURRICULUM_FILE_NAME: &str = "curriculum.json";
+const UNITS_DIRECTORY_NAME: &str = "units";
 const SPEECH_MODELS_DIRECTORY: &str = "models";
 const CLIP_STORE_DIRECTORY: &str = "build/clips";
 const BUNDLES_DIRECTORY: &str = "build/artifacts";
@@ -14,8 +15,7 @@ const LOCAL_REPOSITORY_DIRECTORY: &str = "build/repository";
 const EMBEDDED_BUNDLE_DIRECTORY: &str = "web/static/embedded";
 
 pub struct WorkspacePaths {
-    pub curriculum_path: PathBuf,
-    pub units_directory: PathBuf,
+    pub courses_directory: PathBuf,
     pub speech_models_directory: PathBuf,
     pub clip_store_directory: PathBuf,
     pub bundles_directory: PathBuf,
@@ -33,8 +33,7 @@ impl WorkspacePaths {
 
     pub fn at_root(root: &Path) -> WorkspacePaths {
         WorkspacePaths {
-            curriculum_path: root.join(CURRICULUM_PATH),
-            units_directory: root.join(UNITS_DIRECTORY),
+            courses_directory: root.join(COURSES_DIRECTORY),
             speech_models_directory: root.join(SPEECH_MODELS_DIRECTORY),
             clip_store_directory: root.join(CLIP_STORE_DIRECTORY),
             bundles_directory: root.join(BUNDLES_DIRECTORY),
@@ -43,8 +42,16 @@ impl WorkspacePaths {
         }
     }
 
-    pub fn unit_path(&self, unit_id: &str) -> PathBuf {
-        self.units_directory.join(format!("{unit_id}.json"))
+    pub fn course_directory(&self, course_id: &str) -> PathBuf {
+        self.courses_directory.join(course_id)
+    }
+
+    pub fn curriculum_path(&self, course_id: &str) -> PathBuf {
+        self.course_directory(course_id).join(CURRICULUM_FILE_NAME)
+    }
+
+    pub fn unit_path(&self, course_id: &str, unit_id: &str) -> PathBuf {
+        self.course_directory(course_id).join(UNITS_DIRECTORY_NAME).join(format!("{unit_id}.json"))
     }
 
     pub fn engine_clip_directory(&self, engine: SpeechEngineKind) -> PathBuf {

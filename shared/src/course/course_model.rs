@@ -2,43 +2,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::AppError;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
-pub enum LevelKind {
-    A1,
-    A2,
-    B1,
-    B2,
-}
-
-impl LevelKind {
-    pub fn code(self) -> &'static str {
-        match self {
-            LevelKind::A1 => "A1",
-            LevelKind::A2 => "A2",
-            LevelKind::B1 => "B1",
-            LevelKind::B2 => "B2",
-        }
-    }
-
-    pub fn requires_readings(self) -> bool {
-        matches!(self, LevelKind::B1 | LevelKind::B2)
-    }
-}
-
-impl TryFrom<&str> for LevelKind {
-    type Error = AppError;
-
-    fn try_from(code: &str) -> Result<LevelKind, AppError> {
-        match code {
-            "A1" => Ok(LevelKind::A1),
-            "A2" => Ok(LevelKind::A2),
-            "B1" => Ok(LevelKind::B1),
-            "B2" => Ok(LevelKind::B2),
-            unrecognized => Err(AppError::from(format!("unknown level code; [code={unrecognized}]"))),
-        }
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum SpeakerGenderKind {
     #[serde(rename = "f")]
@@ -68,18 +31,25 @@ impl TryFrom<&str> for SpeakerGenderKind {
     }
 }
 
+/// A stage of a curriculum, such as a CEFR level.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct LevelSummary {
-    pub code: LevelKind,
+pub struct CourseLevel {
+    pub code: String,
     pub title: String,
+    pub requires_readings: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Course {
+    pub id: String,
     pub title: String,
-    pub levels: Vec<LevelSummary>,
+    /// The language taught, as a BCP 47 tag.
+    pub target_language: String,
+    /// The language the course is taught in, as a BCP 47 tag.
+    pub source_language: String,
+    pub levels: Vec<CourseLevel>,
     pub units: Vec<Unit>,
 }
 
@@ -96,8 +66,8 @@ impl Course {
         Some((unit, item))
     }
 
-    pub fn units_at_level(&self, level: LevelKind) -> impl Iterator<Item = &Unit> {
-        self.units.iter().filter(move |unit| unit.level == level)
+    pub fn find_level(&self, level_code: &str) -> Option<&CourseLevel> {
+        self.levels.iter().find(|level| level.code == level_code)
     }
 }
 
@@ -116,7 +86,7 @@ pub fn parse_vocabulary_card_id(card_id: &str) -> Option<(&str, usize)> {
 #[serde(deny_unknown_fields)]
 pub struct Unit {
     pub id: String,
-    pub level: LevelKind,
+    pub level: String,
     pub order: u32,
     pub title: String,
     pub objectives: Vec<String>,
@@ -129,14 +99,15 @@ pub struct Unit {
     pub exercises: Vec<Exercise>,
 }
 
-/// Portuguese text with its English translation.
+/// Text in the target language with its natural translation into the source language.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct PhrasePair {
-    pub pt: String,
-    pub en: String,
+    pub target: String,
+    pub source: String,
+    /// The target text rendered word for word, in the target's word order, in the source language.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub literal: Option<String>,
+    pub source_literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clip_key: Option<String>,
 }
@@ -144,12 +115,12 @@ pub struct PhrasePair {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct VocabularyItem {
-    pub pt: String,
-    pub en: String,
+    pub target: String,
+    pub source: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub literal: Option<String>,
+    pub source_literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub pos: Option<String>,
+    pub part_of_speech: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub note: Option<String>,
     pub example: PhrasePair,
@@ -171,10 +142,10 @@ pub struct Dialogue {
 pub struct DialogueLine {
     pub speaker: String,
     pub gender: SpeakerGenderKind,
-    pub pt: String,
-    pub en: String,
+    pub target: String,
+    pub source: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub literal: Option<String>,
+    pub source_literal: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub clip_key: Option<String>,
 }
@@ -216,7 +187,7 @@ pub struct Reading {
 pub enum ExerciseKind {
     MultipleChoice,
     FillBlank,
-    TranslateToPortuguese,
+    TranslateToTarget,
     OrderWords,
     ListeningChoice,
     Dictation,
@@ -227,7 +198,7 @@ impl ExerciseKind {
     pub const ALL: [ExerciseKind; 7] = [
         ExerciseKind::MultipleChoice,
         ExerciseKind::FillBlank,
-        ExerciseKind::TranslateToPortuguese,
+        ExerciseKind::TranslateToTarget,
         ExerciseKind::OrderWords,
         ExerciseKind::ListeningChoice,
         ExerciseKind::Dictation,
@@ -238,7 +209,7 @@ impl ExerciseKind {
         match self {
             ExerciseKind::MultipleChoice => "multiple_choice",
             ExerciseKind::FillBlank => "fill_blank",
-            ExerciseKind::TranslateToPortuguese => "translate_to_pt",
+            ExerciseKind::TranslateToTarget => "translate_to_target",
             ExerciseKind::OrderWords => "order_words",
             ExerciseKind::ListeningChoice => "listening_choice",
             ExerciseKind::Dictation => "dictation",
@@ -250,7 +221,7 @@ impl ExerciseKind {
         match self {
             ExerciseKind::MultipleChoice => "Choose the answer",
             ExerciseKind::FillBlank => "Fill in the blank",
-            ExerciseKind::TranslateToPortuguese => "Translate into Portuguese",
+            ExerciseKind::TranslateToTarget => "Translate the sentence",
             ExerciseKind::OrderWords => "Put the words in order",
             ExerciseKind::ListeningChoice => "Listen and choose the meaning",
             ExerciseKind::Dictation => "Listen and type what you hear",
@@ -277,8 +248,8 @@ pub enum Exercise {
     MultipleChoice(MultipleChoiceExercise),
     #[serde(rename = "fill_blank")]
     FillBlank(FillBlankExercise),
-    #[serde(rename = "translate_to_pt")]
-    TranslateToPortuguese(TranslateToPortugueseExercise),
+    #[serde(rename = "translate_to_target")]
+    TranslateToTarget(TranslateToTargetExercise),
     #[serde(rename = "order_words")]
     OrderWords(OrderWordsExercise),
     #[serde(rename = "listening_choice")]
@@ -294,7 +265,7 @@ pub enum Exercise {
 pub struct MultipleChoiceExercise {
     pub prompt: String,
     pub choices: Vec<String>,
-    pub answer: usize,
+    pub answer_index: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
 }
@@ -302,9 +273,9 @@ pub struct MultipleChoiceExercise {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct FillBlankExercise {
-    pub prompt_pt: String,
-    pub answer: Vec<String>,
-    pub hint_en: String,
+    pub prompt_target: String,
+    pub answers: Vec<String>,
+    pub hint_source: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -315,16 +286,16 @@ impl FillBlankExercise {
     pub const BLANK_MARKER: &'static str = "___";
 
     pub fn completed_sentence(&self) -> String {
-        let first_answer: &str = self.answer.first().map(String::as_str).unwrap_or("");
+        let first_answer: &str = self.answers.first().map(String::as_str).unwrap_or("");
 
-        self.prompt_pt.replace(Self::BLANK_MARKER, first_answer)
+        self.prompt_target.replace(Self::BLANK_MARKER, first_answer)
     }
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct TranslateToPortugueseExercise {
-    pub prompt_en: String,
+pub struct TranslateToTargetExercise {
+    pub prompt_source: String,
     pub answers: Vec<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
@@ -335,7 +306,7 @@ pub struct TranslateToPortugueseExercise {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OrderWordsExercise {
-    pub prompt_en: String,
+    pub prompt_source: String,
     pub words: Vec<String>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub distractors: Vec<String>,
@@ -354,9 +325,9 @@ impl OrderWordsExercise {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ListeningChoiceExercise {
-    pub audio_pt: String,
+    pub audio_target: String,
     pub choices: Vec<String>,
-    pub answer: usize,
+    pub answer_index: usize,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -366,8 +337,8 @@ pub struct ListeningChoiceExercise {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct DictationExercise {
-    pub audio_pt: String,
-    pub hint_en: String,
+    pub audio_target: String,
+    pub hint_source: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub explanation: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -389,7 +360,7 @@ impl Exercise {
         match self {
             Exercise::MultipleChoice(_) => ExerciseKind::MultipleChoice,
             Exercise::FillBlank(_) => ExerciseKind::FillBlank,
-            Exercise::TranslateToPortuguese(_) => ExerciseKind::TranslateToPortuguese,
+            Exercise::TranslateToTarget(_) => ExerciseKind::TranslateToTarget,
             Exercise::OrderWords(_) => ExerciseKind::OrderWords,
             Exercise::ListeningChoice(_) => ExerciseKind::ListeningChoice,
             Exercise::Dictation(_) => ExerciseKind::Dictation,
@@ -401,7 +372,7 @@ impl Exercise {
         let explanation: &Option<String> = match self {
             Exercise::MultipleChoice(exercise) => &exercise.explanation,
             Exercise::FillBlank(exercise) => &exercise.explanation,
-            Exercise::TranslateToPortuguese(exercise) => &exercise.explanation,
+            Exercise::TranslateToTarget(exercise) => &exercise.explanation,
             Exercise::OrderWords(exercise) => &exercise.explanation,
             Exercise::ListeningChoice(exercise) => &exercise.explanation,
             Exercise::Dictation(exercise) => &exercise.explanation,
@@ -414,7 +385,7 @@ impl Exercise {
     pub fn clip_key(&self) -> Option<&str> {
         let clip_key: &Option<String> = match self {
             Exercise::FillBlank(exercise) => &exercise.clip_key,
-            Exercise::TranslateToPortuguese(exercise) => &exercise.clip_key,
+            Exercise::TranslateToTarget(exercise) => &exercise.clip_key,
             Exercise::OrderWords(exercise) => &exercise.clip_key,
             Exercise::ListeningChoice(exercise) => &exercise.clip_key,
             Exercise::Dictation(exercise) => &exercise.clip_key,
@@ -424,14 +395,14 @@ impl Exercise {
         clip_key.as_deref()
     }
 
-    /// The Portuguese sentence that the exercise's clip speaks.
+    /// The target-language sentence the exercise's clip speaks.
     pub fn spoken_text(&self) -> Option<String> {
         match self {
             Exercise::FillBlank(exercise) => Some(exercise.completed_sentence()),
-            Exercise::TranslateToPortuguese(exercise) => exercise.answers.first().cloned(),
+            Exercise::TranslateToTarget(exercise) => exercise.answers.first().cloned(),
             Exercise::OrderWords(exercise) => Some(exercise.sentence()),
-            Exercise::ListeningChoice(exercise) => Some(exercise.audio_pt.clone()),
-            Exercise::Dictation(exercise) => Some(exercise.audio_pt.clone()),
+            Exercise::ListeningChoice(exercise) => Some(exercise.audio_target.clone()),
+            Exercise::Dictation(exercise) => Some(exercise.audio_target.clone()),
             Exercise::MultipleChoice(_) | Exercise::Match(_) => None,
         }
     }
@@ -440,11 +411,11 @@ impl Exercise {
     pub fn prompt_text(&self) -> String {
         match self {
             Exercise::MultipleChoice(exercise) => exercise.prompt.clone(),
-            Exercise::FillBlank(exercise) => exercise.prompt_pt.clone(),
-            Exercise::TranslateToPortuguese(exercise) => exercise.prompt_en.clone(),
-            Exercise::OrderWords(exercise) => exercise.prompt_en.clone(),
-            Exercise::ListeningChoice(exercise) => exercise.audio_pt.clone(),
-            Exercise::Dictation(exercise) => exercise.audio_pt.clone(),
+            Exercise::FillBlank(exercise) => exercise.prompt_target.clone(),
+            Exercise::TranslateToTarget(exercise) => exercise.prompt_source.clone(),
+            Exercise::OrderWords(exercise) => exercise.prompt_source.clone(),
+            Exercise::ListeningChoice(exercise) => exercise.audio_target.clone(),
+            Exercise::Dictation(exercise) => exercise.audio_target.clone(),
             Exercise::Match(exercise) => exercise
                 .prompt
                 .clone()
@@ -464,18 +435,18 @@ mod tests {
     #[test]
     fn exercise_parses_each_kind_from_its_type_tag() {
         let multiple_choice: Exercise =
-            parse_exercise(r#"{"type":"multiple_choice","prompt":"p","choices":["a","b","c"],"answer":1}"#).unwrap();
+            parse_exercise(r#"{"type":"multiple_choice","prompt":"p","choices":["a","b","c"],"answer_index":1}"#).unwrap();
         let translate: Exercise =
-            parse_exercise(r#"{"type":"translate_to_pt","prompt_en":"I live here.","answers":["Eu moro aqui."]}"#).unwrap();
+            parse_exercise(r#"{"type":"translate_to_target","prompt_source":"I live here.","answers":["Eu moro aqui."]}"#).unwrap();
 
         assert_eq!(multiple_choice.kind(), ExerciseKind::MultipleChoice);
-        assert_eq!(translate.kind(), ExerciseKind::TranslateToPortuguese);
+        assert_eq!(translate.kind(), ExerciseKind::TranslateToTarget);
     }
 
     #[test]
     fn exercise_rejects_unknown_fields() {
         let result: Result<Exercise, serde_json::Error> =
-            parse_exercise(r#"{"type":"dictation","audio_pt":"Oi.","hint_en":"Hi.","surprise":1}"#);
+            parse_exercise(r#"{"type":"dictation","audio_target":"Oi.","hint_source":"Hi.","surprise":1}"#);
 
         assert!(result.is_err());
     }
@@ -490,9 +461,9 @@ mod tests {
     #[test]
     fn fill_blank_completed_sentence_uses_first_answer() {
         let exercise: FillBlankExercise = FillBlankExercise {
-            prompt_pt: "Eu ___ brasileiro.".to_string(),
-            answer: vec!["sou".to_string()],
-            hint_en: "I am Brazilian.".to_string(),
+            prompt_target: "Eu ___ brasileiro.".to_string(),
+            answers: vec!["sou".to_string()],
+            hint_source: "I am Brazilian.".to_string(),
             explanation: None,
             clip_key: None,
         };

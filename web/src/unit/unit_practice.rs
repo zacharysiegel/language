@@ -8,7 +8,7 @@ use crate::practice::ExerciseSession;
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 #[component]
-pub fn PracticeSection(unit: Unit) -> impl IntoView {
+pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let unit_id: String = unit.id.clone();
     let active_mode: RwSignal<Option<PracticeModeKind>> = RwSignal::new(None);
@@ -35,6 +35,7 @@ pub fn PracticeSection(unit: Unit) -> impl IntoView {
     };
 
     let record_completion = {
+        let course_id: String = course_id.clone();
         let unit_id: String = unit_id.clone();
 
         move |mode: PracticeModeKind, score: SessionScore| {
@@ -42,7 +43,7 @@ pub fn PracticeSection(unit: Unit) -> impl IntoView {
             let now_milliseconds: i64 = platform::now_milliseconds();
 
             progress_store.update(|progress| {
-                progress.record_practice_session(&unit_id, mode, score, vocabulary_count, today, now_milliseconds);
+                progress.record_practice_session(&course_id, &unit_id, mode, score, vocabulary_count, today, now_milliseconds);
             });
         }
     };
@@ -51,7 +52,7 @@ pub fn PracticeSection(unit: Unit) -> impl IntoView {
         let unit_id: String = unit_id.clone();
 
         move || {
-            let unit_progress = progress_store.read(|progress| progress.unit_progress(&unit_id));
+            let unit_progress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
 
             if unit_progress.attempt_count == 0 {
                 "You have not attempted this unit yet.".to_string()

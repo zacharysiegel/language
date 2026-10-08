@@ -7,13 +7,17 @@ use shared::course::CourseOutline;
 use shared::progress::Progress;
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
 
-use crate::course_data::course_gate;
+use crate::course_data::{self, course_gate, use_route_course_id};
 use crate::platform;
-use crate::progress_state::{ProgressStore, use_progress_store};
+use crate::progress_state::{self, ProgressStore, remember_route_course, use_progress_store};
 
 #[component]
 pub fn ProgressPage() -> impl IntoView {
-    course_gate(|course: Arc<CourseOutline>| view! { <ProgressSummary course /> })
+    let course_id: Memo<String> = use_route_course_id();
+
+    remember_route_course(use_progress_store(), course_id);
+
+    course_gate(move || course_id.get(), |course: Arc<CourseOutline>| view! { <ProgressSummary course /> })
 }
 
 fn box_label(box_index: usize) -> String {
@@ -31,19 +35,13 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
         .iter()
         .map(|unit| {
             let unit_id: String = unit.id.clone();
-            let unit_href: String = format!("/unit/{unit_id}");
-            let unit_label: String = format!("{} {}: {}", unit.level.code(), unit.order, unit.title);
+            let course_id: String = course.id.clone();
+            let unit_href: String = course_data::unit_path(&course_id, &unit_id);
+            let unit_label: String = format!("{} {}: {}", unit.level, unit.order, unit.title);
             let status = move || {
-                let unit_progress = progress_store.read(|progress| progress.unit_progress(&unit_id));
-                let percent: u32 = (unit_progress.best_proportion * 100.0).round() as u32;
+                let unit_progress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
 
-                if unit_progress.completed {
-                    view! { <span class="tag tag-ink">"Completed"</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
-                } else if unit_progress.attempt_count > 0 {
-                    view! { <span class="tag tag-active">"In progress"</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
-                } else {
-                    view! { <span class="tag">"Not started"</span> }.into_any()
-                }
+                progress_state::unit_status_view(unit_progress)
             };
 
             view! {
@@ -55,8 +53,9 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
         })
         .collect();
 
+    let box_course_id: String = course.id.clone();
     let box_rows = move || {
-        let counts = progress_store.read(|progress| count_by_box(progress.cards.values()));
+        let counts = progress_store.read(|progress| count_by_box(progress.course_progress(&box_course_id).cards.values()));
 
         counts
             .into_iter()
@@ -67,7 +66,8 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
 
     let unit_count: usize = course.units.len();
     let streak_days = move || progress_store.read(|progress| progress.streak_days(platform::today()));
-    let completed_count = move || progress_store.read(|progress| progress.completed_unit_count());
+    let completed_course_id: String = course.id.clone();
+    let completed_count = move || progress_store.read(|progress| progress.course_progress(&completed_course_id).completed_unit_count());
 
     view! {
         <h1>"Progress"</h1>

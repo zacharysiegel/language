@@ -1,8 +1,13 @@
 use leptos::prelude::*;
 use leptos_router::components::{A, Route, Router, Routes};
+use leptos_router::hooks::use_location;
 use leptos_router::{ParamSegment, StaticSegment};
 
-use crate::course_data::{CourseLoadState, CourseStore, provide_course_store, use_course_store};
+use crate::course_data::{
+    self, COURSE_ID_PARAM, COURSE_SEGMENT, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
+    provide_course_store,
+};
+use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
 use crate::home::HomePage;
 use crate::platform;
@@ -30,7 +35,7 @@ mod ssr {
                 <head>
                     <meta charset="utf-8" />
                     <meta name="viewport" content="width=device-width, initial-scale=1" />
-                    <title>"Português do Brasil"</title>
+                    <title>"Language"</title>
                     <HashedStylesheet options=options.clone() id="leptos" />
                     <AutoReload options=options.clone() />
                     <HydrationScripts options />
@@ -53,34 +58,50 @@ pub fn App() -> impl IntoView {
             <NavigationBar />
             <main>
                 <Routes fallback=|| view! { <p class="status">"Page not found."</p> }>
-                    <Route path=StaticSegment("") view=HomePage />
-                    <Route path=(StaticSegment("unit"), ParamSegment("unit_id")) view=UnitPage />
-                    <Route path=StaticSegment("review") view=ReviewPage />
-                    <Route path=StaticSegment("glossary") view=GlossaryPage />
-                    <Route path=StaticSegment("progress") view=ProgressPage />
+                    <Route path=StaticSegment("") view=CoursesPage />
+                    <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM)) view=HomePage />
+                    <Route
+                        path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM), StaticSegment(UNIT_SEGMENT), ParamSegment(UNIT_ID_PARAM))
+                        view=UnitPage
+                    />
+                    <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM), StaticSegment(REVIEW_SEGMENT)) view=ReviewPage />
+                    <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM), StaticSegment(GLOSSARY_SEGMENT)) view=GlossaryPage />
+                    <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM), StaticSegment(PROGRESS_SEGMENT)) view=ProgressPage />
                 </Routes>
             </main>
         </Router>
     }
 }
 
+/// The course the page is under, else the one the learner opened last.
+fn active_course_id(path: &str, progress_store: ProgressStore) -> Option<String> {
+    course_data::course_id_in_path(path).or_else(|| progress_store.read(|progress| progress.settings.last_course_id.clone()))
+}
+
 #[component]
 fn NavigationBar() -> impl IntoView {
-    let course_store: CourseStore = use_course_store();
     let progress_store: ProgressStore = use_progress_store();
+    let location = use_location();
+    let course_id = move || active_course_id(&location.pathname.get(), progress_store);
 
-    let due_count = move || {
-        let CourseLoadState::Loaded(_) = course_store.state() else {
-            return 0;
-        };
+    let due_count = move |course_id: &str| {
         let now_milliseconds: i64 = platform::now_milliseconds();
 
-        progress_store.read(|progress| {
-            progress
-                .cards
-                .values()
-                .filter(|card| card.due_milliseconds <= now_milliseconds)
-                .count()
+        progress_store.read(|progress| progress.course_progress(course_id).due_card_count(now_milliseconds))
+    };
+    let course_links = move || {
+        course_id().map(|course_id| {
+            let due: usize = due_count(&course_id);
+
+            view! {
+                <A href=course_data::course_path(&course_id) exact=true>"Course"</A>
+                <A href=course_data::review_path(&course_id)>
+                    "Review"
+                    {(due > 0).then(|| view! { <span class="chrome-count numeric" title="Words ready to review now">{due}</span> })}
+                </A>
+                <A href=course_data::glossary_path(&course_id)>"Glossary"</A>
+                <A href=course_data::progress_path(&course_id)>"Progress"</A>
+            }
         })
     };
     let slow_audio = move || progress_store.read(|progress| progress.settings.slow_audio);
@@ -88,17 +109,8 @@ fn NavigationBar() -> impl IntoView {
 
     view! {
         <nav class="chrome">
-            <A href="/" attr:class="chrome-brand">"Português"</A>
-            <A href="/" exact=true>"Course"</A>
-            <A href="/review">
-                "Review"
-                {move || {
-                    (due_count() > 0)
-                        .then(|| view! { <span class="chrome-count numeric" title="Words ready to review now">{due_count()}</span> })
-                }}
-            </A>
-            <A href="/glossary">"Glossary"</A>
-            <A href="/progress">"Progress"</A>
+            <A href="/" attr:class="chrome-brand" exact=true>"Language"</A>
+            {course_links}
             <div class="chrome-settings">
                 <label class="field">
                     <span class="field-label">"Voice"</span>

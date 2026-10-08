@@ -1,5 +1,5 @@
 use shared::AppError;
-use shared::course::{Curriculum, CurriculumUnit, SeverityKind, Unit, ValidationIssue, validate_unit};
+use shared::course::{self, Curriculum, CurriculumUnit, SeverityKind, Unit, ValidationIssue};
 
 use crate::course_source;
 use crate::workspace::WorkspacePaths;
@@ -27,6 +27,7 @@ impl UnitValidationReport {
 /// A unit file that fails to parse is reported as an error issue rather than aborting the run.
 pub fn validate_curriculum_units(
     paths: &WorkspacePaths,
+    curriculum: &Curriculum,
     curriculum_units: &[&CurriculumUnit],
     require_files: bool,
 ) -> Result<UnitValidationReport, AppError> {
@@ -36,12 +37,16 @@ pub fn validate_curriculum_units(
         issues: Vec::new(),
     };
 
+    if let Some(message) = course::course_id_issue(curriculum) {
+        report.issues.push(error_issue(&curriculum.id, &message));
+    }
+
     for curriculum_unit in curriculum_units {
-        let read_result: Result<Option<Unit>, AppError> = course_source::read_unit(paths, &curriculum_unit.id);
+        let read_result: Result<Option<Unit>, AppError> = course_source::read_unit(paths, &curriculum.id, &curriculum_unit.id);
 
         match read_result {
             Ok(Some(unit)) => {
-                report.issues.extend(validate_unit(curriculum_unit, &unit));
+                report.issues.extend(course::validate_unit(curriculum, curriculum_unit, &unit));
                 report.loaded_units.push(unit);
             },
             Ok(None) => {
@@ -78,31 +83,50 @@ pub fn print_issues(report: &UnitValidationReport) {
     }
 }
 
-pub fn run_validate(paths: &WorkspacePaths, requested_unit_ids: &[String], require_all: bool) -> Result<bool, AppError> {
-    let curriculum: Curriculum = course_source::read_curriculum(paths)?;
+/// The courses to work on: the named one, or every course when none is named.
+pub fn select_course_ids(paths: &WorkspacePaths, requested_course_id: Option<&str>) -> Result<Vec<String>, AppError> {
+    let course_ids: Vec<String> = course_source::list_course_ids(paths)?;
 
-    for requested_id in requested_unit_ids {
-        if !curriculum.units.iter().any(|unit| &unit.id == requested_id) {
-            return Err(AppError::from(format!("unknown unit id; [id={requested_id}]")));
-        }
+    match requested_course_id {
+        Some(requested) if course_ids.iter().any(|course_id| course_id == requested) => Ok(vec![requested.to_string()]),
+        Some(requested) => Err(AppError::from(format!("unknown course id; [id={requested}]"))),
+        None => Ok(course_ids),
+    }
+}
+
+pub fn run_validate(paths: &WorkspacePaths, requested_course_id: Option<&str>, requested_unit_ids: &[String], require_all: bool) -> Result<bool, AppError> {
+    let mut error_count: usize = 0;
+    let mut matched_unit_ids: Vec<&String> = Vec::new();
+
+    for course_id in select_course_ids(paths, requested_course_id)? {
+        let curriculum: Curriculum = course_source::read_curriculum(paths, &course_id)?;
+        let selected_units: Vec<&CurriculumUnit> = curriculum
+            .units
+            .iter()
+            .filter(|unit| requested_unit_ids.is_empty() || requested_unit_ids.contains(&unit.id))
+            .collect();
+
+        matched_unit_ids.extend(requested_unit_ids.iter().filter(|requested| selected_units.iter().any(|unit| &&unit.id == requested)));
+
+        let require_files: bool = require_all || !requested_unit_ids.is_empty();
+        let report: UnitValidationReport = validate_curriculum_units(paths, &curriculum, &selected_units, require_files)?;
+
+        print_issues(&report);
+        println!(
+            "{course_id}: checked {} unit(s), {} missing, {} error(s), {} warning(s)",
+            report.loaded_units.len(),
+            report.missing_unit_ids.len(),
+            report.error_count(),
+            report.warning_count(),
+        );
+        error_count += report.error_count();
     }
 
-    let selected_units: Vec<&CurriculumUnit> = curriculum
-        .units
-        .iter()
-        .filter(|unit| requested_unit_ids.is_empty() || requested_unit_ids.contains(&unit.id))
-        .collect();
-    let require_files: bool = require_all || !requested_unit_ids.is_empty();
-    let report: UnitValidationReport = validate_curriculum_units(paths, &selected_units, require_files)?;
+    let unknown_unit_id: Option<&String> = requested_unit_ids.iter().find(|requested| !matched_unit_ids.contains(requested));
 
-    print_issues(&report);
-    println!(
-        "checked {} unit(s), {} missing, {} error(s), {} warning(s)",
-        report.loaded_units.len(),
-        report.missing_unit_ids.len(),
-        report.error_count(),
-        report.warning_count(),
-    );
+    if let Some(unknown_unit_id) = unknown_unit_id {
+        return Err(AppError::from(format!("unknown unit id; [id={unknown_unit_id}]")));
+    }
 
-    Ok(report.error_count() == 0)
+    Ok(error_count == 0)
 }

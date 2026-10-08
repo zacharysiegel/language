@@ -10,34 +10,30 @@ use crate::validate_command::{self, UnitValidationReport};
 use crate::workspace::WorkspacePaths;
 
 pub struct BuildOptions {
+    pub course_id: Option<String>,
     pub engines: Vec<SpeechEngineKind>,
     pub skip_audio: bool,
     pub allow_missing: bool,
 }
 
 pub fn run_build(paths: &WorkspacePaths, options: &BuildOptions) -> Result<bool, AppError> {
-    let curriculum: Curriculum = course_source::read_curriculum(paths)?;
-    let all_units: Vec<&CurriculumUnit> = curriculum.units.iter().collect();
-    let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &all_units, !options.allow_missing)?;
-
-    validate_command::print_issues(&report);
-
-    if report.error_count() > 0 {
-        eprintln!("build stopped; [errors={}]", report.error_count());
-        return Ok(false);
-    }
-
     let mut plan: AudioPlan = AudioPlan::new();
-    let keyed_units: Vec<Unit> = report
-        .loaded_units
-        .iter()
-        .map(|unit| audio_plan::assign_clip_keys(unit, &mut plan))
-        .collect();
-    let course: Course = Course {
-        title: curriculum.title.clone(),
-        levels: curriculum.levels.clone(),
-        units: keyed_units,
-    };
+    let mut courses: Vec<Course> = Vec::new();
+
+    for course_id in validate_command::select_course_ids(paths, options.course_id.as_deref())? {
+        let curriculum: Curriculum = course_source::read_curriculum(paths, &course_id)?;
+        let all_units: Vec<&CurriculumUnit> = curriculum.units.iter().collect();
+        let report: UnitValidationReport = validate_command::validate_curriculum_units(paths, &curriculum, &all_units, !options.allow_missing)?;
+
+        validate_command::print_issues(&report);
+
+        if report.error_count() > 0 {
+            eprintln!("build stopped; [course={course_id} errors={}]", report.error_count());
+            return Ok(false);
+        }
+
+        courses.push(keyed_course(&curriculum, &report.loaded_units, &mut plan));
+    }
 
     if options.skip_audio {
         log::info!("audio synthesis skipped; [distinct_clips={}]", plan.utterances.len());
@@ -46,19 +42,30 @@ pub fn run_build(paths: &WorkspacePaths, options: &BuildOptions) -> Result<bool,
     }
 
     let recordings: ClipRecordings = audio_synthesis::collect_clip_recordings(&plan, paths)?;
-    let bundle: BuiltBundle = artifact::write_bundle(paths, &course, &plan, &recordings)?;
+    let bundle: BuiltBundle = artifact::write_bundle(paths, &courses, &plan, &recordings)?;
 
     artifact::refresh_embedded_bundle(paths, &bundle)?;
     artifact::prune_bundles(paths)?;
 
     log::info!(
-        "build complete; [version={} units={} distinct_clips={}]",
+        "build complete; [version={} courses={} distinct_clips={}]",
         bundle.manifest.version,
-        course.units.len(),
+        courses.len(),
         plan.utterances.len(),
     );
 
     Ok(true)
+}
+
+pub fn keyed_course(curriculum: &Curriculum, units: &[Unit], plan: &mut AudioPlan) -> Course {
+    Course {
+        id: curriculum.id.clone(),
+        title: curriculum.title.clone(),
+        target_language: curriculum.target_language.clone(),
+        source_language: curriculum.source_language.clone(),
+        levels: curriculum.levels.clone(),
+        units: units.iter().map(|unit| audio_plan::assign_clip_keys(unit, &curriculum.target_language, plan)).collect(),
+    }
 }
 
 fn synthesize_audio(paths: &WorkspacePaths, plan: &AudioPlan, engines: &[SpeechEngineKind]) -> Result<(), AppError> {

@@ -1,6 +1,10 @@
 use clap::ValueEnum;
 use shared::course_shard::VoiceEngineKind;
 
+use crate::speech_engine::{PersonaVoices, SpeechLanguage};
+
+pub const LISTENING_PERSONA_COUNT: usize = 6;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, ValueEnum)]
 pub enum SpeechEngineKind {
     Kokoro,
@@ -13,9 +17,10 @@ pub struct VoiceProfile {
     pub speed: f32,
 }
 
-/// What an engine is asked to speak: the text and the voice it has for the persona.
+/// What an engine is asked to speak: the text, its language, and the voice the engine has for the persona.
 #[derive(Debug, Clone, PartialEq)]
 pub struct ResolvedUtterance {
+    pub language: &'static SpeechLanguage,
     pub profile: VoiceProfile,
     pub text: String,
 }
@@ -28,51 +33,6 @@ pub enum PersonaKind {
     MaleSpeaker(usize),
     ListeningExercise(usize),
 }
-
-const fn profile(voice_id: &'static str, speed: f32) -> VoiceProfile {
-    VoiceProfile { voice_id, speed }
-}
-
-const KOKORO_NARRATOR: VoiceProfile = profile("pf_dora", 0.95);
-const KOKORO_FEMALE_SPEAKERS: [VoiceProfile; 3] = [profile("pf_dora", 1.0), profile("pf_dora", 1.1), profile("pf_dora", 0.9)];
-const KOKORO_MALE_SPEAKERS: [VoiceProfile; 4] = [
-    profile("pm_alex", 1.0),
-    profile("pm_santa", 1.0),
-    profile("pm_alex", 1.1),
-    profile("pm_santa", 0.9),
-];
-const KOKORO_LISTENING_POOL: [VoiceProfile; 6] = [
-    profile("pf_dora", 1.0),
-    profile("pm_alex", 1.0),
-    profile("pm_santa", 1.0),
-    profile("pf_dora", 0.9),
-    profile("pm_alex", 0.9),
-    profile("pm_santa", 0.9),
-];
-
-const MACOS_NARRATOR: VoiceProfile = profile("Luciana", 1.0);
-const MACOS_FEMALE_SPEAKERS: [VoiceProfile; 4] = [
-    profile("Luciana", 1.0),
-    profile("Flo (Portuguese (Brazil))", 1.0),
-    profile("Sandy (Portuguese (Brazil))", 1.0),
-    profile("Shelley (Portuguese (Brazil))", 1.0),
-];
-const MACOS_MALE_SPEAKERS: [VoiceProfile; 3] = [
-    profile("Reed (Portuguese (Brazil))", 1.0),
-    profile("Eddy (Portuguese (Brazil))", 1.0),
-    profile("Rocko (Portuguese (Brazil))", 1.0),
-];
-pub const LISTENING_PERSONA_COUNT: usize = 6;
-
-const MACOS_LISTENING_POOL: [VoiceProfile; 7] = [
-    profile("Luciana", 1.0),
-    profile("Flo (Portuguese (Brazil))", 1.0),
-    profile("Sandy (Portuguese (Brazil))", 1.0),
-    profile("Shelley (Portuguese (Brazil))", 1.0),
-    profile("Reed (Portuguese (Brazil))", 1.0),
-    profile("Eddy (Portuguese (Brazil))", 1.0),
-    profile("Rocko (Portuguese (Brazil))", 1.0),
-];
 
 impl PersonaKind {
     pub fn key(self) -> String {
@@ -107,16 +67,17 @@ impl SpeechEngineKind {
         }
     }
 
-    pub fn profile_for(self, persona: PersonaKind) -> VoiceProfile {
-        match (self, persona) {
-            (SpeechEngineKind::Kokoro, PersonaKind::Narrator) => KOKORO_NARRATOR,
-            (SpeechEngineKind::Kokoro, PersonaKind::FemaleSpeaker(index)) => KOKORO_FEMALE_SPEAKERS[index % KOKORO_FEMALE_SPEAKERS.len()],
-            (SpeechEngineKind::Kokoro, PersonaKind::MaleSpeaker(index)) => KOKORO_MALE_SPEAKERS[index % KOKORO_MALE_SPEAKERS.len()],
-            (SpeechEngineKind::Kokoro, PersonaKind::ListeningExercise(index)) => KOKORO_LISTENING_POOL[index % KOKORO_LISTENING_POOL.len()],
-            (SpeechEngineKind::MacosSay, PersonaKind::Narrator) => MACOS_NARRATOR,
-            (SpeechEngineKind::MacosSay, PersonaKind::FemaleSpeaker(index)) => MACOS_FEMALE_SPEAKERS[index % MACOS_FEMALE_SPEAKERS.len()],
-            (SpeechEngineKind::MacosSay, PersonaKind::MaleSpeaker(index)) => MACOS_MALE_SPEAKERS[index % MACOS_MALE_SPEAKERS.len()],
-            (SpeechEngineKind::MacosSay, PersonaKind::ListeningExercise(index)) => MACOS_LISTENING_POOL[index % MACOS_LISTENING_POOL.len()],
+    pub fn profile_for(self, language: &SpeechLanguage, persona: PersonaKind) -> VoiceProfile {
+        let voices: &PersonaVoices = match self {
+            SpeechEngineKind::Kokoro => &language.kokoro_voices,
+            SpeechEngineKind::MacosSay => &language.macos_voices,
+        };
+
+        match persona {
+            PersonaKind::Narrator => voices.narrator,
+            PersonaKind::FemaleSpeaker(index) => voices.female_speakers[index % voices.female_speakers.len()],
+            PersonaKind::MaleSpeaker(index) => voices.male_speakers[index % voices.male_speakers.len()],
+            PersonaKind::ListeningExercise(index) => voices.listening_pool[index % voices.listening_pool.len()],
         }
     }
 
@@ -125,19 +86,26 @@ impl SpeechEngineKind {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::speech_engine::BRAZILIAN_PORTUGUESE;
 
     #[test]
     fn profile_for_wraps_speaker_indexes_around_the_pool() {
         let engine: SpeechEngineKind = SpeechEngineKind::Kokoro;
 
-        assert_eq!(engine.profile_for(PersonaKind::FemaleSpeaker(0)), engine.profile_for(PersonaKind::FemaleSpeaker(3)));
-        assert_eq!(engine.profile_for(PersonaKind::ListeningExercise(1)), engine.profile_for(PersonaKind::ListeningExercise(7)));
+        assert_eq!(
+            engine.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::FemaleSpeaker(0)),
+            engine.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::FemaleSpeaker(3)),
+        );
+        assert_eq!(
+            engine.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::ListeningExercise(1)),
+            engine.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::ListeningExercise(7)),
+        );
     }
 
     #[test]
-    fn kokoro_voices_are_the_brazilian_portuguese_voices() {
-        for index in 0..KOKORO_LISTENING_POOL.len() {
-            let voice_id: &str = SpeechEngineKind::Kokoro.profile_for(PersonaKind::ListeningExercise(index)).voice_id;
+    fn kokoro_voices_for_brazilian_portuguese_are_its_portuguese_voices() {
+        for index in 0..LISTENING_PERSONA_COUNT {
+            let voice_id: &str = SpeechEngineKind::Kokoro.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::ListeningExercise(index)).voice_id;
 
             assert!(voice_id.starts_with("pf_") || voice_id.starts_with("pm_"));
         }

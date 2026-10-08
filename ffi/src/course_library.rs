@@ -5,12 +5,12 @@ use std::sync::{Arc, Mutex};
 
 use shared::AppError;
 use shared::artifact::{self, FilesystemArtifactCache, ManifestEntry, ManifestSource, content_address, discovery, fetch, manifest};
-use shared::course::CourseOutline;
+use shared::course;
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
 use shared::filesystem;
 use shared::http::{DirectoryFetch, HttpCacheMode, ReqwestHttpFetch};
 
-use crate::course_records::{CourseOutlineRecord, UnitLessonRecord};
+use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord};
 use crate::ffi_error::CoreError;
 use crate::progress_book::AudioEngineRecord;
 
@@ -27,7 +27,7 @@ pub struct CoreConfiguration {
     pub embedded_bundle_directory: String,
 }
 
-/// Opens published course versions for a native app.
+/// Opens published versions of the courses for a native app.
 #[derive(uniffi::Object)]
 pub struct CourseLibrary {
     configuration: CoreConfiguration,
@@ -129,19 +129,13 @@ impl CourseLibrary {
             cache_directory: self.cache_directory(),
             http_fetch: self.http_fetch.clone(),
         };
-        let course_bytes: Vec<u8> = shard_loader.load_shard_bytes(&source, &source.manifest.course).await?;
-        let contents: CourseShardContents = course_shard::read_course_shard(&course_bytes)?;
-        let version: CourseVersion = CourseVersion {
+
+        Ok(Arc::new(CourseVersion {
             source,
             audio_base_url,
             shard_loader,
-            outline: contents.outline,
             audio_sha256_by_clip: Mutex::new(BTreeMap::new()),
-        };
-
-        version.register_clip_audio(&contents.clip_audio);
-
-        Ok(Arc::new(version))
+        }))
     }
 
     async fn remember_version(&self, source: &ManifestSource) -> Result<(), AppError> {
@@ -182,13 +176,12 @@ impl ShardLoader {
     }
 }
 
-/// One published version of the course, opened from a repository or from the bundle shipped with the app.
+/// One published version of the courses, opened from a repository or from the bundle shipped with the app.
 #[derive(uniffi::Object)]
 pub struct CourseVersion {
     source: ManifestSource,
     audio_base_url: String,
     shard_loader: ShardLoader,
-    outline: CourseOutline,
     audio_sha256_by_clip: Mutex<BTreeMap<String, BTreeMap<VoiceEngineKind, String>>>,
 }
 
@@ -206,12 +199,26 @@ impl CourseVersion {
         self.shard_loader.origin == ShardOriginKind::Embedded
     }
 
-    pub fn outline(&self) -> CourseOutlineRecord {
-        (&self.outline).into()
+    pub fn courses(&self) -> Vec<CourseSummaryRecord> {
+        self.source
+            .manifest
+            .courses
+            .iter()
+            .map(|(course_id, manifest_course)| CourseSummaryRecord {
+                id: course_id.clone(),
+                title: manifest_course.title.clone(),
+                target_language_name: course::language_name(&manifest_course.target_language),
+                source_language_name: course::language_name(&manifest_course.source_language),
+            })
+            .collect()
     }
 
-    pub async fn load_unit(self: Arc<Self>, unit_id: String) -> Result<UnitLessonRecord, CoreError> {
-        run_detached(move || block_on(self.open_unit(&unit_id))).await
+    pub async fn load_course(self: Arc<Self>, course_id: String) -> Result<CourseOutlineRecord, CoreError> {
+        run_detached(move || block_on(self.open_course(&course_id))).await
+    }
+
+    pub async fn load_unit(self: Arc<Self>, course_id: String, unit_id: String) -> Result<UnitLessonRecord, CoreError> {
+        run_detached(move || block_on(self.open_unit(&course_id, &unit_id))).await
     }
 
     /// A local file holding the clip's recording in the voice `engine` picks for `spoken_text`, else in any voice,
@@ -222,13 +229,18 @@ impl CourseVersion {
 }
 
 impl CourseVersion {
-    async fn open_unit(&self, unit_id: &str) -> Result<UnitLessonRecord, AppError> {
-        let entry: &ManifestEntry = self
-            .source
-            .manifest
-            .units
-            .get(unit_id)
-            .ok_or_else(|| AppError::from(format!("the published course has no such unit; [unit_id={unit_id}]")))?;
+    async fn open_course(&self, course_id: &str) -> Result<CourseOutlineRecord, AppError> {
+        let entry: &ManifestEntry = &self.source.manifest.find_course(course_id)?.outline;
+        let bytes: Vec<u8> = self.shard_loader.load_shard_bytes(&self.source, entry).await?;
+        let contents: CourseShardContents = course_shard::read_course_shard(&bytes)?;
+
+        self.register_clip_audio(&contents.clip_audio);
+
+        Ok((&contents.outline).into())
+    }
+
+    async fn open_unit(&self, course_id: &str, unit_id: &str) -> Result<UnitLessonRecord, AppError> {
+        let entry: &ManifestEntry = self.source.manifest.find_course(course_id)?.find_unit(unit_id)?;
         let bytes: Vec<u8> = self.shard_loader.load_shard_bytes(&self.source, entry).await?;
         let contents: UnitShardContents = course_shard::read_unit_shard(&bytes)?;
 
@@ -320,9 +332,10 @@ mod tests {
         .unwrap();
 
         let version: Arc<CourseVersion> = library.clone().load_embedded_course().await.unwrap();
-        let outline: CourseOutlineRecord = version.outline();
+        let course_id: String = version.courses()[0].id.clone();
+        let outline: CourseOutlineRecord = version.clone().load_course(course_id.clone()).await.unwrap();
         let first_unit_id: String = outline.units[0].id.clone();
-        let lesson: UnitLessonRecord = version.clone().load_unit(first_unit_id).await.unwrap();
+        let lesson: UnitLessonRecord = version.clone().load_unit(course_id, first_unit_id).await.unwrap();
         let cached_shard_count: usize = fs::read_dir(cache_directory.path().join(SHARD_CACHE_DIRECTORY)).unwrap().count();
 
         assert!(version.is_embedded());

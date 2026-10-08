@@ -2,9 +2,9 @@ use std::collections::HashSet;
 use std::fmt;
 
 use crate::course::{
-    CultureNote, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
+    CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
     ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind,
-    TranslateToPortugueseExercise, Unit, VocabularyItem,
+    TranslateToTargetExercise, Unit, VocabularyItem, target_language_rules,
 };
 
 const MINIMUM_OBJECTIVES: usize = 3;
@@ -26,7 +26,7 @@ const MAXIMUM_ORDER_WORDS_DISTRACTORS: usize = 3;
 const MINIMUM_EXERCISES_BY_KIND: [(ExerciseKind, usize); 7] = [
     (ExerciseKind::MultipleChoice, 5),
     (ExerciseKind::FillBlank, 5),
-    (ExerciseKind::TranslateToPortuguese, 3),
+    (ExerciseKind::TranslateToTarget, 3),
     (ExerciseKind::OrderWords, 3),
     (ExerciseKind::ListeningChoice, 3),
     (ExerciseKind::Dictation, 2),
@@ -36,37 +36,6 @@ const MINIMUM_EXERCISES_BY_KIND: [(ExerciseKind, usize); 7] = [
 const MARKUP_CHARACTERS: &str = "*_#<>[]{}|\\";
 const DASH_CHARACTERS: &str = "—–";
 const FILL_BLANK_FORBIDDEN_ANSWER_CHARACTERS: &str = ".!?,";
-
-/* Stems match any word beginning with them; the remaining lists match whole words or whole phrases. */
-const EUROPEAN_PORTUGUESE_STEMS: [&str; 12] = [
-    "autocarro",
-    "comboio",
-    "telemóvel",
-    "telemovel",
-    "telemóveis",
-    "telemoveis",
-    "rapariga",
-    "frigorífico",
-    "frigorifico",
-    "miúdo",
-    "miudo",
-    "machimbombo",
-];
-const EUROPEAN_PORTUGUESE_WORDS: [&str; 7] = ["ecrã", "ecra", "equipa", "equipas", "facto", "factos", "estás"];
-const EUROPEAN_PORTUGUESE_PHRASES: [&str; 6] = [
-    "pequeno almoço",
-    "pequeno almoco",
-    "casa de banho",
-    "tu és",
-    "bilhete de identidade",
-    "passadeira",
-];
-const EUROPEAN_PROGRESSIVE_AUXILIARIES: [&str; 9] = [
-    "estou", "estás", "está", "estamos", "estão", "estava", "estavam", "estive", "esteve",
-];
-const SHORT_INFINITIVES: [&str; 7] = ["ler", "ver", "ter", "dar", "ser", "vir", "pôr"];
-const INFINITIVE_ENDINGS: [&str; 4] = ["ar", "er", "ir", "or"];
-const INFINITIVE_LOOKALIKES: [&str; 1] = ["favor"];
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum SeverityKind {
@@ -90,6 +59,7 @@ impl fmt::Display for ValidationIssue {
 
 struct IssueCollector<'a> {
     unit_id: &'a str,
+    target_language: &'a str,
     issues: Vec<ValidationIssue>,
 }
 
@@ -121,7 +91,7 @@ impl IssueCollector<'_> {
         present
     }
 
-    fn check_spoken_portuguese(&mut self, location: &str, text: &str) {
+    fn check_spoken_target(&mut self, location: &str, text: &str) {
         if !self.require_text(location, "spoken text", text) {
             return;
         }
@@ -150,15 +120,15 @@ impl IssueCollector<'_> {
         if character_count > MAXIMUM_SPOKEN_CHARACTERS {
             self.error(location, format!("spoken text is too long ({character_count} characters)"));
         }
-        if contains_european_portuguese(text) {
-            self.error(location, format!("European Portuguese form in spoken text: {text}"));
+        if let Some(message) = target_language_rules::target_language_issue(self.target_language, text) {
+            self.error(location, message);
         }
     }
 
     fn check_pair(&mut self, location: &str, pair: &PhrasePair) {
-        self.check_spoken_portuguese(&format!("{location}.pt"), &pair.pt);
-        self.require_text(&format!("{location}.en"), "en", &pair.en);
-        self.check_literal(location, &pair.literal, &pair.en);
+        self.check_spoken_target(&format!("{location}.target"), &pair.target);
+        self.require_text(&format!("{location}.source"), "source", &pair.source);
+        self.check_literal(location, &pair.source_literal, &pair.source);
     }
 
     fn check_literal(&mut self, location: &str, literal: &Option<String>, natural: &str) {
@@ -166,10 +136,10 @@ impl IssueCollector<'_> {
             return;
         };
 
-        self.require_text(&format!("{location}.literal"), "literal", literal);
+        self.require_text(&format!("{location}.source_literal"), "source_literal", literal);
 
         if literal.trim().eq_ignore_ascii_case(natural.trim()) {
-            self.warning(&format!("{location}.literal"), "literal translation repeats the natural translation; omit it");
+            self.warning(&format!("{location}.source_literal"), "the literal rendering repeats the natural translation; omit it");
         }
     }
 
@@ -195,61 +165,30 @@ impl IssueCollector<'_> {
             self.error(location, "choices must be unique");
         }
         if answer >= choices.len() {
-            self.error(location, "answer must be an index into choices");
+            self.error(location, "answer_index must be an index into choices");
         }
     }
 }
 
-fn contains_european_portuguese(text: &str) -> bool {
-    let lowercase_text: String = text.to_lowercase();
-    let tokens: Vec<&str> = lowercase_text
-        .split(|character: char| !character.is_alphabetic())
-        .filter(|token| !token.is_empty())
-        .collect();
-
-    let stem_found: bool = tokens
-        .iter()
-        .any(|token| EUROPEAN_PORTUGUESE_STEMS.iter().any(|stem| token.starts_with(stem)));
-    let word_found: bool = tokens.iter().any(|token| EUROPEAN_PORTUGUESE_WORDS.contains(token));
-    let padded_tokens: String = format!(" {} ", tokens.join(" "));
-    let phrase_found: bool = EUROPEAN_PORTUGUESE_PHRASES
-        .iter()
-        .any(|phrase| padded_tokens.contains(&format!(" {phrase} ")));
-
-    stem_found || word_found || phrase_found || contains_european_progressive(&tokens)
-}
-
-fn contains_european_progressive(tokens: &[&str]) -> bool {
-    tokens.windows(3).any(|window| {
-        let [auxiliary, preposition, verb]: [&str; 3] = [window[0], window[1], window[2]];
-        let long_infinitive: bool = verb.chars().count() > 3
-            && INFINITIVE_ENDINGS.iter().any(|ending| verb.ends_with(ending))
-            && !INFINITIVE_LOOKALIKES.contains(&verb);
-        let is_infinitive: bool = long_infinitive || SHORT_INFINITIVES.contains(&verb);
-
-        EUROPEAN_PROGRESSIVE_AUXILIARIES.contains(&auxiliary) && preposition == "a" && is_infinitive
-    })
-}
-
 fn check_multiple_choice(collector: &mut IssueCollector, location: &str, exercise: &MultipleChoiceExercise) {
     collector.require_text(&format!("{location}.prompt"), "prompt", &exercise.prompt);
-    collector.check_choices(location, 3, 5, &exercise.choices, exercise.answer);
+    collector.check_choices(location, 3, 5, &exercise.choices, exercise.answer_index);
 }
 
 fn check_fill_blank(collector: &mut IssueCollector, location: &str, exercise: &FillBlankExercise) {
-    collector.require_text(&format!("{location}.hint_en"), "hint_en", &exercise.hint_en);
+    collector.require_text(&format!("{location}.hint_source"), "hint_source", &exercise.hint_source);
 
-    let blank_count: usize = exercise.prompt_pt.matches(FillBlankExercise::BLANK_MARKER).count();
+    let blank_count: usize = exercise.prompt_target.matches(FillBlankExercise::BLANK_MARKER).count();
 
     if blank_count != 1 {
-        collector.error(location, format!("prompt_pt must contain exactly one ___ (found {blank_count})"));
+        collector.error(location, format!("prompt_target must contain exactly one ___ (found {blank_count})"));
     }
-    if exercise.answer.is_empty() || exercise.answer.iter().any(|accepted| accepted.trim().is_empty()) {
-        collector.error(location, "answer must be a non-empty array of strings");
+    if exercise.answers.is_empty() || exercise.answers.iter().any(|accepted| accepted.trim().is_empty()) {
+        collector.error(location, "answers must be a non-empty array of strings");
     }
 
     let punctuated: bool = exercise
-        .answer
+        .answers
         .iter()
         .any(|accepted| accepted.contains(|character: char| FILL_BLANK_FORBIDDEN_ANSWER_CHARACTERS.contains(character)));
 
@@ -257,27 +196,27 @@ fn check_fill_blank(collector: &mut IssueCollector, location: &str, exercise: &F
         collector.error(location, "fill_blank answers must not contain punctuation");
     }
 
-    let has_single_blank_and_answer: bool = blank_count == 1 && !exercise.answer.is_empty();
+    let has_single_blank_and_answer: bool = blank_count == 1 && !exercise.answers.is_empty();
 
     if has_single_blank_and_answer {
-        collector.check_spoken_portuguese(&format!("{location}.completed_sentence"), &exercise.completed_sentence());
+        collector.check_spoken_target(&format!("{location}.completed_sentence"), &exercise.completed_sentence());
     }
 }
 
-fn check_translate(collector: &mut IssueCollector, location: &str, exercise: &TranslateToPortugueseExercise) {
-    collector.require_text(&format!("{location}.prompt_en"), "prompt_en", &exercise.prompt_en);
+fn check_translate(collector: &mut IssueCollector, location: &str, exercise: &TranslateToTargetExercise) {
+    collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
 
     if exercise.answers.is_empty() {
         collector.error(location, "answers must be a non-empty array");
     }
 
     for accepted in &exercise.answers {
-        collector.check_spoken_portuguese(&format!("{location}.answers"), accepted);
+        collector.check_spoken_target(&format!("{location}.answers"), accepted);
     }
 }
 
 fn check_order_words(collector: &mut IssueCollector, location: &str, exercise: &OrderWordsExercise) {
-    collector.require_text(&format!("{location}.prompt_en"), "prompt_en", &exercise.prompt_en);
+    collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
 
     if exercise.words.len() < 3 || exercise.words.len() > 12 {
         collector.error(location, "words must be an array of 3 to 12 tokens in correct order");
@@ -290,7 +229,7 @@ fn check_order_words(collector: &mut IssueCollector, location: &str, exercise: &
         }
     }
 
-    collector.check_spoken_portuguese(&format!("{location}.words"), &exercise.sentence());
+    collector.check_spoken_target(&format!("{location}.words"), &exercise.sentence());
 
     let distractors_valid: bool = exercise.distractors.len() <= MAXIMUM_ORDER_WORDS_DISTRACTORS
         && exercise.distractors.iter().all(|distractor| !distractor.trim().is_empty());
@@ -301,13 +240,13 @@ fn check_order_words(collector: &mut IssueCollector, location: &str, exercise: &
 }
 
 fn check_listening_choice(collector: &mut IssueCollector, location: &str, exercise: &ListeningChoiceExercise) {
-    collector.check_spoken_portuguese(&format!("{location}.audio_pt"), &exercise.audio_pt);
-    collector.check_choices(location, 3, 4, &exercise.choices, exercise.answer);
+    collector.check_spoken_target(&format!("{location}.audio_target"), &exercise.audio_target);
+    collector.check_choices(location, 3, 4, &exercise.choices, exercise.answer_index);
 }
 
 fn check_dictation(collector: &mut IssueCollector, location: &str, exercise: &DictationExercise) {
-    collector.check_spoken_portuguese(&format!("{location}.audio_pt"), &exercise.audio_pt);
-    collector.require_text(&format!("{location}.hint_en"), "hint_en", &exercise.hint_en);
+    collector.check_spoken_target(&format!("{location}.audio_target"), &exercise.audio_target);
+    collector.require_text(&format!("{location}.hint_source"), "hint_source", &exercise.hint_source);
 }
 
 fn check_match(collector: &mut IssueCollector, location: &str, exercise: &MatchExercise) {
@@ -331,7 +270,7 @@ fn check_exercise(collector: &mut IssueCollector, location: &str, exercise: &Exe
             collector.check_explanation(location, &exercise.explanation);
             check_fill_blank(collector, location, exercise);
         },
-        Exercise::TranslateToPortuguese(exercise) => {
+        Exercise::TranslateToTarget(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_translate(collector, location, exercise);
         },
@@ -376,22 +315,22 @@ fn check_vocabulary(collector: &mut IssueCollector, vocabulary: &[VocabularyItem
     for (item_index, item) in vocabulary.iter().enumerate() {
         let location: String = format!("vocabulary[{item_index}]");
 
-        collector.check_spoken_portuguese(&format!("{location}.pt"), &item.pt);
-        collector.require_text(&format!("{location}.en"), "en", &item.en);
-        collector.check_literal(&location, &item.literal, &item.en);
+        collector.check_spoken_target(&format!("{location}.target"), &item.target);
+        collector.require_text(&format!("{location}.source"), "source", &item.source);
+        collector.check_literal(&location, &item.source_literal, &item.source);
         collector.check_pair(&format!("{location}.example"), &item.example);
 
         if let Some(note) = &item.note {
             collector.require_text(&format!("{location}.note"), "note", note);
         }
-        if let Some(part_of_speech) = &item.pos {
+        if let Some(part_of_speech) = &item.part_of_speech {
             collector.require_text(&format!("{location}.pos"), "pos", part_of_speech);
         }
 
-        let inserted: bool = seen_items.insert(item.pt.to_lowercase());
+        let inserted: bool = seen_items.insert(item.target.to_lowercase());
 
         if !inserted {
-            collector.error(&location, format!("duplicate vocabulary item: {}", item.pt));
+            collector.error(&location, format!("duplicate vocabulary item: {}", item.target));
         }
     }
 }
@@ -412,9 +351,9 @@ fn check_dialogue(collector: &mut IssueCollector, location: &str, dialogue: &Dia
         let line_location: String = format!("{location}.lines[{line_index}]");
 
         collector.require_text(&format!("{line_location}.speaker"), "speaker", &line.speaker);
-        collector.check_spoken_portuguese(&format!("{line_location}.pt"), &line.pt);
-        collector.require_text(&format!("{line_location}.en"), "en", &line.en);
-        collector.check_literal(&line_location, &line.literal, &line.en);
+        collector.check_spoken_target(&format!("{line_location}.target"), &line.target);
+        collector.require_text(&format!("{line_location}.source"), "source", &line.source);
+        collector.check_literal(&line_location, &line.source_literal, &line.source);
 
         let known_gender: Option<SpeakerGenderKind> = speaker_genders
             .iter()
@@ -539,8 +478,8 @@ fn check_reading(collector: &mut IssueCollector, location: &str, reading: &Readi
     check_multiple_choice_only(collector, &format!("{location}.questions"), &reading.questions);
 }
 
-fn check_readings(collector: &mut IssueCollector, unit: &Unit) {
-    if unit.level.requires_readings() && unit.readings.is_empty() {
+fn check_readings(collector: &mut IssueCollector, unit: &Unit, requires_readings: bool) {
+    if requires_readings && unit.readings.is_empty() {
         collector.error("readings", "required (at least 1) for B1 and B2");
     }
 
@@ -574,17 +513,25 @@ fn check_exercises(collector: &mut IssueCollector, exercises: &[Exercise]) {
     }
 }
 
-pub fn validate_unit(curriculum_unit: &CurriculumUnit, unit: &Unit) -> Vec<ValidationIssue> {
+pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, unit: &Unit) -> Vec<ValidationIssue> {
     let mut collector: IssueCollector = IssueCollector {
         unit_id: &curriculum_unit.id,
+        target_language: &curriculum.target_language,
         issues: Vec::new(),
+    };
+    let requires_readings: bool = match curriculum.levels.iter().find(|level| level.code == unit.level) {
+        Some(level) => level.requires_readings,
+        None => {
+            collector.error("level", format!("the curriculum has no level {}", unit.level));
+            false
+        },
     };
 
     if unit.id != curriculum_unit.id {
         collector.error("id", format!("expected {}, found {}", curriculum_unit.id, unit.id));
     }
     if unit.level != curriculum_unit.level {
-        collector.error("level", format!("expected {}", curriculum_unit.level.code()));
+        collector.error("level", format!("expected {}", curriculum_unit.level));
     }
     if unit.order != curriculum_unit.order {
         collector.error("order", format!("expected {}", curriculum_unit.order));
@@ -603,34 +550,8 @@ pub fn validate_unit(curriculum_unit: &CurriculumUnit, unit: &Unit) -> Vec<Valid
     check_dialogues(&mut collector, &unit.dialogues);
     check_grammar(&mut collector, &unit.grammar);
     check_culture(&mut collector, &unit.culture);
-    check_readings(&mut collector, unit);
+    check_readings(&mut collector, unit, requires_readings);
     check_exercises(&mut collector, &unit.exercises);
 
     collector.issues
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn european_portuguese_detects_stems_words_phrases_and_progressive() {
-        assert!(contains_european_portuguese("Vou de autocarro."));
-        assert!(contains_european_portuguese("O comboio chegou."));
-        assert!(contains_european_portuguese("Onde fica a casa de banho?"));
-        assert!(contains_european_portuguese("Estou a fazer o jantar."));
-        assert!(contains_european_portuguese("Tu estás cansado?"));
-        assert!(contains_european_portuguese("Ela está a cozinhar."));
-        assert!(contains_european_portuguese("Eles estavam a ver televisão."));
-        assert!(contains_european_portuguese("Estou a ler um livro."));
-    }
-
-    #[test]
-    fn european_portuguese_accepts_brazilian_forms() {
-        assert!(!contains_european_portuguese("Vou de ônibus."));
-        assert!(!contains_european_portuguese("Estou fazendo o jantar."));
-        assert!(!contains_european_portuguese("Estou a favor da ideia."));
-        assert!(!contains_european_portuguese("Ele está a par de tudo."));
-        assert!(!contains_european_portuguese("Onde fica o banheiro?"));
-    }
 }

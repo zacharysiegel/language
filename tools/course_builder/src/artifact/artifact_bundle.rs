@@ -4,8 +4,8 @@ use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
 use shared::AppError;
-use shared::artifact::{self, Manifest, ManifestEntry, compression, content_address, manifest};
-use shared::course::{Course, Unit};
+use shared::artifact::{self, Manifest, ManifestCourse, ManifestEntry, compression, content_address, manifest};
+use shared::course::Course;
 use shared::course_shard::{self, ClipAudioEntry};
 
 use crate::artifact::course_shard_writer::{self, ClipAudioIndex, ClipCatalog};
@@ -32,7 +32,7 @@ pub struct BuiltBundle {
 /// Writes a complete bundle under the bundles directory; it appears under its version name only once finished.
 pub fn write_bundle(
     paths: &WorkspacePaths,
-    course: &Course,
+    courses: &[Course],
     plan: &AudioPlan,
     recordings: &ClipRecordings,
 ) -> Result<BuiltBundle, AppError> {
@@ -46,17 +46,14 @@ pub fn write_bundle(
         fs::remove_dir_all(&partial_directory)?;
     }
 
-    fs::create_dir_all(partial_directory.join(manifest::SUBDIR_DATA))?;
-
     let clip_catalog: ClipCatalog = ClipCatalog {
         plan,
         audio_index: &recordings.audio_index,
     };
-    let course_entry: ManifestEntry = write_course_shard(&partial_directory, course, &clip_catalog)?;
-    let mut unit_entries: BTreeMap<String, ManifestEntry> = BTreeMap::new();
+    let mut manifest_courses: BTreeMap<String, ManifestCourse> = BTreeMap::new();
 
-    for unit in &course.units {
-        unit_entries.insert(unit.id.clone(), write_unit_shard(&partial_directory, unit, &clip_catalog)?);
+    for course in courses {
+        manifest_courses.insert(course.id.clone(), write_course_shards(&partial_directory, course, &clip_catalog)?);
     }
 
     let linked_audio_count: usize = link_audio_files(&partial_directory, &recordings.file_by_audio_sha256)?;
@@ -65,8 +62,7 @@ pub fn write_bundle(
         manifest_schema_version: manifest::MANIFEST_SCHEMA_VERSION,
         version: version.clone(),
         artifact_created,
-        course: course_entry,
-        units: unit_entries,
+        courses: manifest_courses,
         voice_pipeline_revisions: recordings.pipeline_revision_by_engine_code.clone(),
     };
 
@@ -74,8 +70,9 @@ pub fn write_bundle(
     fs::rename(&partial_directory, &bundle_directory)?;
 
     log::info!(
-        "wrote bundle; [version={version} units={} audio_files={linked_audio_count} path={}]",
-        built_manifest.units.len(),
+        "wrote bundle; [version={version} courses={} shards={} audio_files={linked_audio_count} path={}]",
+        built_manifest.courses.len(),
+        built_manifest.file_entries().count(),
         bundle_directory.display(),
     );
 
@@ -94,29 +91,41 @@ fn read_taken_versions(paths: &WorkspacePaths) -> Result<BTreeSet<String>, AppEr
     Ok(taken_versions)
 }
 
-fn write_course_shard(bundle_directory: &Path, course: &Course, clip_catalog: &ClipCatalog) -> Result<ManifestEntry, AppError> {
-    let partial_path: PathBuf = bundle_directory.join(manifest::SUBDIR_DATA).join(PARTIAL_SHARD_FILE_NAME);
+/// Writes the course's outline shard and one shard per unit under `data/<course id>/`.
+fn write_course_shards(bundle_directory: &Path, course: &Course, clip_catalog: &ClipCatalog) -> Result<ManifestCourse, AppError> {
+    let course_data_directory: String = format!("{}/{}", manifest::SUBDIR_DATA, course.id);
+    let partial_path: PathBuf = bundle_directory.join(&course_data_directory).join(PARTIAL_SHARD_FILE_NAME);
 
+    fs::create_dir_all(bundle_directory.join(&course_data_directory))?;
     course_shard_writer::write_course_shard(&partial_path, course, clip_catalog)?;
 
-    name_shard_by_content(bundle_directory, &partial_path, "course")
-}
+    let outline: ManifestEntry = name_shard_by_content(bundle_directory, &partial_path, &course_data_directory, "course")?;
+    let mut units: BTreeMap<String, ManifestEntry> = BTreeMap::new();
 
-fn write_unit_shard(bundle_directory: &Path, unit: &Unit, clip_catalog: &ClipCatalog) -> Result<ManifestEntry, AppError> {
-    let partial_path: PathBuf = bundle_directory.join(manifest::SUBDIR_DATA).join(PARTIAL_SHARD_FILE_NAME);
+    for unit in &course.units {
+        course_shard_writer::write_unit_shard(&partial_path, unit, clip_catalog)?;
+        units.insert(
+            unit.id.clone(),
+            name_shard_by_content(bundle_directory, &partial_path, &course_data_directory, &format!("unit-{}", unit.id))?,
+        );
+    }
 
-    course_shard_writer::write_unit_shard(&partial_path, unit, clip_catalog)?;
-
-    name_shard_by_content(bundle_directory, &partial_path, &format!("unit-{}", unit.id))
+    Ok(ManifestCourse {
+        title: course.title.clone(),
+        target_language: course.target_language.clone(),
+        source_language: course.source_language.clone(),
+        outline,
+        units,
+    })
 }
 
 /* The hash covers the compressed bytes, which are what a client downloads and verifies. */
-fn name_shard_by_content(bundle_directory: &Path, partial_path: &Path, stem: &str) -> Result<ManifestEntry, AppError> {
+fn name_shard_by_content(bundle_directory: &Path, partial_path: &Path, data_directory: &str, stem: &str) -> Result<ManifestEntry, AppError> {
     let plain_bytes: Vec<u8> = fs::read(partial_path)?;
     let compressed_bytes: Vec<u8> = compression::compress(&plain_bytes)?;
     let sha256: String = content_address::sha256_hex(&compressed_bytes);
     let file_name: String = content_address::content_addressed_file_name(stem, &sha256, manifest::SHARD_FILE_EXTENSION);
-    let relative_path: String = format!("{}/{file_name}", manifest::SUBDIR_DATA);
+    let relative_path: String = format!("{data_directory}/{file_name}");
 
     fs::write(bundle_directory.join(&relative_path), &compressed_bytes)?;
     fs::remove_file(partial_path)?;
@@ -251,10 +260,12 @@ pub fn refresh_embedded_bundle(paths: &WorkspacePaths, bundle: &BuiltBundle) -> 
         fs::remove_dir_all(embedded_directory)?;
     }
 
-    fs::create_dir_all(embedded_directory.join(&bundle.manifest.version).join(manifest::SUBDIR_DATA))?;
-
     for entry in bundle.manifest.file_entries() {
         let destination: PathBuf = embedded_directory.join(manifest::versioned_file_key(&bundle.manifest.version, &entry.relative_path));
+
+        if let Some(parent) = destination.parent() {
+            fs::create_dir_all(parent)?;
+        }
 
         fs::copy(bundle.directory.join(&entry.relative_path), destination)?;
     }
@@ -268,13 +279,18 @@ pub fn refresh_embedded_bundle(paths: &WorkspacePaths, bundle: &BuiltBundle) -> 
 
 /// Every recording hash the bundle's shards name, after checking each shard against its manifest hash.
 pub fn referenced_audio_sha256s(bundle_directory: &Path, bundle_manifest: &Manifest) -> Result<BTreeSet<String>, AppError> {
-    let course_bytes: Vec<u8> = read_verified_shard(bundle_directory, &bundle_manifest.course)?;
-    let mut clip_audio: Vec<ClipAudioEntry> = course_shard::read_course_shard(&course_bytes)?.clip_audio;
+    let mut clip_audio: Vec<ClipAudioEntry> = Vec::new();
 
-    for entry in bundle_manifest.units.values() {
-        let unit_bytes: Vec<u8> = read_verified_shard(bundle_directory, entry)?;
+    for manifest_course in bundle_manifest.courses.values() {
+        let course_bytes: Vec<u8> = read_verified_shard(bundle_directory, &manifest_course.outline)?;
 
-        clip_audio.extend(course_shard::read_unit_shard(&unit_bytes)?.clip_audio);
+        clip_audio.extend(course_shard::read_course_shard(&course_bytes)?.clip_audio);
+
+        for entry in manifest_course.units.values() {
+            let unit_bytes: Vec<u8> = read_verified_shard(bundle_directory, entry)?;
+
+            clip_audio.extend(course_shard::read_unit_shard(&unit_bytes)?.clip_audio);
+        }
     }
 
     Ok(clip_audio.into_iter().map(|clip_audio_entry| clip_audio_entry.audio_sha256).collect())

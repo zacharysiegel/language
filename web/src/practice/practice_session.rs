@@ -10,11 +10,11 @@ use crate::practice::{ExerciseResult, exercise_body};
 
 const ENTER_KEY: &str = "Enter";
 
-/* Kinds whose answer is a Portuguese sentence the learner did not just hear, so the sentence is played
+/* Kinds whose answer is a target-language sentence the learner did not just hear, so the sentence is played
    once the answer is checked. */
 const SPEAK_AFTER_ANSWER_KINDS: [ExerciseKind; 3] = [
     ExerciseKind::FillBlank,
-    ExerciseKind::TranslateToPortuguese,
+    ExerciseKind::TranslateToTarget,
     ExerciseKind::OrderWords,
 ];
 

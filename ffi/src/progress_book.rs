@@ -7,7 +7,7 @@ use chrono::{NaiveDate, Utc};
 use shared::AppError;
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
-use shared::progress::{AudioEngineKind, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress};
+use shared::progress::{AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress};
 use shared::review::{self, ReviewCard};
 
 use crate::ffi_error::CoreError;
@@ -43,16 +43,16 @@ impl From<AudioEngineKind> for AudioEngineRecord {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum ReviewDirectionRecord {
-    PortugueseToEnglish,
-    EnglishToPortuguese,
+    TargetToSource,
+    SourceToTarget,
     Mixed,
 }
 
 impl From<ReviewDirectionRecord> for ReviewDirectionKind {
     fn from(record: ReviewDirectionRecord) -> ReviewDirectionKind {
         match record {
-            ReviewDirectionRecord::PortugueseToEnglish => ReviewDirectionKind::PortugueseToEnglish,
-            ReviewDirectionRecord::EnglishToPortuguese => ReviewDirectionKind::EnglishToPortuguese,
+            ReviewDirectionRecord::TargetToSource => ReviewDirectionKind::TargetToSource,
+            ReviewDirectionRecord::SourceToTarget => ReviewDirectionKind::SourceToTarget,
             ReviewDirectionRecord::Mixed => ReviewDirectionKind::Mixed,
         }
     }
@@ -61,19 +61,20 @@ impl From<ReviewDirectionRecord> for ReviewDirectionKind {
 impl From<ReviewDirectionKind> for ReviewDirectionRecord {
     fn from(kind: ReviewDirectionKind) -> ReviewDirectionRecord {
         match kind {
-            ReviewDirectionKind::PortugueseToEnglish => ReviewDirectionRecord::PortugueseToEnglish,
-            ReviewDirectionKind::EnglishToPortuguese => ReviewDirectionRecord::EnglishToPortuguese,
+            ReviewDirectionKind::TargetToSource => ReviewDirectionRecord::TargetToSource,
+            ReviewDirectionKind::SourceToTarget => ReviewDirectionRecord::SourceToTarget,
             ReviewDirectionKind::Mixed => ReviewDirectionRecord::Mixed,
         }
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct SettingsRecord {
     pub show_translations: bool,
     pub slow_audio: bool,
     pub review_direction: ReviewDirectionRecord,
     pub audio_engine: AudioEngineRecord,
+    pub last_course_id: Option<String>,
 }
 
 impl From<&Settings> for SettingsRecord {
@@ -83,6 +84,7 @@ impl From<&Settings> for SettingsRecord {
             slow_audio: settings.slow_audio,
             review_direction: settings.review_direction.into(),
             audio_engine: settings.audio_engine.into(),
+            last_course_id: settings.last_course_id.clone(),
         }
     }
 }
@@ -94,6 +96,7 @@ impl From<SettingsRecord> for Settings {
             slow_audio: record.slow_audio,
             review_direction: record.review_direction.into(),
             audio_engine: record.audio_engine.into(),
+            last_course_id: record.last_course_id,
         }
     }
 }
@@ -189,16 +192,17 @@ impl ProgressBook {
         self.change(|progress| progress.settings = settings.into())
     }
 
-    pub fn unit_progress(&self, unit_id: String) -> UnitProgressRecord {
-        self.lock().unit_progress(&unit_id).into()
+    pub fn unit_progress(&self, course_id: String, unit_id: String) -> UnitProgressRecord {
+        self.lock().course_progress(&course_id).unit_progress(&unit_id).into()
     }
 
-    pub fn completed_unit_count(&self) -> u32 {
-        self.lock().completed_unit_count() as u32
+    pub fn completed_unit_count(&self, course_id: String) -> u32 {
+        self.lock().course_progress(&course_id).completed_unit_count() as u32
     }
 
     pub fn record_practice_session(
         &self,
+        course_id: String,
         unit_id: String,
         mode: PracticeModeRecord,
         correct_count: u32,
@@ -212,7 +216,7 @@ impl ProgressBook {
         let mut outcome: Option<PracticeOutcome> = None;
 
         self.change(|progress| {
-            outcome = Some(progress.record_practice_session(&unit_id, mode.into(), score, vocabulary_count as usize, today(), now_milliseconds()));
+            outcome = Some(progress.record_practice_session(&course_id, &unit_id, mode.into(), score, vocabulary_count as usize, today(), now_milliseconds()));
         })?;
 
         outcome
@@ -220,54 +224,53 @@ impl ProgressBook {
             .ok_or_else(|| CoreError::Failure { message: "the practice session was not recorded".to_string() })
     }
 
-    pub fn queue_unit_vocabulary(&self, unit_id: String, vocabulary_count: u32) -> Result<QueuedCardsRecord, CoreError> {
+    pub fn queue_unit_vocabulary(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<QueuedCardsRecord, CoreError> {
         let card_ids: Vec<String> = (0..vocabulary_count as usize).map(|item_index| shared::course::vocabulary_card_id(&unit_id, item_index)).collect();
         let mut queued: Option<QueuedCards> = None;
 
-        self.change(|progress| queued = Some(progress.queue_cards_for_review(card_ids.into_iter(), now_milliseconds())))?;
+        self.change(|progress| queued = Some(progress.course_progress_mut(&course_id).queue_cards_for_review(card_ids.into_iter(), now_milliseconds())))?;
 
         queued
             .map(QueuedCardsRecord::from)
             .ok_or_else(|| CoreError::Failure { message: "the words were not queued".to_string() })
     }
 
-    pub fn due_card_count(&self) -> u32 {
-        let now: i64 = now_milliseconds();
-
-        self.lock().cards.values().filter(|card| card.due_milliseconds <= now).count() as u32
+    pub fn due_card_count(&self, course_id: String) -> u32 {
+        self.lock().course_progress(&course_id).due_card_count(now_milliseconds()) as u32
     }
 
-    pub fn card_count(&self) -> u32 {
-        self.lock().cards.len() as u32
+    pub fn card_count(&self, course_id: String) -> u32 {
+        self.lock().course_progress(&course_id).cards.len() as u32
     }
 
-    /// The ids of up to `limit` cards due now, in the order they should be reviewed.
-    pub fn due_card_ids(&self, limit: u32) -> Vec<String> {
-        let progress: MutexGuard<'_, Progress> = self.lock();
+    /// The ids of up to `limit` of the course's cards due now, in the order they should be reviewed.
+    pub fn due_card_ids(&self, course_id: String, limit: u32) -> Vec<String> {
+        let course_progress: CourseProgress = self.lock().course_progress(&course_id);
 
-        review::select_due_cards(progress.cards.values(), now_milliseconds(), limit as usize)
+        review::select_due_cards(course_progress.cards.values(), now_milliseconds(), limit as usize)
             .into_iter()
             .map(|card| card.id.clone())
             .collect()
     }
 
     /// Reschedules the card and counts one review as today's activity.
-    pub fn grade_card(&self, card_id: String, remembered: bool) -> Result<(), CoreError> {
+    pub fn grade_card(&self, course_id: String, card_id: String, remembered: bool) -> Result<(), CoreError> {
         let now: i64 = now_milliseconds();
 
         self.change(|progress| {
-            let graded: Option<ReviewCard> = progress.cards.get(&card_id).map(|card| card.graded(remembered, now));
+            let course_progress: &mut CourseProgress = progress.course_progress_mut(&course_id);
+            let graded: Option<ReviewCard> = course_progress.cards.get(&card_id).map(|card| card.graded(remembered, now));
 
             if let Some(graded) = graded {
-                progress.cards.insert(card_id.clone(), graded);
+                course_progress.cards.insert(card_id.clone(), graded);
             }
 
             progress.record_review_activity(today(), 1);
         })
     }
 
-    pub fn count_by_box(&self) -> Vec<u32> {
-        review::count_by_box(self.lock().cards.values()).iter().map(|count| *count as u32).collect()
+    pub fn count_by_box(&self, course_id: String) -> Vec<u32> {
+        review::count_by_box(self.lock().course_progress(&course_id).cards.values()).iter().map(|count| *count as u32).collect()
     }
 
     pub fn streak_days(&self) -> u32 {
@@ -355,6 +358,8 @@ fn today() -> NaiveDate {
 mod tests {
     use super::*;
 
+    const COURSE_ID: &str = "pt_br.en.foundations";
+
     fn book_in(directory: &tempfile::TempDir) -> Arc<ProgressBook> {
         ProgressBook::open(directory.path().join("progress.json").display().to_string())
     }
@@ -364,25 +369,26 @@ mod tests {
         let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
 
         let book: Arc<ProgressBook> = book_in(&directory);
-        book.record_practice_session("u".to_string(), PracticeModeRecord::Full, 9, 10, 4).unwrap();
+        book.record_practice_session(COURSE_ID.to_string(), "u".to_string(), PracticeModeRecord::Full, 9, 10, 4).unwrap();
 
         let reopened: Arc<ProgressBook> = book_in(&directory);
 
-        assert!(reopened.unit_progress("u".to_string()).completed);
-        assert_eq!(reopened.card_count(), 4);
-        assert_eq!(reopened.due_card_count(), 4);
+        assert!(reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()).completed);
+        assert_eq!(reopened.card_count(COURSE_ID.to_string()), 4);
+        assert_eq!(reopened.due_card_count(COURSE_ID.to_string()), 4);
+        assert_eq!(reopened.card_count("es.en.foundations".to_string()), 0);
     }
 
     #[test]
     fn grading_a_remembered_card_takes_it_out_of_the_due_queue() {
         let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
         let book: Arc<ProgressBook> = book_in(&directory);
-        book.queue_unit_vocabulary("u".to_string(), 2).unwrap();
+        book.queue_unit_vocabulary(COURSE_ID.to_string(), "u".to_string(), 2).unwrap();
 
-        let first_due: String = book.due_card_ids(10)[0].clone();
-        book.grade_card(first_due, true).unwrap();
+        let first_due: String = book.due_card_ids(COURSE_ID.to_string(), 10)[0].clone();
+        book.grade_card(COURSE_ID.to_string(), first_due, true).unwrap();
 
-        assert_eq!(book.due_card_count(), 1);
+        assert_eq!(book.due_card_count(COURSE_ID.to_string()), 1);
         assert_eq!(book.streak_days(), 1);
     }
 
@@ -393,7 +399,7 @@ mod tests {
 
         let book: Arc<ProgressBook> = book_in(&directory);
 
-        assert_eq!(book.card_count(), 0);
+        assert_eq!(book.card_count(COURSE_ID.to_string()), 0);
         assert!(directory.path().join("progress.unreadable").exists());
     }
 
@@ -406,9 +412,10 @@ mod tests {
             slow_audio: true,
             review_direction: ReviewDirectionRecord::Mixed,
             audio_engine: AudioEngineRecord::Kokoro,
+            last_course_id: Some(COURSE_ID.to_string()),
         };
 
-        book.update_settings(settings).unwrap();
+        book.update_settings(settings.clone()).unwrap();
 
         assert_eq!(book_in(&directory).settings(), settings);
     }

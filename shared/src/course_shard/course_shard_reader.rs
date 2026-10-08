@@ -2,9 +2,9 @@ use std::collections::BTreeMap;
 
 use crate::AppError;
 use crate::course::{
-    CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind, FillBlankExercise,
-    GrammarNote, GrammarTable, LevelKind, LevelSummary, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
-    OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToPortugueseExercise, UnitLesson, UnitOutline,
+    CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind,
+    FillBlankExercise, GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
+    OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson, UnitOutline,
     VocabularyItem,
 };
 use crate::course_shard::{APPLICATION_ID, ClipAudioEntry, CourseShardContents, SCHEMA_VERSION, UnitShardContents, VoiceEngineKind};
@@ -13,13 +13,20 @@ use crate::sqlite::{ReadOnlyDatabase, SqlRecord, validate_shard_header};
 pub fn read_course_shard(bytes: &[u8]) -> Result<CourseShardContents, AppError> {
     let database: ReadOnlyDatabase = open_shard(bytes)?;
 
-    let title: String = read_course_title(&database)?;
-    let levels: Vec<LevelSummary> = read_levels(&database)?;
+    let identity: CourseIdentity = read_course_identity(&database)?;
+    let levels: Vec<CourseLevel> = read_levels(&database)?;
     let units: Vec<UnitOutline> = read_unit_outlines(&database)?;
     let clip_audio: Vec<ClipAudioEntry> = read_clip_audio(&database)?;
 
     Ok(CourseShardContents {
-        outline: CourseOutline { title, levels, units },
+        outline: CourseOutline {
+            id: identity.id,
+            title: identity.title,
+            target_language: identity.target_language,
+            source_language: identity.source_language,
+            levels,
+            units,
+        },
         clip_audio,
     })
 }
@@ -53,25 +60,36 @@ fn open_shard(bytes: &[u8]) -> Result<ReadOnlyDatabase, AppError> {
     ReadOnlyDatabase::open(bytes)
 }
 
-fn read_course_title(database: &ReadOnlyDatabase) -> Result<String, AppError> {
-    let records: Vec<SqlRecord> = database.query("select title from course;")?;
+struct CourseIdentity {
+    id: String,
+    title: String,
+    target_language: String,
+    source_language: String,
+}
+
+fn read_course_identity(database: &ReadOnlyDatabase) -> Result<CourseIdentity, AppError> {
+    let records: Vec<SqlRecord> = database.query("select course_id, title, target_language, source_language from course;")?;
     let record: &SqlRecord = records
         .first()
         .ok_or_else(|| AppError::from("course shard: no course record".to_string()))?;
 
-    record.text(0)
+    Ok(CourseIdentity {
+        id: record.text(0)?,
+        title: record.text(1)?,
+        target_language: record.text(2)?,
+        source_language: record.text(3)?,
+    })
 }
 
-fn read_levels(database: &ReadOnlyDatabase) -> Result<Vec<LevelSummary>, AppError> {
-    let records: Vec<SqlRecord> = database.query("select level_code, title from level order by position asc;")?;
-    let mut levels: Vec<LevelSummary> = Vec::with_capacity(records.len());
+fn read_levels(database: &ReadOnlyDatabase) -> Result<Vec<CourseLevel>, AppError> {
+    let records: Vec<SqlRecord> = database.query("select level_code, title, requires_readings from level order by position asc;")?;
+    let mut levels: Vec<CourseLevel> = Vec::with_capacity(records.len());
 
     for record in &records {
-        let code: String = record.text(0)?;
-
-        levels.push(LevelSummary {
-            code: LevelKind::try_from(code.as_str())?,
+        levels.push(CourseLevel {
+            code: record.text(0)?,
             title: record.text(1)?,
+            requires_readings: record.integer(2)? != 0,
         });
     }
 
@@ -87,12 +105,11 @@ fn read_unit_outlines(database: &ReadOnlyDatabase) -> Result<Vec<UnitOutline>, A
 
     for record in &unit_records {
         let id: String = record.text(0)?;
-        let level_code: String = record.text(1)?;
         let order: u32 = u32::try_from(record.position(2)?)
             .map_err(|_| AppError::from(format!("course shard: unit ordinal out of range; [unit_id={id}]")))?;
 
         units.push(UnitOutline {
-            level: LevelKind::try_from(level_code.as_str())?,
+            level: record.text(1)?,
             order,
             title: record.text(3)?,
             objectives: objectives_by_unit.remove(&id).unwrap_or_default(),
@@ -118,23 +135,24 @@ fn read_objectives(database: &ReadOnlyDatabase) -> Result<BTreeMap<String, Vec<S
 
 fn read_vocabulary(database: &ReadOnlyDatabase) -> Result<BTreeMap<String, Vec<VocabularyItem>>, AppError> {
     let records: Vec<SqlRecord> = database.query(
-        "select unit_id, pt, en, literal, part_of_speech, note, clip_key, example_pt, example_en, example_literal, example_clip_key \
+        "select unit_id, target_text, source_text, source_literal, part_of_speech, note, clip_key, example_target_text, example_source_text, \
+         example_source_literal, example_clip_key \
          from vocabulary_item order by unit_id asc, position asc;",
     )?;
     let mut vocabulary_by_unit: BTreeMap<String, Vec<VocabularyItem>> = BTreeMap::new();
 
     for record in &records {
         let item: VocabularyItem = VocabularyItem {
-            pt: record.text(1)?,
-            en: record.text(2)?,
-            literal: record.optional_text(3)?,
-            pos: record.optional_text(4)?,
+            target: record.text(1)?,
+            source: record.text(2)?,
+            source_literal: record.optional_text(3)?,
+            part_of_speech: record.optional_text(4)?,
             note: record.optional_text(5)?,
             clip_key: record.optional_text(6)?,
             example: PhrasePair {
-                pt: record.text(7)?,
-                en: record.text(8)?,
-                literal: record.optional_text(9)?,
+                target: record.text(7)?,
+                source: record.text(8)?,
+                source_literal: record.optional_text(9)?,
                 clip_key: record.optional_text(10)?,
             },
         };
@@ -178,12 +196,12 @@ fn read_culture_note(database: &ReadOnlyDatabase) -> Result<CultureNote, AppErro
     })
 }
 
-/* Columns `pt, en, literal, clip_key` starting at `first_column`. */
+/* Columns `target_text, source_text, source_literal, clip_key` starting at `first_column`. */
 fn read_phrase_pair(record: &SqlRecord, first_column: usize) -> Result<PhrasePair, AppError> {
     Ok(PhrasePair {
-        pt: record.text(first_column)?,
-        en: record.text(first_column + 1)?,
-        literal: record.optional_text(first_column + 2)?,
+        target: record.text(first_column)?,
+        source: record.text(first_column + 1)?,
+        source_literal: record.optional_text(first_column + 2)?,
         clip_key: record.optional_text(first_column + 3)?,
     })
 }
@@ -208,7 +226,7 @@ fn read_dialogues(database: &ReadOnlyDatabase) -> Result<Vec<Dialogue>, AppError
 
 fn read_dialogue_lines(database: &ReadOnlyDatabase) -> Result<BTreeMap<usize, Vec<DialogueLine>>, AppError> {
     let records: Vec<SqlRecord> = database.query(
-        "select dialogue_position, speaker, speaker_gender, pt, en, literal, clip_key \
+        "select dialogue_position, speaker, speaker_gender, target_text, source_text, source_literal, clip_key \
          from dialogue_line order by dialogue_position asc, position asc;",
     )?;
     let mut lines_by_dialogue: BTreeMap<usize, Vec<DialogueLine>> = BTreeMap::new();
@@ -218,9 +236,9 @@ fn read_dialogue_lines(database: &ReadOnlyDatabase) -> Result<BTreeMap<usize, Ve
         let line: DialogueLine = DialogueLine {
             speaker: record.text(1)?,
             gender: SpeakerGenderKind::try_from(gender_code.as_str())?,
-            pt: record.text(3)?,
-            en: record.text(4)?,
-            literal: record.optional_text(5)?,
+            target: record.text(3)?,
+            source: record.text(4)?,
+            source_literal: record.optional_text(5)?,
             clip_key: record.optional_text(6)?,
         };
 
@@ -297,7 +315,7 @@ fn read_grammar_table_rows(database: &ReadOnlyDatabase) -> Result<BTreeMap<usize
 
 fn read_grammar_examples(database: &ReadOnlyDatabase) -> Result<BTreeMap<usize, Vec<PhrasePair>>, AppError> {
     let records: Vec<SqlRecord> = database.query(
-        "select note_position, pt, en, literal, clip_key from grammar_example order by note_position asc, position asc;",
+        "select note_position, target_text, source_text, source_literal, clip_key from grammar_example order by note_position asc, position asc;",
     )?;
     let mut examples_by_note: BTreeMap<usize, Vec<PhrasePair>> = BTreeMap::new();
 
@@ -332,7 +350,7 @@ fn read_readings(
 
 fn read_reading_paragraphs(database: &ReadOnlyDatabase) -> Result<BTreeMap<usize, Vec<PhrasePair>>, AppError> {
     let records: Vec<SqlRecord> = database.query(
-        "select reading_position, pt, en, literal, clip_key from reading_paragraph order by reading_position asc, position asc;",
+        "select reading_position, target_text, source_text, source_literal, clip_key from reading_paragraph order by reading_position asc, position asc;",
     )?;
     let mut paragraphs_by_reading: BTreeMap<usize, Vec<PhrasePair>> = BTreeMap::new();
 
@@ -356,7 +374,7 @@ struct ExerciseChildren {
 fn read_exercises(database: &ReadOnlyDatabase) -> Result<BTreeMap<Option<usize>, Vec<Exercise>>, AppError> {
     let mut children: ExerciseChildren = read_exercise_children(database)?;
     let records: Vec<SqlRecord> = database.query(
-        "select exercise_id, reading_position, exercise_kind, prompt, correct_choice_index, hint_en, explanation, clip_key \
+        "select exercise_id, reading_position, exercise_kind, prompt, correct_choice_index, hint_source, explanation, clip_key \
          from exercise order by reading_position asc, position asc;",
     )?;
     let mut exercises_by_reading: BTreeMap<Option<usize>, Vec<Exercise>> = BTreeMap::new();
@@ -383,7 +401,7 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
     let kind: ExerciseKind = ExerciseKind::try_from(kind_code.as_str())?;
     let prompt: Option<String> = record.optional_text(3)?;
     let correct_choice_index: Option<i64> = record.optional_integer(4)?;
-    let hint_en: Option<String> = record.optional_text(5)?;
+    let hint_source: Option<String> = record.optional_text(5)?;
     let explanation: Option<String> = record.optional_text(6)?;
     let clip_key: Option<String> = record.optional_text(7)?;
     let required_prompt = || {
@@ -392,7 +410,7 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
             .ok_or_else(|| AppError::from(format!("unit shard: exercise has no prompt; [exercise_id={exercise_id} kind={kind_code}]")))
     };
     let required_hint = || {
-        hint_en
+        hint_source
             .clone()
             .ok_or_else(|| AppError::from(format!("unit shard: exercise has no hint; [exercise_id={exercise_id} kind={kind_code}]")))
     };
@@ -406,39 +424,39 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
         ExerciseKind::MultipleChoice => Exercise::MultipleChoice(MultipleChoiceExercise {
             prompt: required_prompt()?,
             choices: children.choices.remove(&exercise_id).unwrap_or_default(),
-            answer: required_answer_index()?,
+            answer_index: required_answer_index()?,
             explanation,
         }),
         ExerciseKind::FillBlank => Exercise::FillBlank(FillBlankExercise {
-            prompt_pt: required_prompt()?,
-            answer: children.answers.remove(&exercise_id).unwrap_or_default(),
-            hint_en: required_hint()?,
+            prompt_target: required_prompt()?,
+            answers: children.answers.remove(&exercise_id).unwrap_or_default(),
+            hint_source: required_hint()?,
             explanation,
             clip_key,
         }),
-        ExerciseKind::TranslateToPortuguese => Exercise::TranslateToPortuguese(TranslateToPortugueseExercise {
-            prompt_en: required_prompt()?,
+        ExerciseKind::TranslateToTarget => Exercise::TranslateToTarget(TranslateToTargetExercise {
+            prompt_source: required_prompt()?,
             answers: children.answers.remove(&exercise_id).unwrap_or_default(),
             explanation,
             clip_key,
         }),
         ExerciseKind::OrderWords => Exercise::OrderWords(OrderWordsExercise {
-            prompt_en: required_prompt()?,
+            prompt_source: required_prompt()?,
             words: children.words.remove(&exercise_id).unwrap_or_default(),
             distractors: children.distractors.remove(&exercise_id).unwrap_or_default(),
             explanation,
             clip_key,
         }),
         ExerciseKind::ListeningChoice => Exercise::ListeningChoice(ListeningChoiceExercise {
-            audio_pt: required_prompt()?,
+            audio_target: required_prompt()?,
             choices: children.choices.remove(&exercise_id).unwrap_or_default(),
-            answer: required_answer_index()?,
+            answer_index: required_answer_index()?,
             explanation,
             clip_key,
         }),
         ExerciseKind::Dictation => Exercise::Dictation(DictationExercise {
-            audio_pt: required_prompt()?,
-            hint_en: required_hint()?,
+            audio_target: required_prompt()?,
+            hint_source: required_hint()?,
             explanation,
             clip_key,
         }),
@@ -489,7 +507,7 @@ fn read_exercise_texts(database: &ReadOnlyDatabase, sql: &str) -> Result<BTreeMa
 
 fn read_exercise_pairs(database: &ReadOnlyDatabase) -> Result<BTreeMap<i64, Vec<PhrasePair>>, AppError> {
     let records: Vec<SqlRecord> = database
-        .query("select exercise_id, pt, en, literal, clip_key from exercise_pair order by exercise_id asc, position asc;")?;
+        .query("select exercise_id, target_text, source_text, source_literal, clip_key from exercise_pair order by exercise_id asc, position asc;")?;
     let mut pairs_by_exercise: BTreeMap<i64, Vec<PhrasePair>> = BTreeMap::new();
 
     for record in &records {

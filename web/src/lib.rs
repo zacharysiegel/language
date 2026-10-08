@@ -6,6 +6,7 @@ pub mod app;
 pub mod artifact_client;
 pub mod audio_player;
 pub mod course_data;
+pub mod courses;
 pub mod glossary;
 pub mod home;
 pub mod platform;

@@ -13,8 +13,8 @@ const DATE_KEY_FORMAT: &str = "%Y-%m-%d";
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum ReviewDirectionKind {
-    PortugueseToEnglish,
-    EnglishToPortuguese,
+    TargetToSource,
+    SourceToTarget,
     Mixed,
 }
 
@@ -50,6 +50,9 @@ pub struct Settings {
     pub review_direction: ReviewDirectionKind,
     #[serde(default = "default_audio_engine")]
     pub audio_engine: AudioEngineKind,
+    /// The course the learner opened last.
+    #[serde(default)]
+    pub last_course_id: Option<String>,
 }
 
 fn default_audio_engine() -> AudioEngineKind {
@@ -61,7 +64,7 @@ fn default_show_translations() -> bool {
 }
 
 fn default_review_direction() -> ReviewDirectionKind {
-    ReviewDirectionKind::PortugueseToEnglish
+    ReviewDirectionKind::TargetToSource
 }
 
 impl Default for Settings {
@@ -71,6 +74,7 @@ impl Default for Settings {
             slow_audio: false,
             review_direction: default_review_direction(),
             audio_engine: default_audio_engine(),
+            last_course_id: None,
         }
     }
 }
@@ -105,35 +109,16 @@ pub struct QueuedCards {
     pub made_due_count: usize,
 }
 
+/// One course's review deck and unit results.
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
-pub struct Progress {
+pub struct CourseProgress {
     #[serde(default)]
     pub cards: BTreeMap<String, ReviewCard>,
     #[serde(default)]
     pub units: BTreeMap<String, UnitProgress>,
-    #[serde(default)]
-    pub settings: Settings,
-    #[serde(default)]
-    pub activity: BTreeMap<String, DailyActivity>,
 }
 
-pub fn date_key(date: NaiveDate) -> String {
-    date.format(DATE_KEY_FORMAT).to_string()
-}
-
-impl Progress {
-    pub fn from_json(text: &str) -> Result<Progress, AppError> {
-        let progress: Progress = serde_json::from_str(text)?;
-
-        Ok(progress)
-    }
-
-    pub fn to_json(&self) -> Result<String, AppError> {
-        let text: String = serde_json::to_string_pretty(self)?;
-
-        Ok(text)
-    }
-
+impl CourseProgress {
     pub fn unit_progress(&self, unit_id: &str) -> UnitProgress {
         self.units.get(unit_id).cloned().unwrap_or_default()
     }
@@ -188,10 +173,58 @@ impl Progress {
         queued
     }
 
+    pub fn completed_unit_count(&self) -> usize {
+        self.units.values().filter(|unit_progress| unit_progress.completed).count()
+    }
+
+    pub fn due_card_count(&self, now_milliseconds: i64) -> usize {
+        self.cards.values().filter(|card| card.due_milliseconds <= now_milliseconds).count()
+    }
+}
+
+/// Everything the learner has done, across every course; study activity counts toward one streak.
+#[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+pub struct Progress {
+    /// Each course's progress, by course id.
+    #[serde(default)]
+    pub courses: BTreeMap<String, CourseProgress>,
+    #[serde(default)]
+    pub settings: Settings,
+    #[serde(default)]
+    pub activity: BTreeMap<String, DailyActivity>,
+}
+
+pub fn date_key(date: NaiveDate) -> String {
+    date.format(DATE_KEY_FORMAT).to_string()
+}
+
+impl Progress {
+    pub fn from_json(text: &str) -> Result<Progress, AppError> {
+        let progress: Progress = serde_json::from_str(text)?;
+
+        Ok(progress)
+    }
+
+    pub fn to_json(&self) -> Result<String, AppError> {
+        let text: String = serde_json::to_string_pretty(self)?;
+
+        Ok(text)
+    }
+
+    /// The course's progress; empty for a course the learner has not started.
+    pub fn course_progress(&self, course_id: &str) -> CourseProgress {
+        self.courses.get(course_id).cloned().unwrap_or_default()
+    }
+
+    pub fn course_progress_mut(&mut self, course_id: &str) -> &mut CourseProgress {
+        self.courses.entry(course_id.to_string()).or_default()
+    }
+
     /// Counts the session's exercises as today's activity; a full practice also records an attempt at the unit and,
-    /// when passed, adds the unit's words to the review deck.
+    /// when passed, adds the unit's words to the course's review deck.
     pub fn record_practice_session(
         &mut self,
+        course_id: &str,
         unit_id: &str,
         mode: PracticeModeKind,
         score: SessionScore,
@@ -208,12 +241,14 @@ impl Progress {
             };
         }
 
-        self.record_unit_attempt(unit_id, score.proportion(), PASS_PROPORTION);
+        let course_progress: &mut CourseProgress = self.course_progress_mut(course_id);
+
+        course_progress.record_unit_attempt(unit_id, score.proportion(), PASS_PROPORTION);
 
         let words_added_count: usize = if score.passed() {
             let card_ids = (0..vocabulary_count).map(|item_index| crate::course::vocabulary_card_id(unit_id, item_index));
 
-            self.add_cards_if_missing(card_ids, now_milliseconds)
+            course_progress.add_cards_if_missing(card_ids, now_milliseconds)
         } else {
             0
         };
@@ -230,10 +265,6 @@ impl Progress {
 
     pub fn record_review_activity(&mut self, today: NaiveDate, review_count: u32) {
         self.activity.entry(date_key(today)).or_default().review_count += review_count;
-    }
-
-    pub fn completed_unit_count(&self) -> usize {
-        self.units.values().filter(|unit_progress| unit_progress.completed).count()
     }
 
     pub fn streak_days(&self, today: NaiveDate) -> u32 {
@@ -258,18 +289,20 @@ impl Progress {
 mod tests {
     use super::*;
 
+    const COURSE_ID: &str = "pt_br.en.foundations";
+
     fn date(year: i32, month: u32, day: u32) -> NaiveDate {
         NaiveDate::from_ymd_opt(year, month, day).unwrap()
     }
 
     #[test]
     fn record_unit_attempt_keeps_best_proportion_and_completion() {
-        let mut progress: Progress = Progress::default();
+        let mut course_progress: CourseProgress = CourseProgress::default();
 
-        progress.record_unit_attempt("u", 0.9, 0.8);
-        progress.record_unit_attempt("u", 0.5, 0.8);
+        course_progress.record_unit_attempt("u", 0.9, 0.8);
+        course_progress.record_unit_attempt("u", 0.5, 0.8);
 
-        let unit_progress: UnitProgress = progress.unit_progress("u");
+        let unit_progress: UnitProgress = course_progress.unit_progress("u");
 
         assert!(unit_progress.completed);
         assert_eq!(unit_progress.best_proportion, 0.9);
@@ -278,46 +311,47 @@ mod tests {
 
     #[test]
     fn add_cards_if_missing_does_not_reset_existing_cards() {
-        let mut progress: Progress = Progress::default();
-        progress.add_cards_if_missing(["a:0".to_string()].into_iter(), 0);
-        progress.cards.get_mut("a:0").unwrap().box_index = 3;
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.add_cards_if_missing(["a:0".to_string()].into_iter(), 0);
+        course_progress.cards.get_mut("a:0").unwrap().box_index = 3;
 
-        let added_count: usize = progress.add_cards_if_missing(["a:0".to_string(), "a:1".to_string()].into_iter(), 10);
+        let added_count: usize = course_progress.add_cards_if_missing(["a:0".to_string(), "a:1".to_string()].into_iter(), 10);
 
         assert_eq!(added_count, 1);
-        assert_eq!(progress.cards["a:0"].box_index, 3);
+        assert_eq!(course_progress.cards["a:0"].box_index, 3);
     }
 
     #[test]
     fn queue_cards_for_review_makes_scheduled_cards_due_and_keeps_their_box() {
-        let mut progress: Progress = Progress::default();
-        progress.add_cards_if_missing(["a:0".to_string(), "a:1".to_string()].into_iter(), 0);
-        let remembered: ReviewCard = progress.cards["a:0"].graded(true, 1_000);
-        progress.cards.insert("a:0".to_string(), remembered);
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.add_cards_if_missing(["a:0".to_string(), "a:1".to_string()].into_iter(), 0);
+        let remembered: ReviewCard = course_progress.cards["a:0"].graded(true, 1_000);
+        course_progress.cards.insert("a:0".to_string(), remembered);
 
-        let queued: QueuedCards = progress.queue_cards_for_review(["a:0".to_string(), "a:1".to_string(), "a:2".to_string()].into_iter(), 2_000);
+        let queued: QueuedCards =
+            course_progress.queue_cards_for_review(["a:0".to_string(), "a:1".to_string(), "a:2".to_string()].into_iter(), 2_000);
 
         assert_eq!(queued, QueuedCards { added_count: 1, made_due_count: 1 });
-        assert_eq!(progress.cards["a:0"].due_milliseconds, 2_000);
-        assert_eq!(progress.cards["a:0"].box_index, 1);
-        assert_eq!(progress.cards["a:2"].due_milliseconds, 2_000);
+        assert_eq!(course_progress.cards["a:0"].due_milliseconds, 2_000);
+        assert_eq!(course_progress.cards["a:0"].box_index, 1);
+        assert_eq!(course_progress.due_card_count(2_000), 3);
     }
 
     #[test]
-    fn record_practice_session_adds_the_words_of_a_passed_full_practice_only() {
+    fn record_practice_session_adds_the_words_of_a_passed_full_practice_to_that_course_only() {
         let mut progress: Progress = Progress::default();
         let passing: SessionScore = SessionScore { correct_count: 9, total_count: 10 };
         let failing: SessionScore = SessionScore { correct_count: 2, total_count: 10 };
 
-        let quick: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Quick, passing, 3, date(2026, 10, 3), 0);
-        let failed: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Full, failing, 3, date(2026, 10, 3), 0);
-        let passed: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Full, passing, 3, date(2026, 10, 3), 0);
+        let quick: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Quick, passing, 3, date(2026, 10, 3), 0);
+        let failed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, failing, 3, date(2026, 10, 3), 0);
+        let passed: PracticeOutcome = progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, passing, 3, date(2026, 10, 3), 0);
 
         assert_eq!(quick.words_added_count, 0);
         assert_eq!(failed, PracticeOutcome { passed: false, words_added_count: 0 });
         assert_eq!(passed, PracticeOutcome { passed: true, words_added_count: 3 });
-        assert_eq!(progress.unit_progress("u").attempt_count, 2);
-        assert!(progress.unit_progress("u").completed);
+        assert_eq!(progress.course_progress(COURSE_ID).unit_progress("u").attempt_count, 2);
+        assert!(progress.course_progress("es.en.foundations").cards.is_empty());
         assert_eq!(progress.activity[&date_key(date(2026, 10, 3))].exercise_count, 30);
     }
 
@@ -345,6 +379,7 @@ mod tests {
         let progress: Progress = Progress::from_json("{}").unwrap();
 
         assert!(progress.settings.show_translations);
-        assert!(progress.cards.is_empty());
+        assert!(progress.courses.is_empty());
+        assert_eq!(progress.settings.last_course_id, None);
     }
 }

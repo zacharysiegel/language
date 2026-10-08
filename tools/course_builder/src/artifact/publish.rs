@@ -51,7 +51,7 @@ pub async fn publish_bundle(bundle_directory: &Path, repository: &ArtifactReposi
         return Err(AppError::from(format!("the repository already has this version; aborting publish; [version={version}]")));
     }
 
-    log::info!("publishing; [version={version} shards={} recordings={}]", bundle_manifest.units.len() + 1, referenced_audio_sha256s.len());
+    log::info!("publishing; [version={version} shards={} recordings={}]", bundle_manifest.file_entries().count(), referenced_audio_sha256s.len());
 
     let (audio_published, audio_already_present): (usize, usize) =
         publish_audio(bundle_directory, &referenced_audio_sha256s, repository).await?;
@@ -125,34 +125,17 @@ mod tests {
     use std::collections::BTreeMap;
 
     use shared::artifact::sha256_hex;
-    use shared::course::{Course, Curriculum, Unit};
+    use shared::course::Course;
     use shared::course_shard::{ClipAudioEntry, VoiceEngineKind};
 
     use super::*;
     use crate::artifact::repository::LocalArtifactRepository;
     use crate::artifact::{BuiltBundle, ClipRecordings, write_bundle};
-    use crate::audio_plan::{self, AudioPlan};
-    use crate::course_source;
+    use crate::audio_plan::AudioPlan;
+    use crate::test_courses;
     use crate::workspace::WorkspacePaths;
 
     const RECORDED_CLIP_COUNT: usize = 3;
-
-    fn read_keyed_course(plan: &mut AudioPlan) -> Course {
-        let paths: WorkspacePaths = WorkspacePaths::locate().unwrap();
-        let curriculum: Curriculum = course_source::read_curriculum(&paths).unwrap();
-        let units: Vec<Unit> = curriculum
-            .units
-            .iter()
-            .filter_map(|curriculum_unit| course_source::read_unit(&paths, &curriculum_unit.id).unwrap())
-            .map(|unit| audio_plan::assign_clip_keys(&unit, plan))
-            .collect();
-
-        Course {
-            title: curriculum.title,
-            levels: curriculum.levels,
-            units,
-        }
-    }
 
     /* Recordings for the first few vocabulary clips only; the rest of the course has none. */
     fn recordings_in(directory: &Path, course: &Course) -> ClipRecordings {
@@ -189,14 +172,14 @@ mod tests {
         fs::create_dir_all(&clip_directory).unwrap();
 
         let mut plan: AudioPlan = AudioPlan::new();
-        let course: Course = read_keyed_course(&mut plan);
+        let course: Course = test_courses::read_keyed_courses(&mut plan).remove(0);
         let recordings: ClipRecordings = recordings_in(&clip_directory, &course);
         let repository_root: PathBuf = workspace_directory.path().join("repository");
         let repository: ArtifactRepositoryKind =
             ArtifactRepositoryKind::Local(LocalArtifactRepository::new(repository_root.clone(), "/repository".to_string()));
-        let first_bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let first_bundle: BuiltBundle = write_bundle(&paths, std::slice::from_ref(&course), &plan, &recordings).unwrap();
         let first_report: PublishReport = publish_bundle(&first_bundle.directory, &repository).await.unwrap();
-        let second_bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let second_bundle: BuiltBundle = write_bundle(&paths, std::slice::from_ref(&course), &plan, &recordings).unwrap();
         let second_report: PublishReport = publish_bundle(&second_bundle.directory, &repository).await.unwrap();
 
         let latest_bytes: Vec<u8> = fs::read(repository_root.join(manifest::MANIFEST_LATEST_KEY)).unwrap();
@@ -211,6 +194,7 @@ mod tests {
         }
 
         assert_eq!(first_report.shards_published, course.units.len() + 1);
+        assert!(latest_manifest.courses.contains_key(&course.id));
         assert_eq!(first_report.audio_published, RECORDED_CLIP_COUNT);
         assert_eq!(second_report.audio_published, 0);
         assert_eq!(second_report.audio_already_present, RECORDED_CLIP_COUNT);
@@ -221,13 +205,13 @@ mod tests {
         let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
         let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
         let mut plan: AudioPlan = AudioPlan::new();
-        let course: Course = read_keyed_course(&mut plan);
+        let course: Course = test_courses::read_keyed_courses(&mut plan).remove(0);
         let recordings: ClipRecordings = ClipRecordings {
             audio_index: BTreeMap::new(),
             file_by_audio_sha256: BTreeMap::new(),
             pipeline_revision_by_engine_code: BTreeMap::new(),
         };
-        let bundle: BuiltBundle = write_bundle(&paths, &course, &plan, &recordings).unwrap();
+        let bundle: BuiltBundle = write_bundle(&paths, std::slice::from_ref(&course), &plan, &recordings).unwrap();
         let repository: ArtifactRepositoryKind =
             ArtifactRepositoryKind::Local(LocalArtifactRepository::new(workspace_directory.path().join("repository"), "/repository".to_string()));
 
