@@ -5,6 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::AppError;
 use crate::course_shard::VoiceEngineKind;
+use crate::practice::{PASS_PROPORTION, PracticeModeKind, SessionScore};
 use crate::review::ReviewCard;
 
 const DATE_KEY_FORMAT: &str = "%Y-%m-%d";
@@ -90,6 +91,12 @@ pub struct DailyActivity {
     pub exercise_count: u32,
     #[serde(default)]
     pub review_count: u32,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct PracticeOutcome {
+    pub passed: bool,
+    pub words_added_count: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -181,6 +188,42 @@ impl Progress {
         queued
     }
 
+    /// Counts the session's exercises as today's activity; a full practice also records an attempt at the unit and,
+    /// when passed, adds the unit's words to the review deck.
+    pub fn record_practice_session(
+        &mut self,
+        unit_id: &str,
+        mode: PracticeModeKind,
+        score: SessionScore,
+        vocabulary_count: usize,
+        today: NaiveDate,
+        now_milliseconds: i64,
+    ) -> PracticeOutcome {
+        self.record_exercise_activity(today, score.total_count as u32);
+
+        if mode == PracticeModeKind::Quick {
+            return PracticeOutcome {
+                passed: score.passed(),
+                words_added_count: 0,
+            };
+        }
+
+        self.record_unit_attempt(unit_id, score.proportion(), PASS_PROPORTION);
+
+        let words_added_count: usize = if score.passed() {
+            let card_ids = (0..vocabulary_count).map(|item_index| crate::course::vocabulary_card_id(unit_id, item_index));
+
+            self.add_cards_if_missing(card_ids, now_milliseconds)
+        } else {
+            0
+        };
+
+        PracticeOutcome {
+            passed: score.passed(),
+            words_added_count,
+        }
+    }
+
     pub fn record_exercise_activity(&mut self, today: NaiveDate, exercise_count: u32) {
         self.activity.entry(date_key(today)).or_default().exercise_count += exercise_count;
     }
@@ -258,6 +301,24 @@ mod tests {
         assert_eq!(progress.cards["a:0"].due_milliseconds, 2_000);
         assert_eq!(progress.cards["a:0"].box_index, 1);
         assert_eq!(progress.cards["a:2"].due_milliseconds, 2_000);
+    }
+
+    #[test]
+    fn record_practice_session_adds_the_words_of_a_passed_full_practice_only() {
+        let mut progress: Progress = Progress::default();
+        let passing: SessionScore = SessionScore { correct_count: 9, total_count: 10 };
+        let failing: SessionScore = SessionScore { correct_count: 2, total_count: 10 };
+
+        let quick: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Quick, passing, 3, date(2026, 10, 3), 0);
+        let failed: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Full, failing, 3, date(2026, 10, 3), 0);
+        let passed: PracticeOutcome = progress.record_practice_session("u", PracticeModeKind::Full, passing, 3, date(2026, 10, 3), 0);
+
+        assert_eq!(quick.words_added_count, 0);
+        assert_eq!(failed, PracticeOutcome { passed: false, words_added_count: 0 });
+        assert_eq!(passed, PracticeOutcome { passed: true, words_added_count: 3 });
+        assert_eq!(progress.unit_progress("u").attempt_count, 2);
+        assert!(progress.unit_progress("u").completed);
+        assert_eq!(progress.activity[&date_key(date(2026, 10, 3))].exercise_count, 30);
     }
 
     #[test]

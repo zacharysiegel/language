@@ -29,8 +29,14 @@ pub async fn discover_latest_manifest(
     )
     .await;
 
-    let discovery_document: Result<DiscoveryDocument, AppError> =
-        discovery_bytes.and_then(|bytes| discovery::parse_discovery_document(&bytes));
+    let discovery_document: Result<DiscoveryDocument, AppError> = discovery_bytes
+        .and_then(|bytes| discovery::parse_discovery_document(&bytes))
+        .map(|document| DiscoveryDocument {
+            schema_version: document.schema_version,
+            repository_base_url: fetch::resolve_reference(discovery_url, &document.repository_base_url),
+            minimum_client_version: document.minimum_client_version,
+            sunset: document.sunset,
+        });
 
     if let Err(error) = &discovery_document {
         log::warn!("discovery unavailable, using the static repository; [error={error}]");
@@ -237,6 +243,21 @@ mod tests {
         let source: ManifestSource = discover_latest_manifest(&http_fetch, "/discovery", "/repository").await.unwrap();
 
         assert_eq!(source.repository_base_url, "https://repository.example");
+    }
+
+    #[tokio::test]
+    async fn discover_latest_manifest_resolves_a_root_relative_base_against_the_discovery_origin() {
+        let sha256: String = sha256_hex(b"abc");
+        let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::from([
+            ("http://127.0.0.1:3000/discovery".to_string(), discovery_json("/repository", "0.1.0")),
+            ("http://127.0.0.1:3000/repository/latest/manifest.json".to_string(), manifest_json(&sha256).into_bytes()),
+        ]));
+
+        let source: ManifestSource =
+            discover_latest_manifest(&http_fetch, "http://127.0.0.1:3000/discovery", "http://127.0.0.1:3000/repository").await.unwrap();
+
+        assert_eq!(source.repository_base_url, "http://127.0.0.1:3000/repository");
+        assert_eq!(http_fetch.requested_urls().await.len(), 2);
     }
 
     #[tokio::test]

@@ -6,6 +6,26 @@ pub fn join_url(base_url: &str, key: &str) -> String {
     format!("{}/{key}", base_url.trim_end_matches('/'))
 }
 
+/// `reference` made absolute against `base_url`'s origin when it is a root-relative path and `base_url` has one.
+pub fn resolve_reference(base_url: &str, reference: &str) -> String {
+    let is_root_relative: bool = reference.starts_with('/') && !reference.starts_with("//");
+    let origin: Option<&str> = base_url
+        .find("://")
+        .map(|scheme_end| {
+            let authority_start: usize = scheme_end + "://".len();
+            let authority_end: usize = base_url[authority_start..]
+                .find('/')
+                .map_or(base_url.len(), |offset| authority_start + offset);
+
+            &base_url[..authority_end]
+        });
+
+    match (is_root_relative, origin) {
+        (true, Some(origin)) => format!("{origin}{reference}"),
+        _ => reference.to_string(),
+    }
+}
+
 pub async fn fetch_bytes(http_fetch: &impl HttpFetch, url: &str, cache_mode: HttpCacheMode) -> Result<Vec<u8>, AppError> {
     let response: HttpResponse = http_fetch
         .get(&HttpRequest {
@@ -65,6 +85,14 @@ mod tests {
     fn join_url_collapses_a_trailing_slash() {
         assert_eq!(join_url("https://example.org/", "data/x"), "https://example.org/data/x");
         assert_eq!(join_url("/repository", "data/x"), "/repository/data/x");
+    }
+
+    #[test]
+    fn resolve_reference_joins_a_root_relative_path_to_the_base_origin() {
+        assert_eq!(resolve_reference("http://127.0.0.1:3000/discovery", "/repository"), "http://127.0.0.1:3000/repository");
+        assert_eq!(resolve_reference("https://example.org", "/repository"), "https://example.org/repository");
+        assert_eq!(resolve_reference("/discovery", "/repository"), "/repository");
+        assert_eq!(resolve_reference("http://127.0.0.1:3000/discovery", "https://cdn.example/r"), "https://cdn.example/r");
     }
 
     #[tokio::test]

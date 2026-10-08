@@ -1,19 +1,11 @@
 use chrono::NaiveDate;
 use leptos::prelude::*;
 use shared::course::{Exercise, Unit};
-use shared::practice::{PASS_PROPORTION, SessionScore, shuffled};
+use shared::practice::{PASS_PROPORTION, PracticeModeKind, QUICK_PRACTICE_EXERCISE_COUNT, SessionScore, shuffled};
 
 use crate::platform;
 use crate::practice::ExerciseSession;
 use crate::progress_state::{ProgressStore, use_progress_store};
-
-const QUICK_PRACTICE_EXERCISE_COUNT: usize = 10;
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PracticeModeKind {
-    Full,
-    Quick,
-}
 
 #[component]
 pub fn PracticeSection(unit: Unit) -> impl IntoView {
@@ -47,18 +39,11 @@ pub fn PracticeSection(unit: Unit) -> impl IntoView {
 
         move |mode: PracticeModeKind, score: SessionScore| {
             let today: NaiveDate = platform::today();
+            let now_milliseconds: i64 = platform::now_milliseconds();
 
             progress_store.update(|progress| {
-                progress.record_exercise_activity(today, score.total_count as u32);
-
-                if mode == PracticeModeKind::Full {
-                    progress.record_unit_attempt(&unit_id, score.proportion(), PASS_PROPORTION);
-                }
+                progress.record_practice_session(&unit_id, mode, score, vocabulary_count, today, now_milliseconds);
             });
-
-            if mode == PracticeModeKind::Full && score.passed() {
-                progress_store.add_unit_vocabulary(&unit_id, vocabulary_count);
-            }
         }
     };
 
