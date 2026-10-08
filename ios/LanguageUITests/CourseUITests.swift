@@ -119,6 +119,16 @@ final class CourseUITests: XCTestCase {
         saveScreenshot("11-settings")
     }
 
+    func testNavigationShowsTheCourseTitleAndOpensTheCourseList() throws {
+        let courseButton: XCUIElement = app.buttons["courses"].firstMatch
+
+        XCTAssertTrue(courseButton.waitForExistence(timeout: 20))
+        XCTAssertEqual(courseButton.label, try Self.readCourseTitle())
+
+        courseButton.tap()
+        XCTAssertTrue(app.buttons["course-\(Self.courseId)"].waitForExistence(timeout: 5))
+    }
+
     func testUnitStatusIsSetByStartTheStatusControlAndPractice() throws {
         openUnit(Self.practicedUnitId)
         assertSelected(app.buttons["unit-status-not-started"])
@@ -238,5 +248,13 @@ final class CourseUITests: XCTestCase {
         let data: Data = try Data(contentsOf: path)
 
         return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    }
+
+    private static func readCourseTitle() throws -> String {
+        let path: URL = repositoryRoot.appendingPathComponent("data/courses/\(courseId)/curriculum.json")
+        let data: Data = try Data(contentsOf: path)
+        let curriculum: [String: Any] = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+
+        return curriculum["title"] as? String ?? ""
     }
 }

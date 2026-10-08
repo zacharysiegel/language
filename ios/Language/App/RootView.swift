@@ -64,6 +64,10 @@ struct RootView: View {
         return courses.count == 1 ? courses[0].id : nil
     }
 
+    private func courseTitle(courseId: String) -> String? {
+        courseStore.courses().first { course in course.id == courseId }?.title
+    }
+
     private func navigationRoot<Content: View>(courseId: String?, @ViewBuilder content: @escaping (CourseOutlineRecord) -> Content) -> some View {
         NavigationStack {
             VersionGate {
@@ -78,9 +82,13 @@ struct RootView: View {
             }
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
-                    if courseId != nil, courseStore.courses().count > 1 {
-                        Button("Courses") { coursesPresented = true }
-                            .accessibilityIdentifier("courses")
+                    if let courseTitle = courseId.flatMap(courseTitle(courseId:)) {
+                        Button {
+                            coursesPresented = true
+                        } label: {
+                            Text(courseTitle).lineLimit(1)
+                        }
+                        .accessibilityIdentifier("courses")
                     }
                 }
 
