@@ -11,7 +11,7 @@ struct SettingsSheet: View {
                 VStack(alignment: .leading, spacing: .spaceLg) {
                     voiceSection()
                     speedSection()
-                    versionSection()
+                    courseContentSection()
                 }
                 .padding(.spaceMd)
                 .readableWidth()
@@ -68,18 +68,18 @@ struct SettingsSheet: View {
         }
     }
 
-    private func versionSection() -> some View {
+    private func courseContentSection() -> some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
-            MicroLabel(text: "Course version")
+            MicroLabel(text: "Course content")
 
             if let version = courseStore.shownVersion() {
-                Text(version.version()).font(.dataText)
-                Text(version.isEmbedded() ? "Shipped with the app" : version.repositoryBaseUrl())
+                Text("Published as \(version.version())").font(.dataText)
+                Text(version.isEmbedded() ? "The copy included in the app" : "Downloaded from \(version.repositoryBaseUrl())")
                     .font(.captionText)
                     .foregroundStyle(Color.inkMuted)
             }
 
-            Button("Check for a newer version") {
+            Button("Check for updated course content") {
                 Task { await courseStore.refresh() }
             }
             .buttonStyle(SquareButtonStyle(isCompact: true))

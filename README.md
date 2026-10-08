@@ -14,7 +14,7 @@ The Voice menu chooses between the two recording sets: Auto (the macOS voice for
 
 ## How the data flows
 
-- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes a bundle to `build/artifacts/<version>/` (versions are named `<date>+<city>`): a `manifest.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). It also copies the manifest and shards to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
+- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes a bundle to `build/artifacts/<version>/`, one version of the course content (named `<date>+<city>`): a `manifest.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). It also copies the manifest and shards to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
 - `course_builder publish local | cloudflare-r2 | dry` uploads the bundle: recordings the repository lacks, then the shards, then `<version>/manifest.json`, and `latest/manifest.json` last.
 - The app reads `/discovery` for the repository's address, fetches `latest/manifest.json`, opens the course shard, and opens a unit's shard when the unit is visited. Every download is checked against its hash and cached in the browser, so the app opens offline once visited.
 

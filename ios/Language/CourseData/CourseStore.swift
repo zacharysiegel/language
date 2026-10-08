@@ -160,9 +160,9 @@ final class CourseStore {
 
             if isNewVersion {
                 show(latest)
-                updateMessage = "Updated to version \(latest.version())."
+                updateMessage = "Downloaded the course content published as \(latest.version())."
             } else {
-                updateMessage = "You have the latest version."
+                updateMessage = "The course content is up to date."
             }
         } catch {
             _ = CoreErrorReport.record(error, while: "fetching the latest version")
