@@ -1,0 +1,91 @@
+name: PortugueseCourse
+options:
+  bundleIdPrefix: org.singularity.portuguese
+  deploymentTarget:
+    iOS: "18.0"
+  developmentLanguage: en
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+    # The origin that serves /discovery and /repository; the simulator reaches the Mac's own server here.
+    PORTUGUESE_COURSE_ORIGIN: "http://127.0.0.1:3000"
+targets:
+  PortugueseCourse:
+    type: application
+    platform: iOS
+    sources:
+      - path: PortugueseCourse
+        excludes:
+          - Resources/embedded_bundle
+      - path: PortugueseCourse/Resources/embedded_bundle
+        type: folder
+        buildPhase: resources
+      - path: ../target/uniffi/swift
+    dependencies:
+      - framework: ../target/uniffi/PortugueseCore.xcframework
+        embed: false
+      - sdk: AVFoundation.framework
+      - sdk: SystemConfiguration.framework
+      - sdk: Security.framework
+    info:
+      path: PortugueseCourse/Info.plist
+      properties:
+        CFBundleDisplayName: Português
+        CFBundleLocalizations: ["en"]
+        UILaunchScreen: {}
+        UIApplicationSceneManifest:
+          UIApplicationSupportsMultipleScenes: false
+        UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"]
+        PortugueseCourseOrigin: $(PORTUGUESE_COURSE_ORIGIN)
+        NSLocalNetworkUsageDescription: The course is downloaded from a server on your local network.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course
+        TARGETED_DEVICE_FAMILY: "1,2"
+        ARCHS: arm64
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        GENERATE_INFOPLIST_FILE: false
+        CODE_SIGN_STYLE: Automatic
+    preBuildScripts:
+      - name: Build the Rust core
+        script: /usr/bin/env -i HOME="${HOME}" PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" "${SRCROOT}/../scripts/ios/build-ios-core.sh"
+        basedOnDependencyAnalysis: false
+      - name: Sync the embedded bundle
+        script: "\"${SRCROOT}/../scripts/ios/sync-ios-embedded-bundle.sh\""
+        basedOnDependencyAnalysis: false
+  PortugueseCourseTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: PortugueseCourseTests
+    dependencies:
+      - target: PortugueseCourse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course.tests
+        GENERATE_INFOPLIST_FILE: true
+  PortugueseCourseUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: PortugueseCourseUITests
+    dependencies:
+      - target: PortugueseCourse
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course.uitests
+        GENERATE_INFOPLIST_FILE: true
+        TEST_TARGET_NAME: PortugueseCourse
+schemes:
+  PortugueseCourse:
+    build:
+      targets:
+        PortugueseCourse: all
+    test:
+      targets:
+        - PortugueseCourseTests
+        - PortugueseCourseUITests
