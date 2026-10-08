@@ -123,7 +123,7 @@ fn synthesize_with_macos_say(clips: &[(String, ResolvedUtterance)], engine_direc
 
 fn say_utterance(destination: &Path, utterance: &ResolvedUtterance) -> Result<(), AppError> {
     let temporary_path: PathBuf = std::env::temp_dir().join(format!(
-        "portuguese-course-{}-{}.aiff",
+        "language-{}-{}.aiff",
         std::process::id(),
         destination.file_stem().and_then(|stem| stem.to_str()).unwrap_or("clip"),
     ));

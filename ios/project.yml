@@ -1,4 +1,4 @@
-name: PortugueseCourse
+name: Language
 options:
   bundleIdPrefix: org.singularity.portuguese
   deploymentTarget:
@@ -10,41 +10,41 @@ settings:
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
     # The origin that serves /discovery and /repository; the simulator reaches the Mac's own server here.
-    PORTUGUESE_COURSE_ORIGIN: "http://127.0.0.1:3000"
+    LANGUAGE_ORIGIN: "http://127.0.0.1:3000"
 targets:
-  PortugueseCourse:
+  Language:
     type: application
     platform: iOS
     sources:
-      - path: PortugueseCourse
+      - path: Language
         excludes:
           - Resources/embedded_bundle
-      - path: PortugueseCourse/Resources/embedded_bundle
+      - path: Language/Resources/embedded_bundle
         type: folder
         buildPhase: resources
       - path: ../target/uniffi/swift
     dependencies:
-      - framework: ../target/uniffi/PortugueseCore.xcframework
+      - framework: ../target/uniffi/LanguageCore.xcframework
         embed: false
       - sdk: AVFoundation.framework
       - sdk: SystemConfiguration.framework
       - sdk: Security.framework
     info:
-      path: PortugueseCourse/Info.plist
+      path: Language/Info.plist
       properties:
-        CFBundleDisplayName: Português
+        CFBundleDisplayName: Language
         CFBundleLocalizations: ["en"]
         UILaunchScreen: {}
         UIApplicationSceneManifest:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"]
-        PortugueseCourseOrigin: $(PORTUGUESE_COURSE_ORIGIN)
+        LanguageOrigin: $(LANGUAGE_ORIGIN)
         NSLocalNetworkUsageDescription: The course is downloaded from a server on your local network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.language
         TARGETED_DEVICE_FAMILY: "1,2"
         ARCHS: arm64
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
@@ -57,35 +57,35 @@ targets:
       - name: Sync the embedded bundle
         script: "\"${SRCROOT}/../scripts/ios/sync-ios-embedded-bundle.sh\""
         basedOnDependencyAnalysis: false
-  PortugueseCourseTests:
+  LanguageTests:
     type: bundle.unit-test
     platform: iOS
     sources:
-      - path: PortugueseCourseTests
+      - path: LanguageTests
     dependencies:
-      - target: PortugueseCourse
+      - target: Language
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course.tests
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.language.tests
         GENERATE_INFOPLIST_FILE: true
-  PortugueseCourseUITests:
+  LanguageUITests:
     type: bundle.ui-testing
     platform: iOS
     sources:
-      - path: PortugueseCourseUITests
+      - path: LanguageUITests
     dependencies:
-      - target: PortugueseCourse
+      - target: Language
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.portuguese.course.uitests
+        PRODUCT_BUNDLE_IDENTIFIER: org.singularity.language.uitests
         GENERATE_INFOPLIST_FILE: true
-        TEST_TARGET_NAME: PortugueseCourse
+        TEST_TARGET_NAME: Language
 schemes:
-  PortugueseCourse:
+  Language:
     build:
       targets:
-        PortugueseCourse: all
+        Language: all
     test:
       targets:
-        - PortugueseCourseTests
-        - PortugueseCourseUITests
+        - LanguageTests
+        - LanguageUITests

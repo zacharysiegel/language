@@ -18,8 +18,8 @@ use tower_http::services::ServeDir;
 
 use crate::app::{App, shell};
 
-pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "PORTUGUESE_COURSE_LOCAL_REPOSITORY_ROOT";
-pub const ENV_REPOSITORY_BASE_URL: &str = "PORTUGUESE_COURSE_REPOSITORY_BASE_URL";
+pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "LANGUAGE_LOCAL_REPOSITORY_ROOT";
+pub const ENV_REPOSITORY_BASE_URL: &str = "LANGUAGE_REPOSITORY_BASE_URL";
 
 const DEFAULT_LOCAL_REPOSITORY_ROOT: &str = "build/repository";
 const CACHE_CONTROL_IMMUTABLE: &str = "public, max-age=31536000, immutable";

@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct PortugueseCourseApp: App {
+struct LanguageApp: App {
     @State private var courseStore: CourseStore
     @State private var progressStore: ProgressStore
     @State private var audioPlayer: AudioPlayer = AudioPlayer()

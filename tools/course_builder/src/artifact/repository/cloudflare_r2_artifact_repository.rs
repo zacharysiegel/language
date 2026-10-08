@@ -15,7 +15,7 @@ use crate::artifact::repository::cors_policy::CorsPolicy;
 
 /* R2 ignores the region but the S3 client requires one; "auto" is the value Cloudflare documents. */
 const R2_REGION_PLACEHOLDER: &str = "auto";
-const R2_CREDENTIALS_PROVIDER_NAME: &str = "portuguese-course-r2";
+const R2_CREDENTIALS_PROVIDER_NAME: &str = "language-r2";
 
 pub const ENV_R2_ACCOUNT_ID: &str = "R2_ACCOUNT_ID";
 pub const ENV_R2_ARTIFACT_BUCKET: &str = "R2_ARTIFACT_BUCKET";

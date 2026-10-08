@@ -10,7 +10,7 @@ set -euo pipefail
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 readonly SOURCE_DIRECTORY="${REPO_ROOT}/web/static/embedded"
-readonly DESTINATION_DIRECTORY="${REPO_ROOT}/ios/PortugueseCourse/Resources/embedded_bundle"
+readonly DESTINATION_DIRECTORY="${REPO_ROOT}/ios/Language/Resources/embedded_bundle"
 
 if test ! -f "${SOURCE_DIRECTORY}/manifest.json"; then
     echo "error: ${SOURCE_DIRECTORY} has no bundle; run ./scripts/build/build-course.sh first" >&2

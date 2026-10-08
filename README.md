@@ -1,6 +1,6 @@
-# Português do Brasil
+# Language
 
-A Brazilian Portuguese course for English speakers, from A1 to B2: 44 units that teach the principles first (sounds and spelling, stress and accents, the structure of the language, then grammar), with dialogues, readings, exercises and vocabulary, with spoken audio for every Portuguese sentence and a spaced-repetition review deck. Progress is kept in the browser.
+Language courses that teach the principles first (sounds and spelling, stress and accents, the structure of the language, then grammar), with dialogues, readings, exercises and vocabulary, spoken audio for every sentence in the language taught, and a spaced-repetition review deck. Each course is one curriculum in a target language taught in a source language, in `data/courses/<course id>/`; the first is Brazilian Portuguese for English speakers, from A1 to B2. Progress is kept on the device.
 
 ## Run it
 
@@ -26,7 +26,7 @@ Copy `template.env` to `.env` and fill in the R2 settings. Put the publish token
 secr encrypt --key "$MASTER_SECRET" --name cloudflare.r2.publish.secret_access_key <secret-access-key>
 ```
 
-Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then run `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` to the bucket's public URL.
+Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then run `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `LANGUAGE_REPOSITORY_BASE_URL` to the bucket's public URL.
 
 ## iOS app
 
@@ -36,10 +36,10 @@ Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `c
 ./scripts/build/build-course.sh --skip-audio
 ./scripts/ios/sync-ios-embedded-bundle.sh
 ./scripts/ios/build-ios-core.sh
-cd ios && xcodegen generate && open PortugueseCourse.xcodeproj
+cd ios && xcodegen generate && open Language.xcodeproj
 ```
 
-Building in Xcode reruns the last two scripts. The app reads `/discovery` from `PORTUGUESE_COURSE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator, the Mac's address for a device), opens the bundle shipped inside it when the server cannot be reached, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/PortugueseCourse.xcodeproj -scheme PortugueseCourse -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice.
+Building in Xcode reruns the last two scripts. The app reads `/discovery` from `LANGUAGE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator, the Mac's address for a device), opens the bundle shipped inside it when the server cannot be reached, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/Language.xcodeproj -scheme Language -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice.
 
 ## Layout
 

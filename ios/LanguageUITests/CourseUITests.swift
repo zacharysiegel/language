@@ -16,7 +16,7 @@ final class CourseUITests: XCTestCase {
     override func setUp() {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["-PortugueseCourseProgressFile", "ui-test-progress-\(UUID().uuidString).json"]
+        app.launchArguments = ["-LanguageProgressFile", "ui-test-progress-\(UUID().uuidString).json"]
         app.launch()
         try? FileManager.default.createDirectory(atPath: Self.screenshotDirectory, withIntermediateDirectories: true)
     }
