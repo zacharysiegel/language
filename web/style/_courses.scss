@@ -1,0 +1,31 @@
+ul.courses {
+    display: flex;
+    flex-direction: column;
+    border-top: var(--border-rule);
+}
+
+ul.courses li {
+    border-bottom: var(--border-rule);
+}
+
+ul.courses li a {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    padding: var(--space-sm) 0;
+    text-decoration: none;
+}
+
+.course-name {
+    color: var(--color-accent-link);
+}
+
+ul.courses li a:hover .course-name,
+ul.courses li a:focus-visible .course-name {
+    color: var(--color-accent-hover);
+}
+
+.course-languages {
+    font-size: var(--type-size-caption);
+    color: var(--color-ink-muted);
+}

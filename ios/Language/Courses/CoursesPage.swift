@@ -10,7 +10,7 @@ struct CoursesPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                PageHeader(caption: "\(courseStore.courses().count) courses", title: "Courses")
+                PageHeader(caption: courseStore.courses().count == 1 ? "1 course" : "\(courseStore.courses().count) courses", title: "Courses")
                     .padding(.bottom, .spaceMd)
 
                 HairlineRule()
