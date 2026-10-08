@@ -3,7 +3,7 @@ import OSLog
 
 /// Sends failures to the unified log, with the Rust call stack when the core raised them.
 enum CoreErrorReport {
-    static let logger: Logger = Logger(subsystem: "org.singularity.language", category: "core")
+    static let logger: Logger = Logger(subsystem: Bundle.main.bundleIdentifier ?? "language", category: "core")
 
     /// Logs `error` with what was being done and returns the text to show the learner.
     static func record(_ error: Error, while activity: String) -> String {
