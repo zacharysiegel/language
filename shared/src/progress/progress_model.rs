@@ -78,6 +78,9 @@ impl Default for Settings {
 
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
 pub struct UnitProgress {
+    /// The learner has opened the unit.
+    #[serde(default)]
+    pub started: bool,
     #[serde(default)]
     pub completed: bool,
     #[serde(default)]
@@ -118,11 +121,17 @@ impl CourseProgress {
         self.units.insert(
             unit_id.to_string(),
             UnitProgress {
+                started: true,
                 completed: previous.completed || proportion >= pass_proportion,
                 best_proportion: previous.best_proportion.max(proportion),
                 attempt_count: previous.attempt_count + 1,
             },
         );
+    }
+
+    /// Records that the learner opened the unit.
+    pub fn mark_unit_started(&mut self, unit_id: &str) {
+        self.units.entry(unit_id.to_string()).or_default().started = true;
     }
 
     pub fn add_cards_if_missing(&mut self, card_ids: impl Iterator<Item = String>, now_milliseconds: i64) -> usize {
@@ -258,6 +267,18 @@ mod tests {
         assert!(unit_progress.completed);
         assert_eq!(unit_progress.best_proportion, 0.9);
         assert_eq!(unit_progress.attempt_count, 2);
+    }
+
+    #[test]
+    fn opening_or_attempting_a_unit_starts_it() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+
+        course_progress.record_unit_attempt("attempted", 0.5, 0.8);
+        course_progress.mark_unit_started("u");
+
+        assert!(course_progress.unit_progress("u").started);
+        assert!(course_progress.unit_progress("attempted").started);
+        assert!(!course_progress.unit_progress("other").started);
     }
 
     #[test]

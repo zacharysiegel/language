@@ -89,6 +89,14 @@ final class ProgressStore {
         return outcome
     }
 
+    func startUnit(courseId: String, unitId: String) {
+        guard !unitProgress(courseId: courseId, unitId: unitId).started else {
+            return
+        }
+
+        perform { try book.startUnit(courseId: courseId, unitId: unitId) }
+    }
+
     func queueUnitVocabulary(courseId: String, unitId: String, vocabularyCount: Int) -> QueuedCardsRecord? {
         var queued: QueuedCardsRecord?
 

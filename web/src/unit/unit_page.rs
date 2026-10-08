@@ -8,7 +8,7 @@ use shared::course::{CourseOutline, Unit};
 use crate::course_data::{
     self, CourseStore, ShardLoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
 };
-use crate::progress_state::{remember_route_course, use_progress_store};
+use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 use crate::unit::{
     DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, VocabularySection,
 };
@@ -78,7 +78,17 @@ pub fn UnitPage() -> impl IntoView {
     let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
     let unit_state: Memo<Option<ShardLoadState<Unit>>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()));
 
-    remember_route_course(use_progress_store(), course_id);
+    let progress_store: ProgressStore = use_progress_store();
+
+    remember_route_course(progress_store, course_id);
+
+    Effect::new(move |_| {
+        let unit_loaded: bool = matches!(unit_state.get(), Some(ShardLoadState::Loaded(_)));
+
+        if unit_loaded {
+            progress_store.start_unit(&course_id.get(), &unit_id.get());
+        }
+    });
 
     Effect::new(move |_| {
         let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(ShardLoadState::Loaded(_)));
