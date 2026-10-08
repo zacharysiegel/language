@@ -1,4 +1,3 @@
-use chrono::NaiveDate;
 use shared::course_shard::ClipAudioEntry;
 use shared::progress::AudioEngineKind;
 
@@ -89,13 +88,6 @@ mod browser {
 
     pub fn now_milliseconds() -> i64 {
         js_sys::Date::now() as i64
-    }
-
-    pub fn today() -> NaiveDate {
-        let now: js_sys::Date = js_sys::Date::new_0();
-
-        NaiveDate::from_ymd_opt(now.get_full_year() as i32, now.get_month() + 1, now.get_date())
-            .unwrap_or(NaiveDate::MIN)
     }
 
     pub fn random_unit() -> f64 {
@@ -297,10 +289,6 @@ mod server {
 
     pub fn now_milliseconds() -> i64 {
         0
-    }
-
-    pub fn today() -> NaiveDate {
-        NaiveDate::MIN
     }
 
     pub fn random_unit() -> f64 {

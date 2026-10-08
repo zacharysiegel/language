@@ -3,7 +3,7 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
 
-use chrono::{NaiveDate, Utc};
+use chrono::Utc;
 use shared::AppError;
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
@@ -216,7 +216,7 @@ impl ProgressBook {
         let mut outcome: Option<PracticeOutcome> = None;
 
         self.change(|progress| {
-            outcome = Some(progress.record_practice_session(&course_id, &unit_id, mode.into(), score, vocabulary_count as usize, today(), now_milliseconds()));
+            outcome = Some(progress.record_practice_session(&course_id, &unit_id, mode.into(), score, vocabulary_count as usize, now_milliseconds()));
         })?;
 
         outcome
@@ -253,7 +253,7 @@ impl ProgressBook {
             .collect()
     }
 
-    /// Reschedules the card and counts one review as today's activity.
+    /// Reschedules the card as remembered or forgotten.
     pub fn grade_card(&self, course_id: String, card_id: String, remembered: bool) -> Result<(), CoreError> {
         let now: i64 = now_milliseconds();
 
@@ -264,17 +264,11 @@ impl ProgressBook {
             if let Some(graded) = graded {
                 course_progress.cards.insert(card_id.clone(), graded);
             }
-
-            progress.record_review_activity(today(), 1);
         })
     }
 
     pub fn count_by_box(&self, course_id: String) -> Vec<u32> {
         review::count_by_box(self.lock().course_progress(&course_id).cards.values()).iter().map(|count| *count as u32).collect()
-    }
-
-    pub fn streak_days(&self) -> u32 {
-        self.lock().streak_days(today())
     }
 
     pub fn export_json(&self) -> Result<String, CoreError> {
@@ -350,9 +344,6 @@ fn now_milliseconds() -> i64 {
     Utc::now().timestamp_millis()
 }
 
-fn today() -> NaiveDate {
-    chrono::Local::now().date_naive()
-}
 
 #[cfg(test)]
 mod tests {
@@ -389,7 +380,6 @@ mod tests {
         book.grade_card(COURSE_ID.to_string(), first_due, true).unwrap();
 
         assert_eq!(book.due_card_count(COURSE_ID.to_string()), 1);
-        assert_eq!(book.streak_days(), 1);
     }
 
     #[test]

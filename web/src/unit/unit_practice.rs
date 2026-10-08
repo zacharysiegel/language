@@ -1,4 +1,3 @@
-use chrono::NaiveDate;
 use leptos::prelude::*;
 use shared::course::{Exercise, Unit};
 use shared::practice::{PASS_PROPORTION, PracticeModeKind, QUICK_PRACTICE_EXERCISE_COUNT, SessionScore, shuffled};
@@ -39,11 +38,10 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
         let unit_id: String = unit_id.clone();
 
         move |mode: PracticeModeKind, score: SessionScore| {
-            let today: NaiveDate = platform::today();
             let now_milliseconds: i64 = platform::now_milliseconds();
 
             progress_store.update(|progress| {
-                progress.record_practice_session(&course_id, &unit_id, mode, score, vocabulary_count, today, now_milliseconds);
+                progress.record_practice_session(&course_id, &unit_id, mode, score, vocabulary_count, now_milliseconds);
             });
         }
     };

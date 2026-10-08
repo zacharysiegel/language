@@ -68,11 +68,6 @@ final class ProgressStore {
         updateSettings { settings in settings.lastCourseId = courseId }
     }
 
-    func streakDays() -> Int {
-        _ = changeCount
-        return Int(book.streakDays())
-    }
-
     func lastError() -> String? {
         errorMessage
     }
