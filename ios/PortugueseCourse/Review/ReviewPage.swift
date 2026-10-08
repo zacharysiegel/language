@@ -3,7 +3,7 @@ import SwiftUI
 /// A card to show in a review session, and which side faces the learner first.
 struct ReviewItem: Equatable {
     let cardId: String
-    let promptIsPortuguese: Bool
+    let promptIsTarget: Bool
 }
 
 /// Every vocabulary item of the course by its review card id, with the unit it belongs to.
@@ -26,15 +26,16 @@ struct VocabularyIndex {
 struct ReviewPage: View {
     static let sessionCardLimit: Int = 20
 
-    @Environment(CourseStore.self) private var courseStore
+    let outline: CourseOutlineRecord
+
     @Environment(ProgressStore.self) private var progressStore
     @State private var sessionItems: [ReviewItem]?
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: .spaceMd) {
-                if let sessionItems, let outline = courseStore.outline() {
-                    ReviewSession(index: VocabularyIndex(outline: outline), items: sessionItems, onExit: { self.sessionItems = nil })
+                if let sessionItems {
+                    ReviewSession(courseId: outline.id, index: VocabularyIndex(outline: outline), items: sessionItems, onExit: { self.sessionItems = nil })
                 } else {
                     setupView()
                 }
@@ -47,8 +48,8 @@ struct ReviewPage: View {
     }
 
     private func setupView() -> some View {
-        let dueCount: Int = progressStore.dueCardCount()
-        let laterCount: Int = max(progressStore.cardCount() - dueCount, 0)
+        let dueCount: Int = progressStore.dueCardCount(courseId: outline.id)
+        let laterCount: Int = max(progressStore.cardCount(courseId: outline.id) - dueCount, 0)
 
         return VStack(alignment: .leading, spacing: .spaceMd) {
             PageHeader(caption: nil, title: "Review")
@@ -87,8 +88,8 @@ struct ReviewPage: View {
                 get: { progressStore.settings().reviewDirection },
                 set: { direction in progressStore.updateSettings { settings in settings.reviewDirection = direction } },
             )) {
-                Text("Portuguese to English").tag(ReviewDirectionRecord.portugueseToEnglish)
-                Text("English to Portuguese").tag(ReviewDirectionRecord.englishToPortuguese)
+                Text("\(outline.targetLanguageName) to \(outline.sourceLanguageName)").tag(ReviewDirectionRecord.targetToSource)
+                Text("\(outline.sourceLanguageName) to \(outline.targetLanguageName)").tag(ReviewDirectionRecord.sourceToTarget)
                 Text("Mixed").tag(ReviewDirectionRecord.mixed)
             }
             .pickerStyle(.menu)
@@ -100,24 +101,25 @@ struct ReviewPage: View {
     private func buildSessionItems() -> [ReviewItem] {
         let direction: ReviewDirectionRecord = progressStore.settings().reviewDirection
 
-        return progressStore.dueCardIds(limit: Self.sessionCardLimit).map { cardId in
-            let promptIsPortuguese: Bool
+        return progressStore.dueCardIds(courseId: outline.id, limit: Self.sessionCardLimit).map { cardId in
+            let promptIsTarget: Bool
 
             switch direction {
-            case .portugueseToEnglish:
-                promptIsPortuguese = true
-            case .englishToPortuguese:
-                promptIsPortuguese = false
+            case .targetToSource:
+                promptIsTarget = true
+            case .sourceToTarget:
+                promptIsTarget = false
             case .mixed:
-                promptIsPortuguese = Bool.random()
+                promptIsTarget = Bool.random()
             }
 
-            return ReviewItem(cardId: cardId, promptIsPortuguese: promptIsPortuguese)
+            return ReviewItem(cardId: cardId, promptIsTarget: promptIsTarget)
         }
     }
 }
 
 struct ReviewSession: View {
+    let courseId: String
     let index: VocabularyIndex
     let items: [ReviewItem]
     let onExit: () -> Void
@@ -148,7 +150,7 @@ struct ReviewSession: View {
             ReviewCardView(
                 unit: entry.0,
                 item: entry.1,
-                promptIsPortuguese: item.promptIsPortuguese,
+                promptIsTarget: item.promptIsTarget,
                 position: currentIndex,
                 total: items.count,
                 revealed: $revealed,
@@ -166,7 +168,7 @@ struct ReviewSession: View {
     }
 
     private func grade(remembered: Bool) {
-        progressStore.gradeCard(cardId: items[currentIndex].cardId, remembered: remembered)
+        progressStore.gradeCard(courseId: courseId, cardId: items[currentIndex].cardId, remembered: remembered)
 
         if remembered {
             rememberedCount += 1
@@ -181,7 +183,7 @@ struct ReviewSession: View {
 struct ReviewCardView: View {
     let unit: UnitOutlineRecord
     let item: VocabularyItemRecord
-    let promptIsPortuguese: Bool
+    let promptIsTarget: Bool
     let position: Int
     let total: Int
     @Binding var revealed: Bool
@@ -204,7 +206,7 @@ struct ReviewCardView: View {
 
             VStack(alignment: .leading, spacing: .spaceMd) {
                 MicroLabel(text: unit.title)
-                Text(promptIsPortuguese ? item.pt : item.en)
+                Text(promptIsTarget ? item.target : item.source)
                     .font(.headingText)
                     .accessibilityIdentifier("flashcard-prompt")
 
@@ -218,27 +220,27 @@ struct ReviewCardView: View {
             }
             .panel()
         }
-        .onAppear { playIfPortugueseShows() }
-        .onChange(of: revealed) { playIfPortugueseShows() }
+        .onAppear { playIfTargetShows() }
+        .onChange(of: revealed) { playIfTargetShows() }
     }
 
     private func answerView() -> some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             HStack(spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.pt))
-                Text(promptIsPortuguese ? item.en : item.pt).font(.titleText)
+                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target))
+                Text(promptIsTarget ? item.source : item.target).font(.titleText)
             }
 
-            if let literal = item.literal {
+            if let literal = item.sourceLiteral {
                 Text("literally: \(literal)").font(.captionText).italic().foregroundStyle(Color.inkMuted)
             }
 
             HStack(alignment: .top, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.pt))
+                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target))
 
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(item.example.pt).font(.bodyText)
-                    Text(item.example.en).font(.captionText).foregroundStyle(Color.inkMuted)
+                    Text(item.example.target).font(.bodyText)
+                    Text(item.example.source).font(.captionText).foregroundStyle(Color.inkMuted)
                 }
                 .fixedSize(horizontal: false, vertical: true)
             }
@@ -259,11 +261,11 @@ struct ReviewCardView: View {
         }
     }
 
-    private func playIfPortugueseShows() {
-        guard promptIsPortuguese || revealed else {
+    private func playIfTargetShows() {
+        guard promptIsTarget || revealed else {
             return
         }
 
-        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.pt), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
     }
 }

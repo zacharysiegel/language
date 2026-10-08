@@ -26,7 +26,7 @@ pub fn TranslationToggle() -> impl IntoView {
                 prop:checked=move || progress_store.read(|progress| progress.settings.show_translations)
                 on:change=move |_| progress_store.update(|progress| progress.settings.show_translations = !progress.settings.show_translations)
             />
-            <span class="field-label">"Show English"</span>
+            <span class="field-label">"Show translations"</span>
         </label>
     }
 }

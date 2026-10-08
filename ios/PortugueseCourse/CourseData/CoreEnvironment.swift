@@ -6,7 +6,7 @@ struct CoreEnvironment {
     static let progressFileArgumentKey: String = "PortugueseCourseProgressFile"
     static let embeddedBundleDirectoryName: String = "embedded_bundle"
     static let cacheDirectoryName: String = "artifacts"
-    static let progressFileName: String = "progress.json"
+    static let progressFileName: String = "language-progress.json"
 
     let configuration: CoreConfiguration
     let progressPath: String

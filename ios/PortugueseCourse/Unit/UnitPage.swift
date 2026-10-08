@@ -31,6 +31,7 @@ enum UnitTabKind: String, CaseIterable, Hashable {
 }
 
 struct UnitPage: View {
+    let courseId: String
     let unitId: String
     let initialTab: UnitTabKind
 
@@ -41,14 +42,19 @@ struct UnitPage: View {
     var body: some View {
         content()
             .navigationBarTitleDisplayMode(.inline)
-            .onAppear { courseStore.ensureUnitLoaded(unitId: unitId) }
-            .onChange(of: courseStore.shownVersion()?.version()) { courseStore.ensureUnitLoaded(unitId: unitId) }
+            .onAppear { ensureLoaded() }
+            .onChange(of: courseStore.shownVersion()?.version()) { ensureLoaded() }
             .onDisappear { audioPlayer.stop() }
+    }
+
+    private func ensureLoaded() {
+        courseStore.ensureOutlineLoaded(courseId: courseId)
+        courseStore.ensureUnitLoaded(courseId: courseId, unitId: unitId)
     }
 
     @ViewBuilder
     private func content() -> some View {
-        switch courseStore.unitState(unitId: unitId) {
+        switch courseStore.unitState(courseId: courseId, unitId: unitId) {
         case .loaded(let unit, let lesson):
             loadedView(unit: unit, lesson: lesson)
         case .failed(let message):
@@ -56,7 +62,13 @@ struct UnitPage: View {
                 .font(.bodyText)
                 .foregroundStyle(Color.accentActive)
                 .padding(.spaceMd)
-        case .loading, .none:
+        case .none:
+            Text("Loading the unit…")
+                .font(.bodyText)
+                .foregroundStyle(Color.inkMuted)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .onChange(of: courseStore.outline(courseId: courseId)?.id) { ensureLoaded() }
+        case .loading:
             Text("Loading the unit…")
                 .font(.bodyText)
                 .foregroundStyle(Color.inkMuted)
@@ -112,7 +124,7 @@ struct UnitPage: View {
     private func section(tab: UnitTabKind, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
         switch tab {
         case .overview:
-            OverviewSection(unit: unit, lesson: lesson)
+            OverviewSection(courseId: courseId, unit: unit, lesson: lesson)
         case .grammar:
             GrammarSection(notes: lesson.grammar)
         case .dialogues:
@@ -122,16 +134,16 @@ struct UnitPage: View {
         case .vocabulary:
             VocabularySection(items: unit.vocabulary)
         case .practice:
-            PracticeSection(unit: unit, lesson: lesson)
+            PracticeSection(courseId: courseId, unit: unit, lesson: lesson)
         }
     }
 
     @ViewBuilder
     private func unitNavigation(unit: UnitOutlineRecord) -> some View {
-        if let units = courseStore.outline()?.units, let position = units.firstIndex(where: { candidate in candidate.id == unit.id }) {
+        if let units = courseStore.outline(courseId: courseId)?.units, let position = units.firstIndex(where: { candidate in candidate.id == unit.id }) {
             HStack(alignment: .top) {
                 if position > 0 {
-                    NavigationLink(value: UnitDestination(unitId: units[position - 1].id, tab: .overview)) {
+                    NavigationLink(value: UnitDestination(courseId: courseId, unitId: units[position - 1].id, tab: .overview)) {
                         Text("← \(units[position - 1].title)").font(.captionText).foregroundStyle(Color.accentLink)
                     }
                 }
@@ -139,7 +151,7 @@ struct UnitPage: View {
                 Spacer()
 
                 if position + 1 < units.count {
-                    NavigationLink(value: UnitDestination(unitId: units[position + 1].id, tab: .overview)) {
+                    NavigationLink(value: UnitDestination(courseId: courseId, unitId: units[position + 1].id, tab: .overview)) {
                         Text("\(units[position + 1].title) →").font(.captionText).foregroundStyle(Color.accentLink)
                     }
                     .accessibilityIdentifier("next-unit")

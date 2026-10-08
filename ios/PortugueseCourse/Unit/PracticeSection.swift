@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct PracticeSection: View {
+    let courseId: String
     let unit: UnitOutlineRecord
     let lesson: UnitLessonRecord
 
@@ -51,6 +52,7 @@ struct PracticeSection: View {
 
     private func record(mode: PracticeModeRecord, score: SessionScoreRecord) {
         let outcome: PracticeOutcomeRecord? = progressStore.recordPracticeSession(
+            courseId: courseId,
             unitId: unit.id,
             mode: mode,
             correctCount: Int(score.correctCount),
@@ -64,7 +66,7 @@ struct PracticeSection: View {
     }
 
     private func bestSummary() -> String {
-        let unitProgress: UnitProgressRecord = progressStore.unitProgress(unitId: unit.id)
+        let unitProgress: UnitProgressRecord = progressStore.unitProgress(courseId: courseId, unitId: unit.id)
 
         if unitProgress.attemptCount == 0 {
             return "You have not attempted this unit yet."

@@ -9,34 +9,34 @@ struct ExerciseBody: View {
         switch exercise {
         case .multipleChoice(let prompt, let choices, let answerIndex, _):
             VStack(alignment: .leading, spacing: .spaceMd) {
-                Text(prompt).font(.portugueseText).fixedSize(horizontal: false, vertical: true)
+                Text(prompt).font(.targetText).fixedSize(horizontal: false, vertical: true)
                 ChoiceList(choices: choices, answerIndex: Int(answerIndex), answerText: choices[Int(answerIndex)], onSubmit: onSubmit)
             }
-        case .listeningChoice(let audioPt, let choices, let answerIndex, _, let clipKey):
+        case .listeningChoice(let audioTarget, let choices, let answerIndex, _, let clipKey):
             VStack(alignment: .leading, spacing: .spaceMd) {
-                ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioPt))
-                ChoiceList(choices: choices, answerIndex: Int(answerIndex), answerText: "\(audioPt) = \(choices[Int(answerIndex)])", onSubmit: onSubmit)
+                ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget))
+                ChoiceList(choices: choices, answerIndex: Int(answerIndex), answerText: "\(audioTarget) = \(choices[Int(answerIndex)])", onSubmit: onSubmit)
             }
-        case .fillBlank(let promptPt, let answers, let hintEn, _, _):
-            FillBlankView(promptPt: promptPt, answers: answers, hintEn: hintEn, completedSentence: exerciseSpokenText(exercise: exercise) ?? promptPt, onSubmit: onSubmit)
-        case .translateToPortuguese(let promptEn, let answers, _, _):
+        case .fillBlank(let promptTarget, let answers, let hintSource, _, _):
+            FillBlankView(promptTarget: promptTarget, answers: answers, hintSource: hintSource, completedSentence: exerciseSpokenText(exercise: exercise) ?? promptTarget, onSubmit: onSubmit)
+        case .translateToTarget(let promptSource, let answers, _, _):
             TypedAnswerView(
-                prompt: { Text(promptEn).font(.portugueseText) },
+                prompt: { Text(promptSource).font(.targetText) },
                 acceptedAnswers: answers,
                 answerText: answers.joined(separator: "  |  "),
                 onSubmit: onSubmit,
             )
-        case .dictation(let audioPt, let hintEn, _, let clipKey):
+        case .dictation(let audioTarget, let hintSource, _, let clipKey):
             TypedAnswerView(
-                prompt: { ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioPt)) },
-                acceptedAnswers: [audioPt],
-                answerText: "\(audioPt) = \(hintEn)",
+                prompt: { ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget)) },
+                acceptedAnswers: [audioTarget],
+                answerText: "\(audioTarget) = \(hintSource)",
                 onSubmit: onSubmit,
             )
-        case .orderWords(let promptEn, let words, let distractors, _, _):
-            OrderWordsView(promptEn: promptEn, words: words, distractors: distractors, onSubmit: onSubmit)
+        case .orderWords(let promptSource, let words, let distractors, _, _):
+            OrderWordsView(promptSource: promptSource, words: words, distractors: distractors, onSubmit: onSubmit)
         case .match(let prompt, let pairs, _):
-            MatchView(prompt: prompt ?? "Match the Portuguese with the English", pairs: pairs, onSubmit: onSubmit)
+            MatchView(prompt: prompt ?? "Match each phrase with its translation", pairs: pairs, onSubmit: onSubmit)
         }
     }
 }
@@ -153,7 +153,7 @@ struct AnswerField: View {
 
     var body: some View {
         TextField("Type your answer", text: $text)
-            .font(.portugueseText)
+            .font(.targetText)
             .textInputAutocapitalization(.never)
             .autocorrectionDisabled()
             .submitLabel(.done)
@@ -167,9 +167,9 @@ struct AnswerField: View {
 }
 
 struct FillBlankView: View {
-    let promptPt: String
+    let promptTarget: String
     let answers: [String]
-    let hintEn: String
+    let hintSource: String
     let completedSentence: String
     let onSubmit: (ExerciseResult) -> Void
 
@@ -177,9 +177,9 @@ struct FillBlankView: View {
         TypedAnswerView(
             prompt: {
                 VStack(alignment: .leading, spacing: .spaceXs) {
-                    Text(hintEn).font(.captionText).foregroundStyle(Color.inkMuted)
-                    Text(promptPt.replacingOccurrences(of: fillBlankMarker(), with: "_____"))
-                        .font(.portugueseText)
+                    Text(hintSource).font(.captionText).foregroundStyle(Color.inkMuted)
+                    Text(promptTarget.replacingOccurrences(of: fillBlankMarker(), with: "_____"))
+                        .font(.targetText)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             },
@@ -191,7 +191,7 @@ struct FillBlankView: View {
 }
 
 struct OrderWordsView: View {
-    let promptEn: String
+    let promptSource: String
     let sentence: String
     let onSubmit: (ExerciseResult) -> Void
 
@@ -199,8 +199,8 @@ struct OrderWordsView: View {
     @State private var placedTokenIds: [Int] = []
     @State private var answered: Bool = false
 
-    init(promptEn: String, words: [String], distractors: [String], onSubmit: @escaping (ExerciseResult) -> Void) {
-        self.promptEn = promptEn
+    init(promptSource: String, words: [String], distractors: [String], onSubmit: @escaping (ExerciseResult) -> Void) {
+        self.promptSource = promptSource
         self.sentence = words.joined(separator: " ")
         self.onSubmit = onSubmit
         _tokens = State(initialValue: OrderWordsView.shuffledAvoidingIdentity(words + distractors))
@@ -208,7 +208,7 @@ struct OrderWordsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
-            Text(promptEn).font(.portugueseText).fixedSize(horizontal: false, vertical: true)
+            Text(promptSource).font(.targetText).fixedSize(horizontal: false, vertical: true)
 
             FlowLayout {
                 ForEach(placedTokenIds, id: \.self) { tokenId in
@@ -242,7 +242,7 @@ struct OrderWordsView: View {
 
     private func tokenButton(_ text: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(text).font(.portugueseText)
+            Text(text).font(.targetText)
         }
         .buttonStyle(SquareButtonStyle(isCompact: true))
     }
@@ -313,10 +313,10 @@ struct MatchView: View {
                     ForEach(leftOrder, id: \.self) { pairIndex in
                         Button {
                             selectedLeft = pairIndex
-                            playPortuguese(pairIndex)
+                            playTarget(pairIndex)
                             resolveSelection()
                         } label: {
-                            Text(pairs[pairIndex].pt)
+                            Text(pairs[pairIndex].target)
                         }
                         .buttonStyle(ChoiceButtonStyle(mark: leftMark(pairIndex)))
                         .disabled(matchedPairIndexes.contains(pairIndex))
@@ -330,7 +330,7 @@ struct MatchView: View {
                             selectedRight = pairIndex
                             resolveSelection()
                         } label: {
-                            Text(pairs[pairIndex].en)
+                            Text(pairs[pairIndex].source)
                         }
                         .buttonStyle(ChoiceButtonStyle(mark: rightMark(pairIndex)))
                         .disabled(matchedPairIndexes.contains(pairIndex))
@@ -361,10 +361,10 @@ struct MatchView: View {
         return selectedRight == pairIndex ? .selected : .unmarked
     }
 
-    private func playPortuguese(_ pairIndex: Int) {
+    private func playTarget(_ pairIndex: Int) {
         let pair: PhrasePairRecord = pairs[pairIndex]
 
-        audioPlayer.play(AudioClip(clipKey: pair.clipKey, text: pair.pt), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(AudioClip(clipKey: pair.clipKey, text: pair.target), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
     }
 
     private func resolveSelection() {
@@ -390,7 +390,7 @@ struct MatchView: View {
         matchedPairIndexes.append(leftIndex)
 
         if matchedPairIndexes.count == pairs.count {
-            let answerText: String = pairs.map { pair in "\(pair.pt) = \(pair.en)" }.joined(separator: "; ")
+            let answerText: String = pairs.map { pair in "\(pair.target) = \(pair.source)" }.joined(separator: "; ")
 
             onSubmit(ExerciseResult.fromChoice(chosenCorrectly: mistakeCount == 0, answerText: answerText))
         }

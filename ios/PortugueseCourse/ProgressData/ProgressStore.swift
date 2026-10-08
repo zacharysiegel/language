@@ -25,34 +25,47 @@ final class ProgressStore {
         perform { try book.updateSettings(settings: settings) }
     }
 
-    func unitProgress(unitId: String) -> UnitProgressRecord {
+    func unitProgress(courseId: String, unitId: String) -> UnitProgressRecord {
         _ = changeCount
-        return book.unitProgress(unitId: unitId)
+        return book.unitProgress(courseId: courseId, unitId: unitId)
     }
 
-    func completedUnitCount() -> Int {
+    func completedUnitCount(courseId: String) -> Int {
         _ = changeCount
-        return Int(book.completedUnitCount())
+        return Int(book.completedUnitCount(courseId: courseId))
     }
 
-    func dueCardCount() -> Int {
+    func dueCardCount(courseId: String) -> Int {
         _ = changeCount
-        return Int(book.dueCardCount())
+        return Int(book.dueCardCount(courseId: courseId))
     }
 
-    func cardCount() -> Int {
+    func cardCount(courseId: String) -> Int {
         _ = changeCount
-        return Int(book.cardCount())
+        return Int(book.cardCount(courseId: courseId))
     }
 
-    func dueCardIds(limit: Int) -> [String] {
+    func dueCardIds(courseId: String, limit: Int) -> [String] {
         _ = changeCount
-        return book.dueCardIds(limit: UInt32(limit))
+        return book.dueCardIds(courseId: courseId, limit: UInt32(limit))
     }
 
-    func countByBox() -> [Int] {
+    func countByBox(courseId: String) -> [Int] {
         _ = changeCount
-        return book.countByBox().map { count in Int(count) }
+        return book.countByBox(courseId: courseId).map { count in Int(count) }
+    }
+
+    /// The course the learner opened last.
+    func lastCourseId() -> String? {
+        settings().lastCourseId
+    }
+
+    func rememberCourse(courseId: String) {
+        guard settings().lastCourseId != courseId else {
+            return
+        }
+
+        updateSettings { settings in settings.lastCourseId = courseId }
     }
 
     func streakDays() -> Int {
@@ -64,11 +77,12 @@ final class ProgressStore {
         errorMessage
     }
 
-    func recordPracticeSession(unitId: String, mode: PracticeModeRecord, correctCount: Int, totalCount: Int, vocabularyCount: Int) -> PracticeOutcomeRecord? {
+    func recordPracticeSession(courseId: String, unitId: String, mode: PracticeModeRecord, correctCount: Int, totalCount: Int, vocabularyCount: Int) -> PracticeOutcomeRecord? {
         var outcome: PracticeOutcomeRecord?
 
         perform {
             outcome = try book.recordPracticeSession(
+                courseId: courseId,
                 unitId: unitId,
                 mode: mode,
                 correctCount: UInt32(correctCount),
@@ -80,16 +94,16 @@ final class ProgressStore {
         return outcome
     }
 
-    func queueUnitVocabulary(unitId: String, vocabularyCount: Int) -> QueuedCardsRecord? {
+    func queueUnitVocabulary(courseId: String, unitId: String, vocabularyCount: Int) -> QueuedCardsRecord? {
         var queued: QueuedCardsRecord?
 
-        perform { queued = try book.queueUnitVocabulary(unitId: unitId, vocabularyCount: UInt32(vocabularyCount)) }
+        perform { queued = try book.queueUnitVocabulary(courseId: courseId, unitId: unitId, vocabularyCount: UInt32(vocabularyCount)) }
 
         return queued
     }
 
-    func gradeCard(cardId: String, remembered: Bool) {
-        perform { try book.gradeCard(cardId: cardId, remembered: remembered) }
+    func gradeCard(courseId: String, cardId: String, remembered: Bool) {
+        perform { try book.gradeCard(courseId: courseId, cardId: cardId, remembered: remembered) }
     }
 
     func exportJson() -> String? {

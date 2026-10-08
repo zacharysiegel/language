@@ -31,5 +31,5 @@ extension Font {
     static let titleText = Font.system(size: 17, weight: .semibold)
     static let headingText = Font.system(size: 22, weight: .semibold)
     static let figureText = Font.system(size: 38, weight: .semibold).monospacedDigit()
-    static let portugueseText = Font.system(size: 16, weight: .medium)
+    static let targetText = Font.system(size: 16, weight: .medium)
 }

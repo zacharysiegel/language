@@ -1,17 +1,15 @@
 import SwiftUI
 
 struct ProgressPage: View {
-    @Environment(CourseStore.self) private var courseStore
+    let outline: CourseOutlineRecord
+
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: .spaceLg) {
-                if let outline = courseStore.outline() {
-                    summary(outline)
-                    unitsSection(outline)
-                }
-
+                summary(outline)
+                unitsSection(outline)
                 deckSection()
                 ProgressTransfer()
             }
@@ -25,7 +23,7 @@ struct ProgressPage: View {
     private func summary(_ outline: CourseOutlineRecord) -> some View {
         VStack(alignment: .leading, spacing: .spaceXs) {
             PageHeader(caption: nil, title: "Progress")
-            Text("\(progressStore.completedUnitCount()) / \(outline.units.count) units completed").font(.dataText).foregroundStyle(Color.inkMuted)
+            Text("\(progressStore.completedUnitCount(courseId: outline.id)) / \(outline.units.count) units completed").font(.dataText).foregroundStyle(Color.inkMuted)
             Text("Study streak \(progressStore.streakDays()) day(s)").font(.dataText).foregroundStyle(Color.inkMuted)
         }
     }
@@ -36,7 +34,7 @@ struct ProgressPage: View {
             HairlineRule()
 
             ForEach(outline.units, id: \.id) { unit in
-                NavigationLink(value: UnitDestination(unitId: unit.id, tab: .overview)) {
+                NavigationLink(value: UnitDestination(courseId: outline.id, unitId: unit.id, tab: .overview)) {
                     HStack {
                         Text("\(unit.levelCode) \(unit.order): \(unit.title)")
                             .font(.bodyText)
@@ -45,7 +43,7 @@ struct ProgressPage: View {
 
                         Spacer()
 
-                        UnitStatusTag(unitProgress: progressStore.unitProgress(unitId: unit.id))
+                        UnitStatusTag(unitProgress: progressStore.unitProgress(courseId: outline.id, unitId: unit.id))
                     }
                     .padding(.vertical, .spaceSm)
                 }
@@ -58,7 +56,7 @@ struct ProgressPage: View {
 
     private func deckSection() -> some View {
         let intervals: [UInt32] = reviewIntervalDays()
-        let counts: [Int] = progressStore.countByBox()
+        let counts: [Int] = progressStore.countByBox(courseId: outline.id)
 
         return VStack(alignment: .leading, spacing: 0) {
             Text("Review deck").font(.titleText).padding(.bottom, .spaceSm)
