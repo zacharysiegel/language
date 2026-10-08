@@ -17,9 +17,9 @@ create table dialogue_line (
     position integer not null,
     speaker text not null,
     speaker_gender text not null,
-    pt text not null,
-    en text not null,
-    literal text,
+    target_text text not null,
+    source_text text not null,
+    source_literal text,
     clip_key text constraint dialogue_line_clip_fk references clip (clip_key),
     constraint dialogue_line_pk primary key (dialogue_position, position)
 )
@@ -52,9 +52,9 @@ create table grammar_table_cell (
 create table grammar_example (
     note_position integer not null constraint grammar_example_note_fk references grammar_note (position),
     position integer not null,
-    pt text not null,
-    en text not null,
-    literal text,
+    target_text text not null,
+    source_text text not null,
+    source_literal text,
     clip_key text constraint grammar_example_clip_fk references clip (clip_key),
     constraint grammar_example_pk primary key (note_position, position)
 )
@@ -70,9 +70,9 @@ create table reading (
 create table reading_paragraph (
     reading_position integer not null constraint reading_paragraph_reading_fk references reading (position),
     position integer not null,
-    pt text not null,
-    en text not null,
-    literal text,
+    target_text text not null,
+    source_text text not null,
+    source_literal text,
     clip_key text constraint reading_paragraph_clip_fk references clip (clip_key),
     constraint reading_paragraph_pk primary key (reading_position, position)
 )
@@ -85,7 +85,7 @@ create table exercise (
     exercise_kind text not null,
     prompt text,
     correct_choice_index integer,
-    hint_en text,
+    hint_source text,
     explanation text,
     clip_key text constraint exercise_clip_fk references clip (clip_key)
 )
@@ -119,9 +119,9 @@ create table exercise_word (
 create table exercise_pair (
     exercise_id integer not null constraint exercise_pair_exercise_fk references exercise (exercise_id),
     position integer not null,
-    pt text not null,
-    en text not null,
-    literal text,
+    target_text text not null,
+    source_text text not null,
+    source_literal text,
     clip_key text constraint exercise_pair_clip_fk references clip (clip_key),
     constraint exercise_pair_pk primary key (exercise_id, position)
 )

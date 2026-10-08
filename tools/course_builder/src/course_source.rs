@@ -8,15 +8,34 @@ use shared::course::{Curriculum, Unit};
 
 use crate::workspace::WorkspacePaths;
 
-pub fn read_curriculum(paths: &WorkspacePaths) -> Result<Curriculum, AppError> {
-    let text: String = fs::read_to_string(&paths.curriculum_path)?;
+/// The ids of every course directory that holds a curriculum, in name order.
+pub fn list_course_ids(paths: &WorkspacePaths) -> Result<Vec<String>, AppError> {
+    let mut course_ids: Vec<String> = Vec::new();
 
-    parse_json(&text, &paths.curriculum_path)
+    for directory_entry in fs::read_dir(&paths.courses_directory)? {
+        let course_id: String = directory_entry?.file_name().to_string_lossy().into_owned();
+
+        if paths.curriculum_path(&course_id).exists() {
+            course_ids.push(course_id);
+        }
+    }
+
+    course_ids.sort();
+
+    Ok(course_ids)
+}
+
+pub fn read_curriculum(paths: &WorkspacePaths, course_id: &str) -> Result<Curriculum, AppError> {
+    let curriculum_path: PathBuf = paths.curriculum_path(course_id);
+    let text: String = fs::read_to_string(&curriculum_path)
+        .map_err(|error| AppError::from(format!("could not read a curriculum; [path={} error={error}]", curriculum_path.display())))?;
+
+    parse_json(&text, &curriculum_path)
 }
 
 /// `None` when the unit has no file yet.
-pub fn read_unit(paths: &WorkspacePaths, unit_id: &str) -> Result<Option<Unit>, AppError> {
-    let unit_path: PathBuf = paths.unit_path(unit_id);
+pub fn read_unit(paths: &WorkspacePaths, course_id: &str, unit_id: &str) -> Result<Option<Unit>, AppError> {
+    let unit_path: PathBuf = paths.unit_path(course_id, unit_id);
     let read_result: Result<String, std::io::Error> = fs::read_to_string(&unit_path);
 
     match read_result {

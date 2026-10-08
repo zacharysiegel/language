@@ -13,7 +13,7 @@ use crate::artifact::ClipRecordings;
 use crate::audio_encoding::{self, AUDIO_FILE_EXTENSION, PARTIAL_FILE_EXTENSION};
 use crate::audio_plan::{AudioPlan, Utterance};
 use crate::kokoro::kokoro_synthesis;
-use crate::speech_engine::{ResolvedUtterance, SpeechEngineKind, spoken_text_for};
+use crate::speech_engine::{self, ResolvedUtterance, SpeechEngineKind, SpeechLanguage};
 use crate::work_pool;
 use crate::workspace::WorkspacePaths;
 
@@ -56,8 +56,8 @@ fn synthesize_missing_engine_audio(plan: &AudioPlan, paths: &WorkspacePaths, eng
         .utterances
         .iter()
         .filter(|(clip_key, _)| !is_valid_audio_file(&clip_file_path(&engine_directory, clip_key)))
-        .map(|(clip_key, utterance)| (clip_file_name(clip_key), resolve(engine, utterance)))
-        .collect();
+        .map(|(clip_key, utterance)| resolve(engine, utterance).map(|resolved| (clip_file_name(clip_key), resolved)))
+        .collect::<Result<Vec<(String, ResolvedUtterance)>, AppError>>()?;
 
     log::info!(
         "audio plan; [engine={} distinct_clips={} to_synthesize={}]",
@@ -80,11 +80,14 @@ fn clip_file_path(engine_directory: &Path, clip_key: &str) -> PathBuf {
     engine_directory.join(clip_file_name(clip_key))
 }
 
-fn resolve(engine: SpeechEngineKind, utterance: &Utterance) -> ResolvedUtterance {
-    ResolvedUtterance {
-        profile: engine.profile_for(utterance.persona),
+fn resolve(engine: SpeechEngineKind, utterance: &Utterance) -> Result<ResolvedUtterance, AppError> {
+    let language: &'static SpeechLanguage = speech_engine::speech_language(&utterance.language)?;
+
+    Ok(ResolvedUtterance {
+        language,
+        profile: engine.profile_for(language, utterance.persona),
         text: utterance.text.clone(),
-    }
+    })
 }
 
 /* Clips made by an older version of the pipeline are discarded, because they carry the same file names. */
@@ -139,7 +142,7 @@ fn run_say(output_path: &Path, utterance: &ResolvedUtterance) -> Result<(), AppE
         .args(["-v", utterance.profile.voice_id, "-o"])
         .arg(output_path)
         .arg("--")
-        .arg(spoken_text_for(&utterance.text))
+        .arg(speech_engine::spoken_text_for(utterance.language, &utterance.text))
         .spawn()?;
     let started: Instant = Instant::now();
 

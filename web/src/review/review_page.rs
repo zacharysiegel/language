@@ -2,14 +2,14 @@ use std::sync::Arc;
 
 use chrono::NaiveDate;
 use leptos::prelude::*;
-use shared::course::{CourseOutline, UnitOutline, VocabularyItem};
+use shared::course::{self, CourseOutline, UnitOutline, VocabularyItem};
 use shared::progress::ReviewDirectionKind;
 use shared::review::{ReviewCard, select_due_cards};
 
 use crate::audio_player::{PlayButton, audio_clip, play_in_background};
-use crate::course_data::course_gate;
+use crate::course_data::{course_gate, use_route_course_id};
 use crate::platform::{self, AudioClip};
-use crate::progress_state::{ProgressStore, use_progress_store};
+use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 
 const SESSION_CARD_LIMIT: usize = 20;
 const RANDOM_DIRECTION_THRESHOLD: f64 = 0.5;
@@ -17,35 +17,44 @@ const RANDOM_DIRECTION_THRESHOLD: f64 = 0.5;
 #[derive(Debug, Clone, PartialEq)]
 struct ReviewItem {
     card_id: String,
-    prompt_is_portuguese: bool,
+    prompt_is_target: bool,
 }
+
+const SOURCE_TO_TARGET_CODE: &str = "source_to_target";
+const TARGET_TO_SOURCE_CODE: &str = "target_to_source";
+const MIXED_CODE: &str = "mixed";
 
 #[component]
 pub fn ReviewPage() -> impl IntoView {
-    course_gate(|course: Arc<CourseOutline>| view! { <ReviewSetup course /> })
+    let course_id: Memo<String> = use_route_course_id();
+
+    remember_route_course(use_progress_store(), course_id);
+
+    course_gate(move || course_id.get(), |course: Arc<CourseOutline>| view! { <ReviewSetup course /> })
 }
 
 fn direction_from_code(code: &str) -> ReviewDirectionKind {
     match code {
-        "english_to_portuguese" => ReviewDirectionKind::EnglishToPortuguese,
-        "mixed" => ReviewDirectionKind::Mixed,
-        _ => ReviewDirectionKind::PortugueseToEnglish,
+        SOURCE_TO_TARGET_CODE => ReviewDirectionKind::SourceToTarget,
+        MIXED_CODE => ReviewDirectionKind::Mixed,
+        _ => ReviewDirectionKind::TargetToSource,
     }
 }
 
-fn build_session_items(progress_store: ProgressStore) -> Vec<ReviewItem> {
+fn build_session_items(course_id: &str, progress_store: ProgressStore) -> Vec<ReviewItem> {
     let now_milliseconds: i64 = platform::now_milliseconds();
 
     progress_store.read(|progress| {
         let direction: ReviewDirectionKind = progress.settings.review_direction;
+        let course_progress = progress.course_progress(course_id);
 
-        select_due_cards(progress.cards.values(), now_milliseconds, SESSION_CARD_LIMIT)
+        select_due_cards(course_progress.cards.values(), now_milliseconds, SESSION_CARD_LIMIT)
             .into_iter()
             .map(|card| ReviewItem {
                 card_id: card.id.clone(),
-                prompt_is_portuguese: match direction {
-                    ReviewDirectionKind::PortugueseToEnglish => true,
-                    ReviewDirectionKind::EnglishToPortuguese => false,
+                prompt_is_target: match direction {
+                    ReviewDirectionKind::TargetToSource => true,
+                    ReviewDirectionKind::SourceToTarget => false,
                     ReviewDirectionKind::Mixed => platform::random_unit() < RANDOM_DIRECTION_THRESHOLD,
                 },
             })
@@ -58,12 +67,13 @@ fn ReviewSetup(course: Arc<CourseOutline>) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let session_items: RwSignal<Option<Vec<ReviewItem>>> = RwSignal::new(None);
 
-    let due_count = move || {
-        let now_milliseconds: i64 = platform::now_milliseconds();
-
-        progress_store.read(|progress| progress.cards.values().filter(|card| card.due_milliseconds <= now_milliseconds).count())
-    };
-    let total_count = move || progress_store.read(|progress| progress.cards.len());
+    let course_id: StoredValue<String> = StoredValue::new(course.id.clone());
+    let target_name: String = course::language_name(&course.target_language);
+    let source_name: String = course::language_name(&course.source_language);
+    let target_to_source_label: StoredValue<String> = StoredValue::new(format!("{target_name} to {source_name}"));
+    let source_to_target_label: StoredValue<String> = StoredValue::new(format!("{source_name} to {target_name}"));
+    let due_count = move || progress_store.read(|progress| progress.course_progress(&course_id.get_value()).due_card_count(platform::now_milliseconds()));
+    let total_count = move || progress_store.read(|progress| progress.course_progress(&course_id.get_value()).cards.len());
     let current_direction = move || progress_store.read(|progress| progress.settings.review_direction);
 
     view! {
@@ -96,13 +106,13 @@ fn ReviewSetup(course: Arc<CourseOutline>) -> impl IntoView {
                                 progress_store.update(|progress| progress.settings.review_direction = direction);
                             }
                         >
-                            <option value="portuguese_to_english" selected=move || current_direction() == ReviewDirectionKind::PortugueseToEnglish>
-                                "Portuguese to English"
+                            <option value=TARGET_TO_SOURCE_CODE selected=move || current_direction() == ReviewDirectionKind::TargetToSource>
+                                {target_to_source_label.get_value()}
                             </option>
-                            <option value="english_to_portuguese" selected=move || current_direction() == ReviewDirectionKind::EnglishToPortuguese>
-                                "English to Portuguese"
+                            <option value=SOURCE_TO_TARGET_CODE selected=move || current_direction() == ReviewDirectionKind::SourceToTarget>
+                                {source_to_target_label.get_value()}
                             </option>
-                            <option value="mixed" selected=move || current_direction() == ReviewDirectionKind::Mixed>"Mixed"</option>
+                            <option value=MIXED_CODE selected=move || current_direction() == ReviewDirectionKind::Mixed>"Mixed"</option>
                         </select>
                     </label>
                 </div>
@@ -114,7 +124,7 @@ fn ReviewSetup(course: Arc<CourseOutline>) -> impl IntoView {
                             <button
                                 type="button"
                                 class="primary"
-                                on:click=move |_| session_items.set(Some(build_session_items(progress_store)))
+                                on:click=move |_| session_items.set(Some(build_session_items(&course_id.get_value(), progress_store)))
                             >
                                 "Start review"
                             </button>
@@ -139,6 +149,7 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
 
     let grade_current = {
         let items: Arc<Vec<ReviewItem>> = items.clone();
+        let course_id: String = course.id.clone();
 
         move |remembered: bool| {
             let Some(item) = items.get(current_index.get_untracked()) else {
@@ -148,10 +159,11 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
             let today: NaiveDate = platform::today();
 
             progress_store.update(|progress| {
-                let graded: Option<ReviewCard> = progress.cards.get(&item.card_id).map(|card| card.graded(remembered, now_milliseconds));
+                let course_progress = progress.course_progress_mut(&course_id);
+                let graded: Option<ReviewCard> = course_progress.cards.get(&item.card_id).map(|card| card.graded(remembered, now_milliseconds));
 
                 if let Some(graded) = graded {
-                    progress.cards.insert(item.card_id.clone(), graded);
+                    course_progress.cards.insert(item.card_id.clone(), graded);
                 }
 
                 progress.record_review_activity(today, 1);
@@ -179,7 +191,7 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
                     Some((unit, vocabulary_item)) => card_view(
                         unit,
                         vocabulary_item,
-                        item.prompt_is_portuguese,
+                        item.prompt_is_target,
                         index,
                         total_count,
                         revealed,
@@ -208,7 +220,7 @@ struct CardProgress {
 fn card_view(
     unit: &UnitOutline,
     item: &VocabularyItem,
-    prompt_is_portuguese: bool,
+    prompt_is_target: bool,
     index: usize,
     total_count: usize,
     revealed: RwSignal<bool>,
@@ -216,24 +228,24 @@ fn card_view(
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let card_progress: CardProgress = CardProgress { index, total_count };
-    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.pt);
+    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target);
 
     Effect::new(move |_| {
-        if prompt_is_portuguese || revealed.get() {
+        if prompt_is_target || revealed.get() {
             play_in_background(autoplay_clip.clone(), false);
         }
     });
 
-    let prompt_text: String = if prompt_is_portuguese { item.pt.clone() } else { item.en.clone() };
-    let answer_text: String = if prompt_is_portuguese { item.en.clone() } else { item.pt.clone() };
+    let prompt_text: String = if prompt_is_target { item.target.clone() } else { item.source.clone() };
+    let answer_text: String = if prompt_is_target { item.source.clone() } else { item.target.clone() };
     let unit_title: String = unit.title.clone();
     let item_audio: Option<String> = item.clip_key.clone();
-    let item_portuguese: String = item.pt.clone();
+    let item_target: String = item.target.clone();
     let example_audio: Option<String> = item.example.clip_key.clone();
-    let example_portuguese: String = item.example.pt.clone();
-    let example_english: String = item.example.en.clone();
+    let example_target: String = item.example.target.clone();
+    let example_source: String = item.example.source.clone();
     let note: Option<String> = item.note.clone();
-    let literal: Option<String> = item.literal.clone();
+    let literal: Option<String> = item.source_literal.clone();
     let grade_forgot = grade.clone();
 
     view! {
@@ -253,13 +265,13 @@ fn card_view(
 
                     view! {
                         <div class="flashcard-answer">
-                            <PlayButton clip_key=item_audio.clone() text=item_portuguese.clone() />
+                            <PlayButton clip_key=item_audio.clone() text=item_target.clone() />
                             {answer_text.clone()}
                         </div>
                         {literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> })}
                         <div class="example">
-                            <PlayButton clip_key=example_audio.clone() text=example_portuguese.clone() />
-                            {example_portuguese.clone()}" "<span class="muted">{example_english.clone()}</span>
+                            <PlayButton clip_key=example_audio.clone() text=example_target.clone() />
+                            {example_target.clone()}" "<span class="muted">{example_source.clone()}</span>
                         </div>
                         {note.map(|note| view! { <div class="note">{note}</div> })}
                         <div class="row">

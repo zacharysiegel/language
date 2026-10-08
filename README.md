@@ -43,7 +43,7 @@ Building in Xcode reruns the last two scripts. The app reads `/discovery` from `
 
 ## Layout
 
-- `data/curriculum.json` lists the units; `data/units/<id>.json` holds one unit each. The format is described in `docs/authoring.md`.
+- `data/courses/<course id>/curriculum.json` describes a course (its languages, levels and units); `units/<id>.json` beside it holds one unit each. The format is described in `docs/authoring.md`.
 - `shared/` has the course model and its validation, the shard schema and reader, the artifact contract (manifest, discovery, verified fetch and cache), answer checking, the review schedule and the progress model.
 - `tools/course_builder/` validates the data, synthesizes the audio, writes bundles, and publishes them.
 - `web/` is the Leptos app and the server that hosts it, `/discovery`, and the local repository.

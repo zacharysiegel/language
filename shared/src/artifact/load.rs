@@ -184,8 +184,15 @@ mod tests {
   "manifest_schema_version": {schema_version},
   "version": "v1",
   "artifact_created": "2026-10-07T12:00:00Z",
-  "course": {{ "relative_path": "data/course-{sha256}.sqlite", "size_bytes": 3, "sha256": "{sha256}" }},
-  "units": {{}},
+  "courses": {{
+    "c": {{
+      "title": "t",
+      "target_language": "pt-BR",
+      "source_language": "en",
+      "outline": {{ "relative_path": "data/c/course-{sha256}.sqlite", "size_bytes": 3, "sha256": "{sha256}" }},
+      "units": {{}}
+    }}
+  }},
   "voice_pipeline_revisions": {{}}
 }}"#,
             schema_version = manifest::MANIFEST_SCHEMA_VERSION,

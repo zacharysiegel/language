@@ -29,8 +29,8 @@ mod browser {
 
     use super::*;
 
-    const PROGRESS_STORAGE_KEY: &str = "portuguese-course.progress.v1";
-    const UNREADABLE_PROGRESS_STORAGE_KEY: &str = "portuguese-course.progress.v1.unreadable";
+    const PROGRESS_STORAGE_KEY: &str = "language.progress.v2";
+    const UNREADABLE_PROGRESS_STORAGE_KEY: &str = "language.progress.v2.unreadable";
     const SLOW_PLAYBACK_RATE: f64 = 0.7;
     const NORMAL_PLAYBACK_RATE: f64 = 1.0;
     const CLIP_ENDED: &str = "ended";

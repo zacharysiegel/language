@@ -22,8 +22,17 @@ impl ProgressStore {
         self.progress.set(replacement);
     }
 
-    /// Adds missing words and brings words that are scheduled for later back to the review queue.
-    pub fn queue_unit_vocabulary_for_review(&self, unit_id: &str, vocabulary_count: usize) -> QueuedCards {
+    /// Records the course as the one the learner opened last, when it is not already.
+    pub fn remember_course(&self, course_id: &str) {
+        let is_remembered: bool = self.progress.with_untracked(|progress| progress.settings.last_course_id.as_deref() == Some(course_id));
+
+        if !is_remembered {
+            self.progress.update(|progress| progress.settings.last_course_id = Some(course_id.to_string()));
+        }
+    }
+
+    /// Adds missing words and brings words that are scheduled for later back to the course's review queue.
+    pub fn queue_unit_vocabulary_for_review(&self, course_id: &str, unit_id: &str, vocabulary_count: usize) -> QueuedCards {
         let card_ids: Vec<String> = (0..vocabulary_count).map(|item_index| vocabulary_card_id(unit_id, item_index)).collect();
         let now_milliseconds: i64 = platform::now_milliseconds();
         let mut queued: QueuedCards = QueuedCards {
@@ -32,7 +41,7 @@ impl ProgressStore {
         };
 
         self.progress.update(|progress| {
-            queued = progress.queue_cards_for_review(card_ids.into_iter(), now_milliseconds);
+            queued = progress.course_progress_mut(course_id).queue_cards_for_review(card_ids.into_iter(), now_milliseconds);
         });
 
         queued
@@ -76,6 +85,11 @@ pub fn provide_progress_store() {
     Effect::new(move |_| platform::set_audio_engine(progress.with(|current| current.settings.audio_engine)));
 
     provide_context(ProgressStore { progress });
+}
+
+/// Keeps the course of the current page recorded as the one the learner opened last.
+pub fn remember_route_course(progress_store: ProgressStore, course_id: Memo<String>) {
+    Effect::new(move |_| progress_store.remember_course(&course_id.get()));
 }
 
 pub fn use_progress_store() -> ProgressStore {

@@ -1,16 +1,18 @@
 # Unit authoring guide
 
-Each unit is one JSON file at `data/units/<unit-id>.json`. The unit ids, levels, titles, goals, grammar focus and vocabulary themes are in `data/curriculum.json`; follow them. Check your file with `node tools/validate.mjs <unit-id>` from the project root and fix every error before finishing.
+A course lives in `data/courses/<course id>/`. Its `curriculum.json` names the course id (`<target language>.<source language>.<curriculum name>`, for example `pt_br.en.foundations`), the title, the `target_language` taught and the `source_language` it is taught in (BCP 47 tags such as `pt-BR` and `en`), the levels (each with `code`, `title` and `requires_readings`), and the units with their ids, levels, titles, goals, grammar focus and vocabulary themes; follow them. Each unit is one JSON file at `units/<unit-id>.json` in the course directory. Check your file with `cargo run --package course_builder -- validate --course <course id> <unit-id>` and fix every error before finishing.
+
+Fields named `target` hold text in the language taught; fields named `source` hold text in the language the course is taught in; `source_literal` is the target text rendered word for word in the source language. The rules below that name Portuguese and English are this course's instances of those roles.
 
 ## Language rules (Brazilian Portuguese only)
 
 - Brazilian vocabulary, spelling and grammar throughout: `você`, `a gente`, `ônibus`, `trem`, `celular`, `café da manhã`, `banheiro`, `geladeira`, `suco`, `moça`, `fato`, `contato`.
 - Progressive is `estou fazendo`, never `estou a fazer`. Colloquial object pronouns go before the verb (`me disse`, `te amo`).
 - Use natural, current speech in dialogues: `tá`, `pra`, `né` are fine in informal dialogue at A2 and above (sparingly at A1). Keep grammar notes honest about formal vs colloquial usage.
-- Every `pt` string must be correct, natural and fully spelled with accents. Re-read everything once for accent, agreement and conjugation errors before you finish.
-- Every `pt` string is spoken by a text-to-speech engine. It must be plain speakable text: no slashes (write two separate items instead of `obrigado/obrigada`), no parentheses, no markdown, no symbols, no em or en dashes, no `___`. Write numbers as words when they are short. Keep each string under about 200 characters.
-- English (`en`, `explanation`, `prompt`, `hint_en`, `context`, `note`) is plain natural English. Explanations and notes may contain `\n\n` to separate paragraphs. Plain text only, no markdown syntax.
-- Mentions of European Portuguese as a contrast belong only in `note` or `explanation` text (English), never inside a `pt` field.
+- Every `target` string must be correct, natural and fully spelled with accents. Re-read everything once for accent, agreement and conjugation errors before you finish.
+- Every `target` string is spoken by a text-to-speech engine. It must be plain speakable text: no slashes (write two separate items instead of `obrigado/obrigada`), no parentheses, no markdown, no symbols, no em or en dashes, no `___`. Write numbers as words when they are short. Keep each string under about 200 characters.
+- English (`source`, `explanation`, `prompt`, `hint_source`, `context`, `note`) is plain natural English. Explanations and notes may contain `\n\n` to separate paragraphs. Plain text only, no markdown syntax.
+- Mentions of European Portuguese as a contrast belong only in `note` or `explanation` text (English), never inside a `target` field.
 - Difficulty must match the level. A1 uses very short sentences and only the grammar covered so far (the current unit's focus plus all earlier units in the curriculum). A2 can use the past tenses once introduced; B1 and B2 use longer, richer text.
 - Recycle vocabulary and grammar from earlier units in the sequence, but each unit must introduce its own new vocabulary and must not require grammar from later units.
 
@@ -19,7 +21,7 @@ Each unit is one JSON file at `data/units/<unit-id>.json`. The unit ids, levels,
 The learner wants to understand the language as a system before memorizing words. Vocabulary is secondary: it is easy to add to a firm foundation.
 
 - Teach the rule, then the examples. Every grammar note states the underlying principle (what the pattern is, why it exists, where it stops working) before any list of examples, in plain English, with the technical term defined the first time it is used.
-- Nothing is used before it is explained. Every letter, sound, diacritic, grammatical term, verb form and construction that appears in a `pt` string, example or exercise must have been explained in an earlier unit or in this one. When a unit introduces a word with an accent mark, a nasal vowel, an unusual spelling or a silent letter, a grammar note in the same unit (titled "Spelling and sound: ...") explains why it is written and pronounced that way, using the rules from the first three units. Never write an accented word without the reader knowing what the accent does.
+- Nothing is used before it is explained. Every letter, sound, diacritic, grammatical term, verb form and construction that appears in a `target` string, example or exercise must have been explained in an earlier unit or in this one. When a unit introduces a word with an accent mark, a nasal vowel, an unusual spelling or a silent letter, a grammar note in the same unit (titled "Spelling and sound: ...") explains why it is written and pronounced that way, using the rules from the first three units. Never write an accented word without the reader knowing what the accent does.
 - Prefer a small, well-chosen vocabulary that serves the grammar over long thematic lists: 12 to 20 items is enough, chosen to illustrate the patterns being taught.
 - Explain in terms of the structure of the language, with contrasts to English: what English does with word order or auxiliary verbs, what Portuguese does with endings, agreement or contractions.
 - Exercises test the principles (apply the rule, choose the form, explain the spelling, place the stress) at least as much as they test recall of words.
@@ -28,11 +30,11 @@ The learner wants to understand the language as a system before memorizing words
 
 The learner wants three separate things, never blended into one gloss: the literal meaning, the natural translation, and how the expression is used.
 
-- `en` is the natural English equivalent, short and clean, with no parenthetical usage notes. For example `"en": "excuse me"`.
-- `literal` is the word-for-word rendering that follows the Portuguese structure and word order, so the learner sees what the words actually say. Join the English words that stand for one Portuguese word with a hyphen, and show structural differences honestly. For example `"literal": "with license"` for `com licença`, `"literal": "I-am with hunger"` for `estou com fome`, `"literal": "I have 30 years"` for `tenho trinta anos`, `"literal": "all well?"` for `tudo bem?`. Add `literal` to every vocabulary item, dialogue line, grammar example and reading paragraph where the natural translation differs significantly from the word-for-word rendering: idioms, fixed phrases, constructions where Portuguese uses a different structure (estar com, ter de, gostar de, ficar, dar, haver and so on), and false friends. Omit it when the natural translation is already essentially word-for-word (for example `o livro`, `the book`). Never fabricate a literal meaning: it must be a faithful word-level gloss, and when a word is itself opaque (an old or idiomatic form), gloss its parts as far as they are transparent.
+- `source` is the natural English equivalent, short and clean, with no parenthetical usage notes. For example `"source": "excuse me"`.
+- `source_literal` is the word-for-word rendering that follows the Portuguese structure and word order, so the learner sees what the words actually say. Join the English words that stand for one Portuguese word with a hyphen, and show structural differences honestly. For example `"source_literal": "with license"` for `com licença`, `"source_literal": "I-am with hunger"` for `estou com fome`, `"source_literal": "I have 30 years"` for `tenho trinta anos`, `"source_literal": "all well?"` for `tudo bem?`. Add `source_literal` to every vocabulary item, dialogue line, grammar example and reading paragraph where the natural translation differs significantly from the word-for-word rendering: idioms, fixed phrases, constructions where Portuguese uses a different structure (estar com, ter de, gostar de, ficar, dar, haver and so on), and false friends. Omit it when the natural translation is already essentially word-for-word (for example `o livro`, `the book`). Never fabricate a literal meaning: it must be a faithful word-level gloss, and when a word is itself opaque (an old or idiomatic form), gloss its parts as far as they are transparent.
 - `note` (and the lesson text) explain the usage: when and to whom you say it, register, regional differences, and why the literal and natural meanings diverge (the etymology or logic behind the idiom).
 
-The `literal` field is allowed on vocabulary items, dialogue lines and every phrase pair (grammar examples, reading paragraphs, match pairs). It is not spoken.
+The `source_literal` field is allowed on vocabulary items, dialogue lines and every phrase pair (grammar examples, reading paragraphs, match pairs). It is not spoken.
 
 ## File format
 
@@ -45,12 +47,12 @@ The `literal` field is allowed on vocabulary items, dialogue lines and every phr
   "objectives": ["Three to five 'I can...' style goals as full English sentences"],
   "vocabulary": [
     {
-      "pt": "olá",
-      "en": "hello",
-      "literal": "optional word-for-word gloss, only when it differs significantly",
-      "pos": "interjection",
+      "target": "olá",
+      "source": "hello",
+      "source_literal": "optional word-for-word gloss, only when it differs significantly",
+      "part_of_speech": "interjection",
       "note": "optional short English usage note",
-      "example": {"pt": "Olá, tudo bem?", "en": "Hello, how are you?"}
+      "example": {"target": "Olá, tudo bem?", "source": "Hello, how are you?"}
     }
   ],
   "dialogues": [
@@ -59,8 +61,8 @@ The `literal` field is allowed on vocabulary items, dialogue lines and every phr
       "title": "Meeting at a party",
       "context": "One or two English sentences setting the scene.",
       "lines": [
-        {"speaker": "Ana", "gender": "f", "pt": "Oi, tudo bem?", "en": "Hi, how are you?"},
-        {"speaker": "Carlos", "gender": "m", "pt": "Tudo bem, e você?", "en": "Fine, and you?"}
+        {"speaker": "Ana", "gender": "f", "target": "Oi, tudo bem?", "source": "Hi, how are you?"},
+        {"speaker": "Carlos", "gender": "m", "target": "Tudo bem, e você?", "source": "Fine, and you?"}
       ]
     }
   ],
@@ -69,7 +71,7 @@ The `literal` field is allowed on vocabulary items, dialogue lines and every phr
       "title": "Short title",
       "explanation": "Clear plain-text English explanation written for an English speaker. Explain the rule, the pattern, the exceptions that matter at this level and where Brazilian usage differs from textbook or European forms. Use \n\n between paragraphs.",
       "table": {"headers": ["Pronoun", "Form"], "rows": [["eu", "sou"], ["você", "é"]]},
-      "examples": [{"pt": "Eu sou brasileiro.", "en": "I am Brazilian."}]
+      "examples": [{"target": "Eu sou brasileiro.", "source": "I am Brazilian."}]
     }
   ],
   "culture": {"title": "Short title", "text": "Two or more plain-text English paragraphs about Brazilian culture or usage that relates to the unit's theme. Include a few Portuguese words inline in plain text if helpful."},
@@ -77,8 +79,8 @@ The `literal` field is allowed on vocabulary items, dialogue lines and every phr
     {
       "id": "r1",
       "title": "Title",
-      "paragraphs": [{"pt": "A paragraph of Portuguese text.", "en": "Its English translation."}],
-      "questions": [{"type": "multiple_choice", "prompt": "...", "choices": ["...", "...", "..."], "answer": 0, "explanation": "..."}]
+      "paragraphs": [{"target": "A paragraph of Portuguese text.", "source": "Its English translation."}],
+      "questions": [{"type": "multiple_choice", "prompt": "...", "choices": ["...", "...", "..."], "answer_index": 0, "explanation": "..."}]
     }
   ],
   "exercises": []
@@ -87,47 +89,47 @@ The `literal` field is allowed on vocabulary items, dialogue lines and every phr
 
 Rules for each section:
 
-- `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `pos` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `pt` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `pt` value within the unit.
+- `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `part_of_speech` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `target` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `target` value within the unit.
 - `dialogues`: 2 to 3 dialogues, each with 6 to 14 lines, 2 to 4 distinct speakers, speaker names consistent within a dialogue and `gender` of `f` or `m` on every line matching the speaker. Dialogues must use the unit's vocabulary and grammar focus in realistic situations. A dialogue id must be unique within the unit (`d1`, `d2`, ...).
 - `grammar`: 2 to 4 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, Brazilian usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
 - `culture`: one note of at least 200 characters.
 - `readings`: optional at A1 and A2 (omit the key or use `[]`), required at B1 and B2 (at least 1; 2 for B2 units). A reading has at least 2 paragraphs of real connected text at the level, and at least 2 (ideally 3 to 4) `multiple_choice` comprehension questions.
-- `exercises`: at least 22 in total, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_pt 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30 exercises. Cover the whole unit: vocabulary, the grammar notes, and the dialogues.
+- `exercises`: at least 22 in total, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30 exercises. Cover the whole unit: vocabulary, the grammar notes, and the dialogues.
 
 ## Exercise types
 
 ```json
-{"type": "multiple_choice", "prompt": "How do you say 'good evening'?", "choices": ["Boa noite", "Boa tarde", "Bom dia"], "answer": 1, "explanation": "optional short English explanation"}
+{"type": "multiple_choice", "prompt": "How do you say 'good evening'?", "choices": ["Boa noite", "Boa tarde", "Bom dia"], "answer_index": 1, "explanation": "optional short English explanation"}
 ```
-Prompts may be English or Portuguese questions. 3 to 5 unique choices. `answer` is the zero-based index. Vary the position of the correct answer across exercises.
+Prompts may be English or Portuguese questions. 3 to 5 unique choices. `answer_index` is the zero-based index. Vary the position of the correct answer across exercises.
 
 ```json
-{"type": "fill_blank", "prompt_pt": "Eu ___ brasileiro.", "answer": ["sou"], "hint_en": "I am Brazilian.", "explanation": "optional"}
+{"type": "fill_blank", "prompt_target": "Eu ___ brasileiro.", "answers": ["sou"], "hint_source": "I am Brazilian.", "explanation": "optional"}
 ```
-Exactly one `___` in `prompt_pt`. `answer` is an array of acceptable fillers (lowercase, no punctuation, may be more than one word, for example `["vou comer"]`). Include every genuinely acceptable alternative.
+Exactly one `___` in `prompt_target`. `answers` is an array of acceptable fillers (lowercase, no punctuation, may be more than one word, for example `["vou comer"]`). Include every genuinely acceptable alternative.
 
 ```json
-{"type": "translate_to_pt", "prompt_en": "I live in São Paulo.", "answers": ["Eu moro em São Paulo.", "Moro em São Paulo."], "explanation": "optional"}
+{"type": "translate_to_target", "prompt_source": "I live in São Paulo.", "answers": ["Eu moro em São Paulo.", "Moro em São Paulo."], "explanation": "optional"}
 ```
 `answers` lists every natural correct translation the learner could reasonably type, including versions with and without the subject pronoun where both are natural. Keep the sentence short and tightly constrained by the English so the answer set is practical.
 
 ```json
-{"type": "order_words", "prompt_en": "Where do you live?", "words": ["Onde", "você", "mora", "?"], "distractors": ["moro"]}
+{"type": "order_words", "prompt_source": "Where do you live?", "words": ["Onde", "você", "mora", "?"], "distractors": ["moro"]}
 ```
 `words` are the tokens in the correct order. Punctuation must be attached to the preceding word (`mora?`), not a separate token, and no token contains a space. The learner rebuilds the sentence from the shuffled tokens plus the optional `distractors` (at most 3). Keep the sentence to 3 to 10 tokens, and make sure the token order is the only correct order.
 
 ```json
-{"type": "listening_choice", "audio_pt": "Eu moro no Rio de Janeiro.", "choices": ["I live in Rio de Janeiro.", "I work in Rio de Janeiro.", "I study in Rio de Janeiro."], "answer": 0}
+{"type": "listening_choice", "audio_target": "Eu moro no Rio de Janeiro.", "choices": ["I live in Rio de Janeiro.", "I work in Rio de Janeiro.", "I study in Rio de Janeiro."], "answer_index": 0}
 ```
-The learner hears `audio_pt` and picks the English meaning. Distractors must differ in a way that can be heard (a different key word), not in a way the audio cannot resolve.
+The learner hears `audio_target` and picks the English meaning. Distractors must differ in a way that can be heard (a different key word), not in a way the audio cannot resolve.
 
 ```json
-{"type": "dictation", "audio_pt": "Bom dia, tudo bem?", "hint_en": "Good morning, how are you?"}
+{"type": "dictation", "audio_target": "Bom dia, tudo bem?", "hint_source": "Good morning, how are you?"}
 ```
 The learner types what they hear. Keep it short (3 to 10 words) and unambiguous in spelling.
 
 ```json
-{"type": "match", "prompt": "Match the Portuguese with the English", "pairs": [{"pt": "o pai", "en": "the father"}, {"pt": "a mãe", "en": "the mother"}, {"pt": "o irmão", "en": "the brother"}, {"pt": "a irmã", "en": "the sister"}]}
+{"type": "match", "prompt": "Match the Portuguese with the English", "pairs": [{"target": "o pai", "source": "the father"}, {"target": "a mãe", "source": "the mother"}, {"target": "o irmão", "source": "the brother"}, {"target": "a irmã", "source": "the sister"}]}
 ```
 4 to 6 pairs, all unambiguous.
 

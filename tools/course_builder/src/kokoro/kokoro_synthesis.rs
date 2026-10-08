@@ -8,7 +8,7 @@ use crate::kokoro::kokoro_models::{self, KokoroFiles};
 use crate::kokoro::kokoro_phonemizer::{Phonemizer, split_into_chunks};
 use crate::kokoro::kokoro_short_words::{self, CARRIER_PHONEMES};
 use crate::kokoro::kokoro_synthesizer::{self, KokoroSynthesizer, KokoroVocabulary, SAMPLE_RATE, VoiceTables};
-use crate::speech_engine::{ResolvedUtterance, spoken_text_for};
+use crate::speech_engine::{self, ResolvedUtterance};
 use crate::work_pool;
 
 const INFERENCE_WORKER_COUNT: usize = 4;
@@ -63,22 +63,22 @@ fn prepare_clips<'a>(clips: &'a [(String, ResolvedUtterance)], files: &KokoroFil
     let mut prepared_clips: Vec<PreparedClip> = Vec::with_capacity(clips.len());
 
     for (file_name, utterance) in clips {
-        let chunks: Vec<PreparedChunk> = split_into_chunks(&spoken_text_for(&utterance.text))
-            .iter()
-            .map(|chunk| {
-                let phonemes: String = phonemizer.phonemize(chunk);
-                let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
+        let mut chunks: Vec<PreparedChunk> = Vec::new();
 
-                let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT && !phonemes.contains(' ')).then(|| {
-                    let bare_phonemes: &str = phonemes.trim_end_matches(|symbol: char| ".,!?;:…".contains(symbol));
+        for chunk in split_into_chunks(&speech_engine::spoken_text_for(utterance.language, &utterance.text)) {
+            let phonemes: String = phonemizer.phonemize(utterance.language.espeak_voice, &chunk)?;
+            let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
 
-                    vocabulary.tokens_for(&format!("{bare_phonemes}, {CARRIER_PHONEMES}"))
-                });
+            let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT && !phonemes.contains(' ')).then(|| {
+                let bare_phonemes: &str = phonemes.trim_end_matches(|symbol: char| ".,!?;:…".contains(symbol));
 
-                PreparedChunk { phonemes, tokens, carrier_tokens }
-            })
-            .filter(|chunk| !chunk.tokens.is_empty())
-            .collect();
+                vocabulary.tokens_for(&format!("{bare_phonemes}, {CARRIER_PHONEMES}"))
+            });
+
+            if !tokens.is_empty() {
+                chunks.push(PreparedChunk { phonemes, tokens, carrier_tokens });
+            }
+        }
 
         if chunks.is_empty() {
             return Err(AppError::from(format!("text produced no phonemes; [text={}]", utterance.text)));

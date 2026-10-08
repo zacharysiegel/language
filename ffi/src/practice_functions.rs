@@ -105,9 +105,9 @@ mod tests {
     #[test]
     fn exercise_spoken_text_completes_a_fill_blank_sentence() {
         let exercise: ExerciseRecord = ExerciseRecord::FillBlank {
-            prompt_pt: "Eu ___ brasileiro.".to_string(),
+            prompt_target: "Eu ___ brasileiro.".to_string(),
             answers: vec!["sou".to_string()],
-            hint_en: "I am Brazilian.".to_string(),
+            hint_source: "I am Brazilian.".to_string(),
             explanation: None,
             clip_key: None,
         };

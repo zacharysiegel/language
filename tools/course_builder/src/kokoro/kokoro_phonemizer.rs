@@ -7,7 +7,6 @@ use shared::AppError;
 
 const ESPEAK_DATA_DIRECTORY_VARIABLE: &str = "ESPEAKNG_DATA_DIRECTORY";
 const ESPEAK_DATA_DIRECTORY_NAME: &str = "espeak-ng-data";
-const ESPEAK_VOICE: &str = "pt-br";
 const TIE_CHARACTER: char = '^';
 const PUNCTUATION_CHARACTERS: &str = ";:,.!?¡¿—…\"«»“”";
 const SENTENCE_END_CHARACTERS: &str = ".!?";
@@ -28,8 +27,8 @@ const TIED_PHONEME_SYMBOLS: [(&str, &str); 11] = [
     ("ɔ^ɪ", "Y"),
 ];
 
-// eSpeak keeps its voice and clause position in process-wide state.
-static ESPEAK_SESSION: Mutex<()> = Mutex::new(());
+// eSpeak keeps its voice and clause position in process-wide state; the session holds the voice it last set.
+static ESPEAK_SESSION: Mutex<Option<String>> = Mutex::new(None);
 static ESPEAK_INITIALIZATION: OnceLock<Result<(), String>> = OnceLock::new();
 
 pub struct Phonemizer;
@@ -45,8 +44,14 @@ impl Phonemizer {
     }
 
     /// Phonemes in the symbol set of Kokoro's vocabulary, with the punctuation of `text` kept in place.
-    pub fn phonemize(&self, text: &str) -> String {
-        let session: MutexGuard<'_, ()> = ESPEAK_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    pub fn phonemize(&self, espeak_voice: &str, text: &str) -> Result<String, AppError> {
+        let mut session: MutexGuard<'_, Option<String>> = ESPEAK_SESSION.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+
+        if session.as_deref() != Some(espeak_voice) {
+            set_espeak_voice(espeak_voice)?;
+            *session = Some(espeak_voice.to_string());
+        }
+
         let text: String = text.replace('«', "\u{201c}").replace('»', "\u{201d}");
         let mut phonemes: String = String::new();
         let mut words: String = String::new();
@@ -67,8 +72,21 @@ impl Phonemizer {
             phonemes = phonemes.replace(tied, symbol);
         }
 
-        phonemes.replace(TIE_CHARACTER, "").replace('-', "")
+        Ok(phonemes.replace(TIE_CHARACTER, "").replace('-', ""))
     }
+}
+
+fn set_espeak_voice(espeak_voice: &str) -> Result<(), AppError> {
+    let voice: CString = CString::new(espeak_voice).map_err(|error| AppError::from(error.to_string()))?;
+
+    // SAFETY: `voice` is a valid NUL-terminated string that outlives the call; the caller holds the eSpeak session.
+    let status: i32 = unsafe { espeak_rs_sys::espeak_SetVoiceByName(voice.as_ptr()) };
+
+    if status != espeak_rs_sys::espeak_ERROR_EE_OK as i32 {
+        return Err(AppError::from(format!("eSpeak NG has no such voice; [voice={espeak_voice} status={status}]")));
+    }
+
+    Ok(())
 }
 
 fn append_words(phonemes: &mut String, words: &mut String) {
@@ -88,7 +106,6 @@ fn append_words(phonemes: &mut String, words: &mut String) {
 fn initialize_espeak() -> Result<(), String> {
     let data_directory: PathBuf = locate_espeak_data_directory()?;
     let data_path: CString = CString::new(data_directory.to_string_lossy().as_ref()).map_err(|error| error.to_string())?;
-    let voice: CString = CString::new(ESPEAK_VOICE).map_err(|error| error.to_string())?;
 
     // SAFETY: both pointers are valid, NUL-terminated and outlive the calls; initialization runs once, under the OnceLock.
     let sample_rate: i32 = unsafe {
@@ -102,13 +119,6 @@ fn initialize_espeak() -> Result<(), String> {
 
     if sample_rate <= 0 {
         return Err(format!("eSpeak NG did not initialize; [data={} code={sample_rate}]", data_directory.display()));
-    }
-
-    // SAFETY: `voice` is a valid NUL-terminated string that outlives the call.
-    let status: i32 = unsafe { espeak_rs_sys::espeak_SetVoiceByName(voice.as_ptr()) };
-
-    if status != espeak_rs_sys::espeak_ERROR_EE_OK as i32 {
-        return Err(format!("eSpeak NG has no such voice; [voice={ESPEAK_VOICE} status={status}]"));
     }
 
     Ok(())
@@ -234,20 +244,21 @@ fn split_into_sentences(text: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::speech_engine::BRAZILIAN_PORTUGUESE;
 
     #[test]
     fn phonemize_keeps_punctuation_and_uses_kokoro_symbols() {
         let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
 
-        assert_eq!(phonemizer.phonemize("Nossa, de novo?"), "nˈɔsæ, ʤy nˈovʊ?");
-        assert_eq!(phonemizer.phonemize("Estou com dor de barriga."), "estˌow koŋ dˈor ʤy bˌaxˈiɡæ.");
+        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "Nossa, de novo?").unwrap(), "nˈɔsæ, ʤy nˈovʊ?");
+        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "Estou com dor de barriga.").unwrap(), "estˌow koŋ dˈor ʤy bˌaxˈiɡæ.");
     }
 
     #[test]
     fn phonemize_single_word_has_no_punctuation() {
         let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
 
-        assert_eq!(phonemizer.phonemize("desejar"), "dˌezeʒˈar");
+        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "desejar").unwrap(), "dˌezeʒˈar");
     }
 
     #[test]

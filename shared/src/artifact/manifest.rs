@@ -7,7 +7,7 @@ use crate::AppError;
 use crate::artifact::{content_address, schema_version};
 
 pub const MANIFEST_FILENAME: &str = "manifest.json";
-pub const MANIFEST_SCHEMA_VERSION: u32 = 1;
+pub const MANIFEST_SCHEMA_VERSION: u32 = 2;
 pub const MANIFEST_SCHEMA_VERSION_FIELD: &str = "manifest_schema_version";
 pub const SUBDIR_DATA: &str = "data";
 pub const SUBDIR_AUDIO: &str = "audio";
@@ -44,14 +44,43 @@ pub struct Manifest {
     pub manifest_schema_version: u32,
     pub version: String,
     pub artifact_created: DateTime<Utc>,
-    pub course: ManifestEntry,
-    pub units: BTreeMap<String, ManifestEntry>,
+    /// Every published course, by course id.
+    pub courses: BTreeMap<String, ManifestCourse>,
     pub voice_pipeline_revisions: BTreeMap<String, u32>,
 }
 
 impl Manifest {
     pub fn file_entries(&self) -> impl Iterator<Item = &ManifestEntry> {
-        std::iter::once(&self.course).chain(self.units.values())
+        self.courses.values().flat_map(ManifestCourse::file_entries)
+    }
+
+    pub fn find_course(&self, course_id: &str) -> Result<&ManifestCourse, AppError> {
+        self.courses
+            .get(course_id)
+            .ok_or_else(|| AppError::from(format!("the published version has no such course; [course_id={course_id}]")))
+    }
+}
+
+/// One course's shards, and what a course list shows before any shard is opened.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct ManifestCourse {
+    pub title: String,
+    pub target_language: String,
+    pub source_language: String,
+    pub outline: ManifestEntry,
+    /// The course's unit shards, by unit id.
+    pub units: BTreeMap<String, ManifestEntry>,
+}
+
+impl ManifestCourse {
+    pub fn file_entries(&self) -> impl Iterator<Item = &ManifestEntry> {
+        std::iter::once(&self.outline).chain(self.units.values())
+    }
+
+    pub fn find_unit(&self, unit_id: &str) -> Result<&ManifestEntry, AppError> {
+        self.units
+            .get(unit_id)
+            .ok_or_else(|| AppError::from(format!("the published course has no such unit; [unit_id={unit_id}]")))
     }
 }
 
@@ -115,8 +144,15 @@ mod tests {
   "manifest_schema_version": {schema_version},
   "version": "20261007T120000Z-1a2b3c4d",
   "artifact_created": "2026-10-07T12:00:00Z",
-  "course": {{ "relative_path": "data/course-{sha}.sqlite.br", "size_bytes": 1000, "sha256": "{sha}" }},
-  "units": {{ "a1-01": {{ "relative_path": "data/unit-a1-01-{sha}.sqlite.br", "size_bytes": 2000, "sha256": "{sha}" }} }},
+  "courses": {{
+    "pt_br.en.foundations": {{
+      "title": "Português do Brasil",
+      "target_language": "pt-BR",
+      "source_language": "en",
+      "outline": {{ "relative_path": "data/pt_br.en.foundations/course-{sha}.sqlite.br", "size_bytes": 1000, "sha256": "{sha}" }},
+      "units": {{ "a1-01": {{ "relative_path": "data/pt_br.en.foundations/unit-a1-01-{sha}.sqlite.br", "size_bytes": 2000, "sha256": "{sha}" }} }}
+    }}
+  }},
   "voice_pipeline_revisions": {{ "kokoro": 3, "macos_say": 1 }}
 }}"#,
             schema_version = MANIFEST_SCHEMA_VERSION,
@@ -137,7 +173,8 @@ mod tests {
         let manifest: Manifest = parse_manifest(valid_manifest_json().as_bytes()).unwrap();
 
         assert_eq!(manifest.version, "20261007T120000Z-1a2b3c4d");
-        assert_eq!(manifest.units["a1-01"].size_bytes, 2000);
+        assert_eq!(manifest.courses["pt_br.en.foundations"].units["a1-01"].size_bytes, 2000);
+        assert_eq!(manifest.file_entries().count(), 2);
         assert_eq!(manifest.voice_pipeline_revisions["kokoro"], 3);
 
         let produced: String = serde_json::to_string_pretty(&manifest).unwrap();
@@ -193,7 +230,7 @@ mod tests {
 
     #[test]
     fn parse_manifest_rejects_path_traversal_relative_path() {
-        let json: String = valid_manifest_json().replace("data/course", "../course");
+        let json: String = valid_manifest_json().replace("data/pt_br.en.foundations/course", "../course");
 
         assert!(parse_manifest(json.as_bytes()).is_err());
     }
