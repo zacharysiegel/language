@@ -119,6 +119,31 @@ final class CourseUITests: XCTestCase {
         saveScreenshot("11-settings")
     }
 
+    func testUnitStatusIsSetByStartTheStatusControlAndPractice() throws {
+        openUnit(Self.practicedUnitId)
+        assertSelected(app.buttons["unit-status-not-started"])
+        saveScreenshot("12-unit-status")
+
+        app.buttons["start-unit"].tap()
+        assertSelected(app.buttons["unit-status-in-progress"])
+        XCTAssertFalse(app.buttons["start-unit"].exists)
+
+        app.buttons["unit-status-completed"].tap()
+        assertSelected(app.buttons["unit-status-completed"])
+
+        app.buttons["unit-status-not-started"].tap()
+        assertSelected(app.buttons["unit-status-not-started"])
+        XCTAssertTrue(app.buttons["start-unit"].waitForExistence(timeout: 5))
+
+        app.buttons["tab-practice"].tap()
+        app.buttons["quick-practice"].tap()
+        XCTAssertTrue(app.buttons["quit"].waitForExistence(timeout: 5))
+        app.buttons["quit"].tap()
+
+        app.buttons["tab-overview"].tap()
+        assertSelected(app.buttons["unit-status-in-progress"])
+    }
+
     // MARK: - Driving exercises
 
     private func openUnit(_ unitId: String) {
@@ -184,6 +209,13 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(heading.waitForExistence(timeout: 5), "no feedback for exercise \(index)")
         XCTAssertEqual(heading.label, "Correct", "exercise \(index): \(exercise)")
         scrollUntilHittable(app.buttons["continue-exercise"])
+    }
+
+    private func assertSelected(_ element: XCUIElement) {
+        let selected: XCTNSPredicateExpectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
+        let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [selected], timeout: 5)
+
+        XCTAssertEqual(waitResult, .completed)
     }
 
     private func scrollUntilHittable(_ element: XCUIElement) {

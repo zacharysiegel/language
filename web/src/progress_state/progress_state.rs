@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use shared::course::vocabulary_card_id;
-use shared::progress::{Progress, QueuedCards};
+use shared::progress::{Progress, QueuedCards, UnitStatusKind};
 
 use crate::platform;
 
@@ -33,11 +33,19 @@ impl ProgressStore {
 
     /// Records the unit as started, when it is not already.
     pub fn start_unit(&self, course_id: &str, unit_id: &str) {
-        let is_started: bool = self.progress.with_untracked(|progress| progress.course_progress(course_id).unit_progress(unit_id).started);
+        let status: UnitStatusKind = self.progress.with_untracked(|progress| progress.course_progress(course_id).unit_progress(unit_id).status);
 
-        if !is_started {
-            self.progress.update(|progress| progress.course_progress_mut(course_id).mark_unit_started(unit_id));
+        if status == UnitStatusKind::NotStarted {
+            self.progress.update(|progress| progress.course_progress_mut(course_id).start_unit(unit_id));
         }
+    }
+
+    pub fn unit_status(&self, course_id: &str, unit_id: &str) -> UnitStatusKind {
+        self.progress.with(|progress| progress.course_progress(course_id).unit_progress(unit_id).status)
+    }
+
+    pub fn set_unit_status(&self, course_id: &str, unit_id: &str, status: UnitStatusKind) {
+        self.progress.update(|progress| progress.course_progress_mut(course_id).set_unit_status(unit_id, status));
     }
 
     /// Adds missing words and brings words that are scheduled for later back to the course's review queue.

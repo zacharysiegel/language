@@ -82,7 +82,7 @@ final class CoreIntegrationTests: XCTestCase {
 
         XCTAssertTrue(outcome.passed)
         XCTAssertEqual(outcome.wordsAddedCount, 3)
-        XCTAssertTrue(ProgressBook.open(path: path).unitProgress(courseId: "c", unitId: "u").completed)
+        XCTAssertEqual(ProgressBook.open(path: path).unitProgress(courseId: "c", unitId: "u").status, .completed)
         XCTAssertEqual(ProgressBook.open(path: path).cardCount(courseId: "other"), 0)
     }
 

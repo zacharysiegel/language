@@ -274,22 +274,50 @@ struct PageHeader: View {
     }
 }
 
+extension UnitStatusRecord: CaseIterable {
+    public static let allCases: [UnitStatusRecord] = [.notStarted, .inProgress, .completed]
+
+    func label() -> String {
+        switch self {
+        case .notStarted:
+            return "Not started"
+        case .inProgress:
+            return "In progress"
+        case .completed:
+            return "Completed"
+        }
+    }
+
+    func accessibilityName() -> String {
+        switch self {
+        case .notStarted:
+            return "not-started"
+        case .inProgress:
+            return "in-progress"
+        case .completed:
+            return "completed"
+        }
+    }
+}
+
 /// A unit's status: completed, in progress, or not started, with its best score.
 struct UnitStatusTag: View {
     let unitProgress: UnitProgressRecord
 
     var body: some View {
         HStack(spacing: .spaceXs) {
-            if unitProgress.completed {
-                TagView(text: "Completed", isInk: true)
+            switch unitProgress.status {
+            case .completed:
+                TagView(text: UnitStatusRecord.completed.label(), isInk: true)
                 percentText()
-            } else if unitProgress.attemptCount > 0 {
-                TagView(text: "In progress", isActive: true)
-                percentText()
-            } else if unitProgress.started {
-                TagView(text: "In progress", isActive: true)
-            } else {
-                TagView(text: "Not started")
+            case .inProgress:
+                TagView(text: UnitStatusRecord.inProgress.label(), isActive: true)
+
+                if unitProgress.attemptCount > 0 {
+                    percentText()
+                }
+            case .notStarted:
+                TagView(text: UnitStatusRecord.notStarted.label())
             }
         }
     }
@@ -324,5 +352,43 @@ struct SquareToggleStyle: ToggleStyle {
             }
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// A row of square hairline segments, one per option, with the chosen one filled ink.
+struct SquareSegmentedControl<Option: Hashable>: View {
+    let options: [Option]
+    let selection: Option
+    let label: (Option) -> String
+    let accessibilityIdentifier: (Option) -> String
+    let onSelect: (Option) -> Void
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(options, id: \.self) { option in
+                segment(option: option, isSelected: option == selection)
+            }
+        }
+    }
+
+    private func segment(option: Option, isSelected: Bool) -> some View {
+        Button {
+            onSelect(option)
+        } label: {
+            Text(label(option))
+                .font(.captionText)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+                .frame(maxWidth: .infinity)
+                .padding(.horizontal, .spaceXs)
+                .padding(.vertical, .spaceSm)
+                .foregroundStyle(isSelected ? Color.paper : Color.ink)
+                .background(isSelected ? Color.ink : Color.paper)
+                .overlay(Rectangle().stroke(Color.ink, lineWidth: .hairline))
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityIdentifier(option))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 }

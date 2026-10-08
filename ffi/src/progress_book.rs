@@ -7,7 +7,7 @@ use chrono::Utc;
 use shared::AppError;
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
-use shared::progress::{AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress};
+use shared::progress::{AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress, UnitStatusKind};
 use shared::review::{self, ReviewCard};
 
 use crate::ffi_error::CoreError;
@@ -101,10 +101,36 @@ impl From<SettingsRecord> for Settings {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum UnitStatusRecord {
+    NotStarted,
+    InProgress,
+    Completed,
+}
+
+impl From<UnitStatusRecord> for UnitStatusKind {
+    fn from(record: UnitStatusRecord) -> UnitStatusKind {
+        match record {
+            UnitStatusRecord::NotStarted => UnitStatusKind::NotStarted,
+            UnitStatusRecord::InProgress => UnitStatusKind::InProgress,
+            UnitStatusRecord::Completed => UnitStatusKind::Completed,
+        }
+    }
+}
+
+impl From<UnitStatusKind> for UnitStatusRecord {
+    fn from(kind: UnitStatusKind) -> UnitStatusRecord {
+        match kind {
+            UnitStatusKind::NotStarted => UnitStatusRecord::NotStarted,
+            UnitStatusKind::InProgress => UnitStatusRecord::InProgress,
+            UnitStatusKind::Completed => UnitStatusRecord::Completed,
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
 pub struct UnitProgressRecord {
-    pub started: bool,
-    pub completed: bool,
+    pub status: UnitStatusRecord,
     pub best_proportion: f64,
     pub attempt_count: u32,
 }
@@ -112,8 +138,7 @@ pub struct UnitProgressRecord {
 impl From<UnitProgress> for UnitProgressRecord {
     fn from(unit_progress: UnitProgress) -> UnitProgressRecord {
         UnitProgressRecord {
-            started: unit_progress.started,
-            completed: unit_progress.completed,
+            status: unit_progress.status.into(),
             best_proportion: unit_progress.best_proportion,
             attempt_count: unit_progress.attempt_count,
         }
@@ -198,15 +223,20 @@ impl ProgressBook {
         self.lock().course_progress(&course_id).unit_progress(&unit_id).into()
     }
 
-    /// Records that the learner opened the unit; saves only when it was not started before.
+    /// Moves a not started unit to in progress; saves only when it was not started.
     pub fn start_unit(&self, course_id: String, unit_id: String) -> Result<(), CoreError> {
-        let is_started: bool = self.lock().course_progress(&course_id).unit_progress(&unit_id).started;
+        let status: UnitStatusKind = self.lock().course_progress(&course_id).unit_progress(&unit_id).status;
 
-        if is_started {
+        if status != UnitStatusKind::NotStarted {
             return Ok(());
         }
 
-        self.change(|progress| progress.course_progress_mut(&course_id).mark_unit_started(&unit_id))
+        self.change(|progress| progress.course_progress_mut(&course_id).start_unit(&unit_id))
+    }
+
+    /// Keeps the best score and the attempt count.
+    pub fn set_unit_status(&self, course_id: String, unit_id: String, status: UnitStatusRecord) -> Result<(), CoreError> {
+        self.change(|progress| progress.course_progress_mut(&course_id).set_unit_status(&unit_id, status.into()))
     }
 
     pub fn completed_unit_count(&self, course_id: String) -> u32 {
@@ -377,10 +407,47 @@ mod tests {
 
         let reopened: Arc<ProgressBook> = book_in(&directory);
 
-        assert!(reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()).completed);
+        assert_eq!(reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()).status, UnitStatusRecord::Completed);
         assert_eq!(reopened.card_count(COURSE_ID.to_string()), 4);
         assert_eq!(reopened.due_card_count(COURSE_ID.to_string()), 4);
         assert_eq!(reopened.card_count("es.en.foundations".to_string()), 0);
+    }
+
+    #[test]
+    fn start_unit_moves_only_a_not_started_unit_to_in_progress() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+
+        book.start_unit(COURSE_ID.to_string(), "u".to_string()).unwrap();
+        book.set_unit_status(COURSE_ID.to_string(), "done".to_string(), UnitStatusRecord::Completed).unwrap();
+        book.start_unit(COURSE_ID.to_string(), "done".to_string()).unwrap();
+
+        let reopened: Arc<ProgressBook> = book_in(&directory);
+
+        assert_eq!(reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()).status, UnitStatusRecord::InProgress);
+        assert_eq!(reopened.unit_progress(COURSE_ID.to_string(), "done".to_string()).status, UnitStatusRecord::Completed);
+        assert_eq!(reopened.unit_progress(COURSE_ID.to_string(), "other".to_string()).status, UnitStatusRecord::NotStarted);
+    }
+
+    #[test]
+    fn set_unit_status_is_saved_and_keeps_the_score_and_attempts() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.record_practice_session(COURSE_ID.to_string(), "u".to_string(), PracticeModeRecord::Full, 9, 10, 4).unwrap();
+
+        book.set_unit_status(COURSE_ID.to_string(), "u".to_string(), UnitStatusRecord::NotStarted).unwrap();
+
+        let reopened: Arc<ProgressBook> = book_in(&directory);
+
+        assert_eq!(
+            reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()),
+            UnitProgressRecord {
+                status: UnitStatusRecord::NotStarted,
+                best_proportion: 0.9,
+                attempt_count: 1,
+            },
+        );
+        assert_eq!(reopened.completed_unit_count(COURSE_ID.to_string()), 0);
     }
 
     #[test]

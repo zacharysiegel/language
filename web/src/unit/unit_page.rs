@@ -10,7 +10,7 @@ use crate::course_data::{
 };
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 use crate::unit::{
-    DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, VocabularySection,
+    DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, UnitStatusControl, VocabularySection,
 };
 
 
@@ -83,14 +83,6 @@ pub fn UnitPage() -> impl IntoView {
     remember_route_course(progress_store, course_id);
 
     Effect::new(move |_| {
-        let unit_loaded: bool = matches!(unit_state.get(), Some(ShardLoadState::Loaded(_)));
-
-        if unit_loaded {
-            progress_store.start_unit(&course_id.get(), &unit_id.get());
-        }
-    });
-
-    Effect::new(move |_| {
         let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(ShardLoadState::Loaded(_)));
 
         if outline_loaded {
@@ -159,6 +151,7 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
         <div class="lesson-header">
             <span class="page-caption">{caption}</span>
             <h1>{title}</h1>
+            <UnitStatusControl course_id=course.id.clone() unit_id=unit.id.clone() />
         </div>
         <div class="tabs">{tab_links}</div>
         {section}

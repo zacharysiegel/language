@@ -37,7 +37,6 @@ struct UnitPage: View {
 
     @Environment(CourseStore.self) private var courseStore
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(ProgressStore.self) private var progressStore
     @State private var activeTab: UnitTabKind?
 
     var body: some View {
@@ -83,6 +82,7 @@ struct UnitPage: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: .spaceMd) {
                 PageHeader(caption: "\(unit.levelCode) · \(unit.order)", title: unit.title)
+                UnitStatusPanel(courseId: courseId, unitId: unit.id)
                 tabRow(lesson: lesson, active: tab)
                 section(tab: tab, unit: unit, lesson: lesson)
                 unitNavigation(unit: unit)
@@ -92,7 +92,6 @@ struct UnitPage: View {
             .id(tab)
         }
         .navigationTitle(unit.title)
-        .onAppear { progressStore.startUnit(courseId: courseId, unitId: unit.id) }
     }
 
     private func tabRow(lesson: UnitLessonRecord, active: UnitTabKind) -> some View {

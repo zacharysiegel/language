@@ -76,17 +76,59 @@ impl Default for Settings {
     }
 }
 
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum UnitStatusKind {
+    #[default]
+    NotStarted,
+    InProgress,
+    Completed,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize)]
+#[serde(from = "StoredUnitProgress")]
 pub struct UnitProgress {
-    /// The learner has opened the unit.
-    #[serde(default)]
-    pub started: bool,
-    #[serde(default)]
-    pub completed: bool,
-    #[serde(default)]
+    pub status: UnitStatusKind,
     pub best_proportion: f64,
-    #[serde(default)]
     pub attempt_count: u32,
+}
+
+impl UnitProgress {
+    pub fn is_completed(&self) -> bool {
+        self.status == UnitStatusKind::Completed
+    }
+}
+
+/// A unit record as saved; records saved before `status` existed carry `started` and `completed` instead.
+#[derive(Deserialize)]
+struct StoredUnitProgress {
+    #[serde(default)]
+    status: Option<UnitStatusKind>,
+    #[serde(default)]
+    started: bool,
+    #[serde(default)]
+    completed: bool,
+    #[serde(default)]
+    best_proportion: f64,
+    #[serde(default)]
+    attempt_count: u32,
+}
+
+impl From<StoredUnitProgress> for UnitProgress {
+    fn from(stored: StoredUnitProgress) -> UnitProgress {
+        let status: UnitStatusKind = match stored.status {
+            Some(status) => status,
+            None if stored.completed => UnitStatusKind::Completed,
+            None if stored.started || stored.attempt_count > 0 => UnitStatusKind::InProgress,
+            None => UnitStatusKind::NotStarted,
+        };
+
+        UnitProgress {
+            status,
+            best_proportion: stored.best_proportion,
+            attempt_count: stored.attempt_count,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -115,23 +157,37 @@ impl CourseProgress {
         self.units.get(unit_id).cloned().unwrap_or_default()
     }
 
+    /// A pass completes the unit; any other attempt leaves a completed unit completed and an unfinished one in progress.
     pub fn record_unit_attempt(&mut self, unit_id: &str, proportion: f64, pass_proportion: f64) {
         let previous: UnitProgress = self.unit_progress(unit_id);
+        let status: UnitStatusKind = if previous.is_completed() || proportion >= pass_proportion {
+            UnitStatusKind::Completed
+        } else {
+            UnitStatusKind::InProgress
+        };
 
         self.units.insert(
             unit_id.to_string(),
             UnitProgress {
-                started: true,
-                completed: previous.completed || proportion >= pass_proportion,
+                status,
                 best_proportion: previous.best_proportion.max(proportion),
                 attempt_count: previous.attempt_count + 1,
             },
         );
     }
 
-    /// Records that the learner opened the unit.
-    pub fn mark_unit_started(&mut self, unit_id: &str) {
-        self.units.entry(unit_id.to_string()).or_default().started = true;
+    /// Moves a not started unit to in progress; leaves any other status as it is.
+    pub fn start_unit(&mut self, unit_id: &str) {
+        let unit_progress: &mut UnitProgress = self.units.entry(unit_id.to_string()).or_default();
+
+        if unit_progress.status == UnitStatusKind::NotStarted {
+            unit_progress.status = UnitStatusKind::InProgress;
+        }
+    }
+
+    /// Keeps the best score and the attempt count.
+    pub fn set_unit_status(&mut self, unit_id: &str, status: UnitStatusKind) {
+        self.units.entry(unit_id.to_string()).or_default().status = status;
     }
 
     pub fn add_cards_if_missing(&mut self, card_ids: impl Iterator<Item = String>, now_milliseconds: i64) -> usize {
@@ -172,7 +228,7 @@ impl CourseProgress {
     }
 
     pub fn completed_unit_count(&self) -> usize {
-        self.units.values().filter(|unit_progress| unit_progress.completed).count()
+        self.units.values().filter(|unit_progress| unit_progress.is_completed()).count()
     }
 
     pub fn due_card_count(&self, now_milliseconds: i64) -> usize {
@@ -213,7 +269,7 @@ impl Progress {
     }
 
     /// A full practice records an attempt at the unit and, when passed, adds the unit's words to the course's review
-    /// deck; a quick practice records nothing.
+    /// deck; a quick practice only starts the unit.
     pub fn record_practice_session(
         &mut self,
         course_id: &str,
@@ -224,6 +280,8 @@ impl Progress {
         now_milliseconds: i64,
     ) -> PracticeOutcome {
         if mode == PracticeModeKind::Quick {
+            self.course_progress_mut(course_id).start_unit(unit_id);
+
             return PracticeOutcome {
                 passed: score.passed(),
                 words_added_count: 0,
@@ -255,6 +313,20 @@ mod tests {
 
     const COURSE_ID: &str = "pt_br.en.foundations";
 
+    fn unit_status_after(changes: impl FnOnce(&mut CourseProgress)) -> UnitStatusKind {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+
+        changes(&mut course_progress);
+
+        course_progress.unit_progress("u").status
+    }
+
+    fn unit_progress_from_json(text: &str) -> UnitProgress {
+        let progress: Progress = Progress::from_json(&format!(r#"{{"courses": {{"{COURSE_ID}": {{"units": {{"u": {text}}}}}}}}}"#)).unwrap();
+
+        progress.course_progress(COURSE_ID).unit_progress("u")
+    }
+
     #[test]
     fn record_unit_attempt_keeps_best_proportion_and_completion() {
         let mut course_progress: CourseProgress = CourseProgress::default();
@@ -264,21 +336,120 @@ mod tests {
 
         let unit_progress: UnitProgress = course_progress.unit_progress("u");
 
-        assert!(unit_progress.completed);
+        assert_eq!(unit_progress.status, UnitStatusKind::Completed);
         assert_eq!(unit_progress.best_proportion, 0.9);
         assert_eq!(unit_progress.attempt_count, 2);
     }
 
     #[test]
-    fn opening_or_attempting_a_unit_starts_it() {
+    fn record_unit_attempt_below_the_pass_mark_leaves_the_unit_in_progress() {
+        let from_not_started: UnitStatusKind = unit_status_after(|course_progress| course_progress.record_unit_attempt("u", 0.5, 0.8));
+        let from_in_progress: UnitStatusKind = unit_status_after(|course_progress| {
+            course_progress.start_unit("u");
+            course_progress.record_unit_attempt("u", 0.5, 0.8);
+        });
+
+        assert_eq!(from_not_started, UnitStatusKind::InProgress);
+        assert_eq!(from_in_progress, UnitStatusKind::InProgress);
+    }
+
+    #[test]
+    fn record_unit_attempt_at_the_pass_mark_completes_the_unit() {
+        let status: UnitStatusKind = unit_status_after(|course_progress| course_progress.record_unit_attempt("u", 0.8, 0.8));
+
+        assert_eq!(status, UnitStatusKind::Completed);
+    }
+
+    #[test]
+    fn a_unit_is_not_started_until_it_is_started() {
+        let course_progress: CourseProgress = CourseProgress::default();
+
+        assert_eq!(course_progress.unit_progress("u").status, UnitStatusKind::NotStarted);
+    }
+
+    #[test]
+    fn start_unit_moves_only_a_not_started_unit_to_in_progress() {
+        let from_not_started: UnitStatusKind = unit_status_after(|course_progress| course_progress.start_unit("u"));
+        let from_completed: UnitStatusKind = unit_status_after(|course_progress| {
+            course_progress.set_unit_status("u", UnitStatusKind::Completed);
+            course_progress.start_unit("u");
+        });
+
+        assert_eq!(from_not_started, UnitStatusKind::InProgress);
+        assert_eq!(from_completed, UnitStatusKind::Completed);
+    }
+
+    #[test]
+    fn set_unit_status_sets_any_status_and_keeps_the_score_and_attempts() {
         let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.record_unit_attempt("u", 0.9, 0.8);
+        course_progress.record_unit_attempt("u", 0.5, 0.8);
 
-        course_progress.record_unit_attempt("attempted", 0.5, 0.8);
-        course_progress.mark_unit_started("u");
+        for status in [UnitStatusKind::NotStarted, UnitStatusKind::InProgress, UnitStatusKind::Completed, UnitStatusKind::NotStarted] {
+            course_progress.set_unit_status("u", status);
 
-        assert!(course_progress.unit_progress("u").started);
-        assert!(course_progress.unit_progress("attempted").started);
-        assert!(!course_progress.unit_progress("other").started);
+            let unit_progress: UnitProgress = course_progress.unit_progress("u");
+
+            assert_eq!(unit_progress.status, status);
+            assert_eq!(unit_progress.best_proportion, 0.9);
+            assert_eq!(unit_progress.attempt_count, 2);
+        }
+    }
+
+    #[test]
+    fn completed_unit_count_counts_completed_units_only() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.record_unit_attempt("passed", 0.9, 0.8);
+        course_progress.record_unit_attempt("failed", 0.5, 0.8);
+        course_progress.start_unit("started");
+        course_progress.set_unit_status("marked", UnitStatusKind::Completed);
+        course_progress.record_unit_attempt("reset", 0.9, 0.8);
+        course_progress.set_unit_status("reset", UnitStatusKind::NotStarted);
+
+        assert_eq!(course_progress.completed_unit_count(), 2);
+    }
+
+    #[test]
+    fn unit_status_reads_from_legacy_flags() {
+        assert_eq!(unit_progress_from_json(r#"{"completed": true, "started": true}"#).status, UnitStatusKind::Completed);
+        assert_eq!(unit_progress_from_json(r#"{"completed": true}"#).status, UnitStatusKind::Completed);
+        assert_eq!(unit_progress_from_json(r#"{"started": true, "completed": false}"#).status, UnitStatusKind::InProgress);
+        assert_eq!(unit_progress_from_json(r#"{"best_proportion": 0.5, "attempt_count": 1}"#).status, UnitStatusKind::InProgress);
+        assert_eq!(unit_progress_from_json(r#"{"started": false, "completed": false}"#).status, UnitStatusKind::NotStarted);
+        assert_eq!(unit_progress_from_json("{}").status, UnitStatusKind::NotStarted);
+    }
+
+    #[test]
+    fn legacy_unit_records_keep_their_score_and_attempts() {
+        let unit_progress: UnitProgress = unit_progress_from_json(r#"{"completed": true, "best_proportion": 0.9, "attempt_count": 3}"#);
+
+        assert_eq!(
+            unit_progress,
+            UnitProgress {
+                status: UnitStatusKind::Completed,
+                best_proportion: 0.9,
+                attempt_count: 3,
+            },
+        );
+    }
+
+    #[test]
+    fn a_stored_status_takes_precedence_over_legacy_flags() {
+        assert_eq!(unit_progress_from_json(r#"{"status": "not_started", "completed": true}"#).status, UnitStatusKind::NotStarted);
+    }
+
+    #[test]
+    fn unit_progress_round_trips_through_json() {
+        let mut progress: Progress = Progress::default();
+        progress.course_progress_mut(COURSE_ID).record_unit_attempt("u", 0.5, 0.8);
+        progress.course_progress_mut(COURSE_ID).set_unit_status("v", UnitStatusKind::Completed);
+
+        let text: String = progress.to_json().unwrap();
+        let read_back: Progress = Progress::from_json(&text).unwrap();
+
+        assert_eq!(read_back, progress);
+        assert!(!text.contains("\"started\":"));
+        assert!(!text.contains("\"completed\":"));
     }
 
     #[test]
@@ -324,6 +495,26 @@ mod tests {
         assert_eq!(passed, PracticeOutcome { passed: true, words_added_count: 3 });
         assert_eq!(progress.course_progress(COURSE_ID).unit_progress("u").attempt_count, 2);
         assert!(progress.course_progress("es.en.foundations").cards.is_empty());
+    }
+
+    #[test]
+    fn record_practice_session_starts_the_unit_and_never_downgrades_a_completed_one() {
+        let mut progress: Progress = Progress::default();
+        let passing: SessionScore = SessionScore { correct_count: 9, total_count: 10 };
+        let failing: SessionScore = SessionScore { correct_count: 2, total_count: 10 };
+
+        progress.record_practice_session(COURSE_ID, "quick", PracticeModeKind::Quick, failing, 3, 0);
+        progress.record_practice_session(COURSE_ID, "failed", PracticeModeKind::Full, failing, 3, 0);
+        progress.record_practice_session(COURSE_ID, "passed", PracticeModeKind::Full, passing, 3, 0);
+        progress.record_practice_session(COURSE_ID, "passed", PracticeModeKind::Full, failing, 3, 0);
+        progress.record_practice_session(COURSE_ID, "passed", PracticeModeKind::Quick, failing, 3, 0);
+
+        let course_progress: CourseProgress = progress.course_progress(COURSE_ID);
+
+        assert_eq!(course_progress.unit_progress("quick").status, UnitStatusKind::InProgress);
+        assert_eq!(course_progress.unit_progress("quick").attempt_count, 0);
+        assert_eq!(course_progress.unit_progress("failed").status, UnitStatusKind::InProgress);
+        assert_eq!(course_progress.unit_progress("passed").status, UnitStatusKind::Completed);
     }
 
     #[test]

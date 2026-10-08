@@ -218,7 +218,7 @@ fn summary_view(
     let verdict: String = if score.passed() {
         "Passed.".to_string()
     } else {
-        format!("Not passed yet. {}% is needed.", (shared::practice::PASS_PROPORTION * 100.0).round())
+        format!("Not passed yet. {}% is needed.", shared::practice::pass_percent())
     };
     let verdict_class: &str = if score.passed() { "good-text" } else { "bad-text" };
 

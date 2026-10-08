@@ -51,7 +51,7 @@ pub fn session_score(correct_count: u32, total_count: u32) -> SessionScoreRecord
 
 #[uniffi::export]
 pub fn pass_percent() -> u32 {
-    (practice::PASS_PROPORTION * 100.0).round() as u32
+    practice::pass_percent()
 }
 
 #[uniffi::export]
