@@ -42,6 +42,7 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
         })
         .collect();
 
+    let help_shown: RwSignal<bool> = RwSignal::new(false);
     let caption: String = format!(
         "Starting a practice also starts the unit. Passing the full practice with at least {}% completes it.",
         practice::pass_percent(),
@@ -60,7 +61,16 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
                 <span class="field-label">"Status"</span>
                 <select on:change:target=move |event| set_status(event.target().value())>{status_options}</select>
             </label>
-            <span class="muted">{caption}</span>
+            <button
+                type="button"
+                class="help"
+                aria-label="How a unit's status changes"
+                aria-expanded=move || help_shown.get().to_string()
+                on:click=move |_| help_shown.update(|shown| *shown = !*shown)
+            >
+                "?"
+            </button>
+            {move || help_shown.get().then(|| view! { <p class="muted unit-status-help">{caption.clone()}</p> })}
         </div>
     }
 }
