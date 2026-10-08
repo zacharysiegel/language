@@ -1,5 +1,5 @@
 use js_sys::{Promise, Uint8Array};
-use shared::AppError;
+use shared::{AppError, AppErrorStatic};
 use wasm_bindgen::{JsCast, JsValue};
 use wasm_bindgen_futures::JsFuture;
 use web_sys::DomException;
@@ -17,10 +17,10 @@ pub fn owned_uint8_array(bytes: &[u8]) -> Uint8Array {
     array
 }
 
-pub async fn await_and_cast<T: JsCast>(promise: Promise) -> Result<T, AppError> {
+pub async fn await_and_cast<T: JsCast>(promise: Promise) -> Result<T, AppErrorStatic> {
     let value: JsValue = JsFuture::from(promise).await.map_err(error)?;
 
-    dyn_into(value)
+    Ok(dyn_into(value)?)
 }
 
 pub fn dyn_into<T: JsCast>(value: JsValue) -> Result<T, AppError> {

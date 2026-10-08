@@ -1,5 +1,5 @@
 use js_sys::{ArrayBuffer, Promise, Uint8Array};
-use shared::AppError;
+use shared::AppErrorStatic;
 use shared::http::{HttpCacheMode, HttpFetch, HttpRequest, HttpResponse};
 use web_sys::{RequestCache, RequestInit, Window};
 
@@ -8,7 +8,7 @@ use crate::artifact_client::js_interop;
 pub struct BrowserFetch;
 
 impl HttpFetch for BrowserFetch {
-    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppError> {
+    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppErrorStatic> {
         let window: Window = js_interop::get_window()?;
         let init: RequestInit = RequestInit::new();
 

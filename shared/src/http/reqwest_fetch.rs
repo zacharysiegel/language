@@ -1,7 +1,8 @@
 use reqwest::header::{self, HeaderValue};
 use reqwest::{Client, RequestBuilder};
 
-use crate::AppError;
+use crate::error;
+use crate::{AppError, AppErrorStatic};
 use crate::http::{HttpCacheMode, HttpFetch, HttpRequest, HttpResponse};
 
 pub struct ReqwestHttpFetch {
@@ -19,7 +20,7 @@ impl ReqwestHttpFetch {
 }
 
 impl HttpFetch for ReqwestHttpFetch {
-    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppError> {
+    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppErrorStatic> {
         let builder: RequestBuilder = match request.cache_mode {
             // reqwest holds no cache of its own; the header is addressed to intermediaries.
             HttpCacheMode::Reload => self.client.get(&request.url).header(header::CACHE_CONTROL, HeaderValue::from_static("no-cache")),
@@ -29,12 +30,12 @@ impl HttpFetch for ReqwestHttpFetch {
         let response: reqwest::Response = builder
             .send()
             .await
-            .map_err(|error| AppError::from(format!("fetch failed; [url={} error={error}]", request.url)))?;
+            .map_err(|error| AppErrorStatic::from(format!("fetch failed; [url={} error={}]", request.url, error::render_error_chain(&error))))?;
         let status: u16 = response.status().as_u16();
         let bytes: Vec<u8> = response
             .bytes()
             .await
-            .map_err(|error| AppError::from(format!("reading a response failed; [url={} error={error}]", request.url)))?
+            .map_err(|error| AppErrorStatic::from(format!("reading a response failed; [url={} error={}]", request.url, error::render_error_chain(&error))))?
             .to_vec();
 
         Ok(HttpResponse { status, bytes })

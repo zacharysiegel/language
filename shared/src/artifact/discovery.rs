@@ -39,11 +39,12 @@ pub enum AuthoritativeBase {
     Discovered(String),
 }
 
-pub fn authoritative_repository_base(static_base: &str, discovery: &Result<DiscoveryDocument, AppError>) -> AuthoritativeBase {
+/// `discovery` is `None` when the discovery document could not be read.
+pub fn authoritative_repository_base(static_base: &str, discovery: Option<&DiscoveryDocument>) -> AuthoritativeBase {
     match discovery {
-        Err(_) => AuthoritativeBase::Static,
-        Ok(document) if document.repository_base_url == static_base => AuthoritativeBase::Static,
-        Ok(document) => AuthoritativeBase::Discovered(document.repository_base_url.clone()),
+        None => AuthoritativeBase::Static,
+        Some(document) if document.repository_base_url == static_base => AuthoritativeBase::Static,
+        Some(document) => AuthoritativeBase::Discovered(document.repository_base_url.clone()),
     }
 }
 
@@ -116,24 +117,22 @@ mod tests {
 
     #[test]
     fn authoritative_repository_base_uses_static_when_discovery_fails() {
-        let discovery: Result<DiscoveryDocument, AppError> = Err(AppError::from("discovery failed".to_string()));
-
-        assert_eq!(authoritative_repository_base("/repository", &discovery), AuthoritativeBase::Static);
+        assert_eq!(authoritative_repository_base("/repository", None), AuthoritativeBase::Static);
     }
 
     #[test]
     fn authoritative_repository_base_uses_static_when_discovery_matches() {
-        let discovery: Result<DiscoveryDocument, AppError> = Ok(document_with_base("/repository"));
+        let document: DiscoveryDocument = document_with_base("/repository");
 
-        assert_eq!(authoritative_repository_base("/repository", &discovery), AuthoritativeBase::Static);
+        assert_eq!(authoritative_repository_base("/repository", Some(&document)), AuthoritativeBase::Static);
     }
 
     #[test]
     fn authoritative_repository_base_uses_discovered_when_base_differs() {
-        let discovery: Result<DiscoveryDocument, AppError> = Ok(document_with_base("https://repository.example"));
+        let document: DiscoveryDocument = document_with_base("https://repository.example");
 
         assert_eq!(
-            authoritative_repository_base("/repository", &discovery),
+            authoritative_repository_base("/repository", Some(&document)),
             AuthoritativeBase::Discovered("https://repository.example".to_string()),
         );
     }

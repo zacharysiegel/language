@@ -1,16 +1,16 @@
-use crate::AppError;
+use crate::AppErrorStatic;
 
 /// A local store of repository files by their relative path. Content-addressed names make every entry
 /// immutable, so no entry is ever stale.
 // The returned futures carry no `Send` bound; an implementation may hold `!Send` handles.
 #[allow(async_fn_in_trait)]
 pub trait ArtifactCache {
-    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppError>;
+    async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppErrorStatic>;
 
-    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppError>;
+    async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppErrorStatic>;
 
     /// Removes every entry whose path is not in `relative_paths_to_keep`.
-    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppError>;
+    async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppErrorStatic>;
 }
 
 #[cfg(test)]
@@ -36,17 +36,17 @@ pub(crate) mod tests {
     }
 
     impl ArtifactCache for MockArtifactCache {
-        async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppError> {
+        async fn put(&self, relative_path: &str, bytes: &[u8]) -> Result<(), AppErrorStatic> {
             self.entries.lock().await.insert(relative_path.to_string(), bytes.to_vec());
 
             Ok(())
         }
 
-        async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppError> {
+        async fn get(&self, relative_path: &str) -> Result<Option<Vec<u8>>, AppErrorStatic> {
             Ok(self.entries.lock().await.get(relative_path).cloned())
         }
 
-        async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppError> {
+        async fn retain(&self, relative_paths_to_keep: &[String]) -> Result<(), AppErrorStatic> {
             self.entries.lock().await.retain(|path, _| relative_paths_to_keep.contains(path));
 
             Ok(())

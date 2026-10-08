@@ -1,14 +1,14 @@
 use std::fs;
 use std::io::ErrorKind;
 
-use crate::AppError;
+use crate::AppErrorStatic;
 use crate::http::{HttpFetch, HttpRequest, HttpResponse};
 
 /// Serves URLs that are filesystem paths, answering a missing file with 404, for bundles shipped as files.
 pub struct DirectoryFetch;
 
 impl HttpFetch for DirectoryFetch {
-    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppError> {
+    async fn get(&self, request: &HttpRequest) -> Result<HttpResponse, AppErrorStatic> {
         let read: Result<Vec<u8>, std::io::Error> = fs::read(&request.url);
 
         match read {
@@ -17,7 +17,7 @@ impl HttpFetch for DirectoryFetch {
                 status: 404,
                 bytes: Vec::new(),
             }),
-            Err(error) => Err(AppError::from(format!("reading a bundled file failed; [path={} error={error}]", request.url))),
+            Err(error) => Err(AppErrorStatic::from(format!("reading a bundled file failed; [path={} error={error}]", request.url))),
         }
     }
 }
