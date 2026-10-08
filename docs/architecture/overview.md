@@ -48,7 +48,7 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 
 - `shared` holds the client side of the contract: manifest and discovery types, verified fetch, the cache trait, brotli decoding, the shard reader, and a read-only in-memory SQLite (rusqlite on native targets, `sqlite-wasm-rs` with a read-only memory VFS on `wasm32`).
 - Web: on start the app shows the version it cached last, if any, then the latest version when it differs. Shards are cached in the origin private file system by name, and the cache is trimmed to the latest manifest. With no cache and no repository, the embedded bundle opens. A unit's shard is fetched when the unit is visited. The Voice menu picks a recording per clip from `clip_audio`, falling back to the other engine, then to the browser's speech synthesis.
-- iOS and Android can read the same artifacts through the same core; they are not built.
+- iOS: a SwiftUI app (`ios/`) over the same core, compiled as a static library for device and simulator, packaged as an xcframework, and reached through Swift bindings that UniFFI generates from `ffi/`. The core does the work the web app does in Rust: discovery, manifest, verified shard loading, caching under `Library/Caches`, recordings downloaded and verified on first play, the embedded bundle shipped in the app as the floor, progress saved to a file, answer checking and review scheduling. Swift draws the screens and plays audio (`AVAudioPlayer`, and the system pt-BR voice when a clip has no recording).
 - Learner progress stays on the device.
 
 ## Hosting
@@ -67,3 +67,4 @@ clients: /discovery -> latest manifest -> course shard -> unit shards on demand 
 - The local repository is `build/repository/`, served by the app's server, rather than `web/static/repository/`.
 - The embedded bundle holds every shard and no recordings, rather than three foundation units.
 - The repository trait gained `existing_keys`, which Eafora's lacks, to skip recordings already published.
+- iOS: HTTP (reqwest) and the cache (the filesystem) run inside the Rust core rather than in Swift through `URLSession` and `FileManager`, so iOS and the web share one loader. The FFI surface is a separate `ffi` crate rather than a module inside the core, so the wasm32 build never compiles UniFFI. The generated Swift is compiled into the app target, and the static library's module map is a plain module rather than a framework module.

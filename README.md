@@ -28,12 +28,27 @@ secr encrypt --key "$MASTER_SECRET" --name cloudflare.r2.publish.secret_access_k
 
 Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then run `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` to the bucket's public URL.
 
+## iOS app
+
+`ios/` is a SwiftUI app over the same Rust core, reached through UniFFI. It needs Xcode and XcodeGen (`brew install xcodegen`):
+
+```sh
+./scripts/build/build-course.sh --skip-audio
+./scripts/ios/sync-ios-embedded-bundle.sh
+./scripts/ios/build-ios-core.sh
+cd ios && xcodegen generate && open PortugueseCourse.xcodeproj
+```
+
+Building in Xcode reruns the last two scripts. The app reads `/discovery` from `PORTUGUESE_COURSE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator, the Mac's address for a device), opens the bundle shipped inside it when the server cannot be reached, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/PortugueseCourse.xcodeproj -scheme PortugueseCourse -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice.
+
 ## Layout
 
 - `data/curriculum.json` lists the units; `data/units/<id>.json` holds one unit each. The format is described in `docs/authoring.md`.
 - `shared/` has the course model and its validation, the shard schema and reader, the artifact contract (manifest, discovery, verified fetch and cache), answer checking, the review schedule and the progress model.
 - `tools/course_builder/` validates the data, synthesizes the audio, writes bundles, and publishes them.
 - `web/` is the Leptos app and the server that hosts it, `/discovery`, and the local repository.
+- `ffi/` exposes the core to the native apps through UniFFI; `tools/uniffi_bindgen_swift/` generates the Swift bindings.
+- `ios/` is the iOS app.
 
 ## Commands
 
