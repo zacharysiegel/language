@@ -20,12 +20,13 @@ struct TranslationToggle: View {
 struct PhraseRow: View {
     let pair: PhrasePairRecord
     var speaker: String? = nil
+    var voiceChoice: VoiceChoiceRecord = .ownText
 
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
         HStack(alignment: .top, spacing: .spaceSm) {
-            PlayButton(clip: AudioClip(clipKey: pair.clipKey, text: pair.target))
+            PlayButton(clip: AudioClip(clipKey: pair.clipKey, text: pair.target, voiceChoice: voiceChoice))
 
             VStack(alignment: .leading, spacing: 2) {
                 if let speaker {

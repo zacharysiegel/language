@@ -28,13 +28,45 @@ const AUTO_SHORT_CLIP_WORD_LIMIT: usize = 2;
 
 impl AudioEngineKind {
     pub fn voice_engine_for(self, text: &str) -> VoiceEngineKind {
+        self.voice_engine_for_longest_text(word_count(text))
+    }
+
+    /// One recording set for every line of a dialogue; `Auto` picks the neural set when any line is longer than a short clip.
+    pub fn voice_engine_for_dialogue<'a>(self, line_texts: impl IntoIterator<Item = &'a str>) -> VoiceEngineKind {
+        let longest_line_word_count: usize = line_texts.into_iter().map(word_count).max().unwrap_or(0);
+
+        self.voice_engine_for_longest_text(longest_line_word_count)
+    }
+
+    pub fn voice_engine_for_clip(self, spoken_text: &str, voice_choice: &VoiceChoiceKind) -> VoiceEngineKind {
+        match voice_choice {
+            VoiceChoiceKind::OwnText => self.voice_engine_for(spoken_text),
+            VoiceChoiceKind::WholeDialogue { line_texts } => self.voice_engine_for_dialogue(line_texts.iter().map(String::as_str)),
+        }
+    }
+
+    fn voice_engine_for_longest_text(self, longest_word_count: usize) -> VoiceEngineKind {
         match self {
             AudioEngineKind::Kokoro => VoiceEngineKind::Kokoro,
             AudioEngineKind::MacosSay => VoiceEngineKind::MacosSay,
-            AudioEngineKind::Auto if text.split_whitespace().count() <= AUTO_SHORT_CLIP_WORD_LIMIT => VoiceEngineKind::MacosSay,
+            AudioEngineKind::Auto if longest_word_count <= AUTO_SHORT_CLIP_WORD_LIMIT => VoiceEngineKind::MacosSay,
             AudioEngineKind::Auto => VoiceEngineKind::Kokoro,
         }
     }
+}
+
+fn word_count(text: &str) -> usize {
+    text.split_whitespace().count()
+}
+
+/// Which texts decide the recording set a clip plays from.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub enum VoiceChoiceKind {
+    #[default]
+    OwnText,
+    WholeDialogue {
+        line_texts: Vec<String>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -523,6 +555,38 @@ mod tests {
         assert_eq!(AudioEngineKind::Auto.voice_engine_for("Oi, tudo bem?"), VoiceEngineKind::Kokoro);
         assert_eq!(AudioEngineKind::Kokoro.voice_engine_for("o"), VoiceEngineKind::Kokoro);
         assert_eq!(AudioEngineKind::MacosSay.voice_engine_for("Eu moro aqui agora."), VoiceEngineKind::MacosSay);
+    }
+
+    #[test]
+    fn auto_engine_uses_the_neural_voice_for_a_whole_dialogue_with_any_long_line() {
+        let line_texts: [&str; 3] = ["Oi!", "Oi, tudo bem?", "Tudo."];
+
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for_dialogue(line_texts), VoiceEngineKind::Kokoro);
+    }
+
+    #[test]
+    fn auto_engine_uses_the_macos_voice_for_a_whole_dialogue_of_short_lines() {
+        let line_texts: [&str; 3] = ["Oi!", "Tudo bem?", "Tudo."];
+
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for_dialogue(line_texts), VoiceEngineKind::MacosSay);
+    }
+
+    #[test]
+    fn explicit_engine_is_kept_for_a_whole_dialogue() {
+        let line_texts: [&str; 2] = ["Oi!", "Eu moro aqui agora."];
+
+        assert_eq!(AudioEngineKind::Kokoro.voice_engine_for_dialogue(line_texts), VoiceEngineKind::Kokoro);
+        assert_eq!(AudioEngineKind::MacosSay.voice_engine_for_dialogue(line_texts), VoiceEngineKind::MacosSay);
+    }
+
+    #[test]
+    fn voice_engine_for_clip_follows_its_dialogue_or_its_own_text() {
+        let whole_dialogue: VoiceChoiceKind = VoiceChoiceKind::WholeDialogue {
+            line_texts: vec!["Oi!".to_string(), "Eu moro aqui agora.".to_string()],
+        };
+
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for_clip("Oi!", &whole_dialogue), VoiceEngineKind::Kokoro);
+        assert_eq!(AudioEngineKind::Auto.voice_engine_for_clip("Oi!", &VoiceChoiceKind::OwnText), VoiceEngineKind::MacosSay);
     }
 
     #[test]

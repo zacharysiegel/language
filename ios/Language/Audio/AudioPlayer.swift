@@ -6,6 +6,7 @@ import Observation
 struct AudioClip: Equatable {
     let clipKey: String?
     let text: String
+    var voiceChoice: VoiceChoiceRecord = .ownText
 }
 
 /// Plays clips one at a time; starting a clip or a sequence stops whatever was playing.
@@ -84,7 +85,7 @@ final class AudioPlayer {
         }
 
         do {
-            return try await version.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text)
+            return try await version.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text, voiceChoice: clip.voiceChoice)
         } catch {
             _ = CoreErrorReport.record(error, while: "finding the recording of clip \(clipKey)")
             return nil

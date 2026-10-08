@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use shared::course::{Dialogue, GrammarNote, PhrasePair, Reading, Unit, VocabularyItem};
-use shared::progress::QueuedCards;
+use shared::progress::{QueuedCards, VoiceChoiceKind};
 
 use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
 use crate::platform::AudioClip;
@@ -32,7 +32,7 @@ pub fn TranslationToggle() -> impl IntoView {
 }
 
 #[component]
-fn PhraseRow(pair: PhrasePair) -> impl IntoView {
+fn PhraseRow(pair: PhrasePair, #[prop(optional)] voice_choice: VoiceChoiceKind) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let literal = pair.source_literal.clone().map(|literal| {
         view! {
@@ -44,7 +44,7 @@ fn PhraseRow(pair: PhrasePair) -> impl IntoView {
 
     view! {
         <li class="phrase">
-            <PlayButton clip_key=pair.clip_key.clone() text=pair.target.clone() />
+            <PlayButton clip_key=pair.clip_key.clone() text=pair.target.clone() voice_choice />
             <span class="pt">{pair.target.clone()}</span>
             <span class="en" class:hidden=move || !progress_store.read(|progress| progress.settings.show_translations)>
                 {pair.source.clone()}
@@ -128,7 +128,14 @@ pub fn VocabularySection(unit: Unit) -> impl IntoView {
 
 #[component]
 fn DialogueView(dialogue: Dialogue) -> impl IntoView {
-    let clips: Vec<AudioClip> = dialogue.lines.iter().map(|line| audio_clip(&line.clip_key, &line.target)).collect();
+    let voice_choice: VoiceChoiceKind = VoiceChoiceKind::WholeDialogue {
+        line_texts: dialogue.lines.iter().map(|line| line.target.clone()).collect(),
+    };
+    let clips: Vec<AudioClip> = dialogue
+        .lines
+        .iter()
+        .map(|line| audio_clip(&line.clip_key, &line.target, voice_choice.clone()))
+        .collect();
     let lines: Vec<_> = dialogue
         .lines
         .iter()
@@ -138,7 +145,10 @@ fn DialogueView(dialogue: Dialogue) -> impl IntoView {
             view! {
                 <li class="dialogue-line">
                     <span class="speaker">{speaker}</span>
-                    <PhraseRow pair=PhrasePair { target: line.target.clone(), source: line.source.clone(), source_literal: line.source_literal.clone(), clip_key: line.clip_key.clone() } />
+                    <PhraseRow
+                        pair=PhrasePair { target: line.target.clone(), source: line.source.clone(), source_literal: line.source_literal.clone(), clip_key: line.clip_key.clone() }
+                        voice_choice=voice_choice.clone()
+                    />
                 </li>
             }
         })
@@ -214,7 +224,11 @@ pub fn GrammarSection(unit: Unit) -> impl IntoView {
 #[component]
 fn ReadingView(reading: Reading) -> impl IntoView {
     let questions_open: RwSignal<bool> = RwSignal::new(false);
-    let clips: Vec<AudioClip> = reading.paragraphs.iter().map(|paragraph| audio_clip(&paragraph.clip_key, &paragraph.target)).collect();
+    let clips: Vec<AudioClip> = reading
+        .paragraphs
+        .iter()
+        .map(|paragraph| audio_clip(&paragraph.clip_key, &paragraph.target, VoiceChoiceKind::OwnText))
+        .collect();
     let paragraph_rows: Vec<_> = reading
         .paragraphs
         .iter()

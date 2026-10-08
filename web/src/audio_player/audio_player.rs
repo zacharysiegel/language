@@ -1,13 +1,15 @@
 use leptos::prelude::*;
 use leptos::task::spawn_local;
+use shared::progress::VoiceChoiceKind;
 
 use crate::platform::{self, AudioClip};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-pub fn audio_clip(clip_key: &Option<String>, fallback_text: &str) -> AudioClip {
+pub fn audio_clip(clip_key: &Option<String>, fallback_text: &str, voice_choice: VoiceChoiceKind) -> AudioClip {
     AudioClip {
         clip_key: clip_key.clone(),
         fallback_text: fallback_text.to_string(),
+        voice_choice,
     }
 }
 
@@ -41,6 +43,7 @@ pub fn PlayButton(
     #[prop(into)] text: String,
     #[prop(optional)] slow: bool,
     #[prop(optional, into)] label: Option<String>,
+    #[prop(optional)] voice_choice: VoiceChoiceKind,
 ) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
     let title: &str = if slow { "Play slowly" } else { "Play audio" };
@@ -59,7 +62,7 @@ pub fn PlayButton(
             on:click=move |event| {
                 event.stop_propagation();
                 let use_slow: bool = slow || progress_store.read(|progress| progress.settings.slow_audio);
-                play_in_background(audio_clip(&clip_key, &text), use_slow);
+                play_in_background(audio_clip(&clip_key, &text, voice_choice.clone()), use_slow);
             }
         >
             {if slow { view! { "0.7×" }.into_any() } else { view! { <PlayIcon /> }.into_any() }}
