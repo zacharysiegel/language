@@ -48,9 +48,9 @@ mod tests {
     use super::*;
 
     #[test]
-    fn cities_are_lowercase_ascii_words_joined_by_hyphens() {
+    fn cities_are_lowercase_ascii_words_joined_by_underscores() {
         for city in CITIES.iter() {
-            let words_are_lowercase_ascii: bool = city.split('-').all(|word| !word.is_empty() && word.bytes().all(|byte| byte.is_ascii_lowercase()));
+            let words_are_lowercase_ascii: bool = city.split('_').all(|word| !word.is_empty() && word.bytes().all(|byte| byte.is_ascii_lowercase()));
 
             assert!(words_are_lowercase_ascii, "{city}");
         }
