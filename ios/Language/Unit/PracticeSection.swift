@@ -48,6 +48,7 @@ struct PracticeSection: View {
 
         outcomeMessage = nil
         activeMode = mode
+        progressStore.startUnit(courseId: courseId, unitId: unit.id)
     }
 
     private func record(mode: PracticeModeRecord, score: SessionScoreRecord) {
@@ -73,7 +74,7 @@ struct PracticeSection: View {
         }
 
         let percent: Int = Int((unitProgress.bestProportion * 100).rounded())
-        let completion: String = unitProgress.completed ? " Unit completed." : ""
+        let completion: String = unitProgress.status == .completed ? " Unit completed." : ""
 
         return "Best score \(percent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
     }

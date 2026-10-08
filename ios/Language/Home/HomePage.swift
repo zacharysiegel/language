@@ -46,7 +46,7 @@ struct HomePage: View {
     }
 
     private func nextIncompleteUnit(_ outline: CourseOutlineRecord) -> UnitOutlineRecord? {
-        outline.units.first { unit in !progressStore.unitProgress(courseId: outline.id, unitId: unit.id).completed }
+        outline.units.first { unit in progressStore.unitProgress(courseId: outline.id, unitId: unit.id).status != .completed }
     }
 
     private func levelSection(_ level: CourseLevelRecord, units: [UnitOutlineRecord]) -> some View {

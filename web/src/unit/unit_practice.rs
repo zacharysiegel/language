@@ -1,6 +1,6 @@
 use leptos::prelude::*;
 use shared::course::{Exercise, Unit};
-use shared::practice::{PASS_PROPORTION, PracticeModeKind, QUICK_PRACTICE_EXERCISE_COUNT, SessionScore, shuffled};
+use shared::practice::{self, PracticeModeKind, SessionScore};
 
 use crate::platform;
 use crate::practice::ExerciseSession;
@@ -17,17 +17,20 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
 
     let start_mode = {
         let all_exercises: Vec<Exercise> = unit.exercises.clone();
+        let course_id: String = course_id.clone();
+        let unit_id: String = unit_id.clone();
 
         move |mode: PracticeModeKind| {
             let chosen: Vec<Exercise> = match mode {
                 PracticeModeKind::Full => all_exercises.clone(),
                 PracticeModeKind::Quick => {
-                    let mut sampled: Vec<Exercise> = shuffled(&all_exercises, platform::random_unit);
-                    sampled.truncate(QUICK_PRACTICE_EXERCISE_COUNT);
+                    let mut sampled: Vec<Exercise> = practice::shuffled(&all_exercises, platform::random_unit);
+                    sampled.truncate(practice::QUICK_PRACTICE_EXERCISE_COUNT);
                     sampled
                 },
             };
 
+            progress_store.start_unit(&course_id, &unit_id);
             session_exercises.set(chosen);
             active_mode.set(Some(mode));
         }
@@ -59,7 +62,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
                     "Best score {}% over {} attempt(s). {}",
                     (unit_progress.best_proportion * 100.0).round(),
                     unit_progress.attempt_count,
-                    if unit_progress.completed { "Unit completed." } else { "" },
+                    if unit_progress.is_completed() { "Unit completed." } else { "" },
                 )
             }
         }
@@ -86,13 +89,13 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
 
                 view! {
                     <p>{best_summary.clone()}</p>
-                    <p class="muted">{format!("Pass mark: {}%.", (PASS_PROPORTION * 100.0).round())}</p>
+                    <p class="muted">{format!("Pass mark: {}%.", practice::pass_percent())}</p>
                     <div class="row">
                         <button type="button" class="primary" on:click=move |_| start_full(PracticeModeKind::Full)>
                             {format!("Full practice ({exercise_count} exercises)")}
                         </button>
                         <button type="button" on:click=move |_| start_quick(PracticeModeKind::Quick)>
-                            {format!("Quick practice ({QUICK_PRACTICE_EXERCISE_COUNT} random exercises)")}
+                            {format!("Quick practice ({} random exercises)", practice::QUICK_PRACTICE_EXERCISE_COUNT)}
                         </button>
                     </div>
                 }

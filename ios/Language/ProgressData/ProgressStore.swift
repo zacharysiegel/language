@@ -89,12 +89,18 @@ final class ProgressStore {
         return outcome
     }
 
+    /// Moves a not started unit to in progress and leaves any other status alone.
     func startUnit(courseId: String, unitId: String) {
-        guard !unitProgress(courseId: courseId, unitId: unitId).started else {
+        guard unitProgress(courseId: courseId, unitId: unitId).status == .notStarted else {
             return
         }
 
         perform { try book.startUnit(courseId: courseId, unitId: unitId) }
+    }
+
+    /// Keeps the best score and the attempt count.
+    func setUnitStatus(courseId: String, unitId: String, status: UnitStatusRecord) {
+        perform { try book.setUnitStatus(courseId: courseId, unitId: unitId, status: status) }
     }
 
     func queueUnitVocabulary(courseId: String, unitId: String, vocabularyCount: Int) -> QueuedCardsRecord? {

@@ -49,7 +49,7 @@ fn next_incomplete_unit_id(course: &CourseOutline, progress_store: ProgressStore
         course
             .units
             .iter()
-            .find(|unit| !course_progress.unit_progress(&unit.id).completed)
+            .find(|unit| !course_progress.unit_progress(&unit.id).is_completed())
             .map(|unit| unit.id.clone())
     })
 }
