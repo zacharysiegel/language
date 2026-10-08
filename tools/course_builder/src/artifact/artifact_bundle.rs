@@ -82,13 +82,20 @@ pub fn write_bundle(
     })
 }
 
-/// Every version a local bundle or the local repository already uses.
+/// Every version a local bundle, the local repository or the embedded bundle already uses.
 fn read_taken_versions(paths: &WorkspacePaths) -> Result<BTreeSet<String>, AppError> {
     let mut taken_versions: BTreeSet<String> = list_version_names(&paths.bundles_directory)?.into_iter().collect();
 
     taken_versions.extend(list_version_names(&paths.local_repository_directory)?);
+    taken_versions.extend(read_embedded_version(paths));
 
     Ok(taken_versions)
+}
+
+fn read_embedded_version(paths: &WorkspacePaths) -> Option<String> {
+    let embedded_manifest: Result<Manifest, AppError> = read_bundle_manifest(&paths.embedded_bundle_directory);
+
+    embedded_manifest.ok().map(|embedded_manifest| embedded_manifest.version)
 }
 
 /// Writes the course's outline shard and one shard per unit under `data/<course id>/`.
@@ -116,6 +123,7 @@ fn write_course_shards(bundle_directory: &Path, course: &Course, clip_catalog: &
         source_language: course.source_language.clone(),
         outline,
         units,
+        test_course: course.test_course,
     })
 }
 
@@ -252,16 +260,18 @@ pub fn prune_bundles(paths: &WorkspacePaths) -> Result<(), AppError> {
     Ok(())
 }
 
-/// Copies the bundle's manifest and shards, without audio, to where the web app serves its embedded bundle.
+/// Copies the bundle's manifest and shards, without audio or test courses, to where the web app serves its
+/// embedded bundle. Leaving a test course out gives the embedded bundle a version label of its own.
 pub fn refresh_embedded_bundle(paths: &WorkspacePaths, bundle: &BuiltBundle) -> Result<(), AppError> {
     let embedded_directory: &Path = &paths.embedded_bundle_directory;
+    let embedded_manifest: Manifest = embedded_manifest_for(paths, &bundle.manifest)?;
 
     if embedded_directory.exists() {
         fs::remove_dir_all(embedded_directory)?;
     }
 
-    for entry in bundle.manifest.file_entries() {
-        let destination: PathBuf = embedded_directory.join(manifest::versioned_file_key(&bundle.manifest.version, &entry.relative_path));
+    for entry in embedded_manifest.file_entries() {
+        let destination: PathBuf = embedded_directory.join(manifest::versioned_file_key(&embedded_manifest.version, &entry.relative_path));
 
         if let Some(parent) = destination.parent() {
             fs::create_dir_all(parent)?;
@@ -270,11 +280,42 @@ pub fn refresh_embedded_bundle(paths: &WorkspacePaths, bundle: &BuiltBundle) -> 
         fs::copy(bundle.directory.join(&entry.relative_path), destination)?;
     }
 
-    write_manifest(&embedded_directory.join(manifest::MANIFEST_FILENAME), &bundle.manifest)?;
+    write_manifest(&embedded_directory.join(manifest::MANIFEST_FILENAME), &embedded_manifest)?;
 
-    log::info!("refreshed the embedded bundle; [version={} path={}]", bundle.manifest.version, embedded_directory.display());
+    log::info!(
+        "refreshed the embedded bundle; [version={} bundle_version={} courses={} test_courses_left_out={} path={}]",
+        embedded_manifest.version,
+        bundle.manifest.version,
+        embedded_manifest.courses.len(),
+        bundle.manifest.courses.len() - embedded_manifest.courses.len(),
+        embedded_directory.display(),
+    );
 
     Ok(())
+}
+
+fn embedded_manifest_for(paths: &WorkspacePaths, bundle_manifest: &Manifest) -> Result<Manifest, AppError> {
+    let courses: BTreeMap<String, ManifestCourse> = bundle_manifest
+        .courses
+        .iter()
+        .filter(|(_, manifest_course)| !manifest_course.test_course)
+        .map(|(course_id, manifest_course)| (course_id.clone(), manifest_course.clone()))
+        .collect();
+
+    /* Clients compare versions by label alone, so different course content must not share one. */
+    let version: String = if courses.len() == bundle_manifest.courses.len() {
+        bundle_manifest.version.clone()
+    } else {
+        version_label::generate(bundle_manifest.artifact_created, &read_taken_versions(paths)?)?
+    };
+
+    Ok(Manifest {
+        manifest_schema_version: bundle_manifest.manifest_schema_version,
+        version,
+        artifact_created: bundle_manifest.artifact_created,
+        courses,
+        voice_pipeline_revisions: bundle_manifest.voice_pipeline_revisions.clone(),
+    })
 }
 
 /// Every recording hash the bundle's shards name, after checking each shard against its manifest hash.
@@ -307,4 +348,85 @@ fn read_verified_shard(bundle_directory: &Path, entry: &ManifestEntry) -> Result
 
 pub fn audio_file_path(bundle_directory: &Path, audio_sha256: &str) -> PathBuf {
     bundle_directory.join(artifact::audio_key(audio_sha256))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::test_courses;
+
+    const TEST_COURSE_ID: &str = "pt_br.en.testing";
+    const UNITS_PER_COURSE: usize = 2;
+
+    /* A teaching course and a test course made from it, each cut to a few units. */
+    fn teaching_and_test_courses(plan: &mut AudioPlan) -> Vec<Course> {
+        let mut teaching_course: Course = test_courses::read_keyed_courses(plan)
+            .into_iter()
+            .find(|course| !course.test_course)
+            .unwrap();
+
+        teaching_course.units.truncate(UNITS_PER_COURSE);
+
+        let mut test_course: Course = teaching_course.clone();
+
+        test_course.id = TEST_COURSE_ID.to_string();
+        test_course.test_course = true;
+
+        vec![teaching_course, test_course]
+    }
+
+    fn no_recordings() -> ClipRecordings {
+        ClipRecordings {
+            audio_index: BTreeMap::new(),
+            file_by_audio_sha256: BTreeMap::new(),
+            pipeline_revision_by_engine_code: BTreeMap::new(),
+        }
+    }
+
+    fn read_embedded_manifest(paths: &WorkspacePaths) -> Manifest {
+        let embedded_bytes: Vec<u8> = fs::read(paths.embedded_bundle_directory.join(manifest::MANIFEST_FILENAME)).unwrap();
+
+        manifest::parse_manifest(&embedded_bytes).unwrap()
+    }
+
+    #[test]
+    fn refresh_embedded_bundle_leaves_out_test_courses_the_bundle_holds() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
+        let mut plan: AudioPlan = AudioPlan::new();
+        let courses: Vec<Course> = teaching_and_test_courses(&mut plan);
+        let teaching_course_id: &String = &courses[0].id;
+
+        let bundle: BuiltBundle = write_bundle(&paths, &courses, &plan, &no_recordings()).unwrap();
+        refresh_embedded_bundle(&paths, &bundle).unwrap();
+
+        let embedded_manifest: Manifest = read_embedded_manifest(&paths);
+        let test_course_data_directory: String = format!("{}/{TEST_COURSE_ID}", manifest::SUBDIR_DATA);
+        let embedded_test_course_directories: [PathBuf; 2] = [&bundle.manifest.version, &embedded_manifest.version]
+            .map(|version| paths.embedded_bundle_directory.join(manifest::versioned_file_key(version, &test_course_data_directory)));
+
+        assert_eq!(bundle.manifest.test_course_ids(), vec![TEST_COURSE_ID]);
+        assert_eq!(embedded_manifest.courses.keys().collect::<Vec<&String>>(), vec![teaching_course_id]);
+        assert_ne!(embedded_manifest.version, bundle.manifest.version);
+        assert!(embedded_test_course_directories.iter().all(|directory| !directory.exists()));
+
+        for entry in embedded_manifest.file_entries() {
+            let embedded_path: PathBuf = paths.embedded_bundle_directory.join(manifest::versioned_file_key(&embedded_manifest.version, &entry.relative_path));
+
+            assert!(embedded_path.exists());
+        }
+    }
+
+    #[test]
+    fn refresh_embedded_bundle_keeps_the_bundle_version_when_no_course_is_left_out() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
+        let mut plan: AudioPlan = AudioPlan::new();
+        let teaching_courses: Vec<Course> = teaching_and_test_courses(&mut plan).into_iter().filter(|course| !course.test_course).collect();
+
+        let bundle: BuiltBundle = write_bundle(&paths, &teaching_courses, &plan, &no_recordings()).unwrap();
+        refresh_embedded_bundle(&paths, &bundle).unwrap();
+
+        assert_eq!(read_embedded_manifest(&paths), bundle.manifest);
+    }
 }

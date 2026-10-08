@@ -19,6 +19,7 @@ final class CourseUITests: XCTestCase {
         app.launchArguments = ["-LanguageProgressFile", "ui-test-progress-\(UUID().uuidString).json"]
         app.launch()
         try? FileManager.default.createDirectory(atPath: Self.screenshotDirectory, withIntermediateDirectories: true)
+        chooseTheCourseIfTheCourseListOpens()
     }
 
     func testHomeOpensAUnitAndEveryTab() throws {
@@ -152,6 +153,23 @@ final class CourseUITests: XCTestCase {
 
         app.buttons["tab-overview"].tap()
         assertSelected(app.buttons["unit-status-in-progress"])
+    }
+
+    // MARK: - Choosing the course
+
+    /// Opens the course under test when the app starts on the course list.
+    private func chooseTheCourseIfTheCourseListOpens() {
+        let courseChoiceIdentifier: String = "course-\(Self.courseId)"
+        let firstScreenIdentifiers: [String] = [courseChoiceIdentifier, "courses"]
+        let firstScreenElement: XCUIElement = app.buttons.matching(NSPredicate(format: "identifier IN %@", firstScreenIdentifiers)).firstMatch
+
+        XCTAssertTrue(firstScreenElement.waitForExistence(timeout: 20))
+
+        let courseChoice: XCUIElement = app.buttons[courseChoiceIdentifier]
+
+        if courseChoice.exists {
+            courseChoice.tap()
+        }
     }
 
     // MARK: - Driving exercises

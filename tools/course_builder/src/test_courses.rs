@@ -14,11 +14,7 @@ pub fn read_keyed_courses(plan: &mut AudioPlan) -> Vec<Course> {
         .iter()
         .map(|course_id| {
             let curriculum: Curriculum = course_source::read_curriculum(&paths, course_id).unwrap();
-            let units: Vec<Unit> = curriculum
-                .units
-                .iter()
-                .filter_map(|curriculum_unit| course_source::read_unit(&paths, course_id, &curriculum_unit.id).unwrap())
-                .collect();
+            let units: Vec<Unit> = course_source::read_present_units(&paths, &curriculum).unwrap();
 
             build_command::keyed_course(&curriculum, &units, plan)
         })

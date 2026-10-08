@@ -8,15 +8,24 @@ Language courses that teach the principles first (sounds and spelling, stress an
 ./scripts/dev/serve.sh
 ```
 
-On the first run that builds the course and publishes it to the local repository (`build/repository/`), then serves http://127.0.0.1:3000 with `cargo leptos watch`. The audio is spoken by the Kokoro neural voices, run locally through ONNX Runtime with eSpeak NG for the phonemes, and by the macOS Brazilian Portuguese voices; the two engines synthesize at the same time. The first run downloads pinned model files into `models/` (checked against checksums) and synthesizes every clip with each engine, which takes tens of minutes; later runs synthesize only the clips that changed. It needs `cmake` (eSpeak NG is built from source), `ffmpeg`, and Apple silicon.
+On the first run that builds the courses, the test courses included, and publishes them to the local repository (`build/repository/`), then serves http://127.0.0.1:3000 with `cargo leptos watch`. The audio is spoken by the Kokoro neural voices, run locally through ONNX Runtime with eSpeak NG for the phonemes, and by the macOS Brazilian Portuguese voices; the two engines synthesize at the same time. The first run downloads pinned model files into `models/` (checked against checksums) and synthesizes every clip with each engine, which takes tens of minutes; later runs synthesize only the clips that changed. It needs `cmake` (eSpeak NG is built from source), `ffmpeg`, and Apple silicon.
 
 The Voice menu chooses between the two recording sets: Auto (the macOS voice for clips of one or two words, where the neural voice is unreliable, and the neural voice for longer ones; every line of a dialogue plays from the same recording set, the neural one when any line is longer), Neural, or macOS. `./scripts/build/build-course.sh --engine macos-say` synthesizes only the macOS set, which needs no download.
 
+To rebuild the local repository later, for example after editing `data/`, run `./scripts/dev/build-local-repository.sh`, which builds with the test courses and publishes locally; its arguments go to the build (`--skip-audio`, `--engine macos-say`). The running server then serves the newly published course content.
+
 ## How the data flows
 
-- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes a bundle to `build/artifacts/<version>/`, one version of the course content (named `<date>+<city>`): a `manifest.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). It also copies the manifest and shards to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
+- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes a bundle to `build/artifacts/<version>/`, one version of the course content (named `<date>+<city>`): a `manifest.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). It also copies the manifest and shards, without the test courses, to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
 - `course_builder publish local | cloudflare-r2 | dry` uploads the bundle: recordings the repository lacks, then the shards, then `<version>/manifest.json`, and `latest/manifest.json` last.
 - The app reads `/discovery` for the repository's address, fetches `latest/manifest.json`, opens the course shard, and opens a unit's shard when the unit is visited. Every download is checked against its hash and cached in the browser, so the app opens offline once visited.
+
+## Test courses
+
+- A course whose `curriculum.json` sets `"test_course": true` exists to test the apps, for example with more than one course; `pt_br.en.test_course` is one.
+- `course_builder build` leaves test courses out unless given `--include-test-courses`; `--course <test course id>` without the flag is an error. `course_builder validate` always checks them.
+- The local flow includes them: `./scripts/dev/serve.sh` on its first run, and `./scripts/dev/build-local-repository.sh`.
+- The embedded bundle never holds a test course, and `publish cloudflare-r2` refuses a bundle that holds one.
 
 ## Publishing to Cloudflare R2
 
@@ -26,7 +35,7 @@ Copy `template.env` to `.env` and fill in the R2 settings. Put the publish token
 secr encrypt --key "$MASTER_SECRET" --name cloudflare.r2.publish.secret_access_key <secret-access-key>
 ```
 
-Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then run `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `LANGUAGE_REPOSITORY_BASE_URL` to the bucket's public URL.
+Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then build without `--include-test-courses` and publish: `./scripts/build/build-course.sh`, then `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `LANGUAGE_REPOSITORY_BASE_URL` to the bucket's public URL.
 
 ## iOS app
 
@@ -39,7 +48,7 @@ Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `c
 cd ios && xcodegen generate && open Language.xcodeproj
 ```
 
-Building in Xcode reruns the last two scripts. The app reads `/discovery` from `LANGUAGE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator, the Mac's address for a device), opens the bundle shipped inside it when the server cannot be reached, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/Language.xcodeproj -scheme Language -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice.
+Building in Xcode reruns the last two scripts. The app reads `/discovery` from `LANGUAGE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator, the Mac's address for a device), opens the bundle shipped inside it when the server cannot be reached, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/Language.xcodeproj -scheme Language -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice. With the web server serving a local repository built by `./scripts/dev/build-local-repository.sh`, the app lists the test courses too, and the UI tests choose `pt_br.en.foundations` from the course list.
 
 ## Layout
 
@@ -56,5 +65,6 @@ Building in Xcode reruns the last two scripts. The app reads `/discovery` from `
 cargo run --package course_builder -- validate --all
 ./scripts/build/build-course.sh
 ./scripts/publish/publish-course.sh local
+./scripts/dev/build-local-repository.sh
 cargo test
 ```

@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 
 use shared::AppError;
-use shared::artifact::discovery;
+use shared::artifact::{Manifest, discovery};
 
 use crate::artifact::repository::{
     ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository, ENV_LOCAL_REPOSITORY_ROOT,
@@ -9,6 +9,7 @@ use crate::artifact::repository::{
     LocalArtifactRepository, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
 };
 use crate::artifact::{self, PublishReport};
+use crate::build_command;
 use crate::secrets;
 use crate::workspace::WorkspacePaths;
 
@@ -26,6 +27,10 @@ pub fn run_publish(paths: &WorkspacePaths, target: PublishTargetKind, bundle: Op
         Some(bundle_directory) => bundle_directory,
         None => artifact::find_newest_bundle(paths)?,
     };
+    let bundle_manifest: Manifest = artifact::read_bundle_manifest(&bundle_directory)?;
+
+    check_test_courses_publishable(&target, &bundle_manifest)?;
+
     let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
 
     let report: PublishReport = runtime.block_on(async {
@@ -44,6 +49,21 @@ pub fn run_publish(paths: &WorkspacePaths, target: PublishTargetKind, bundle: Op
     );
 
     Ok(true)
+}
+
+/// Cloudflare R2 is the production repository, so a bundle with a test course is refused there.
+pub fn check_test_courses_publishable(target: &PublishTargetKind, bundle_manifest: &Manifest) -> Result<(), AppError> {
+    let test_course_ids: Vec<&str> = bundle_manifest.test_course_ids();
+
+    match target {
+        PublishTargetKind::CloudflareR2 if !test_course_ids.is_empty() => Err(AppError::from(format!(
+            "a bundle with a test course cannot be published to Cloudflare R2; rebuild without --{}; [version={} test_courses={}]",
+            build_command::INCLUDE_TEST_COURSES_FLAG,
+            bundle_manifest.version,
+            test_course_ids.join(","),
+        ))),
+        PublishTargetKind::CloudflareR2 | PublishTargetKind::Local { .. } | PublishTargetKind::Dry => Ok(()),
+    }
 }
 
 /// The R2 repository named by `.env`, with the secret access key from `secrets.yaml`.
@@ -71,5 +91,77 @@ async fn create_repository(paths: &WorkspacePaths, target: PublishTargetKind) ->
         },
         PublishTargetKind::CloudflareR2 => Ok(ArtifactRepositoryKind::CloudflareR2(create_cloudflare_r2_repository().await?)),
         PublishTargetKind::Dry => Ok(ArtifactRepositoryKind::Dry(DryArtifactRepository::new())),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::BTreeMap;
+
+    use chrono::Utc;
+    use shared::artifact::{ManifestCourse, ManifestEntry, manifest};
+
+    use super::*;
+
+    const TEACHING_COURSE_ID: &str = "pt_br.en.teaching";
+    const TEST_COURSE_ID: &str = "pt_br.en.testing";
+
+    fn manifest_course(course_id: &str, test_course: bool) -> ManifestCourse {
+        ManifestCourse {
+            title: course_id.to_string(),
+            target_language: "pt-BR".to_string(),
+            source_language: "en".to_string(),
+            outline: ManifestEntry {
+                relative_path: format!("{}/{course_id}/course.sqlite.br", manifest::SUBDIR_DATA),
+                size_bytes: 0,
+                sha256: "0".repeat(64),
+            },
+            units: BTreeMap::new(),
+            test_course,
+        }
+    }
+
+    fn manifest_with_courses(course_test_flags: &[(&str, bool)]) -> Manifest {
+        Manifest {
+            manifest_schema_version: manifest::MANIFEST_SCHEMA_VERSION,
+            version: "2026-10-08+Springfield".to_string(),
+            artifact_created: Utc::now(),
+            courses: course_test_flags
+                .iter()
+                .map(|(course_id, test_course)| (course_id.to_string(), manifest_course(course_id, *test_course)))
+                .collect(),
+            voice_pipeline_revisions: BTreeMap::new(),
+        }
+    }
+
+    fn local_target() -> PublishTargetKind {
+        PublishTargetKind::Local {
+            root: None,
+            public_base_url: None,
+        }
+    }
+
+    #[test]
+    fn check_test_courses_publishable_refuses_a_test_course_for_cloudflare_r2() {
+        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false), (TEST_COURSE_ID, true)]);
+
+        let checked: Result<(), AppError> = check_test_courses_publishable(&PublishTargetKind::CloudflareR2, &bundle_manifest);
+
+        assert!(checked.unwrap_err().to_string().contains(TEST_COURSE_ID));
+    }
+
+    #[test]
+    fn check_test_courses_publishable_accepts_a_test_course_locally_and_in_a_dry_run() {
+        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false), (TEST_COURSE_ID, true)]);
+
+        assert!(check_test_courses_publishable(&local_target(), &bundle_manifest).is_ok());
+        assert!(check_test_courses_publishable(&PublishTargetKind::Dry, &bundle_manifest).is_ok());
+    }
+
+    #[test]
+    fn check_test_courses_publishable_accepts_a_bundle_without_test_courses_for_cloudflare_r2() {
+        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false)]);
+
+        assert!(check_test_courses_publishable(&PublishTargetKind::CloudflareR2, &bundle_manifest).is_ok());
     }
 }

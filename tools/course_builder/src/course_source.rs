@@ -45,6 +45,19 @@ pub fn read_unit(paths: &WorkspacePaths, course_id: &str, unit_id: &str) -> Resu
     }
 }
 
+/// The curriculum's units that have a file, in curriculum order.
+pub fn read_present_units(paths: &WorkspacePaths, curriculum: &Curriculum) -> Result<Vec<Unit>, AppError> {
+    let mut units: Vec<Unit> = Vec::new();
+
+    for curriculum_unit in &curriculum.units {
+        let unit: Option<Unit> = read_unit(paths, &curriculum.id, &curriculum_unit.id)?;
+
+        units.extend(unit);
+    }
+
+    Ok(units)
+}
+
 fn parse_json<T: DeserializeOwned>(text: &str, path: &Path) -> Result<T, AppError> {
     let mut deserializer: serde_json::Deserializer<serde_json::de::StrRead> = serde_json::Deserializer::from_str(text);
     let parsed: Result<T, serde_path_to_error::Error<serde_json::Error>> = serde_path_to_error::deserialize(&mut deserializer);

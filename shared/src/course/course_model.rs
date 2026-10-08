@@ -51,6 +51,9 @@ pub struct Course {
     pub source_language: String,
     pub levels: Vec<CourseLevel>,
     pub units: Vec<Unit>,
+    /// A course that exists to test the apps, not to teach.
+    #[serde(default)]
+    pub test_course: bool,
 }
 
 impl Course {
