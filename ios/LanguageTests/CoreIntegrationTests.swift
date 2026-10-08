@@ -1,5 +1,5 @@
 import XCTest
-@testable import PortugueseCourse
+@testable import Language
 
 /// Exercises the Rust core through the generated bindings the app uses.
 final class CoreIntegrationTests: XCTestCase {

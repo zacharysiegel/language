@@ -2,8 +2,8 @@ import Foundation
 
 /// Where the app keeps its cache and progress, and where it finds its course.
 struct CoreEnvironment {
-    static let originInfoKey: String = "PortugueseCourseOrigin"
-    static let progressFileArgumentKey: String = "PortugueseCourseProgressFile"
+    static let originInfoKey: String = "LanguageOrigin"
+    static let progressFileArgumentKey: String = "LanguageProgressFile"
     static let embeddedBundleDirectoryName: String = "embedded_bundle"
     static let cacheDirectoryName: String = "artifacts"
     static let progressFileName: String = "language-progress.json"
@@ -11,8 +11,8 @@ struct CoreEnvironment {
     let configuration: CoreConfiguration
     let progressPath: String
 
-    /// The app's own sandbox and bundle. Launch arguments `-PortugueseCourseOrigin <url>` and
-    /// `-PortugueseCourseProgressFile <name>` override the origin and the progress file's name.
+    /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>` and
+    /// `-LanguageProgressFile <name>` override the origin and the progress file's name.
     static func standard() -> CoreEnvironment {
         let fileManager: FileManager = .default
         let cachesDirectory: URL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]

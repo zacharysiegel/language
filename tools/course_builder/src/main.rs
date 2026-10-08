@@ -101,7 +101,7 @@ struct PublishArguments {
 enum PublishTargetArgument {
     /// Copy into a directory that the web server serves at `/repository`.
     Local {
-        /// The repository directory; `PORTUGUESE_COURSE_LOCAL_REPOSITORY_ROOT`, else `build/repository/`, when omitted.
+        /// The repository directory; `LANGUAGE_LOCAL_REPOSITORY_ROOT`, else `build/repository/`, when omitted.
         #[arg(long)]
         root: Option<PathBuf>,
 

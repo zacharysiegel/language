@@ -30,7 +30,7 @@ clients: /discovery -> latest manifest -> course list -> a course's shard -> its
 - A version is a directory `<version>/` named `<UTC date>+<city>` (a random United States city not already used that day, for uniqueness and for people to tell versions apart), holding `manifest.json` and the shards. Versions are ordered by the manifest's `artifact_created`. Shard names end in the SHA-256 of their bytes.
 - Recordings are named by the SHA-256 of their bytes and sit outside every version, so a publish uploads only the ones the repository lacks. They are not stored in SQLite.
 - `manifest.json` leads with `manifest_schema_version`, then `version`, `artifact_created`, the courses by course id (each with its title, target and source languages, its outline shard and its unit shards by unit id), and each voice engine's pipeline revision. A course list needs only the manifest. Paths are relative to the version directory. `shared::artifact::Manifest` is the canonical type for producer and clients.
-- A shard is SQLite with `application_id` `PTCR` and `user_version` set to the shard schema version, compressed with brotli because neither R2 nor a static file server compresses a generic binary type. The manifest hash covers the compressed bytes.
+- A shard is SQLite with `application_id` `LANG` and `user_version` set to the shard schema version, compressed with brotli because neither R2 nor a static file server compresses a generic binary type. The manifest hash covers the compressed bytes.
 - Every shard has a `clip` table (clip key, persona, spoken text) and a `clip_audio` table (clip key, engine, recording hash, size). The clip key is a hash of the language, the persona and the text, so an unchanged sentence keeps its recordings across builds; the recording hash is what a client fetches.
 - Headers: shards, recordings and versioned manifests are `public, max-age=31536000, immutable`; `latest/` pointers are `public, max-age=300`, and clients fetch them bypassing the HTTP cache.
 - Publish order: recordings, shards, `<version>/manifest.json`, `latest/manifest.<schema>.json`, then `latest/manifest.json`. A client that reads the latest pointer finds every file it names.
@@ -61,7 +61,7 @@ clients: /discovery -> latest manifest -> course list -> a course's shard -> its
 ## Hosting
 
 - Local (the Mac mini): `cargo leptos serve --release` (or `serve.sh` for development) serves the app, `/discovery` and `build/repository/` at `/repository`. Nothing else is needed.
-- R2: the bucket, token and public domain are set up by hand in the Cloudflare dashboard, as for Eafora. `course_builder set-artifact-cors` applies `tools/course_builder/r2-cors.json` to the bucket (the token needs bucket admin permission), then publish with `cloudflare-r2` and set `PORTUGUESE_COURSE_REPOSITORY_BASE_URL` on the app's server to the bucket's public URL.
+- R2: the bucket, token and public domain are set up by hand in the Cloudflare dashboard, as for Eafora. `course_builder set-artifact-cors` applies `tools/course_builder/r2-cors.json` to the bucket (the token needs bucket admin permission), then publish with `cloudflare-r2` and set `LANGUAGE_REPOSITORY_BASE_URL` on the app's server to the bucket's public URL.
 
 ## Deviations from the original proposal
 
