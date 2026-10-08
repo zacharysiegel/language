@@ -8,22 +8,22 @@
     --color-rule:            #d4d4d4; // 1px-rule grey
     --color-ink-muted:       #555555; // secondary text: labels, captions, translations
 
-    --space-xs:              0.25rem; // approx. 4px at default root font size
-    --space-sm:              0.5rem; // approx. 8px
-    --space-md:              1rem; // approx. 16px, the default body unit
-    --space-lg:              2rem; // approx. 32px
-    --space-xl:              3rem; // approx. 48px
+    --space-xs:              0.25rem; // approx. 5px at the 20px root font size
+    --space-sm:              0.5rem; // approx. 10px
+    --space-md:              1rem; // approx. 20px, the default body unit
+    --space-lg:              2rem; // approx. 40px
+    --space-xl:              3rem; // approx. 60px
 
     --font-sans:             "Inter", system-ui, -apple-system, sans-serif;
     --font-mono:             "IBM Plex Mono", ui-monospace, monospace;
 
-    --type-size-body:        0.875rem; // approx. 14px
-    --type-size-data:        0.8125rem; // approx. 13px
-    --type-size-label:       0.625rem; // approx. 10px; the uppercase labels that carry structure
-    --type-size-caption:     0.6875rem; // approx. 11px
-    --type-size-title:       1rem; // approx. 16px
-    --type-size-heading:     1.25rem; // approx. 20px
-    --type-size-figure:      2.25rem; // approx. 36px; a single large word or figure
+    --type-size-body:        0.875rem; // approx. 17.5px
+    --type-size-data:        0.8125rem; // approx. 16px
+    --type-size-label:       0.625rem; // approx. 12.5px; the uppercase labels that carry structure
+    --type-size-caption:     0.6875rem; // approx. 14px
+    --type-size-title:       1rem; // approx. 20px
+    --type-size-heading:     1.25rem; // approx. 25px
+    --type-size-figure:      2.25rem; // approx. 45px; a single large word or figure
     --type-line-height-body: 1.5; // unitless multiplier of the inheritor's font-size
     --type-line-height-data: 1.15;
     --type-line-height-prose: 1.65;
@@ -33,16 +33,17 @@
     --border-active:         var(--border-width-hairline) solid var(--color-accent-active);
     --border-rule:           var(--border-width-hairline) solid var(--color-rule);
 
-    --size-button-icon:      1.4375rem; // approx. 23px: the 13px glyph, the padding either side of it, and the hairline
-    --size-tag:              1.125rem; // approx. 18px: the tag's line box, the padding either side of it, and the hairline
-    --size-check:            1.125rem; // approx. 18px
+    --size-icon-glyph:       0.8125rem; // approx. 16px
+    --size-button-icon:      1.4375rem; // approx. 29px: the glyph, the padding either side of it, and the hairline
+    --size-tag:              1.125rem; // approx. 22.5px: the tag's line box, the padding either side of it, and the hairline
+    --size-check:            1.125rem; // approx. 22.5px
 
-    --width-page:            46rem; // approx. 736px; a measure that keeps prose readable
-    --width-measure:         40rem; // approx. 640px
+    --width-page:            46rem; // approx. 920px; a measure that keeps prose readable
+    --width-measure:         40rem; // approx. 800px
 
     --radius-default:        0;
     --radius-input:          1px;
 }
 
 /* A Sass variable; a media query condition cannot read a custom property. */
-$breakpoint-narrow: 40rem; // approx. 640px
+$breakpoint-narrow: 50rem; // approx. 800px; a media query measures rem against the browser default, not the root

@@ -25,3 +25,8 @@ table.grid td {
 table.grid.paradigm td:first-child {
     color: var(--color-ink-muted);
 }
+
+// A figure or reference reads as one token, so it never breaks across lines.
+table.grid td.numeric {
+    white-space: nowrap;
+}
