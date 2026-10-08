@@ -4,8 +4,8 @@ use leptos_router::hooks::use_location;
 use leptos_router::{ParamSegment, StaticSegment};
 
 use crate::course_data::{
-    self, COURSE_ID_PARAM, COURSE_SEGMENT, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
-    provide_course_store,
+    self, COURSE_ID_PARAM, COURSE_SEGMENT, CourseStore, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
+    VersionLoadState, provide_course_store, use_course_store,
 };
 use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
@@ -78,11 +78,26 @@ fn active_course_id(path: &str, progress_store: ProgressStore) -> Option<String>
     course_data::course_id_in_path(path).or_else(|| progress_store.read(|progress| progress.settings.last_course_id.clone()))
 }
 
+/// The title the published course list gives the course; `None` before the list loads or for an unknown course.
+fn published_course_title(course_store: CourseStore, course_id: &str) -> Option<String> {
+    match course_store.state() {
+        VersionLoadState::Loaded(version) => version.source.manifest.courses.get(course_id).map(|manifest_course| manifest_course.title.clone()),
+        VersionLoadState::Loading | VersionLoadState::Failed(_) => None,
+    }
+}
+
 #[component]
 fn NavigationBar() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
+    let course_store: CourseStore = use_course_store();
     let location = use_location();
     let course_id = move || active_course_id(&location.pathname.get(), progress_store);
+
+    let course_title_link = move || {
+        let course_title: Option<String> = course_id().and_then(|course_id| published_course_title(course_store, &course_id));
+
+        course_title.map(|course_title| view! { <A href="/" attr:class="chrome-course" attr:title="All courses" exact=true>{course_title}</A> })
+    };
 
     let due_count = move |course_id: &str| {
         let now_milliseconds: i64 = platform::now_milliseconds();
@@ -110,6 +125,7 @@ fn NavigationBar() -> impl IntoView {
     view! {
         <nav class="chrome">
             <A href="/" attr:class="chrome-brand" exact=true>"Language"</A>
+            {course_title_link}
             {course_links}
             <div class="chrome-settings">
                 <label class="field">

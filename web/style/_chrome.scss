@@ -17,6 +17,13 @@ nav.chrome {
     margin-right: var(--space-sm);
 }
 
+nav.chrome a.chrome-course {
+    font-weight: 600;
+    margin-right: var(--space-sm);
+    padding-right: var(--space-md);
+    border-right: var(--border-rule);
+}
+
 nav.chrome a:not(.chrome-brand) {
     color: var(--color-ink);
     font-size: var(--type-size-data);
@@ -30,7 +37,7 @@ nav.chrome a:focus-visible {
 }
 
 // Red is the single active mark: the page you are on.
-nav.chrome a[aria-current="page"]:not(.chrome-brand) {
+nav.chrome a[aria-current="page"]:not(.chrome-brand):not(.chrome-course) {
     color: var(--color-accent-active);
     border-bottom-color: var(--color-accent-active);
 }
