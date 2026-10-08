@@ -8,7 +8,7 @@ use shared::artifact::{Manifest, manifest};
 use crate::artifact::artifact_bundle;
 use crate::artifact::repository::artifact_repository::{ArtifactRepository, ObjectHeaders};
 
-pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "PORTUGUESE_COURSE_LOCAL_REPOSITORY_ROOT";
+pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "LANGUAGE_LOCAL_REPOSITORY_ROOT";
 
 const LOCAL_VERSIONS_KEPT: usize = 2;
 
@@ -22,7 +22,8 @@ impl LocalArtifactRepository {
         LocalArtifactRepository { root, public_base_url }
     }
 
-    /// Removes all but the newest versions, then the recordings none of the kept versions name.
+    /// Removes all but the newest versions, then the recordings none of the kept versions name; when a kept version
+    /// cannot be read, no recording is removed.
     pub fn retain_newest_versions(&self) -> Result<(), AppError> {
         let version_names: Vec<String> = artifact_bundle::list_versions_oldest_first(&self.root)?;
         let removable_count: usize = version_names.len().saturating_sub(LOCAL_VERSIONS_KEPT);
@@ -32,7 +33,14 @@ impl LocalArtifactRepository {
             log::info!("removed an old version; [version={version_name}]");
         }
 
-        let kept_audio_sha256s: BTreeSet<String> = self.read_referenced_audio_sha256s(&version_names[removable_count..])?;
+        let kept_audio_read: Result<BTreeSet<String>, AppError> = self.read_referenced_audio_sha256s(&version_names[removable_count..]);
+        let kept_audio_sha256s: BTreeSet<String> = match kept_audio_read {
+            Ok(kept_audio_sha256s) => kept_audio_sha256s,
+            Err(error) => {
+                log::warn!("a kept version is unreadable by this build, so every recording is kept; [error={error}]");
+                return Ok(());
+            },
+        };
         let removed_audio_count: usize = self.remove_audio_except(&kept_audio_sha256s)?;
 
         if removed_audio_count > 0 {
