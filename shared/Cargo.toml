@@ -23,6 +23,8 @@ tokio = { workspace = true, features = ["macros", "rt", "sync"] }
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 # bundles a C SQLite which needs libc; `serialize` adds Connection::deserialize
 rusqlite = { workspace = true, features = ["serialize"] }
+# the HttpFetch for targets with no browser fetch to borrow
+reqwest = { workspace = true }
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 # the SQLite the shard reader's read-only memory VFS registers against; rusqlite does not build for wasm32
