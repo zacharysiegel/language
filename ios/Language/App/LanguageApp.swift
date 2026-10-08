@@ -5,6 +5,7 @@ struct LanguageApp: App {
     @State private var courseStore: CourseStore
     @State private var progressStore: ProgressStore
     @State private var audioPlayer: AudioPlayer = AudioPlayer()
+    @Environment(\.scenePhase) private var scenePhase
 
     init() {
         let environment: CoreEnvironment = CoreEnvironment.standard()
@@ -21,6 +22,11 @@ struct LanguageApp: App {
                 .environment(audioPlayer)
                 .preferredColorScheme(.light)
                 .task { await courseStore.start() }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        Task { await courseStore.refresh() }
+                    }
+                }
         }
     }
 }
