@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["shared", "tools/course_builder", "web"]
+members = ["shared", "ffi", "tools/course_builder", "tools/uniffi_bindgen_swift", "web"]
 
 [workspace.package]
 edition = "2024"
@@ -21,6 +21,8 @@ tempfile = "3.27.*"
 espeak-rs-sys = { version = "0.2.*", features = ["compile-espeak-intonations"] }
 brotli = "8.0.*"
 futures-util = { version = "0.3.*", default-features = false }
+reqwest = { version = "0.13.*", default-features = false, features = ["native-tls"] }
+uniffi = "0.32.*"
 rusqlite = { version = "0.32.*", features = ["bundled"] }
 sqlite-wasm-rs = { version = "0.4.*", default-features = false, features = ["precompiled"] }
 aws-sdk-s3 = "1.152.*"

@@ -1,0 +1,21 @@
+[package]
+name = "ffi"
+version = "0.0.0"
+edition.workspace = true
+publish = false
+
+[lib]
+name = "portuguese_core"
+crate-type = ["staticlib", "lib"]
+
+[dependencies]
+shared = { workspace = true }
+uniffi = { workspace = true, features = ["tokio"] }
+tokio = { workspace = true, features = ["rt-multi-thread", "sync"] }
+chrono = { workspace = true }
+log = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+tempfile = { workspace = true }
+tokio = { workspace = true, features = ["macros", "rt-multi-thread"] }
