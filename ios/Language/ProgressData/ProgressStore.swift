@@ -107,7 +107,12 @@ final class ProgressStore {
     }
 
     func exportJson() -> String? {
-        try? book.exportJson()
+        do {
+            return try book.exportJson()
+        } catch {
+            errorMessage = CoreErrorReport.record(error, while: "exporting progress")
+            return nil
+        }
     }
 
     func importJson(_ text: String) -> Bool {
@@ -130,7 +135,7 @@ final class ProgressStore {
             try change()
             errorMessage = nil
         } catch {
-            errorMessage = String(describing: error)
+            errorMessage = CoreErrorReport.record(error, while: "saving progress")
         }
 
         changeCount += 1

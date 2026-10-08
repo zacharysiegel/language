@@ -68,7 +68,9 @@ final class CoreIntegrationTests: XCTestCase {
         do {
             _ = try await library.loadLatestCourse()
             XCTFail("an unreachable repository loaded")
-        } catch {
+        } catch CoreError.Failure(let message, let backtrace) {
+            XCTAssertTrue(message.contains("127.0.0.1:9"))
+            XCTAssertTrue(backtrace.contains("language_core") || backtrace.contains("shared::"))
         }
     }
 

@@ -73,7 +73,7 @@ impl CourseLibrary {
 async fn run_detached<T: Send + 'static>(work: impl FnOnce() -> Result<T, CoreError> + Send + 'static) -> Result<T, CoreError> {
     let joined: Result<Result<T, CoreError>, tokio::task::JoinError> = tokio::task::spawn_blocking(work).await;
 
-    joined.unwrap_or_else(|error| Err(CoreError::Failure { message: format!("a core task stopped; [error={error}]") }))
+    joined.unwrap_or_else(|error| Err(CoreError::arising(format!("a core task stopped; [error={error}]"))))
 }
 
 fn block_on<T>(work: impl std::future::Future<Output = Result<T, AppError>>) -> Result<T, CoreError> {
