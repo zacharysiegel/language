@@ -9,10 +9,11 @@ use shared::course;
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
 use shared::filesystem;
 use shared::http::{DirectoryFetch, HttpCacheMode, ReqwestHttpFetch};
+use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 
 use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord};
 use crate::ffi_error::CoreError;
-use crate::progress_book::AudioEngineRecord;
+use crate::progress_book::{AudioEngineRecord, VoiceChoiceRecord};
 
 const SHARD_CACHE_DIRECTORY: &str = "shards";
 const AUDIO_CACHE_DIRECTORY: &str = "audio";
@@ -209,10 +210,18 @@ impl CourseVersion {
         Ok(self.open_unit(&course_id, &unit_id).await?)
     }
 
-    /// A local file holding the clip's recording in the voice `engine` picks for `spoken_text`, else in any voice,
-    /// downloaded and verified on first use; `None` when the clip has no recording.
-    pub async fn recording_path(&self, clip_key: String, engine: AudioEngineRecord, spoken_text: String) -> Result<Option<String>, CoreError> {
-        Ok(self.find_recording(&clip_key, engine, &spoken_text).await?)
+    /// A local file holding the clip's recording from the set `engine` picks for `spoken_text` and `voice_choice`, else from
+    /// any set, downloaded and verified on first use; `None` when the clip has no recording.
+    pub async fn recording_path(
+        &self,
+        clip_key: String,
+        engine: AudioEngineRecord,
+        spoken_text: String,
+        voice_choice: VoiceChoiceRecord,
+    ) -> Result<Option<String>, CoreError> {
+        let voice_choice: VoiceChoiceKind = voice_choice.into();
+
+        Ok(self.find_recording(&clip_key, engine, &spoken_text, &voice_choice).await?)
     }
 }
 
@@ -237,8 +246,14 @@ impl CourseVersion {
         Ok((&contents.lesson).into())
     }
 
-    async fn find_recording(&self, clip_key: &str, engine: AudioEngineRecord, spoken_text: &str) -> Result<Option<String>, AppErrorStatic> {
-        let preferred_engine: VoiceEngineKind = shared::progress::AudioEngineKind::from(engine).voice_engine_for(spoken_text);
+    async fn find_recording(
+        &self,
+        clip_key: &str,
+        engine: AudioEngineRecord,
+        spoken_text: &str,
+        voice_choice: &VoiceChoiceKind,
+    ) -> Result<Option<String>, AppErrorStatic> {
+        let preferred_engine: VoiceEngineKind = AudioEngineKind::from(engine).voice_engine_for_clip(spoken_text, voice_choice);
         let Some(audio_sha256) = self.audio_sha256_for(clip_key, preferred_engine)
         else {
             return Ok(None);

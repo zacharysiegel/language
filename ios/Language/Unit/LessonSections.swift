@@ -106,18 +106,24 @@ struct DialoguesSection: View {
             TranslationToggle()
 
             ForEach(dialogues, id: \.id) { dialogue in
+                let voiceChoice: VoiceChoiceRecord = Self.voiceChoice(dialogue)
+
                 VStack(alignment: .leading, spacing: .spaceSm) {
                     Text(dialogue.title).font(.titleText)
                     Text(dialogue.context).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
-                    PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target) })
+                    PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target, voiceChoice: voiceChoice) })
 
                     ForEach(Array(dialogue.lines.enumerated()), id: \.offset) { _, line in
-                        PhraseRow(pair: line.phrase, speaker: line.speaker)
+                        PhraseRow(pair: line.phrase, speaker: line.speaker, voiceChoice: voiceChoice)
                     }
                 }
                 .panel()
             }
         }
+    }
+
+    private static func voiceChoice(_ dialogue: DialogueRecord) -> VoiceChoiceRecord {
+        .wholeDialogue(lineTexts: dialogue.lines.map { line in line.phrase.target })
     }
 }
 

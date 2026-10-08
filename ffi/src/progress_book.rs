@@ -7,7 +7,9 @@ use chrono::Utc;
 use shared::AppError;
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
-use shared::progress::{AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress, UnitStatusKind};
+use shared::progress::{
+    AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress, UnitStatusKind, VoiceChoiceKind,
+};
 use shared::review::{self, ReviewCard};
 
 use crate::ffi_error::CoreError;
@@ -37,6 +39,24 @@ impl From<AudioEngineKind> for AudioEngineRecord {
             AudioEngineKind::Auto => AudioEngineRecord::Auto,
             AudioEngineKind::Kokoro => AudioEngineRecord::Kokoro,
             AudioEngineKind::MacosSay => AudioEngineRecord::MacosSay,
+        }
+    }
+}
+
+/// Which texts decide the recording set a clip plays from.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Enum)]
+pub enum VoiceChoiceRecord {
+    OwnText,
+    WholeDialogue {
+        line_texts: Vec<String>,
+    },
+}
+
+impl From<VoiceChoiceRecord> for VoiceChoiceKind {
+    fn from(record: VoiceChoiceRecord) -> VoiceChoiceKind {
+        match record {
+            VoiceChoiceRecord::OwnText => VoiceChoiceKind::OwnText,
+            VoiceChoiceRecord::WholeDialogue { line_texts } => VoiceChoiceKind::WholeDialogue { line_texts },
         }
     }
 }

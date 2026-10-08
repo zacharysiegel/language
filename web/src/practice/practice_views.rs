@@ -9,6 +9,7 @@ use shared::course::{
     OrderWordsExercise, TranslateToTargetExercise,
 };
 use shared::practice::{AnswerStatus, check_typed_answer, shuffled, shuffled_avoiding_identity};
+use shared::progress::VoiceChoiceKind;
 
 use crate::audio_player::{PlayButton, audio_clip, play_in_background};
 use crate::platform::{self, AudioClip};
@@ -101,7 +102,7 @@ fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<Exer
 #[component]
 fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.choices[exercise.answer_index]);
-    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
 
     Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
 
@@ -224,7 +225,7 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.hint_source);
     let accepted_answers: Vec<String> = vec![exercise.audio_target.clone()];
-    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
 
     Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
 
@@ -374,7 +375,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
         .map(|pair_index| {
             let pair = pairs.pairs[pair_index].clone();
             let resolve_selection = resolve_selection.clone();
-            let clip = audio_clip(&pair.clip_key, &pair.target);
+            let clip: AudioClip = audio_clip(&pair.clip_key, &pair.target, VoiceChoiceKind::OwnText);
 
             view! {
                 <button

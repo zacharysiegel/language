@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use leptos::prelude::*;
 use shared::course::{self, CourseOutline, UnitOutline, VocabularyItem};
-use shared::progress::ReviewDirectionKind;
+use shared::progress::{ReviewDirectionKind, VoiceChoiceKind};
 use shared::review::{ReviewCard, select_due_cards};
 
 use crate::audio_player::{PlayButton, audio_clip, play_in_background};
@@ -224,7 +224,7 @@ fn card_view(
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let card_progress: CardProgress = CardProgress { index, total_count };
-    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target);
+    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target, VoiceChoiceKind::OwnText);
 
     Effect::new(move |_| {
         if prompt_is_target || revealed.get() {

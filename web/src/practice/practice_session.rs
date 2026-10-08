@@ -4,6 +4,7 @@ use leptos::ev;
 use leptos::prelude::*;
 use shared::course::{Exercise, ExerciseKind};
 use shared::practice::SessionScore;
+use shared::progress::VoiceChoiceKind;
 
 use crate::audio_player::{PlayButton, audio_clip, play_in_background};
 use crate::practice::{ExerciseResult, exercise_body};
@@ -176,7 +177,7 @@ fn feedback_view(
 
     if SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
         if let Some(text) = &spoken_text {
-            play_in_background(audio_clip(&audio_path, text), false);
+            play_in_background(audio_clip(&audio_path, text, VoiceChoiceKind::OwnText), false);
         }
     }
 

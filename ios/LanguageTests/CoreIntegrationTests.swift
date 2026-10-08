@@ -51,7 +51,7 @@ final class CoreIntegrationTests: XCTestCase {
         let courseId: String = try XCTUnwrap(latest.courses().first?.id)
         let outline: CourseOutlineRecord = try await latest.loadCourse(courseId: courseId)
         let item: VocabularyItemRecord = try XCTUnwrap(outline.units.first?.vocabulary.first)
-        let path: String? = try await latest.recordingPath(clipKey: try XCTUnwrap(item.clipKey), engine: .kokoro, spokenText: item.target)
+        let path: String? = try await latest.recordingPath(clipKey: try XCTUnwrap(item.clipKey), engine: .kokoro, spokenText: item.target, voiceChoice: .ownText)
         let cached: CourseVersion? = await library.loadCachedCourse()
 
         XCTAssertTrue(FileManager.default.fileExists(atPath: try XCTUnwrap(path)))

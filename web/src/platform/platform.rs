@@ -1,11 +1,12 @@
 use shared::course_shard::ClipAudioEntry;
-use shared::progress::AudioEngineKind;
+use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 
 /// Something to play: the recording of a clip, or the text spoken by the browser's voice when it has none.
 #[derive(Debug, Clone)]
 pub struct AudioClip {
     pub clip_key: Option<String>,
     pub fallback_text: String,
+    pub voice_choice: VoiceChoiceKind,
 }
 
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
@@ -143,8 +144,9 @@ mod browser {
     }
 
     /* The chosen voice's recording, else any other voice's, so a clip one engine lacks still plays a recording. */
-    fn clip_url(clip_key: &str, text: &str) -> Option<String> {
-        let preferred_engine: VoiceEngineKind = SELECTED_ENGINE.with(Cell::get).voice_engine_for(text);
+    fn clip_url(clip: &AudioClip) -> Option<String> {
+        let clip_key: &str = clip.clip_key.as_deref()?;
+        let preferred_engine: VoiceEngineKind = SELECTED_ENGINE.with(Cell::get).voice_engine_for_clip(&clip.fallback_text, &clip.voice_choice);
 
         CLIP_AUDIO.with(|registry| {
             let registry = registry.borrow();
@@ -179,7 +181,7 @@ mod browser {
     }
 
     async fn play_without_stopping(clip: &AudioClip, rate: f64) {
-        let url: Option<String> = clip.clip_key.as_deref().and_then(|clip_key| clip_url(clip_key, &clip.fallback_text));
+        let url: Option<String> = clip_url(clip);
         let Some(url) = url
         else {
             speak_with_browser_voice(&clip.fallback_text, rate).await;
