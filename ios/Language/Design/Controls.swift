@@ -300,7 +300,7 @@ extension UnitStatusRecord: CaseIterable {
     }
 }
 
-/// A unit's status: completed, in progress, or not started, with its best score.
+/// A unit's status, with its best score once it has been practised.
 struct UnitStatusTag: View {
     let unitProgress: UnitProgressRecord
 
@@ -309,7 +309,10 @@ struct UnitStatusTag: View {
             switch unitProgress.status {
             case .completed:
                 TagView(text: UnitStatusRecord.completed.label(), isInk: true)
-                percentText()
+
+                if unitProgress.attemptCount > 0 {
+                    percentText()
+                }
             case .inProgress:
                 TagView(text: UnitStatusRecord.inProgress.label(), isActive: true)
 

@@ -33,16 +33,18 @@ pub fn unit_status_view(unit_progress: UnitProgress) -> AnyView {
     let percent: u32 = (unit_progress.best_proportion * 100.0).round() as u32;
     let label: &'static str = unit_status_label(unit_progress.status);
 
-    match unit_progress.status {
-        UnitStatusKind::Completed => {
-            view! { <span class="tag tag-ink">{label}</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
-        },
-        UnitStatusKind::InProgress if unit_progress.attempt_count > 0 => {
-            view! { <span class="tag tag-active">{label}</span>" "<span class="numeric muted">{percent}"%"</span> }.into_any()
-        },
-        UnitStatusKind::InProgress => view! { <span class="tag tag-active">{label}</span> }.into_any(),
-        UnitStatusKind::NotStarted => view! { <span class="tag">{label}</span> }.into_any(),
+    let tag_class: &'static str = match unit_progress.status {
+        UnitStatusKind::Completed => "tag tag-ink",
+        UnitStatusKind::InProgress => "tag tag-active",
+        UnitStatusKind::NotStarted => "tag",
+    };
+    let shows_score: bool = unit_progress.status != UnitStatusKind::NotStarted && unit_progress.attempt_count > 0;
+
+    view! {
+        <span class=tag_class>{label}</span>
+        {shows_score.then(|| view! { " "<span class="numeric muted">{percent}"%"</span> })}
     }
+    .into_any()
 }
 
 #[cfg(test)]
