@@ -286,6 +286,8 @@ struct UnitStatusTag: View {
             } else if unitProgress.attemptCount > 0 {
                 TagView(text: "In progress", isActive: true)
                 percentText()
+            } else if unitProgress.started {
+                TagView(text: "In progress", isActive: true)
             } else {
                 TagView(text: "Not started")
             }

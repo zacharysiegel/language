@@ -31,6 +31,15 @@ impl ProgressStore {
         }
     }
 
+    /// Records the unit as started, when it is not already.
+    pub fn start_unit(&self, course_id: &str, unit_id: &str) {
+        let is_started: bool = self.progress.with_untracked(|progress| progress.course_progress(course_id).unit_progress(unit_id).started);
+
+        if !is_started {
+            self.progress.update(|progress| progress.course_progress_mut(course_id).mark_unit_started(unit_id));
+        }
+    }
+
     /// Adds missing words and brings words that are scheduled for later back to the course's review queue.
     pub fn queue_unit_vocabulary_for_review(&self, course_id: &str, unit_id: &str, vocabulary_count: usize) -> QueuedCards {
         let card_ids: Vec<String> = (0..vocabulary_count).map(|item_index| vocabulary_card_id(unit_id, item_index)).collect();

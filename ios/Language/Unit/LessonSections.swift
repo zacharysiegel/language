@@ -20,6 +20,11 @@ struct OverviewSection: View {
                     }
                 }
 
+                Text("Opening the unit starts it. Pass its full practice with at least \(passPercent())% to complete it.")
+                    .font(.captionText)
+                    .foregroundStyle(Color.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 Button("Add the \(unit.vocabulary.count) words to my review deck") {
                     let queued: QueuedCardsRecord? = progressStore.queueUnitVocabulary(courseId: courseId, unitId: unit.id, vocabularyCount: unit.vocabulary.count)
 

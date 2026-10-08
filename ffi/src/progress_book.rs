@@ -103,6 +103,7 @@ impl From<SettingsRecord> for Settings {
 
 #[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
 pub struct UnitProgressRecord {
+    pub started: bool,
     pub completed: bool,
     pub best_proportion: f64,
     pub attempt_count: u32,
@@ -111,6 +112,7 @@ pub struct UnitProgressRecord {
 impl From<UnitProgress> for UnitProgressRecord {
     fn from(unit_progress: UnitProgress) -> UnitProgressRecord {
         UnitProgressRecord {
+            started: unit_progress.started,
             completed: unit_progress.completed,
             best_proportion: unit_progress.best_proportion,
             attempt_count: unit_progress.attempt_count,
@@ -194,6 +196,17 @@ impl ProgressBook {
 
     pub fn unit_progress(&self, course_id: String, unit_id: String) -> UnitProgressRecord {
         self.lock().course_progress(&course_id).unit_progress(&unit_id).into()
+    }
+
+    /// Records that the learner opened the unit; saves only when it was not started before.
+    pub fn start_unit(&self, course_id: String, unit_id: String) -> Result<(), CoreError> {
+        let is_started: bool = self.lock().course_progress(&course_id).unit_progress(&unit_id).started;
+
+        if is_started {
+            return Ok(());
+        }
+
+        self.change(|progress| progress.course_progress_mut(&course_id).mark_unit_started(&unit_id))
     }
 
     pub fn completed_unit_count(&self, course_id: String) -> u32 {

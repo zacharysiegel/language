@@ -1,6 +1,7 @@
 use leptos::prelude::*;
-use shared::progress::QueuedCards;
 use shared::course::{Dialogue, GrammarNote, PhrasePair, Reading, Unit, VocabularyItem};
+use shared::practice;
+use shared::progress::QueuedCards;
 
 use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
 use crate::platform::AudioClip;
@@ -71,6 +72,7 @@ pub fn OverviewSection(course_id: String, unit: Unit) -> impl IntoView {
         <section class="lesson-section">
         <h2>"You will learn to"</h2>
         <ul>{objectives}</ul>
+        <p class="muted">{format!("Opening the unit starts it. Pass its full practice with at least {}% to complete it.", (practice::PASS_PROPORTION * 100.0).round())}</p>
         <div class="row">
             <button
                 type="button"
