@@ -22,7 +22,7 @@ use std::process::ExitCode;
 use clap::{Args, Parser, Subcommand};
 use shared::AppError;
 
-use crate::build_command::BuildOptions;
+use crate::build_command::{BuildOptions, TestCourseInclusionKind};
 use crate::cors_command::CorsActionKind;
 use crate::publish_command::PublishTargetKind;
 use crate::speech_engine::SpeechEngineKind;
@@ -85,6 +85,10 @@ struct BuildArguments {
     /// Build only the unit files that exist.
     #[arg(long)]
     allow_missing: bool,
+
+    /// Include the courses marked as test courses, for local development and testing.
+    #[arg(long = build_command::INCLUDE_TEST_COURSES_FLAG)]
+    include_test_courses: bool,
 }
 
 #[derive(Args)]
@@ -139,6 +143,14 @@ fn chosen_engines(named: Vec<SpeechEngineKind>) -> Vec<SpeechEngineKind> {
     named
 }
 
+fn test_course_inclusion(include_test_courses: bool) -> TestCourseInclusionKind {
+    if include_test_courses {
+        return TestCourseInclusionKind::Include;
+    }
+
+    TestCourseInclusionKind::Exclude
+}
+
 fn run(command: CommandKind) -> Result<bool, AppError> {
     let paths: WorkspacePaths = WorkspacePaths::locate()?;
 
@@ -151,6 +163,7 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
                 engines: chosen_engines(arguments.engines),
                 skip_audio: arguments.skip_audio,
                 allow_missing: arguments.allow_missing,
+                test_course_inclusion: test_course_inclusion(arguments.include_test_courses),
             },
         ),
         CommandKind::Publish(arguments) => {

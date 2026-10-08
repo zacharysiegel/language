@@ -12,6 +12,9 @@ pub struct Curriculum {
     pub source_language: String,
     pub levels: Vec<CourseLevel>,
     pub units: Vec<CurriculumUnit>,
+    /// A course that exists to test the apps, not to teach.
+    #[serde(default)]
+    pub test_course: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]

@@ -49,6 +49,7 @@ mod tests {
             source_language: "en".to_string(),
             levels: Vec::new(),
             units: Vec::new(),
+            test_course: false,
         }
     }
 

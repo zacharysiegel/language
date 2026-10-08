@@ -59,6 +59,14 @@ impl Manifest {
             .get(course_id)
             .ok_or_else(|| AppError::from(format!("the published version has no such course; [course_id={course_id}]")))
     }
+
+    pub fn test_course_ids(&self) -> Vec<&str> {
+        self.courses
+            .iter()
+            .filter(|(_, manifest_course)| manifest_course.test_course)
+            .map(|(course_id, _)| course_id.as_str())
+            .collect()
+    }
 }
 
 /// One course's shards, and what a course list shows before any shard is opened.
@@ -70,6 +78,9 @@ pub struct ManifestCourse {
     pub outline: ManifestEntry,
     /// The course's unit shards, by unit id.
     pub units: BTreeMap<String, ManifestEntry>,
+    /// A course that exists to test the apps, not to teach.
+    #[serde(default)]
+    pub test_course: bool,
 }
 
 impl ManifestCourse {
@@ -181,6 +192,17 @@ mod tests {
         let reparsed: Manifest = parse_manifest(produced.as_bytes()).unwrap();
 
         assert_eq!(manifest, reparsed);
+    }
+
+    #[test]
+    fn test_course_ids_names_only_the_courses_marked_as_test_courses() {
+        let mut manifest: Manifest = parse_manifest(valid_manifest_json().as_bytes()).unwrap();
+
+        assert!(manifest.test_course_ids().is_empty());
+
+        manifest.courses.get_mut("pt_br.en.foundations").unwrap().test_course = true;
+
+        assert_eq!(manifest.test_course_ids(), vec!["pt_br.en.foundations"]);
     }
 
     #[test]
