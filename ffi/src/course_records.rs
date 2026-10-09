@@ -1,5 +1,6 @@
 //! The course model as records the native apps receive; each converts from its `shared::course` counterpart.
 
+use shared::artifact::CourseIndexEntry;
 use shared::course::{
     self, CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, FillBlankExercise,
     GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair,
@@ -113,6 +114,17 @@ pub struct CourseSummaryRecord {
     pub title: String,
     pub target_language_name: String,
     pub source_language_name: String,
+}
+
+impl CourseSummaryRecord {
+    pub fn from_index_entry(course_id: &str, entry: &CourseIndexEntry) -> CourseSummaryRecord {
+        CourseSummaryRecord {
+            id: course_id.to_string(),
+            title: entry.title.clone(),
+            target_language_name: course::language_name(&entry.target_language),
+            source_language_name: course::language_name(&entry.source_language),
+        }
+    }
 }
 
 #[derive(Debug, Clone, uniffi::Record)]

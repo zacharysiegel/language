@@ -43,11 +43,12 @@ struct UnitPage: View {
         content()
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { ensureLoaded() }
-            .onChange(of: courseStore.shownVersion()?.version()) { ensureLoaded() }
+            .onChange(of: courseStore.shownContentKey(courseId: courseId)) { ensureLoaded() }
             .onDisappear { audioPlayer.stop() }
     }
 
     private func ensureLoaded() {
+        courseStore.ensurePublicationLoaded(courseId: courseId)
         courseStore.ensureOutlineLoaded(courseId: courseId)
         courseStore.ensureUnitLoaded(courseId: courseId, unitId: unitId)
     }
