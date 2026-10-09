@@ -15,13 +15,6 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
         Memo::new(move |_| progress_store.unit_status(&course_id, &unit_id))
     };
 
-    let start_unit = {
-        let course_id: String = course_id.clone();
-        let unit_id: String = unit_id.clone();
-
-        move || progress_store.start_unit(&course_id, &unit_id)
-    };
-
     let set_status = move |code: String| {
         let Some(chosen) = progress_state::unit_status_from_code(&code)
         else {
@@ -50,13 +43,6 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
 
     view! {
         <div class="unit-status-control">
-            {move || {
-                let start_unit = start_unit.clone();
-
-                (status.get() == UnitStatusKind::NotStarted).then(move || {
-                    view! { <button type="button" class="primary" on:click=move |_| start_unit()>"Start this unit"</button> }
-                })
-            }}
             <label class="field">
                 <span class="field-label">"Status"</span>
                 <select on:change:target=move |event| set_status(event.target().value())>{status_options}</select>
