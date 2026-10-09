@@ -489,7 +489,7 @@ async fn upload_missing_recordings(
     let mut uploaded_count: usize = 0;
 
     for audio_sha256 in recordings {
-        let key: String = manifest::audio_key(audio_sha256);
+        let key: String = repository_key::audio_key(audio_sha256);
 
         if stored_audio_keys.contains(&key) {
             continue;
@@ -532,7 +532,7 @@ fn verify_audio_file(path: &Path, audio_sha256: &str) -> Result<(), AppError> {
     content_address::verify_sha256(&path.display().to_string(), &bytes, audio_sha256)
 }
 
-/// Writes the schema pointer, then `latest/manifest.json` conditional on the pointer read before.
+/// Writes the schema pointer, then the course's latest pointer conditional on the pointer read before.
 async fn update_latest_pointer(
     repository: &impl ArtifactRepository,
     bundle_manifest: &CourseManifest,

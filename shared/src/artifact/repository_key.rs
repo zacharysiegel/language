@@ -50,6 +50,10 @@ pub fn publication_file_key(course_id: &str, publication_label: &str, relative_p
     format!("{}{relative_path}", publication_directory_key(course_id, publication_label))
 }
 
+pub fn audio_key(audio_sha256: &str) -> String {
+    format!("{}/{audio_sha256}.{}", manifest::SUBDIR_AUDIO, manifest::AUDIO_FILE_EXTENSION)
+}
+
 /// A key whose object is replaced in place, so caches must revalidate it.
 pub fn is_pointer_key(key: &str) -> bool {
     if key == COURSE_INDEX_KEY {
@@ -97,6 +101,7 @@ mod tests {
             publication_file_key(COURSE_ID, PUBLICATION_LABEL, "data/course-ab.sqlite.br"),
             "courses/pt_br.en.foundations/2026-10-08+duluth/data/course-ab.sqlite.br",
         );
+        assert_eq!(audio_key("abc"), "audio/abc.m4a");
     }
 
     #[test]
@@ -125,7 +130,7 @@ mod tests {
         assert!(!is_pointer_key(&publication_manifest_key(COURSE_ID, PUBLICATION_LABEL)));
         assert!(!is_pointer_key(&publication_recordings_key(COURSE_ID, PUBLICATION_LABEL)));
         assert!(!is_pointer_key(&publication_file_key(COURSE_ID, PUBLICATION_LABEL, "data/course-ab.sqlite.br")));
-        assert!(!is_pointer_key(&manifest::audio_key("ab")));
+        assert!(!is_pointer_key(&audio_key("ab")));
         assert!(!is_pointer_key("latest/manifest.json"));
     }
 
@@ -134,6 +139,6 @@ mod tests {
         assert_eq!(cache_control_for_key(COURSE_INDEX_KEY), CACHE_CONTROL_POINTER);
         assert_eq!(cache_control_for_key(&course_latest_manifest_key(COURSE_ID)), CACHE_CONTROL_POINTER);
         assert_eq!(cache_control_for_key(&publication_manifest_key(COURSE_ID, PUBLICATION_LABEL)), CACHE_CONTROL_IMMUTABLE);
-        assert_eq!(cache_control_for_key(&manifest::audio_key("ab")), CACHE_CONTROL_IMMUTABLE);
+        assert_eq!(cache_control_for_key(&audio_key("ab")), CACHE_CONTROL_IMMUTABLE);
     }
 }

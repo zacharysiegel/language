@@ -202,6 +202,26 @@ mod tests {
     }
 
     #[test]
+    fn parse_course_manifest_rejects_a_malformed_sha256() {
+        let json: String = valid_course_manifest_json().replace(&format!("\"sha256\": \"{}\"", valid_sha256()), "\"sha256\": \"not-hex\"");
+
+        assert!(parse_course_manifest(json.as_bytes(), Some(COURSE_ID)).is_err());
+    }
+
+    #[test]
+    fn parse_course_manifest_ignores_unknown_fields() {
+        let json: String = valid_course_manifest_json().replace(
+            r#""test_course": false,"#,
+            r#""test_course": false,
+  "field_added_in_a_later_revision": "ignored","#,
+        );
+
+        let course_manifest: CourseManifest = parse_course_manifest(json.as_bytes(), Some(COURSE_ID)).unwrap();
+
+        assert_eq!(course_manifest.publication_label, "2026-10-08+duluth");
+    }
+
+    #[test]
     fn schema_fallback_key_offers_the_readers_own_pointer_beside_the_named_pointer() {
         let latest_manifest_key: String = repository_key::course_latest_manifest_key(COURSE_ID);
         let newer: String = with_schema_version(&valid_course_manifest_json(), COURSE_MANIFEST_SCHEMA_VERSION + 1);

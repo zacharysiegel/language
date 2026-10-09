@@ -8,7 +8,7 @@ use dashmap::DashMap;
 use dashmap::mapref::one::Ref;
 use shared::artifact::{
     self, ArtifactOriginKind, CourseIndexSource, CourseManifest, CourseManifestSource, FilesystemArtifactCache, ManifestEntry,
-    content_address, course_manifest, discovery, fetch, manifest,
+    content_address, course_manifest, discovery, fetch, manifest, repository_key,
 };
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
 use shared::filesystem;
@@ -400,7 +400,7 @@ impl CourseLibrary {
             return Ok(path);
         }
 
-        let url: String = fetch::join_url(&recording.audio_base_url, &manifest::audio_key(&recording.audio_sha256));
+        let url: String = fetch::join_url(&recording.audio_base_url, &repository_key::audio_key(&recording.audio_sha256));
         let bytes: Vec<u8> = fetch::fetch_bytes(http_fetch, &url, HttpCacheMode::Default).await?;
 
         content_address::verify_sha256(&url, &bytes, &recording.audio_sha256)?;
@@ -561,7 +561,7 @@ impl CoursePublication {
 mod tests {
     use std::collections::BTreeSet;
 
-    use shared::artifact::{CourseIndex, CourseIndexEntry, course_index, repository_key};
+    use shared::artifact::{CourseIndex, CourseIndexEntry, course_index};
 
     use super::*;
 
@@ -839,7 +839,7 @@ mod tests {
         let repository: PathBuf = repository_directory(app_origin.path());
         let recording_bytes: &[u8] = b"recording";
         let audio_sha256: String = content_address::sha256_hex(recording_bytes);
-        write_file(&repository.join(manifest::audio_key(&audio_sha256)), recording_bytes);
+        write_file(&repository.join(repository_key::audio_key(&audio_sha256)), recording_bytes);
         let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), cache_directory.path());
         library.register_clip_audio(
             &[ClipAudioEntry {
