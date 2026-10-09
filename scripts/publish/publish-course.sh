@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 
-# Publishes the newest bundle under build/artifacts/ to a repository: `local` (build/repository/, which the
-# web server serves at /repository), `cloudflare-r2`, or `dry` (logs each upload without making it). Cloudflare R2
-# refuses a bundle that holds a test course.
+# Publishes courses' newest bundles under build/artifacts/ to a repository: `local` (build/repository/, which the
+# web server serves at /repository), `cloudflare-r2`, or `dry` (logs each write without making it). Without
+# --course, it publishes every course the repository's index lists; --include-unlisted-courses adds every built
+# course the index does not list yet. Publishing to `local` or `cloudflare-r2` also refreshes those courses in the
+# embedded bundle. Cloudflare R2 refuses a test course.
 #
 # Usage:
+#   ./scripts/publish/publish-course.sh <local|cloudflare-r2|dry> [--course <course id>]... [--include-unlisted-courses]
 #   ./scripts/publish/publish-course.sh local
-#   ./scripts/publish/publish-course.sh cloudflare-r2
-#   ./scripts/publish/publish-course.sh dry
+#   ./scripts/publish/publish-course.sh cloudflare-r2 --course pt_br.en.foundations
+#   ./scripts/publish/publish-course.sh local --include-unlisted-courses
 
 set -euo pipefail
 

@@ -1,4 +1,4 @@
-# Architecture: versioned SQLite artifacts in an object store
+# Architecture: per-course SQLite publications in an object store
 
 The course follows Eafora's architecture (`/Users/singularity/eafora/docs/architecture/overview.md` and `client.md`): a producer builds immutable, content-addressed SQLite shards and publishes them to an object store; every client is a reader of those files through the shared Rust core, and never calls an application server for course data.
 
@@ -9,34 +9,38 @@ data/courses/<course id>/{curriculum.json, units/*.json} (authoring source, in g
         |  course_builder build: validate, synthesize missing clips
         v
 build/clips/<engine>/<clip_key>.m4a          clip store, one directory per speech engine
-        |  course_builder build: write the bundle
+        |  course_builder build: write one bundle per course
         v
-build/artifacts/<version>/
+build/artifacts/<course id>/<publication label>/
         manifest.json
-        data/<course id>/course-<sha256>.sqlite.br      the course's identity, languages, levels, units, vocabulary, their clips
-        data/<course id>/unit-<id>-<sha256>.sqlite.br   one unit's lesson and its clips
+        recordings.json                       the recordings the shards name
+        data/course-<sha256>.sqlite.br        the course's identity, languages, levels, units, vocabulary, their clips
+        data/unit-<id>-<sha256>.sqlite.br     one unit's lesson and its clips
         audio/<sha256>.m4a                    every recording the shards name (hard links into the clip store)
         |  course_builder publish local | cloudflare-r2 | dry
         v
-repository:  audio/<sha256>.m4a
-             <version>/manifest.json, <version>/data/...
-             latest/manifest.1.json, latest/manifest.json (written last)
+repository:  audio/<sha256>.m4a                                       shared by every course
+             courses/<course id>/<publication label>/manifest.json, recordings.json, data/...
+             courses/<course id>/latest/manifest.<schema>.json, latest/manifest.json
+             course-index.json (written last)
         v
 clients: /discovery -> latest manifest -> course list -> a course's shard -> its unit shards on demand -> recordings when played
 ```
 
 ## Artifact contract
 
-- A version is a directory `<version>/` named `<UTC date>+<city>` (a random United States city not already used that day, for uniqueness and for people to tell versions apart), holding `manifest.json` and the shards. Versions are ordered by the manifest's `artifact_created`. Shard names end in the SHA-256 of their bytes.
-- Recordings are named by the SHA-256 of their bytes and sit outside every version, so a publish uploads only the ones the repository lacks. They are not stored in SQLite.
-- `manifest.json` leads with `manifest_schema_version`, then `version`, `artifact_created`, the courses by course id (each with its title, target and source languages, its outline shard, its unit shards by unit id, and whether it is a test course), and each voice engine's pipeline revision. A course list needs only the manifest. Paths are relative to the version directory. `shared::artifact::Manifest` is the canonical type for producer and clients.
+- Each course is published on its own. A publication is a directory `courses/<course id>/<publication label>/`, labelled `<UTC date>+<city>` (a random United States city, unique within the course, for uniqueness and for people to tell publications apart). It holds `manifest.json`, `recordings.json` and the shards under `data/`. Shard names end in the SHA-256 of their bytes.
+- Recordings are named by the SHA-256 of their bytes and sit in `audio/`, outside every course and publication, so a publish uploads only the ones the repository lacks. They are not stored in SQLite. `recordings.json` lists the recordings a publication's shards name; only the producer reads it.
+- `course-index.json` leads with `course_index_schema_version`, then the courses by course id, each with its title, target and source languages, `latest_manifest_key` (relative to the repository base) and whether it is a test course. It names no publication label, so it changes only when a course is added, renamed or removed. A course list needs only the index. `shared::artifact::CourseIndex` is the canonical type.
+- A course manifest leads with `manifest_schema_version`, then `course_id`, `publication_label`, `artifact_created`, the title and languages, whether it is a test course, its outline shard, its unit shards by unit id, and the pipeline revision of each voice engine its recordings come from. Paths are relative to the publication directory. `shared::artifact::CourseManifest` is the canonical type for producer and clients.
+- A course's latest pointer, `courses/<course id>/latest/manifest.json`, is a byte-for-byte copy of the manifest of the publication clients should open. Clients decide whether a course's content changed by comparing manifest bytes.
 - A shard is SQLite with `application_id` `LANG` and `user_version` set to the shard schema version, compressed with brotli because neither R2 nor a static file server compresses a generic binary type. The manifest hash covers the compressed bytes.
 - Every shard has a `clip` table (clip key, persona, spoken text) and a `clip_audio` table (clip key, engine, recording hash, size). The clip key is a hash of the language, the persona and the text, so an unchanged sentence keeps its recordings across builds; the recording hash is what a client fetches.
-- Headers: shards, recordings and versioned manifests are `public, max-age=31536000, immutable`; `latest/` pointers are `public, max-age=300`, and clients fetch them bypassing the HTTP cache.
-- Publish order: recordings, shards, `<version>/manifest.json`, `latest/manifest.<schema>.json`, then `latest/manifest.json`. A client that reads the latest pointer finds every file it names.
-- A client that cannot read the schema of `latest/manifest.json` falls back to `latest/manifest.<its schema>.json`.
-- Discovery: the app's origin serves `/discovery` (`public, max-age=3600`) with `schema_version`, `repository_base_url`, `minimum_client_version` and `sunset`. A document with an unknown `schema_version` is ignored in favor of the static repository (`/repository`), whose manifest the client requests in parallel and reuses when discovery agrees. `minimum_client_version` is informational: an older client logs it and continues.
-- Versioning, as in Eafora: every reader accepts exactly its own manifest, discovery and shard schema versions, and reports whether a mismatched document is older or newer than itself.
+- Headers: `course-index.json` and everything under `courses/<course id>/latest/` are pointers, `public, max-age=300`, which clients fetch bypassing the HTTP cache; everything else is `public, max-age=31536000, immutable`. `shared::artifact::repository_key::cache_control_for_key` is the one rule, which `course_builder publish` and the app's server both apply.
+- Publish order, per course: the recordings the repository lacks, the shards, `recordings.json`, the publication's `manifest.json`, `latest/manifest.<schema>.json`, `latest/manifest.json`, then `course-index.json`. A client that reads a pointer finds every file it names.
+- A client that cannot read the schema of a course's latest pointer falls back to `manifest.<its schema>.json` beside it.
+- Discovery: the app's origin serves `/discovery` (`public, max-age=3600`) with `schema_version`, `repository_base_url`, `minimum_client_version` and `sunset`. The course index is `<repository_base_url>/course-index.json`. A document with an unknown `schema_version` is ignored in favor of the static repository (`/repository`), whose course index the client requests in parallel and reuses when discovery agrees. `minimum_client_version` is informational: an older client logs it and continues.
+- Versioning, as in Eafora: every reader accepts exactly its own course index, manifest, discovery and shard schema versions, and reports whether a mismatched document is older or newer than itself. A later course index schema is published as `course-index.<n>.json` beside `course-index.json`.
 
 ## Courses
 
@@ -48,8 +52,20 @@ clients: /discovery -> latest manifest -> course list -> a course's shard -> its
 ## Producer
 
 - Authoring source stays JSON in git; there is no canonical database. The data is hand-authored and small, so a database would add nothing. This is the deliberate deviation from Eafora.
-- `course_builder build` validates, synthesizes each engine's missing clips with the engines running at the same time, writes the bundle, refreshes `web/static/embedded/` from its courses other than the test courses, and keeps the two newest bundles. It removes the recorded clips that no unit of any course in `data/` uses, built or not. The embedded bundle is refreshed only from a bundle that holds every course other than the test courses, and gets a version label of its own when test courses are left out of it, since clients tell versions apart by label. A test course is built only with `--include-test-courses`, and publishing to Cloudflare R2 refuses a bundle that holds one.
-- `course_builder publish` refuses a version the repository already has. It has three targets, as in Eafora: `local` copies into a directory (default `build/repository/`) and keeps the two newest versions and the recordings they name; `cloudflare-r2` uploads through the S3 API with credentials from `.env` and the secret access key from `secrets.yaml` (decrypted with `secr`); `dry` logs each upload.
+- `course_builder build` validates, synthesizes each engine's missing clips with the engines running at the same time, and writes one bundle per course to `build/artifacts/<course id>/<publication label>/`. A course whose new manifest equals its newest bundle's, apart from the label and creation time, keeps that bundle. It keeps each course's two newest bundles, removes the bundles of course ids no longer in `data/`, and removes the recorded clips that no unit of any course in `data/` uses, built or not. A test course is built only with `--include-test-courses`.
+- `course_builder publish <local|cloudflare-r2|dry>` has three targets, as in Eafora: `local` copies into a directory (default `build/repository/`); `cloudflare-r2` uploads through the S3 API with credentials from `.env` and the secret access key from `secrets.yaml` (decrypted with `secr`); `dry` logs every write as if the repository were empty.
+  - Without `--course`, it publishes the newest bundle of every course the target's index lists and `data/` holds, and logs the `remove-course` command for an indexed course `data/` lacks. `--include-unlisted-courses` adds every built course the index does not list. `--course <id>` (repeatable) publishes only the named courses, listed or not; `--bundle <dir>` publishes one bundle.
+  - Courses are published one after another; one course's failure is reported, the rest continue, and the command exits non-zero.
+  - Publishing is resumable: a rerun skips every file, pointer and index entry already in place. A bundle whose label the target holds for other course content is relabelled and published under the new label.
+  - A named course's pointer always moves to its bundle. A publish of every course leaves a pointer that names a publication uploaded after the bundle's.
+  - The index is rewritten only when the course's entry changes.
+  - Retention, per course: the two newest publications by upload time and every publication a pointer names are kept; on Cloudflare R2, so is a publication whose next newer one was uploaded less than seven days ago. Locally, the recordings no publication's `recordings.json` names are then deleted; on R2 that is `remove-unused-recordings cloudflare-r2`.
+- The embedded bundle, `web/static/embedded/`, has the repository's keys with one publication per course and no recordings or schema pointers: `course-index.json`, `courses/<course id>/latest/manifest.json` and the publication's shards. `publish local` and `publish cloudflare-r2` replace each published course in it, keeping the publication label, so every embedded label is one a repository holds. It never holds a test course, and every build and publish drops a course `data/` lacks or marks a test course.
+- Every command that writes a repository holds its lock for the whole run: locally an exclusive lock on `<root>/.repository.lock`; on R2 a lease object, `.repository-lock`, created only if absent and naming the host, process and time. A command that finds a lease fails and names it; `unlock cloudflare-r2` removes a lease a crashed command left. Index and pointer writes are also conditional on the entity tag read under the lock, so a writer that ignored the lock makes the command fail.
+- `course_builder remove-course <local|cloudflare-r2> --course <id>` rewrites the index without the course, deletes its pointers and then its publications, and drops it from the embedded bundle; locally it also deletes the recordings no publication names. A course left out of a build or a publish is not removed.
+- `course_builder remove-unused-recordings <local|cloudflare-r2>` deletes the recordings no publication names, and keeps every recording when a publication's `recordings.json` is unreadable.
+- `course_builder check-embedded-bundle cloudflare-r2` reads R2 only, and fails unless the embedded index lists exactly the courses R2's index lists, none of them a test course, and each embedded manifest equals R2's latest pointer byte for byte.
+- Cloudflare R2 never holds a test course: publishing there refuses a test course's bundle and an index that lists a course its entry or `data/` marks a test course, before any upload.
 
 ## Consumer
 
@@ -67,11 +83,11 @@ clients: /discovery -> latest manifest -> course list -> a course's shard -> its
 
 - One course shard (outline and vocabulary) replaced the proposed separate index and glossary shards; both pages need the same records.
 - Shards are brotli-compressed, as Eafora's are.
-- Recordings sit outside the version directories, keyed by hash, rather than under `audio/<engine>/` per version, so an unchanged recording is uploaded once.
-- Versions are `<date>+<city>` rather than `<date>+<Nobel laureate>`, and uniqueness is checked against local bundles and the local repository, since there is no database.
+- Recordings sit outside the course and publication directories, keyed by hash, rather than under `audio/<engine>/` per publication, so an unchanged recording is uploaded once.
+- Publication labels are `<date>+<city>` rather than `<date>+<Nobel laureate>`, unique within a course rather than globally, and checked against the course's local bundles, its publications in the local repository and the embedded bundle, and, at publish, the target's publications of the course, since there is no database.
 - The CORS policy is applied through the S3 API by `course_builder set-artifact-cors` rather than by a `wrangler` script.
 - `build` synthesizes; there is no separate `synthesize` command.
 - The local repository is `build/repository/`, served by the app's server, rather than `web/static/repository/`.
 - The embedded bundle holds every shard and no recordings, rather than three foundation units.
-- The repository trait gained `existing_keys`, which Eafora's lacks, to skip recordings already published.
+- The repository trait reads objects with their entity tags, writes conditionally, lists objects with their upload times and deletes, which Eafora's does not, for resumable publishing, retention and the repository lock.
 - iOS: HTTP (reqwest) and the cache (the filesystem) run inside the Rust core rather than in Swift through `URLSession` and `FileManager`, so iOS and the web share one loader. The FFI surface is a separate `ffi` crate rather than a module inside the core, so the wasm32 build never compiles UniFFI. The generated Swift is compiled into the app target, and the static library's module map is a plain module rather than a framework module.

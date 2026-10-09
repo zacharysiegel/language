@@ -1,7 +1,7 @@
 use shared::AppError;
 use shared::course::{Course, Curriculum, CurriculumUnit, Unit};
 
-use crate::artifact::{self, BuiltBundle, ClipRecordings};
+use crate::artifact::{self, ClipRecordings, CourseBundleOutcomeKind};
 use crate::audio_plan::{self, AudioPlan};
 use crate::audio_synthesis;
 use crate::course_source;
@@ -15,12 +15,6 @@ pub const INCLUDE_TEST_COURSES_FLAG: &str = "include-test-courses";
 pub enum TestCourseInclusionKind {
     Exclude,
     Include,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum EmbeddedBundleRefreshKind {
-    Refresh,
-    KeepPrevious,
 }
 
 pub struct BuildOptions {
@@ -56,21 +50,25 @@ pub fn run_build(paths: &WorkspacePaths, options: &BuildOptions) -> Result<bool,
     }
 
     let recordings: ClipRecordings = audio_synthesis::collect_clip_recordings(&plan, paths)?;
-    let bundle: BuiltBundle = artifact::write_bundle(paths, &courses, &plan, &recordings)?;
-    let embedded_bundle_refresh: EmbeddedBundleRefreshKind = decide_embedded_bundle_refresh(paths, &courses)?;
+    let mut written_count: usize = 0;
 
-    match embedded_bundle_refresh {
-        EmbeddedBundleRefreshKind::Refresh => artifact::refresh_embedded_bundle(paths, &bundle)?,
-        EmbeddedBundleRefreshKind::KeepPrevious => {
-            log::info!("kept the previous embedded bundle, since the bundle leaves out a course that is not a test course; [version={}]", bundle.manifest.version);
-        },
+    for course in &courses {
+        let outcome: CourseBundleOutcomeKind = artifact::write_course_bundle(paths, course, &plan, &recordings)?;
+
+        if let CourseBundleOutcomeKind::Written(_) = outcome {
+            written_count += 1;
+        }
+
+        artifact::prune_course_bundles(paths, &course.id)?;
     }
 
-    artifact::prune_bundles(paths)?;
+    let data_course_ids: Vec<String> = course_source::list_course_ids(paths)?;
+
+    artifact::remove_bundles_of_absent_courses(paths, &data_course_ids)?;
+    artifact::drop_embedded_courses_not_taught_in_the_data(paths)?;
 
     log::info!(
-        "build complete; [version={} courses={} distinct_clips={}]",
-        bundle.manifest.version,
+        "build complete; [courses={} bundles_written={written_count} distinct_clips={}]",
         courses.len(),
         plan.utterances.len(),
     );
@@ -117,20 +115,6 @@ pub fn keyed_course(curriculum: &Curriculum, units: &[Unit], plan: &mut AudioPla
         units: units.iter().map(|unit| audio_plan::assign_clip_keys(unit, &curriculum.target_language, plan)).collect(),
         test_course: curriculum.test_course,
     }
-}
-
-/// `Refresh` when `built_courses` holds every course of the data that is not a test course.
-fn decide_embedded_bundle_refresh(paths: &WorkspacePaths, built_courses: &[Course]) -> Result<EmbeddedBundleRefreshKind, AppError> {
-    for course_id in course_source::list_course_ids(paths)? {
-        let curriculum: Curriculum = course_source::read_curriculum(paths, &course_id)?;
-        let built: bool = built_courses.iter().any(|course| course.id == course_id);
-
-        if !curriculum.test_course && !built {
-            return Ok(EmbeddedBundleRefreshKind::KeepPrevious);
-        }
-    }
-
-    Ok(EmbeddedBundleRefreshKind::Refresh)
 }
 
 fn synthesize_audio(paths: &WorkspacePaths, plan: &AudioPlan, engines: &[SpeechEngineKind]) -> Result<(), AppError> {
@@ -242,26 +226,6 @@ mod tests {
         let selected: Result<Vec<Curriculum>, AppError> = select_built_curricula(&paths, Some(TEST_COURSE_ID), TestCourseInclusionKind::Exclude);
 
         assert!(selected.unwrap_err().to_string().contains(&format!("--{INCLUDE_TEST_COURSES_FLAG}")));
-    }
-
-    fn decide_for_built_course_ids(paths: &WorkspacePaths, built_course_ids: &[&str]) -> EmbeddedBundleRefreshKind {
-        let mut plan: AudioPlan = AudioPlan::new();
-        let built_courses: Vec<Course> = built_course_ids
-            .iter()
-            .map(|course_id| keyed_course(&course_source::read_curriculum(paths, course_id).unwrap(), &[], &mut plan))
-            .collect();
-
-        decide_embedded_bundle_refresh(paths, &built_courses).unwrap()
-    }
-
-    #[test]
-    fn decide_embedded_bundle_refresh_refreshes_only_when_every_course_but_the_test_courses_is_built() {
-        let (_workspace_directory, paths): (tempfile::TempDir, WorkspacePaths) = workspace_with_a_teaching_and_a_test_course();
-
-        assert_eq!(decide_for_built_course_ids(&paths, &[TEACHING_COURSE_ID]), EmbeddedBundleRefreshKind::Refresh);
-        assert_eq!(decide_for_built_course_ids(&paths, &[TEACHING_COURSE_ID, TEST_COURSE_ID]), EmbeddedBundleRefreshKind::Refresh);
-        assert_eq!(decide_for_built_course_ids(&paths, &[TEST_COURSE_ID]), EmbeddedBundleRefreshKind::KeepPrevious);
-        assert_eq!(decide_for_built_course_ids(&paths, &[]), EmbeddedBundleRefreshKind::KeepPrevious);
     }
 
     fn copy_directory(source: &Path, destination: &Path) {

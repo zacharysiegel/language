@@ -3,7 +3,9 @@ pub mod cloudflare_r2_artifact_repository;
 pub mod cors_policy;
 pub mod dry_artifact_repository;
 pub mod local_artifact_repository;
-#[cfg(test)]
+#[cfg(test)] // a test double
+pub mod memory_artifact_repository;
+#[cfg(test)] // a test double
 pub mod recording_http_client;
 pub mod repository_lock;
 

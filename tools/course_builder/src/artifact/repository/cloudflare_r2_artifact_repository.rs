@@ -277,13 +277,15 @@ impl ArtifactRepository for CloudflareR2ArtifactRepository {
 
 #[cfg(test)]
 mod tests {
+    use shared::artifact::repository_key;
+
     use super::*;
     use crate::artifact::repository::recording_http_client::{CannedResponse, RecordedRequest, RecordingHttpClient};
 
     const INDEX_KEY: &str = "course-index.json";
     const INDEX_HEADERS: ObjectHeaders = ObjectHeaders {
         content_type: artifact_repository::CONTENT_TYPE_MANIFEST,
-        cache_control: artifact_repository::CACHE_CONTROL_POINTER,
+        cache_control: repository_key::CACHE_CONTROL_POINTER,
     };
 
     #[tokio::test]

@@ -12,7 +12,7 @@ use leptos::prelude::*;
 use leptos_axum::LeptosRoutes;
 use shared::AppError;
 use shared::artifact::discovery::{self, DiscoveryDocument};
-use shared::artifact::manifest;
+use shared::artifact::repository_key;
 use shared::filesystem;
 use tower_http::services::ServeDir;
 
@@ -22,8 +22,6 @@ pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "LANGUAGE_LOCAL_REPOSITORY_ROOT";
 pub const ENV_REPOSITORY_BASE_URL: &str = "LANGUAGE_REPOSITORY_BASE_URL";
 
 const DEFAULT_LOCAL_REPOSITORY_ROOT: &str = "build/repository";
-const CACHE_CONTROL_IMMUTABLE: &str = "public, max-age=31536000, immutable";
-const CACHE_CONTROL_POINTER: &str = "public, max-age=300";
 const CACHE_CONTROL_REVALIDATE: &str = "no-cache";
 const CACHE_CONTROL_DISCOVERY: &str = "public, max-age=3600";
 
@@ -98,13 +96,8 @@ fn repository_router(repository_root: &Path) -> Router {
 
 /* The same headers `course_builder publish cloudflare-r2` sets on each object, so both repositories behave alike. */
 async fn set_repository_cache_control(request: Request, next: Next) -> Response {
-    let is_pointer: bool = request
-        .uri()
-        .path()
-        .trim_start_matches('/')
-        .starts_with(&format!("{}/", manifest::LATEST_POINTER_DIRECTORY));
+    let cache_control: &'static str = repository_cache_control(request.uri().path());
     let mut response: Response = next.run(request).await;
-    let cache_control: &'static str = if is_pointer { CACHE_CONTROL_POINTER } else { CACHE_CONTROL_IMMUTABLE };
 
     if response.status().is_success() {
         response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static(cache_control));
@@ -113,10 +106,32 @@ async fn set_repository_cache_control(request: Request, next: Next) -> Response 
     response
 }
 
+/// `path` is relative to the repository's mount point.
+fn repository_cache_control(path: &str) -> &'static str {
+    repository_key::cache_control_for_key(path.trim_start_matches('/'))
+}
+
 /* The bundle and the app's pages keep their names across rebuilds, so a browser applying its own freshness guess
    can pair a cached script with a newer module and never start. */
 async fn require_revalidation(mut response: Response) -> Response {
     response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static(CACHE_CONTROL_REVALIDATE));
 
     response
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const COURSE_ID: &str = "pt_br.en.foundations";
+
+    #[test]
+    fn repository_cache_control_revalidates_the_index_and_a_course_pointer_and_keeps_a_publication_file() {
+        let course_pointer_path: String = format!("/{}", repository_key::course_latest_manifest_key(COURSE_ID));
+        let publication_file_path: String = format!("/{}", repository_key::publication_file_key(COURSE_ID, "2026-10-08+duluth", "data/course-ab.sqlite.br"));
+
+        assert_eq!(repository_cache_control(&format!("/{}", repository_key::COURSE_INDEX_KEY)), repository_key::CACHE_CONTROL_POINTER);
+        assert_eq!(repository_cache_control(&course_pointer_path), repository_key::CACHE_CONTROL_POINTER);
+        assert_eq!(repository_cache_control(&publication_file_path), repository_key::CACHE_CONTROL_IMMUTABLE);
+    }
 }

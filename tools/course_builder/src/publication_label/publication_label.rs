@@ -32,7 +32,7 @@ pub fn generate(created: DateTime<Utc>, taken_labels: &BTreeSet<String>) -> Resu
     }
 
     Err(AppError::from(format!(
-        "could not generate an unused version label; [attempts={MAX_GENERATION_ATTEMPTS} date={date_prefix}]",
+        "could not generate an unused publication label; [attempts={MAX_GENERATION_ATTEMPTS} date={date_prefix}]",
     )))
 }
 
