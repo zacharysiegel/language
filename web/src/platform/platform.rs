@@ -1,3 +1,4 @@
+use shared::course::SpokenClip;
 use shared::course_shard::ClipAudioEntry;
 use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 
@@ -7,6 +8,16 @@ pub struct AudioClip {
     pub clip_key: Option<String>,
     pub fallback_text: String,
     pub voice_choice: VoiceChoiceKind,
+}
+
+impl From<SpokenClip> for AudioClip {
+    fn from(spoken_clip: SpokenClip) -> AudioClip {
+        AudioClip {
+            clip_key: Some(spoken_clip.clip_key),
+            fallback_text: spoken_clip.spoken_text,
+            voice_choice: spoken_clip.voice_choice,
+        }
+    }
 }
 
 /// How far a playback has got toward making sound.
@@ -45,6 +56,7 @@ mod browser {
     const CLIP_STOPPED: &str = "stopped";
     const UTTERANCE_STARTED: &str = "started";
     const BROWSER_VOICE_LANGUAGE: &str = "pt-BR";
+    const CROSS_ORIGIN_ANONYMOUS: &str = "anonymous";
 
     struct ActiveClip {
         audio: HtmlAudioElement,
@@ -62,6 +74,8 @@ mod browser {
         static SELECTED_ENGINE: Cell<AudioEngineKind> = const { Cell::new(AudioEngineKind::Auto) };
         static ACTIVE_CLIP: RefCell<Option<ActiveClip>> = const { RefCell::new(None) };
         static PLAYBACK_GENERATION: Cell<u64> = const { Cell::new(0) };
+        // The playback generation of a play waiting for its recording to start sounding.
+        static RECORDING_WAIT_GENERATION: Cell<Option<u64>> = const { Cell::new(None) };
     }
 
     fn local_storage() -> Option<Storage> {
@@ -135,6 +149,7 @@ mod browser {
 
     pub fn stop_audio() {
         PLAYBACK_GENERATION.with(|generation| generation.set(generation.get() + 1));
+        RECORDING_WAIT_GENERATION.with(|wait_generation| wait_generation.set(None));
 
         let active_clip: Option<ActiveClip> = ACTIVE_CLIP.with(|active| active.borrow_mut().take());
 
@@ -168,14 +183,24 @@ mod browser {
         });
     }
 
-    /* The chosen voice's recording, else any other voice's, so a clip one engine lacks still plays a recording. */
+    /// Whether a play is waiting for its recording to start sounding.
+    pub fn is_recording_play_waiting() -> bool {
+        RECORDING_WAIT_GENERATION.with(Cell::get).is_some()
+    }
+
     fn clip_url(clip: &AudioClip) -> Option<String> {
+        recording_url(clip, SELECTED_ENGINE.with(Cell::get))
+    }
+
+    /// The URL `clip` plays from when `engine` is selected; `None` when the browser's voice speaks it.
+    pub fn recording_url(clip: &AudioClip, engine: AudioEngineKind) -> Option<String> {
         let clip_key: &str = clip.clip_key.as_deref()?;
-        let preferred_engine: VoiceEngineKind = SELECTED_ENGINE.with(Cell::get).voice_engine_for_clip(&clip.fallback_text, &clip.voice_choice);
+        let preferred_engine: VoiceEngineKind = engine.voice_engine_for_clip(&clip.fallback_text, &clip.voice_choice);
 
         CLIP_RECORDINGS.with(|registry| {
             let registry = registry.borrow();
             let recording_by_engine: &BTreeMap<VoiceEngineKind, ClipRecording> = registry.get(clip_key)?;
+            // The chosen voice's recording, else any other voice's, so a clip one engine lacks still plays a recording.
             let clip_recording: &ClipRecording = recording_by_engine
                 .get(&preferred_engine)
                 .or_else(|| recording_by_engine.values().next())?;
@@ -218,7 +243,20 @@ mod browser {
         };
 
         let starting_generation: u64 = PLAYBACK_GENERATION.with(Cell::get);
-        let outcome: String = play_audio_file(&url, rate, on_phase).await;
+        let on_recording_phase = |phase: PlaybackPhaseKind| {
+            if phase == PlaybackPhaseKind::SoundStarted {
+                end_recording_wait(starting_generation);
+            }
+
+            on_phase(phase);
+        };
+
+        RECORDING_WAIT_GENERATION.with(|wait_generation| wait_generation.set(Some(starting_generation)));
+
+        let outcome: String = play_audio_file(&url, rate, &on_recording_phase).await;
+
+        end_recording_wait(starting_generation);
+
         let stopped_meanwhile: bool = PLAYBACK_GENERATION.with(Cell::get) != starting_generation;
 
         // A pause while play() is pending rejects it, which is a stop and not a load failure.
@@ -227,12 +265,24 @@ mod browser {
         }
     }
 
+    // A play that a newer one replaced must not end the newer one's wait.
+    fn end_recording_wait(generation: u64) {
+        RECORDING_WAIT_GENERATION.with(|wait_generation| {
+            if wait_generation.get() == Some(generation) {
+                wait_generation.set(None);
+            }
+        });
+    }
+
     async fn play_audio_file(url: &str, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) -> String {
-        let Ok(audio) = HtmlAudioElement::new_with_src(url)
+        let Ok(audio) = HtmlAudioElement::new()
         else {
             return CLIP_FAILED.to_string();
         };
 
+        // The repository varies recordings on Origin, so only a CORS request reuses a response the prefetch cached.
+        audio.set_cross_origin(Some(CROSS_ORIGIN_ANONYMOUS));
+        audio.set_src(url);
         audio.set_playback_rate(rate);
 
         let finished: Promise = finished_promise(&audio);
