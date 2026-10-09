@@ -4,13 +4,12 @@ use chrono::{DateTime, TimeDelta, Utc};
 use shared::AppError;
 use shared::artifact::{manifest, repository_key};
 
+use crate::artifact::pointer_publication::{self, PointerPublication};
 use crate::artifact::recordings_list::{self, RecordingsList};
 use crate::artifact::repository::{self, ArtifactRepository, ListedObject, StoredObject};
 
 pub const PUBLICATIONS_KEPT_PER_COURSE: usize = 2;
 pub const PUBLICATION_GRACE_PERIOD: TimeDelta = TimeDelta::days(7);
-
-const PUBLICATION_LABEL_FIELD: &str = "publication_label";
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PublicationGraceKind {
@@ -79,23 +78,17 @@ async fn read_pointer_labels(repository: &impl ArtifactRepository, course_id: &s
 
     for pointer_key in pointer_keys {
         let pointer: Option<StoredObject> = repository.get_object(&pointer_key).await?;
-        let publication_label: Option<String> = pointer.and_then(|pointer| read_publication_label(&pointer.bytes));
+        let pointer_publication: Option<PointerPublication> = pointer.and_then(|pointer| pointer_publication::read_pointer_publication(&pointer.bytes));
 
-        let Some(publication_label) = publication_label else {
+        let Some(pointer_publication) = pointer_publication
+        else {
             return Ok(PointerLabelsKind::Unreadable { pointer_key });
         };
 
-        pointer_labels.insert(publication_label);
+        pointer_labels.insert(pointer_publication.publication_label);
     }
 
     Ok(PointerLabelsKind::Named(pointer_labels))
-}
-
-/* Read loosely, so a pointer of a newer manifest schema still protects its publication. */
-fn read_publication_label(manifest_bytes: &[u8]) -> Option<String> {
-    let document: serde_json::Value = serde_json::from_slice(manifest_bytes).ok()?;
-
-    document.get(PUBLICATION_LABEL_FIELD)?.as_str().map(str::to_string)
 }
 
 /// The labels of the publications to delete, given the course's publications oldest first.
@@ -176,7 +169,8 @@ pub async fn recordings_named_by_publications(repository: &impl ArtifactReposito
         let recordings_read: Option<RecordingsList> =
             recordings_object.and_then(|recordings_object| recordings_list::parse_recordings_list(&recordings_object.bytes).ok());
 
-        let Some(recordings_read) = recordings_read else {
+        let Some(recordings_read) = recordings_read
+        else {
             return Ok(RecordingsNamedKind::Unknown { unreadable_key: recordings_key });
         };
 
@@ -322,6 +316,54 @@ mod tests {
         assert!(repository.contents().keys().all(|key| !key.contains(&teaching_bundles[1].manifest.publication_label)));
         assert_eq!(publication_labels(&repository, SECOND_COURSE_ID), second_labels_before);
         assert_eq!(second_labels_before.len(), 3);
+    }
+
+    /* Four publications of the teaching course, oldest first, and none deleted yet. */
+    async fn publish_four_teaching_publications(workspace: &FixtureWorkspace, repository: &MemoryArtifactRepository) -> Vec<BuiltBundle> {
+        let mut plan: AudioPlan = AudioPlan::new();
+        let mut course: Course = test_courses::fixture_course(&mut plan, TEACHING_COURSE_ID, false);
+        let mut bundles: Vec<BuiltBundle> = Vec::new();
+
+        for title in ["First", "Second", "Third", "Fourth"] {
+            course.title = title.to_string();
+            let bundle: BuiltBundle = workspace.build_bundle(&course, &plan);
+
+            publish_bundle(workspace, repository, RepositoryTargetKind::Dry, &bundle).await;
+            bundles.push(bundle);
+        }
+
+        bundles
+    }
+
+    #[tokio::test]
+    async fn apply_course_retention_keeps_every_publication_when_a_pointer_names_no_readable_publication_label() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+
+        publish_four_teaching_publications(&workspace, &repository).await;
+        repository.insert(&repository_key::course_latest_manifest_key(TEACHING_COURSE_ID), b"not json");
+
+        let labels_before: BTreeSet<String> = publication_labels(&repository, TEACHING_COURSE_ID);
+        let deleted_labels: Vec<String> = apply_course_retention(&repository, TEACHING_COURSE_ID, PublicationGraceKind::None, repository.now()).await.unwrap();
+
+        assert!(deleted_labels.is_empty());
+        assert_eq!(publication_labels(&repository, TEACHING_COURSE_ID), labels_before);
+        assert_eq!(labels_before.len(), 4);
+    }
+
+    #[tokio::test]
+    async fn apply_course_retention_keeps_the_publication_a_pointer_of_a_newer_manifest_schema_names() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+        let bundles: Vec<BuiltBundle> = publish_four_teaching_publications(&workspace, &repository).await;
+        let mut newer_schema_pointer: serde_json::Value = serde_json::to_value(&bundles[0].manifest).unwrap();
+
+        newer_schema_pointer[manifest::MANIFEST_SCHEMA_VERSION_FIELD] = serde_json::Value::from(99);
+        repository.insert(&repository_key::course_latest_manifest_key(TEACHING_COURSE_ID), &serde_json::to_vec(&newer_schema_pointer).unwrap());
+
+        let deleted_labels: Vec<String> = apply_course_retention(&repository, TEACHING_COURSE_ID, PublicationGraceKind::None, repository.now()).await.unwrap();
+
+        assert_eq!(deleted_labels, vec![bundles[1].manifest.publication_label.clone()]);
     }
 
     #[tokio::test]

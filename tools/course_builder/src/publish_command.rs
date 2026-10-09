@@ -65,26 +65,30 @@ pub fn run_publish(paths: &WorkspacePaths, location: RepositoryLocationKind, opt
 
 /// `--bundle` names one course's bundle; `--course` names courses; neither publishes every course.
 pub fn select_courses(options: PublishOptions) -> Result<CourseSelectionKind, AppError> {
-    let Some(bundle_directory) = options.bundle else {
-        if options.course_ids.is_empty() {
-            return Ok(CourseSelectionKind::EveryCourse(options.unlisted_course_inclusion));
-        }
+    match options.bundle {
+        Some(bundle_directory) => select_bundle(bundle_directory, &options.course_ids),
+        None if options.course_ids.is_empty() => Ok(CourseSelectionKind::EveryCourse(options.unlisted_course_inclusion)),
+        None => {
+            let mut course_ids: Vec<String> = options.course_ids;
 
-        let mut course_ids: Vec<String> = options.course_ids;
+            course_ids.sort();
+            course_ids.dedup();
 
-        course_ids.sort();
-        course_ids.dedup();
+            Ok(CourseSelectionKind::Named(course_ids))
+        },
+    }
+}
 
-        return Ok(CourseSelectionKind::Named(course_ids));
-    };
+/// `course_ids` may name only the bundle's course.
+fn select_bundle(bundle_directory: PathBuf, course_ids: &[String]) -> Result<CourseSelectionKind, AppError> {
     let bundle_manifest: CourseManifest = artifact::read_bundle_manifest(&bundle_directory)?;
-    let named_another_course: bool = options.course_ids.iter().any(|course_id| *course_id != bundle_manifest.course_id);
+    let named_another_course: bool = course_ids.iter().any(|course_id| *course_id != bundle_manifest.course_id);
 
     if named_another_course {
         return Err(AppError::from(format!(
             "--bundle names a bundle of another course than --{COURSE_FLAG}; [bundle_course_id={} course_ids={}]",
             bundle_manifest.course_id,
-            options.course_ids.join(","),
+            course_ids.join(","),
         )));
     }
 
@@ -96,7 +100,8 @@ fn report_outcomes(outcomes: &[CoursePublishOutcome]) -> bool {
     let mut failed_course_ids: Vec<&str> = Vec::new();
 
     for outcome in outcomes {
-        let Ok(report) = &outcome.result else {
+        let Ok(report) = &outcome.result
+        else {
             failed_course_ids.push(&outcome.course_id);
             continue;
         };
@@ -128,6 +133,7 @@ fn report_outcomes(outcomes: &[CoursePublishOutcome]) -> bool {
 fn describe_upload(upload: PublicationUploadKind) -> &'static str {
     match upload {
         PublicationUploadKind::Uploaded => "uploaded",
+        PublicationUploadKind::Completed => "completed",
         PublicationUploadKind::AlreadyPresent => "already_present",
     }
 }

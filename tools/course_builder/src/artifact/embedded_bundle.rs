@@ -5,7 +5,6 @@ use std::path::PathBuf;
 
 use shared::AppError;
 use shared::artifact::{self, CourseIndex, CourseIndexEntry, CourseManifest, repository_key};
-use shared::course::Curriculum;
 
 use crate::artifact::artifact_bundle::BuiltBundle;
 use crate::artifact::course_index_update;
@@ -127,7 +126,8 @@ pub fn drop_embedded_course(paths: &WorkspacePaths, course_id: &str) -> Result<E
 fn remove_embedded_index_entry(paths: &WorkspacePaths, course_id: &str) -> Result<Option<CourseIndexEntry>, AppError> {
     let embedded_index: Option<CourseIndex> = read_embedded_course_index(paths)?;
 
-    let Some(mut embedded_index) = embedded_index else {
+    let Some(mut embedded_index) = embedded_index
+    else {
         return Ok(None);
     };
     let removed_entry: Option<CourseIndexEntry> = embedded_index.courses.remove(course_id);
@@ -145,7 +145,7 @@ pub fn drop_embedded_courses_not_taught_in_the_data(paths: &WorkspacePaths) -> R
     let data_course_ids: Vec<String> = course_source::list_course_ids(paths)?;
 
     for course_id in embedded_course_ids {
-        let taught_in_the_data: bool = data_course_ids.contains(&course_id) && !is_test_course_in_the_data(paths, &course_id)?;
+        let taught_in_the_data: bool = data_course_ids.contains(&course_id) && !course_source::is_test_course_in_the_data(paths, &course_id)?;
 
         if !taught_in_the_data {
             drop_embedded_course(paths, &course_id)?;
@@ -153,12 +153,6 @@ pub fn drop_embedded_courses_not_taught_in_the_data(paths: &WorkspacePaths) -> R
     }
 
     Ok(())
-}
-
-fn is_test_course_in_the_data(paths: &WorkspacePaths, course_id: &str) -> Result<bool, AppError> {
-    let curriculum: Curriculum = course_source::read_curriculum(paths, course_id)?;
-
-    Ok(curriculum.test_course)
 }
 
 /* The courses the index lists, and any course directory the index has lost track of. */

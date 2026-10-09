@@ -24,7 +24,7 @@ repository:  audio/<sha256>.m4a                                       shared by 
              courses/<course id>/latest/manifest.<schema>.json, latest/manifest.json
              course-index.json (written last)
         v
-clients: /discovery -> latest manifest -> course list -> a course's shard -> its unit shards on demand -> recordings when played
+clients: /discovery -> course-index.json -> course list; opening a course -> its latest pointer -> its outline shard -> its unit shards on demand -> recordings when played
 ```
 
 ## Artifact contract
@@ -56,8 +56,8 @@ clients: /discovery -> latest manifest -> course list -> a course's shard -> its
 - `course_builder publish <local|cloudflare-r2|dry>` has three targets, as in Eafora: `local` copies into a directory (default `build/repository/`); `cloudflare-r2` uploads through the S3 API with credentials from `.env` and the secret access key from `secrets.yaml` (decrypted with `secr`); `dry` logs every write as if the repository were empty.
   - Without `--course`, it publishes the newest bundle of every course the target's index lists and `data/` holds, and logs the `remove-course` command for an indexed course `data/` lacks. `--include-unlisted-courses` adds every built course the index does not list. `--course <id>` (repeatable) publishes only the named courses, listed or not; `--bundle <dir>` publishes one bundle.
   - Courses are published one after another; one course's failure is reported, the rest continue, and the command exits non-zero.
-  - Publishing is resumable: a rerun skips every file, pointer and index entry already in place. A bundle whose label the target holds for other course content is relabelled and published under the new label.
-  - A named course's pointer always moves to its bundle. A publish of every course leaves a pointer that names a publication uploaded after the bundle's.
+  - Publishing is resumable: a rerun uploads every file of the publication the target lacks, even under a `manifest.json` already in place, and skips every pointer and index entry already in place. A bundle whose label the target holds for other course content is relabelled and published under the new label.
+  - A named course's pointer always moves to its bundle. A publish of every course moves a pointer only to course content built and uploaded after the publication the pointer names.
   - The index is rewritten only when the course's entry changes.
   - Retention, per course: the two newest publications by upload time and every publication a pointer names are kept; on Cloudflare R2, so is a publication whose next newer one was uploaded less than seven days ago. Locally, the recordings no publication's `recordings.json` names are then deleted; on R2 that is `remove-unused-recordings cloudflare-r2`.
 - The embedded bundle, `web/static/embedded/`, has the repository's keys with one publication per course and no recordings or schema pointers: `course-index.json`, `courses/<course id>/latest/manifest.json` and the publication's shards. `publish local` and `publish cloudflare-r2` replace each published course in it, keeping the publication label, so every embedded label is one a repository holds. It never holds a test course, and every build and publish drops a course `data/` lacks or marks a test course.

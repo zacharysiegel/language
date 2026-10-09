@@ -33,6 +33,17 @@ pub fn read_curriculum(paths: &WorkspacePaths, course_id: &str) -> Result<Curric
     parse_json(&text, &curriculum_path)
 }
 
+/// `false` for a course the data does not hold.
+pub fn is_test_course_in_the_data(paths: &WorkspacePaths, course_id: &str) -> Result<bool, AppError> {
+    if !paths.curriculum_path(course_id).exists() {
+        return Ok(false);
+    }
+
+    let curriculum: Curriculum = read_curriculum(paths, course_id)?;
+
+    Ok(curriculum.test_course)
+}
+
 /// `None` when the unit has no file yet.
 pub fn read_unit(paths: &WorkspacePaths, course_id: &str, unit_id: &str) -> Result<Option<Unit>, AppError> {
     let unit_path: PathBuf = paths.unit_path(course_id, unit_id);
