@@ -8,11 +8,11 @@ use std::path::{Path, PathBuf};
 use chrono::{DateTime, Utc};
 use shared::AppError;
 use shared::artifact::{self, CourseIndex, CourseIndexEntry, CourseManifest, content_address, course_manifest, manifest, repository_key};
-use shared::course::Curriculum;
 
 use crate::artifact::artifact_bundle::{self, BuiltBundle};
 use crate::artifact::course_index_update::{self, CourseIndexChangeKind, StoredCourseIndex};
 use crate::artifact::embedded_bundle;
+use crate::artifact::pointer_publication::{self, PointerPublication};
 use crate::artifact::recordings_list::RecordingsList;
 use crate::artifact::repository::{self, ArtifactRepository, ObjectHeaders, StoredObject, WriteConditionKind, WriteOutcomeKind};
 use crate::artifact::retention::{self, ListedPublication, PublicationGraceKind};
@@ -44,13 +44,15 @@ impl RepositoryTargetKind {
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PointerMoveKind {
     ToThisBundle,
-    /// Leaves a pointer that names a publication uploaded after the bundle's.
+    /// Moves the pointer only to course content built and uploaded after the publication it names.
     OnlyForward,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PublicationUploadKind {
     Uploaded,
+    /// The repository held the publication's `manifest.json` but lacked some of the files it names.
+    Completed,
     AlreadyPresent,
 }
 
@@ -59,6 +61,12 @@ pub enum PointerChangeKind {
     Moved,
     AlreadyCurrent,
     LeftOnAnotherPublication,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PointerDecisionKind {
+    Move,
+    Leave,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -99,6 +107,13 @@ struct UploadCounts {
     shards_uploaded: usize,
     recordings_uploaded: usize,
     recordings_already_present: usize,
+    recordings_list_uploaded: bool,
+}
+
+impl UploadCounts {
+    fn uploaded_any_file(&self) -> bool {
+        self.shards_uploaded > 0 || self.recordings_uploaded > 0 || self.recordings_list_uploaded
+    }
 }
 
 struct PlannedCoursePublish {
@@ -222,7 +237,8 @@ async fn plan_every_course(
 
         let newest_bundle: Option<BuiltBundle> = artifact_bundle::find_newest_course_bundle(paths, course_id)?;
 
-        let Some(newest_bundle) = newest_bundle else {
+        let Some(newest_bundle) = newest_bundle
+        else {
             log::info!("no bundle has been built for a course, so it is left as published; [course_id={course_id}]");
             continue;
         };
@@ -247,18 +263,7 @@ fn is_marked_a_test_course(paths: &WorkspacePaths, bundle_manifest: &CourseManif
         return Ok(true);
     }
 
-    is_test_course_in_the_data(paths, &bundle_manifest.course_id)
-}
-
-/// `false` for a course the data does not hold.
-fn is_test_course_in_the_data(paths: &WorkspacePaths, course_id: &str) -> Result<bool, AppError> {
-    if !paths.curriculum_path(course_id).exists() {
-        return Ok(false);
-    }
-
-    let curriculum: Curriculum = course_source::read_curriculum(paths, course_id)?;
-
-    Ok(curriculum.test_course)
+    course_source::is_test_course_in_the_data(paths, &bundle_manifest.course_id)
 }
 
 /// Cloudflare R2 is the production repository, so a test course's bundle is refused there.
@@ -281,7 +286,7 @@ pub fn check_index_lists_no_test_course(paths: &WorkspacePaths, target: Reposito
     }
 
     for (course_id, entry) in &course_index.courses {
-        let marked_a_test_course: bool = entry.test_course || is_test_course_in_the_data(paths, course_id)?;
+        let marked_a_test_course: bool = entry.test_course || course_source::is_test_course_in_the_data(paths, course_id)?;
 
         if marked_a_test_course {
             return Err(AppError::from(format!(
@@ -323,8 +328,12 @@ pub async fn publish_course_bundle(
         place_publication(paths, repository, bundle, &recordings).await?;
     let manifest_bytes: Vec<u8> = read_bundle_manifest_bytes(&bundle.directory)?;
     let pointer: PointerChangeKind = update_latest_pointer(repository, &bundle.manifest, &manifest_bytes, upload, pointer_move).await?;
-    let entry: CourseIndexEntry = index_entry_for_the_pointer(repository, &bundle.manifest, pointer).await?;
-    let index_change: CourseIndexChangeKind = course_index_update::set_course_index_entry(repository, &stored_index, &course_id, entry).await?;
+    let entry: Option<CourseIndexEntry> = index_entry_for_the_pointer(repository, &stored_index, &bundle.manifest, pointer).await?;
+
+    let index_change: CourseIndexChangeKind = match entry {
+        Some(entry) => course_index_update::set_course_index_entry(repository, &stored_index, &course_id, entry).await?,
+        None => CourseIndexChangeKind::Unchanged,
+    };
 
     apply_retention(repository, target, &course_id).await?;
     refresh_embedded_course_after_publish(paths, target, &bundle, pointer)?;
@@ -366,8 +375,8 @@ fn read_bundle_manifest_bytes(bundle_directory: &Path) -> Result<Vec<u8>, AppErr
     fs::read(&manifest_path).map_err(|error| AppError::from(format!("could not read a bundle manifest; [path={} error={error}]", manifest_path.display())))
 }
 
-/// Uploads the bundle's publication unless the repository already holds it; relabels the bundle when the repository
-/// holds other course content under its label.
+/// Uploads the bundle's publication, or the files an interrupted upload or deletion left out of it; relabels the
+/// bundle when the repository holds other course content under its label.
 async fn place_publication(
     paths: &WorkspacePaths,
     repository: &impl ArtifactRepository,
@@ -383,8 +392,15 @@ async fn place_publication(
 
         match stored_manifest {
             Some(stored_manifest) if stored_manifest.bytes == manifest_bytes => {
+                let upload_counts: UploadCounts = upload_missing_publication_files(repository, &bundle, recordings).await?;
+
+                if upload_counts.uploaded_any_file() {
+                    log::info!("completed a publication the repository held only in part; [key={manifest_key}]");
+                    return Ok((bundle, PublicationUploadKind::Completed, upload_counts));
+                }
+
                 log::info!("the repository already holds the publication; [key={manifest_key}]");
-                return Ok((bundle, PublicationUploadKind::AlreadyPresent, UploadCounts::default()));
+                return Ok((bundle, PublicationUploadKind::AlreadyPresent, upload_counts));
             },
             Some(_) => {
                 let target_labels: BTreeSet<String> = list_publication_labels(repository, &bundle.manifest.course_id).await?;
@@ -392,7 +408,9 @@ async fn place_publication(
                 bundle = artifact_bundle::relabel_bundle(paths, &bundle, &target_labels)?;
             },
             None => {
-                let upload_counts: UploadCounts = upload_publication(repository, &bundle, &manifest_bytes, recordings).await?;
+                let upload_counts: UploadCounts = upload_missing_publication_files(repository, &bundle, recordings).await?;
+
+                upload_publication_manifest(repository, &bundle.manifest, &manifest_bytes).await?;
 
                 return Ok((bundle, PublicationUploadKind::Uploaded, upload_counts));
             },
@@ -411,24 +429,38 @@ async fn list_publication_labels(repository: &impl ArtifactRepository, course_id
     Ok(publications.into_iter().map(|publication| publication.publication_label).collect())
 }
 
-/* The recordings and shards a failed run already uploaded are skipped; `manifest.json` goes last. */
-async fn upload_publication(
+/// Uploads every recording, shard and `recordings.json` of the publication that the repository lacks.
+async fn upload_missing_publication_files(
     repository: &impl ArtifactRepository,
     bundle: &BuiltBundle,
-    manifest_bytes: &[u8],
     recordings: &BTreeSet<String>,
 ) -> Result<UploadCounts, AppError> {
     let course_id: &str = &bundle.manifest.course_id;
     let publication_label: &str = &bundle.manifest.publication_label;
     let (recordings_uploaded, recordings_already_present): (usize, usize) = upload_missing_recordings(repository, &bundle.directory, recordings).await?;
-    let shards_uploaded: usize = upload_missing_shards(repository, bundle).await?;
+    let stored_publication_keys: BTreeSet<String> =
+        repository::list_keys(repository, &repository_key::publication_directory_key(course_id, publication_label)).await?;
+    let shards_uploaded: usize = upload_missing_shards(repository, bundle, &stored_publication_keys).await?;
     let recordings_key: String = repository_key::publication_recordings_key(course_id, publication_label);
+    let recordings_list_uploaded: bool = !stored_publication_keys.contains(&recordings_key);
 
-    repository
-        .put_file(&recordings_key, &artifact_bundle::bundle_recordings_path(&bundle.directory), ObjectHeaders::for_key(&recordings_key))
-        .await?;
+    if recordings_list_uploaded {
+        repository
+            .put_file(&recordings_key, &artifact_bundle::bundle_recordings_path(&bundle.directory), ObjectHeaders::for_key(&recordings_key))
+            .await?;
+    }
 
-    let manifest_key: String = repository_key::publication_manifest_key(course_id, publication_label);
+    Ok(UploadCounts {
+        shards_uploaded,
+        recordings_uploaded,
+        recordings_already_present,
+        recordings_list_uploaded,
+    })
+}
+
+/* Written last and only when absent, so a publication's `manifest.json` never names a file the repository lacks. */
+async fn upload_publication_manifest(repository: &impl ArtifactRepository, bundle_manifest: &CourseManifest, manifest_bytes: &[u8]) -> Result<(), AppError> {
+    let manifest_key: String = repository_key::publication_manifest_key(&bundle_manifest.course_id, &bundle_manifest.publication_label);
     let outcome: WriteOutcomeKind = repository
         .put_bytes(&manifest_key, manifest_bytes, ObjectHeaders::for_key(&manifest_key), WriteConditionKind::Absent)
         .await?;
@@ -437,11 +469,7 @@ async fn upload_publication(
         return Err(precondition_failure(repository, &manifest_key));
     }
 
-    Ok(UploadCounts {
-        shards_uploaded,
-        recordings_uploaded,
-        recordings_already_present,
-    })
+    Ok(())
 }
 
 fn precondition_failure(repository: &impl ArtifactRepository, key: &str) -> AppError {
@@ -477,16 +505,15 @@ async fn upload_missing_recordings(
     Ok((uploaded_count, recordings.len() - uploaded_count))
 }
 
-async fn upload_missing_shards(repository: &impl ArtifactRepository, bundle: &BuiltBundle) -> Result<usize, AppError> {
+async fn upload_missing_shards(repository: &impl ArtifactRepository, bundle: &BuiltBundle, stored_publication_keys: &BTreeSet<String>) -> Result<usize, AppError> {
     let course_id: &str = &bundle.manifest.course_id;
     let publication_label: &str = &bundle.manifest.publication_label;
-    let stored_keys: BTreeSet<String> = repository::list_keys(repository, &repository_key::publication_directory_key(course_id, publication_label)).await?;
     let mut uploaded_count: usize = 0;
 
     for entry in bundle.manifest.file_entries() {
         let key: String = repository_key::publication_file_key(course_id, publication_label, &entry.relative_path);
 
-        if stored_keys.contains(&key) {
+        if stored_publication_keys.contains(&key) {
             continue;
         }
 
@@ -515,30 +542,31 @@ async fn update_latest_pointer(
 ) -> Result<PointerChangeKind, AppError> {
     let course_id: &str = &bundle_manifest.course_id;
     let latest_manifest_key: String = repository_key::course_latest_manifest_key(course_id);
+    let schema_pointer_key: String = repository_key::course_schema_pointer_key(&latest_manifest_key, course_manifest::COURSE_MANIFEST_SCHEMA_VERSION);
     let current_pointer: Option<StoredObject> = repository.get_object(&latest_manifest_key).await?;
 
     let write_condition: WriteConditionKind = match &current_pointer {
-        Some(current_pointer) if current_pointer.bytes == manifest_bytes => return Ok(PointerChangeKind::AlreadyCurrent),
+        Some(current_pointer) if current_pointer.bytes == manifest_bytes => {
+            restore_schema_pointer(repository, &schema_pointer_key, manifest_bytes).await?;
+            return Ok(PointerChangeKind::AlreadyCurrent);
+        },
         Some(current_pointer) => WriteConditionKind::MatchesEntityTag(current_pointer.entity_tag.clone()),
         None => WriteConditionKind::Absent,
     };
-    let moves: bool = match (&current_pointer, pointer_move, upload) {
-        (None, _, _) | (_, PointerMoveKind::ToThisBundle, _) | (_, PointerMoveKind::OnlyForward, PublicationUploadKind::Uploaded) => true,
-        (Some(current_pointer), PointerMoveKind::OnlyForward, PublicationUploadKind::AlreadyPresent) => {
-            is_uploaded_after_the_pointers_publication(repository, bundle_manifest, &current_pointer.bytes).await?
-        },
+
+    let decision: PointerDecisionKind = match (&current_pointer, pointer_move) {
+        (None, _) | (_, PointerMoveKind::ToThisBundle) => PointerDecisionKind::Move,
+        (Some(current_pointer), PointerMoveKind::OnlyForward) => decide_forward_move(repository, bundle_manifest, upload, &current_pointer.bytes).await?,
     };
 
-    if !moves {
+    if decision == PointerDecisionKind::Leave {
         log::info!(
-            "left the latest pointer on a publication uploaded after this bundle's; a publish naming the course with --course moves it; [course_id={course_id} publication_label={}]",
+            "left the latest pointer on a publication this bundle does not supersede; a publish naming the course with --course moves it; [course_id={course_id} publication_label={}]",
             bundle_manifest.publication_label,
         );
 
         return Ok(PointerChangeKind::LeftOnAnotherPublication);
     }
-
-    let schema_pointer_key: String = repository_key::course_schema_pointer_key(&latest_manifest_key, course_manifest::COURSE_MANIFEST_SCHEMA_VERSION);
 
     repository
         .put_bytes(&schema_pointer_key, manifest_bytes, ObjectHeaders::for_key(&schema_pointer_key), WriteConditionKind::Unconditional)
@@ -555,16 +583,49 @@ async fn update_latest_pointer(
     Ok(PointerChangeKind::Moved)
 }
 
-/// `true` also when the pointer names a publication the repository no longer lists.
-async fn is_uploaded_after_the_pointers_publication(
+/// Writes the schema pointer unless it already holds `manifest_bytes`.
+async fn restore_schema_pointer(repository: &impl ArtifactRepository, schema_pointer_key: &str, manifest_bytes: &[u8]) -> Result<(), AppError> {
+    let schema_pointer: Option<StoredObject> = repository.get_object(schema_pointer_key).await?;
+    let already_written: bool = schema_pointer.is_some_and(|schema_pointer| schema_pointer.bytes == manifest_bytes);
+
+    if already_written {
+        return Ok(());
+    }
+
+    repository
+        .put_bytes(schema_pointer_key, manifest_bytes, ObjectHeaders::for_key(schema_pointer_key), WriteConditionKind::Unconditional)
+        .await?;
+
+    Ok(())
+}
+
+/// `Move` only when the bundle's course content was built after the pointer's publication's and its publication was
+/// uploaded after that one; `Leave` for a pointer whose publication label or build time cannot be read.
+async fn decide_forward_move(
     repository: &impl ArtifactRepository,
     bundle_manifest: &CourseManifest,
+    upload: PublicationUploadKind,
     pointer_bytes: &[u8],
-) -> Result<bool, AppError> {
+) -> Result<PointerDecisionKind, AppError> {
+    let pointer_publication: Option<PointerPublication> = pointer_publication::read_pointer_publication(pointer_bytes);
+
+    let Some(PointerPublication {
+        publication_label: pointer_label,
+        artifact_created: Some(pointer_built),
+    }) = pointer_publication
+    else {
+        return Ok(PointerDecisionKind::Leave);
+    };
+
+    if bundle_manifest.artifact_created <= pointer_built {
+        return Ok(PointerDecisionKind::Leave);
+    }
+
+    if upload == PublicationUploadKind::Uploaded {
+        return Ok(PointerDecisionKind::Move);
+    }
+
     let publications: Vec<ListedPublication> = retention::list_course_publications(repository, &bundle_manifest.course_id).await?;
-    let pointer_label: Option<String> = artifact::parse_course_manifest(pointer_bytes, Some(&bundle_manifest.course_id))
-        .ok()
-        .map(|pointer_manifest| pointer_manifest.publication_label);
     let upload_time_of = |publication_label: &str| -> Option<DateTime<Utc>> {
         publications
             .iter()
@@ -572,32 +633,41 @@ async fn is_uploaded_after_the_pointers_publication(
             .map(|publication| publication.uploaded)
     };
 
-    let Some(bundle_uploaded) = upload_time_of(&bundle_manifest.publication_label) else {
-        return Ok(true);
-    };
-    let Some(pointer_uploaded) = pointer_label.as_deref().and_then(upload_time_of) else {
-        return Ok(true);
+    /* A pointer whose publication the repository no longer lists is moved. */
+    let decision: PointerDecisionKind = match (upload_time_of(&bundle_manifest.publication_label), upload_time_of(&pointer_label)) {
+        (Some(bundle_uploaded), Some(pointer_uploaded)) if bundle_uploaded <= pointer_uploaded => PointerDecisionKind::Leave,
+        _ => PointerDecisionKind::Move,
     };
 
-    Ok(bundle_uploaded > pointer_uploaded)
+    Ok(decision)
 }
 
-/// The index entry for the publication the course's pointer names after this publish.
+/// The index entry for the publication the course's pointer names after this publish; `None` keeps the course's
+/// current entry.
 async fn index_entry_for_the_pointer(
     repository: &impl ArtifactRepository,
+    stored_index: &StoredCourseIndex,
     bundle_manifest: &CourseManifest,
     pointer: PointerChangeKind,
-) -> Result<CourseIndexEntry, AppError> {
+) -> Result<Option<CourseIndexEntry>, AppError> {
     if pointer != PointerChangeKind::LeftOnAnotherPublication {
-        return Ok(course_index_update::index_entry_for(bundle_manifest));
+        return Ok(Some(course_index_update::index_entry_for(bundle_manifest)));
     }
 
-    let latest_manifest_key: String = repository_key::course_latest_manifest_key(&bundle_manifest.course_id);
-    let current_pointer: Option<StoredObject> = repository.get_object(&latest_manifest_key).await?;
+    let course_id: &str = &bundle_manifest.course_id;
+    let current_pointer: Option<StoredObject> = repository.get_object(&repository_key::course_latest_manifest_key(course_id)).await?;
     let pointer_manifest: Option<CourseManifest> =
-        current_pointer.and_then(|current_pointer| artifact::parse_course_manifest(&current_pointer.bytes, Some(&bundle_manifest.course_id)).ok());
+        current_pointer.and_then(|current_pointer| artifact::parse_course_manifest(&current_pointer.bytes, Some(course_id)).ok());
+    let indexed: bool = stored_index.course_index.courses.contains_key(course_id);
 
-    Ok(course_index_update::index_entry_for(pointer_manifest.as_ref().unwrap_or(bundle_manifest)))
+    let entry: Option<CourseIndexEntry> = match pointer_manifest {
+        Some(pointer_manifest) => Some(course_index_update::index_entry_for(&pointer_manifest)),
+        // A pointer this builder cannot read, such as one of a newer manifest schema.
+        None if indexed => None,
+        None => Some(course_index_update::index_entry_for(bundle_manifest)),
+    };
+
+    Ok(entry)
 }
 
 async fn apply_retention(repository: &impl ArtifactRepository, target: RepositoryTargetKind, course_id: &str) -> Result<(), AppError> {
@@ -646,10 +716,12 @@ fn refresh_embedded_course_after_publish(
 mod tests {
     use std::collections::BTreeMap;
 
+    use chrono::TimeDelta;
     use shared::artifact::CourseIndexEntry;
     use shared::course::Course;
 
     use super::*;
+    use crate::artifact::course_removal;
     use crate::artifact::json_document;
     use crate::artifact::recordings_list::RecordingsList;
     use crate::artifact::repository::LocalArtifactRepository;
@@ -657,7 +729,8 @@ mod tests {
     use crate::audio_plan::AudioPlan;
     use crate::test_courses::{self, FixtureWorkspace, SECOND_COURSE_ID, TEACHING_COURSE_ID, TEST_COURSE_ID};
 
-    const NEWER_PUBLICATION_LABEL: &str = "2026-10-09+elsewhere";
+    const OTHER_PUBLICATION_LABEL: &str = "2026-10-09+elsewhere";
+    const OTHER_PUBLISHERS_TITLE: &str = "Another publisher's title";
 
     async fn publish_named(
         workspace: &FixtureWorkspace,
@@ -684,18 +757,39 @@ mod tests {
         outcomes.iter().map(|outcome| (outcome.course_id.clone(), outcome.result.is_ok())).collect()
     }
 
-    /* Another publisher's newer publication of the course, which the course's pointer names. */
-    fn insert_newer_publication(repository: &MemoryArtifactRepository, bundle: &BuiltBundle) -> Vec<u8> {
-        let mut newer_manifest: CourseManifest = bundle.manifest.clone();
+    /* Another publisher's publication of the course, uploaded after everything `repository` holds and named by the
+       course's pointer; its course content was built `built_after_the_bundle` after the bundle's. */
+    fn insert_other_publishers_publication(repository: &MemoryArtifactRepository, bundle: &BuiltBundle, built_after_the_bundle: TimeDelta) -> Vec<u8> {
+        let mut other_manifest: CourseManifest = bundle.manifest.clone();
 
-        newer_manifest.publication_label = NEWER_PUBLICATION_LABEL.to_string();
+        other_manifest.publication_label = OTHER_PUBLICATION_LABEL.to_string();
+        other_manifest.title = OTHER_PUBLISHERS_TITLE.to_string();
+        other_manifest.artifact_created = bundle.manifest.artifact_created + built_after_the_bundle;
 
-        let newer_bytes: Vec<u8> = json_document::json_document_bytes(&newer_manifest).unwrap();
+        let other_bytes: Vec<u8> = json_document::json_document_bytes(&other_manifest).unwrap();
 
-        repository.insert(&repository_key::publication_manifest_key(&bundle.manifest.course_id, NEWER_PUBLICATION_LABEL), &newer_bytes);
-        repository.insert(&repository_key::course_latest_manifest_key(&bundle.manifest.course_id), &newer_bytes);
+        insert_pointer_and_its_publication(repository, &bundle.manifest.course_id, OTHER_PUBLICATION_LABEL, &other_bytes);
 
-        newer_bytes
+        other_bytes
+    }
+
+    fn insert_pointer_and_its_publication(repository: &MemoryArtifactRepository, course_id: &str, publication_label: &str, manifest_bytes: &[u8]) {
+        repository.insert(&repository_key::publication_manifest_key(course_id, publication_label), manifest_bytes);
+        repository.insert(&repository_key::course_latest_manifest_key(course_id), manifest_bytes);
+    }
+
+    /* The report of the only course the workspace holds. */
+    async fn publish_every_course(
+        workspace: &FixtureWorkspace,
+        repository: &MemoryArtifactRepository,
+        inclusion: UnlistedCourseInclusionKind,
+    ) -> CoursePublishReport {
+        let outcomes: Vec<CoursePublishOutcome> =
+            publish_selected_courses(&workspace.paths, repository, RepositoryTargetKind::Local, &CourseSelectionKind::EveryCourse(inclusion))
+                .await
+                .unwrap();
+
+        outcomes.into_iter().next().unwrap().result.unwrap()
     }
 
     #[tokio::test]
@@ -769,7 +863,8 @@ mod tests {
         assert_eq!(put_keys[audio_count + shard_count..], expected_tail);
 
         for operation in repository.operations() {
-            let RecordedOperationKind::Put { key, headers } = operation else {
+            let RecordedOperationKind::Put { key, headers } = operation
+            else {
                 panic!("a first publish deletes nothing");
             };
 
@@ -996,22 +1091,99 @@ mod tests {
 
         publish_named(&workspace, &repository, RepositoryTargetKind::Local, &bundle).await.unwrap();
 
-        let newer_bytes: Vec<u8> = insert_newer_publication(&repository, &bundle);
+        let other_bytes: Vec<u8> = insert_other_publishers_publication(&repository, &bundle, TimeDelta::hours(-1));
         let embedded_before: Option<Vec<u8>> = embedded_bundle::read_embedded_course_manifest_bytes(&workspace.paths, TEACHING_COURSE_ID).unwrap();
 
-        let outcomes: Vec<CoursePublishOutcome> = publish_selected_courses(
-            &workspace.paths,
-            &repository,
-            RepositoryTargetKind::Local,
-            &CourseSelectionKind::EveryCourse(UnlistedCourseInclusionKind::Exclude),
-        )
-        .await
-        .unwrap();
-        let report: &CoursePublishReport = outcomes[0].result.as_ref().unwrap();
+        let report: CoursePublishReport = publish_every_course(&workspace, &repository, UnlistedCourseInclusionKind::Exclude).await;
+
+        assert_eq!(report.upload, PublicationUploadKind::AlreadyPresent);
+        assert_eq!(report.pointer, PointerChangeKind::LeftOnAnotherPublication);
+        assert_eq!(latest_pointer_bytes(&repository, TEACHING_COURSE_ID), Some(other_bytes));
+        assert_eq!(report.index_change, CourseIndexChangeKind::Updated);
+        assert_eq!(read_index(&repository).await.courses[TEACHING_COURSE_ID].title, OTHER_PUBLISHERS_TITLE);
+        assert_eq!(embedded_bundle::read_embedded_course_manifest_bytes(&workspace.paths, TEACHING_COURSE_ID).unwrap(), embedded_before);
+    }
+
+    #[tokio::test]
+    async fn publish_selected_courses_leaves_a_pointer_on_course_content_built_after_the_bundles() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let mut plan: AudioPlan = AudioPlan::new();
+        let course: Course = test_courses::fixture_course(&mut plan, TEACHING_COURSE_ID, false);
+        let stale_bundle: BuiltBundle = workspace.build_bundle(&course, &plan);
+        let repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+        let other_bytes: Vec<u8> = insert_other_publishers_publication(&repository, &stale_bundle, TimeDelta::hours(1));
+
+        let report: CoursePublishReport = publish_every_course(&workspace, &repository, UnlistedCourseInclusionKind::Include).await;
+
+        assert_eq!(report.upload, PublicationUploadKind::Uploaded);
+        assert_eq!(report.pointer, PointerChangeKind::LeftOnAnotherPublication);
+        assert_eq!(latest_pointer_bytes(&repository, TEACHING_COURSE_ID), Some(other_bytes));
+        assert_eq!(report.index_change, CourseIndexChangeKind::Added);
+        assert_eq!(read_index(&repository).await.courses[TEACHING_COURSE_ID].title, OTHER_PUBLISHERS_TITLE);
+        assert!(!workspace.paths.embedded_course_directory(TEACHING_COURSE_ID).exists());
+    }
+
+    #[tokio::test]
+    async fn publish_selected_courses_reads_a_pointer_of_a_newer_manifest_schema_and_leaves_it_and_the_index_entry() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let mut plan: AudioPlan = AudioPlan::new();
+        let course: Course = test_courses::fixture_course(&mut plan, TEACHING_COURSE_ID, false);
+        let bundle: BuiltBundle = workspace.build_bundle(&course, &plan);
+        let repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+
+        publish_named(&workspace, &repository, RepositoryTargetKind::Local, &bundle).await.unwrap();
+
+        let other_bytes: Vec<u8> = insert_other_publishers_publication(&repository, &bundle, TimeDelta::hours(-1));
+        let mut newer_schema_pointer: serde_json::Value = serde_json::from_slice(&other_bytes).unwrap();
+
+        newer_schema_pointer[manifest::MANIFEST_SCHEMA_VERSION_FIELD] = serde_json::Value::from(99);
+        let newer_schema_bytes: Vec<u8> = serde_json::to_vec(&newer_schema_pointer).unwrap();
+
+        insert_pointer_and_its_publication(&repository, TEACHING_COURSE_ID, OTHER_PUBLICATION_LABEL, &newer_schema_bytes);
+
+        let report: CoursePublishReport = publish_every_course(&workspace, &repository, UnlistedCourseInclusionKind::Exclude).await;
 
         assert_eq!(report.pointer, PointerChangeKind::LeftOnAnotherPublication);
-        assert_eq!(latest_pointer_bytes(&repository, TEACHING_COURSE_ID), Some(newer_bytes));
-        assert_eq!(embedded_bundle::read_embedded_course_manifest_bytes(&workspace.paths, TEACHING_COURSE_ID).unwrap(), embedded_before);
+        assert_eq!(latest_pointer_bytes(&repository, TEACHING_COURSE_ID), Some(newer_schema_bytes));
+        assert_eq!(report.index_change, CourseIndexChangeKind::Unchanged);
+        assert_eq!(read_index(&repository).await.courses[TEACHING_COURSE_ID].title, course.title);
+    }
+
+    #[tokio::test]
+    async fn publish_course_bundle_after_an_interrupted_course_removal_restores_every_file_of_the_publication() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let mut plan: AudioPlan = AudioPlan::new();
+        let course: Course = test_courses::fixture_course(&mut plan, TEACHING_COURSE_ID, false);
+        let bundle: BuiltBundle = workspace.build_bundle(&course, &plan);
+        let published_repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+
+        publish_named(&workspace, &published_repository, RepositoryTargetKind::Local, &bundle).await.unwrap();
+        published_repository.clear_operations();
+        course_removal::remove_course(&workspace.paths, &published_repository, RepositoryTargetKind::Local, TEACHING_COURSE_ID).await.unwrap();
+
+        let removal_write_count: usize = published_repository.operations().len();
+        let mut republish_uploads: Vec<PublicationUploadKind> = Vec::new();
+
+        for failing_write in 0..removal_write_count {
+            let repository: MemoryArtifactRepository = MemoryArtifactRepository::new();
+
+            publish_named(&workspace, &repository, RepositoryTargetKind::Local, &bundle).await.unwrap();
+
+            let published_contents: BTreeMap<String, Vec<u8>> = repository.contents();
+
+            repository.fail_after_writes(failing_write);
+            let interrupted: Result<course_removal::CourseRemovalReport, AppError> =
+                course_removal::remove_course(&workspace.paths, &repository, RepositoryTargetKind::Local, TEACHING_COURSE_ID).await;
+
+            repository.stop_failing();
+            let republished: Result<CoursePublishReport, AppError> = publish_named(&workspace, &repository, RepositoryTargetKind::Local, &bundle).await;
+
+            assert!(interrupted.is_err(), "write {failing_write}");
+            assert_eq!(repository.contents(), published_contents, "write {failing_write}");
+            republish_uploads.push(republished.unwrap().upload);
+        }
+
+        assert!(republish_uploads.contains(&PublicationUploadKind::Completed));
     }
 
     #[tokio::test]

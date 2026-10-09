@@ -6,6 +6,7 @@ pub mod embedded_bundle;
 pub mod embedded_bundle_check;
 pub mod json_document;
 pub mod local_files;
+pub mod pointer_publication;
 pub mod publish;
 pub mod recordings_list;
 pub mod repository;
