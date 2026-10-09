@@ -7,6 +7,7 @@ enum PlaybackOutcome: Sendable {
     case finished
     case failed
     case stopped
+    case interrupted
 }
 
 /// The app's audio session as the output last set or observed it.
@@ -22,13 +23,26 @@ private enum AudioOutputPreparationKind {
     case prepared
 }
 
+/// An audio session interruption as its notification reports it.
+enum AudioSessionInterruptionEvent: Sendable {
+    case began
+    case endedShouldResume
+    case endedShouldNotResume
+}
+
+/// Whether the output has a sound it started and has not yet ended.
+enum AudioOutputActivityKind {
+    case idle
+    case playing
+}
+
 /// The system voice for `AudioOutput.systemVoiceLanguage`, once looked up; `nil` when it is not installed.
 private enum SystemVoiceLookupState {
     case notLookedUp
     case lookedUp(AVSpeechSynthesisVoice?)
 }
 
-/// What the output is playing, kept so that the next play or stop can end it.
+/// The sound the output started last and has not yet ended.
 private enum CurrentPlayback {
     case nothing
     case recording(AVAudioPlayer, RecordingPlayerDelegate)
@@ -47,8 +61,6 @@ private enum CurrentPlayback {
 }
 
 /// Owns the audio session and the system players, so their blocking calls run off the main thread.
-///
-/// A play returns when its sound ends, fails, or is stopped by the next play, or when the calling task is cancelled.
 actor AudioOutput {
     static let systemVoiceLanguage: String = "pt-BR"
 
@@ -65,11 +77,14 @@ actor AudioOutput {
         _ = speechSynthesizerCreatingIfAbsent()
     }
 
+    /// Returns once the recording has ended, failed, been stopped or been interrupted.
     func playRecording(path: String, rate: Float) async -> PlaybackOutcome {
         prepareIfUnprepared()
-        stopCurrentPlayback()
+        stopCurrentPlayback(endingWith: .stopped)
 
-        guard let player = Self.createPlayer(path: path, rate: rate) else {
+        let createdPlayer: AVAudioPlayer? = Self.createPlayer(path: path, rate: rate)
+
+        guard let player = createdPlayer else {
             return .failed
         }
 
@@ -103,21 +118,22 @@ actor AudioOutput {
         return outcome
     }
 
-    func speak(_ text: String, rate: Float) async {
+    /// Returns once the utterance has ended, been stopped or been interrupted.
+    func speak(_ text: String, rate: Float) async -> PlaybackOutcome {
         prepareIfUnprepared()
-        stopCurrentPlayback()
+        stopCurrentPlayback(endingWith: .stopped)
 
         let voice: AVSpeechSynthesisVoice? = systemVoice()
         let synthesizer: AVSpeechSynthesizer = speechSynthesizerCreatingIfAbsent()
 
         guard !Task.isCancelled else {
-            return
+            return .stopped
         }
 
         activateSessionUnlessActive()
 
         guard !Task.isCancelled else {
-            return
+            return .stopped
         }
 
         let utterance: AVSpeechUtterance = AVSpeechUtterance(string: text)
@@ -131,7 +147,7 @@ actor AudioOutput {
         synthesizer.delegate = delegate
         currentPlayback = .speech(delegate)
 
-        _ = await withTaskCancellationHandler {
+        let outcome: PlaybackOutcome = await withTaskCancellationHandler {
             Self.startSpeaking(utterance, synthesizer: synthesizer)
 
             return await completion.outcome()
@@ -140,6 +156,17 @@ actor AudioOutput {
         }
 
         endPlayback(completion)
+
+        return outcome
+    }
+
+    func activity() -> AudioOutputActivityKind {
+        switch currentPlayback {
+        case .nothing:
+            return .idle
+        case .recording, .speech:
+            return .playing
+        }
     }
 
     private func prepareIfUnprepared() {
@@ -179,7 +206,7 @@ actor AudioOutput {
         return synthesizer
     }
 
-    private func stopCurrentPlayback() {
+    private func stopCurrentPlayback(endingWith outcome: PlaybackOutcome) {
         switch currentPlayback {
         case .nothing:
             break
@@ -189,7 +216,7 @@ actor AudioOutput {
             speechSynthesizer?.stopSpeaking(at: .immediate)
         }
 
-        currentPlayback.completion()?.finish(.stopped)
+        currentPlayback.completion()?.finish(outcome)
         currentPlayback = .nothing
     }
 
@@ -199,7 +226,7 @@ actor AudioOutput {
             return
         }
 
-        stopCurrentPlayback()
+        stopCurrentPlayback(endingWith: .stopped)
     }
 
     private func activateSessionUnlessActive() {
@@ -225,15 +252,40 @@ actor AudioOutput {
         }
     }
 
-    /* The system deactivates the session when an interruption begins and leaves reactivating it to the app. */
-    private func observeInterruption(_ interruptionType: AVAudioSession.InterruptionType?) {
-        switch (interruptionType, sessionActivation) {
+    /* The system deactivates the session and pauses playback when an interruption begins; reactivating and resuming are left to the app. */
+    func observeInterruption(_ interruption: AudioSessionInterruptionEvent?) {
+        switch (interruption, sessionActivation) {
         case (.began, .active):
             sessionActivation = .interrupted
-        case (.ended, .interrupted):
-            activateSession()
+        case (.endedShouldResume, .interrupted):
+            resumeAfterInterruption()
+        case (.endedShouldNotResume, .interrupted):
+            sessionActivation = .inactive
+            stopCurrentPlayback(endingWith: .interrupted)
         default:
             break
+        }
+    }
+
+    private func resumeAfterInterruption() {
+        activateSession()
+
+        guard sessionActivation == .active else {
+            stopCurrentPlayback(endingWith: .interrupted)
+            return
+        }
+
+        switch currentPlayback {
+        case .nothing:
+            break
+        case .recording(let player, let delegate):
+            let resumed: Bool = player.play()
+
+            if !resumed {
+                delegate.completion.finish(.interrupted)
+            }
+        case .speech:
+            _ = speechSynthesizer?.continueSpeaking()
         }
     }
 
@@ -241,7 +293,7 @@ actor AudioOutput {
     private func observeMediaServicesReset() {
         let activationBeforeReset: AudioSessionActivationKind = sessionActivation
 
-        stopCurrentPlayback()
+        stopCurrentPlayback(endingWith: .stopped)
         speechSynthesizer = nil
         sessionActivation = .inactive
         Self.configureSessionCategory()
@@ -260,14 +312,14 @@ actor AudioOutput {
             object: session,
             queue: nil,
         ) { [weak self] notification in
-            let interruptionType: AVAudioSession.InterruptionType? = Self.interruptionType(notification)
+            let interruption: AudioSessionInterruptionEvent? = Self.interruptionEvent(notification)
 
             guard let self else {
                 return
             }
 
             Task {
-                await self.observeInterruption(interruptionType)
+                await self.observeInterruption(interruption)
             }
         }
 
@@ -333,10 +385,24 @@ actor AudioOutput {
         PlaybackTiming.end(speakStart)
     }
 
-    private static func interruptionType(_ notification: Notification) -> AVAudioSession.InterruptionType? {
-        let rawValue: UInt? = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+    static func interruptionEvent(_ notification: Notification) -> AudioSessionInterruptionEvent? {
+        let typeRawValue: UInt? = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+        let optionsRawValue: UInt? = notification.userInfo?[AVAudioSessionInterruptionOptionKey] as? UInt
+        let interruptionType: AVAudioSession.InterruptionType? = typeRawValue.flatMap(AVAudioSession.InterruptionType.init(rawValue:))
+        let options: AVAudioSession.InterruptionOptions = optionsRawValue.map(AVAudioSession.InterruptionOptions.init(rawValue:)) ?? []
 
-        return rawValue.flatMap(AVAudioSession.InterruptionType.init(rawValue:))
+        guard let interruptionType else {
+            return nil
+        }
+
+        switch interruptionType {
+        case .began:
+            return .began
+        case .ended:
+            return options.contains(.shouldResume) ? .endedShouldResume : .endedShouldNotResume
+        @unknown default:
+            return nil
+        }
     }
 }
 

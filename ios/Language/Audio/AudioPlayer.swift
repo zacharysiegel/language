@@ -42,7 +42,7 @@ final class AudioPlayer {
         let generation: Int = playbackGeneration
 
         playbackTask = Task {
-            await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
+            _ = await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
         }
     }
 
@@ -57,31 +57,34 @@ final class AudioPlayer {
                     return
                 }
 
-                await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
+                let clipOutcome: PlaybackOutcome = await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
+
+                guard clipOutcome != .interrupted else {
+                    return
+                }
             }
         }
     }
 
-    private func playWithoutStopping(_ clip: AudioClip, engine: AudioEngineRecord, slow: Bool, generation: Int) async {
+    private func playWithoutStopping(_ clip: AudioClip, engine: AudioEngineRecord, slow: Bool, generation: Int) async -> PlaybackOutcome {
         let recordingPath: String? = await findRecording(clip, engine: engine)
         let rate: Float = slow ? Self.slowRate : Self.normalRate
 
         guard playbackGeneration == generation else {
-            return
+            return .stopped
         }
 
         guard let recordingPath else {
-            await output.speak(clip.text, rate: rate)
-            return
+            return await output.speak(clip.text, rate: rate)
         }
 
         let recordingOutcome: PlaybackOutcome = await output.playRecording(path: recordingPath, rate: rate)
 
         guard recordingOutcome == .failed, playbackGeneration == generation else {
-            return
+            return recordingOutcome
         }
 
-        await output.speak(clip.text, rate: rate)
+        return await output.speak(clip.text, rate: rate)
     }
 
     private nonisolated func findRecording(_ clip: AudioClip, engine: AudioEngineRecord) async -> String? {
