@@ -20,6 +20,8 @@ extension CGFloat {
     static let hairline: CGFloat = 1
     static let buttonIconSize: CGFloat = 30
     static let measure: CGFloat = 640
+    static let boxShadowOffset: CGFloat = 4
+    static let floatingTipMaximumWidth: CGFloat = 320
 }
 
 /* The web's type scale, one or two points larger for a phone's reading distance. */

@@ -38,13 +38,21 @@ struct UnitPage: View {
     @Environment(CourseStore.self) private var courseStore
     @Environment(AudioPlayer.self) private var audioPlayer
     @State private var activeTab: UnitTabKind?
+    @State private var isStatusHelpShown: Bool = false
 
     var body: some View {
         content()
             .navigationBarTitleDisplayMode(.inline)
             .onAppear { ensureLoaded() }
             .onChange(of: courseStore.shownContentKey(courseId: courseId)) { ensureLoaded() }
-            .onDisappear { audioPlayer.stop() }
+            .onDisappear {
+                audioPlayer.stop()
+                closeStatusHelp()
+            }
+    }
+
+    private func closeStatusHelp() {
+        isStatusHelpShown = false
     }
 
     private func ensureLoaded() {
@@ -83,7 +91,7 @@ struct UnitPage: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: .spaceMd) {
                 PageHeader(caption: "\(unit.levelCode) · \(unit.order)", title: unit.title)
-                UnitStatusPanel(courseId: courseId, unitId: unit.id)
+                UnitStatusPanel(courseId: courseId, unitId: unit.id, isHelpShown: $isStatusHelpShown)
                 tabRow(lesson: lesson, active: tab)
                 section(tab: tab, unit: unit, lesson: lesson)
                 tabNavigation(lesson: lesson, active: tab)
@@ -91,6 +99,9 @@ struct UnitPage: View {
             .padding(.spaceMd)
             .readableWidth()
             .id(tab)
+        }
+        .floatingTip(isShown: isStatusHelpShown, autoCloseDuration: UnitStatusPanel.helpAutoCloseDuration, onDismiss: closeStatusHelp) {
+            UnitStatusHelpTip(onClose: closeStatusHelp)
         }
         .navigationTitle(unit.title)
     }

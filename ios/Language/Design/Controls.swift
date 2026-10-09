@@ -146,9 +146,27 @@ struct PanelModifier: ViewModifier {
     }
 }
 
+/// A paper box with an ink outline and a solid ink block offset down and to the right behind it.
+struct ShadowedBoxModifier: ViewModifier {
+    func body(content: Content) -> some View {
+        content
+            .background(Color.paper)
+            .overlay(Rectangle().stroke(Color.ink, lineWidth: .hairline))
+            .background(
+                Rectangle()
+                    .fill(Color.ink)
+                    .offset(x: .boxShadowOffset, y: .boxShadowOffset),
+            )
+    }
+}
+
 extension View {
     func panel() -> some View {
         modifier(PanelModifier())
+    }
+
+    func shadowedBox() -> some View {
+        modifier(ShadowedBoxModifier())
     }
 
     /// Keeps prose to a readable measure on wide screens, centred.
