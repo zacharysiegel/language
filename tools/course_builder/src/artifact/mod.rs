@@ -1,7 +1,20 @@
 pub mod artifact_bundle;
+pub mod course_index_update;
+pub mod course_removal;
 pub mod course_shard_writer;
+pub mod embedded_bundle;
+pub mod embedded_bundle_check;
+pub mod json_document;
+pub mod local_files;
 pub mod publish;
+pub mod recordings_list;
 pub mod repository;
+pub mod retention;
 
 pub use artifact_bundle::*;
+pub use course_index_update::*;
+pub use course_removal::*;
+pub use embedded_bundle::*;
+pub use embedded_bundle_check::*;
 pub use publish::*;
+pub use retention::*;

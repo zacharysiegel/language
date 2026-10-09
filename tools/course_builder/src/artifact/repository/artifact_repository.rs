@@ -4,6 +4,7 @@ use std::path::Path;
 
 use chrono::{DateTime, Utc};
 use shared::AppError;
+use shared::artifact::{manifest, repository_key};
 
 use crate::artifact::repository::cloudflare_r2_artifact_repository::CloudflareR2ArtifactRepository;
 use crate::artifact::repository::dry_artifact_repository::DryArtifactRepository;
@@ -12,15 +13,41 @@ use crate::artifact::repository::local_artifact_repository::LocalArtifactReposit
 pub const CONTENT_TYPE_SHARD: &str = "application/vnd.sqlite3";
 pub const CONTENT_TYPE_MANIFEST: &str = "application/json";
 pub const CONTENT_TYPE_AUDIO: &str = "audio/mp4";
+pub const CONTENT_TYPE_OTHER: &str = "application/octet-stream";
 
-pub const CACHE_CONTROL_IMMUTABLE: &str = "public, max-age=31536000, immutable";
-pub const CACHE_CONTROL_POINTER: &str = "public, max-age=300";
+const JSON_FILE_EXTENSION: &str = "json";
 
 /// How a published object is served.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ObjectHeaders {
     pub content_type: &'static str,
     pub cache_control: &'static str,
+}
+
+impl ObjectHeaders {
+    /// The headers a repository serves the object at `key` with.
+    pub fn for_key(key: &str) -> ObjectHeaders {
+        ObjectHeaders {
+            content_type: content_type_for_key(key),
+            cache_control: repository_key::cache_control_for_key(key),
+        }
+    }
+}
+
+fn content_type_for_key(key: &str) -> &'static str {
+    if key.ends_with(&format!(".{}", manifest::SHARD_FILE_EXTENSION)) {
+        return CONTENT_TYPE_SHARD;
+    }
+
+    if key.ends_with(&format!(".{}", manifest::AUDIO_FILE_EXTENSION)) {
+        return CONTENT_TYPE_AUDIO;
+    }
+
+    if key.ends_with(&format!(".{JSON_FILE_EXTENSION}")) {
+        return CONTENT_TYPE_MANIFEST;
+    }
+
+    CONTENT_TYPE_OTHER
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

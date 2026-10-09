@@ -12,20 +12,21 @@ On the first run that builds the courses, the test courses included, and publish
 
 The Voice menu chooses between the two recording sets: Auto (the macOS voice for clips of one or two words, where the neural voice is unreliable, and the neural voice for longer ones; every line of a dialogue plays from the same recording set, the neural one when any line is longer), Neural, or macOS. `./scripts/build/build-course.sh --engine macos-say` synthesizes only the macOS set, which needs no download.
 
-To rebuild the local repository later, for example after editing `data/`, run `./scripts/dev/build-local-repository.sh`, which builds with the test courses and publishes locally; its arguments go to the build (`--skip-audio`, `--engine macos-say`). The running server then serves the newly published course content.
+To rebuild the local repository later, for example after editing `data/`, run `./scripts/dev/build-local-repository.sh`, which builds with the test courses and publishes every course in `data/courses/` locally; its arguments go to the build (`--skip-audio`, `--engine macos-say`). The running server then serves the newly published course content.
 
 ## How the data flows
 
-- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes a bundle to `build/artifacts/<version>/`, one version of the course content (named `<date>+<city>`): a `manifest.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). It also copies the manifest and shards, without the test courses, to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
-- `course_builder publish local | cloudflare-r2 | dry` uploads the bundle: recordings the repository lacks, then the shards, then `<version>/manifest.json`, and `latest/manifest.json` last.
-- The app reads `/discovery` for the repository's address, fetches `latest/manifest.json`, opens the course shard, and opens a unit's shard when the unit is visited. Every download is checked against its hash and cached in the browser, so the app opens offline once visited.
+- `course_builder build` validates `data/`, synthesizes missing clips into `build/clips/<engine>/`, and writes one bundle per course to `build/artifacts/<course id>/<publication label>/`, a publication of that course's content labelled `<date>+<city>`: a `manifest.json`, a `recordings.json`, one brotli-compressed SQLite shard for the course outline and one per unit (`data/*.sqlite.br`, named by their SHA-256), and the recordings (`audio/<sha256>.m4a`). A course whose content is unchanged keeps its newest bundle.
+- `course_builder publish local | cloudflare-r2 | dry` publishes each course on its own: the recordings the repository lacks, the shards, the publication's `manifest.json`, the course's `courses/<course id>/latest/manifest.json`, then the course index, `course-index.json`, which lists the courses. Without `--course` it publishes every course the repository's index lists; `--course <id>` publishes the named courses, and `--include-unlisted-courses` adds every built course. A failed publish completes when rerun. Publishing to `local` or `cloudflare-r2` also copies each published course's manifest and shards, never a test course's, to `web/static/embedded/`, the bundle the app falls back to when no repository answers.
+- `course_builder remove-course local | cloudflare-r2 --course <id>` (`./scripts/publish/remove-course.sh`) takes a course out of a repository and the embedded bundle. Leaving a course out of a build or a publish does not remove it.
+- The app reads `/discovery` for the repository's address, fetches the course index, fetches a course's latest manifest when the course is opened, opens the course shard, and opens a unit's shard when the unit is visited. Every download is checked against its hash and cached in the browser, so the app opens offline once visited.
 
 ## Test courses
 
 - A course whose `curriculum.json` sets `"test_course": true` exists to test the apps, for example with more than one course; `pt_br.en.test_course` is one.
 - `course_builder build` leaves test courses out unless given `--include-test-courses`; `--course <test course id>` without the flag is an error. `course_builder validate` always checks them.
 - The local flow includes them: `./scripts/dev/serve.sh` on its first run, and `./scripts/dev/build-local-repository.sh`.
-- The embedded bundle never holds a test course, and `publish cloudflare-r2` refuses a bundle that holds one.
+- The embedded bundle never holds a test course, and `publish cloudflare-r2` refuses a test course's bundle, and a Cloudflare R2 course index that lists one.
 
 ## Publishing to Cloudflare R2
 
@@ -35,14 +36,20 @@ Copy `template.env` to `.env` and fill in the R2 settings. Put the publish token
 secr encrypt --key "$MASTER_SECRET" --name cloudflare.r2.publish.secret_access_key <secret-access-key>
 ```
 
-Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then build without `--include-test-courses` and publish: `./scripts/build/build-course.sh`, then `./scripts/publish/publish-course.sh cloudflare-r2`. To serve the app against R2, set `LANGUAGE_REPOSITORY_BASE_URL` to the bucket's public URL.
+Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `cargo run --release --package course_builder -- set-artifact-cors` (the token needs bucket admin permission). Then build without `--include-test-courses` and publish: `./scripts/build/build-course.sh`, then `./scripts/publish/publish-course.sh cloudflare-r2 --course <course id>` to add a course, or `./scripts/publish/publish-course.sh cloudflare-r2` to publish every course R2 already lists. To serve the app against R2, set `LANGUAGE_REPOSITORY_BASE_URL` to the bucket's public URL.
+
+Every command that writes R2 holds a lease for its whole run. If one stops without releasing it, `cargo run --release --package course_builder -- unlock cloudflare-r2` removes the lease. Recordings no publication names stay on R2 until `cargo run --release --package course_builder -- remove-unused-recordings cloudflare-r2`.
+
+## Releasing the apps
+
+Before building the web or iOS app for release, publish to Cloudflare R2 after any local publish, since every publish refreshes the embedded bundle, then run `./scripts/release/check-embedded-bundle.sh`. It fails unless the embedded bundle lists exactly the courses R2's index lists, each at the publication R2's latest pointer names.
 
 ## iOS app
 
 `ios/` is a SwiftUI app over the same Rust core, reached through UniFFI. It needs Xcode and XcodeGen (`brew install xcodegen`):
 
 ```sh
-./scripts/build/build-course.sh --skip-audio
+./scripts/dev/build-local-repository.sh --skip-audio
 ./scripts/ios/sync-ios-embedded-bundle.sh
 ./scripts/ios/build-ios-core.sh
 cd ios && xcodegen generate && open Language.xcodeproj
@@ -54,7 +61,7 @@ Building in Xcode reruns the last two scripts. The app reads `/discovery` from `
 
 - `data/courses/<course id>/curriculum.json` describes a course (its languages, levels and units); `units/<id>.json` beside it holds one unit each. The format is described in `docs/authoring.md`.
 - `shared/` has the course model and its validation, the shard schema and reader, the artifact contract (manifest, discovery, verified fetch and cache), answer checking, the review schedule and the progress model.
-- `tools/course_builder/` validates the data, synthesizes the audio, writes bundles, and publishes them.
+- `tools/course_builder/` validates the data, synthesizes the audio, writes each course's bundles, and publishes and removes courses.
 - `web/` is the Leptos app and the server that hosts it, `/discovery`, and the local repository.
 - `ffi/` exposes the core to the native apps through UniFFI; `tools/uniffi_bindgen_swift/` generates the Swift bindings.
 - `ios/` is the iOS app.
@@ -64,7 +71,9 @@ Building in Xcode reruns the last two scripts. The app reads `/discovery` from `
 ```sh
 cargo run --package course_builder -- validate --all
 ./scripts/build/build-course.sh
-./scripts/publish/publish-course.sh local
+./scripts/publish/publish-course.sh local --include-unlisted-courses
+./scripts/publish/remove-course.sh local --course <course id>
 ./scripts/dev/build-local-repository.sh
+./scripts/release/check-embedded-bundle.sh
 cargo test
 ```

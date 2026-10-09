@@ -1,19 +1,22 @@
 use std::path::PathBuf;
 
 use shared::AppError;
-use shared::artifact::{Manifest, discovery};
+use shared::artifact::{CourseManifest, discovery};
 
 use crate::artifact::repository::{
     self, ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository, ENV_LOCAL_REPOSITORY_ROOT,
-    ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_PUBLISH_ACCESS_KEY_ID,
-    LocalArtifactRepository, RepositoryLockKind, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
+    ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_PUBLISH_ACCESS_KEY_ID, LocalArtifactRepository,
+    RepositoryLockKind, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
 };
-use crate::artifact::{self, PublishReport};
-use crate::build_command;
+use crate::artifact::{self, CourseIndexChangeKind, CoursePublishOutcome, CourseSelectionKind, PointerChangeKind, PublicationUploadKind, RepositoryTargetKind, UnlistedCourseInclusionKind};
 use crate::secrets;
 use crate::workspace::WorkspacePaths;
 
-pub enum PublishTargetKind {
+pub const COURSE_FLAG: &str = "course";
+pub const INCLUDE_UNLISTED_COURSES_FLAG: &str = "include-unlisted-courses";
+
+/// A repository a command reads or writes, with what it takes to reach it.
+pub enum RepositoryLocationKind {
     Local {
         root: Option<PathBuf>,
         public_base_url: Option<String>,
@@ -22,51 +25,126 @@ pub enum PublishTargetKind {
     Dry,
 }
 
-pub fn run_publish(paths: &WorkspacePaths, target: PublishTargetKind, bundle: Option<PathBuf>) -> Result<bool, AppError> {
-    let bundle_directory: PathBuf = match bundle {
-        Some(bundle_directory) => bundle_directory,
-        None => artifact::find_newest_bundle(paths)?,
-    };
-    let bundle_manifest: Manifest = artifact::read_bundle_manifest(&bundle_directory)?;
+impl RepositoryLocationKind {
+    pub fn target(&self) -> RepositoryTargetKind {
+        match self {
+            RepositoryLocationKind::Local { .. } => RepositoryTargetKind::Local,
+            RepositoryLocationKind::CloudflareR2 => RepositoryTargetKind::CloudflareR2,
+            RepositoryLocationKind::Dry => RepositoryTargetKind::Dry,
+        }
+    }
+}
 
-    check_test_courses_publishable(&target, &bundle_manifest)?;
+pub struct PublishOptions {
+    pub course_ids: Vec<String>,
+    pub bundle: Option<PathBuf>,
+    pub unlisted_course_inclusion: UnlistedCourseInclusionKind,
+}
 
+pub fn run_publish(paths: &WorkspacePaths, location: RepositoryLocationKind, options: PublishOptions) -> Result<bool, AppError> {
+    let selection: CourseSelectionKind = select_courses(options)?;
+    let target: RepositoryTargetKind = location.target();
     let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
 
-    let report: PublishReport = runtime.block_on(async {
-        let repository: ArtifactRepositoryKind = create_repository(paths, target).await?;
+    let outcomes: Vec<CoursePublishOutcome> = runtime.block_on(async {
+        let repository: ArtifactRepositoryKind = create_repository(paths, location).await?;
         let lock: RepositoryLockKind = repository::acquire_repository_lock(&repository).await?;
 
-        let published: Result<PublishReport, AppError> = artifact::publish_bundle(&bundle_directory, &repository).await;
+        let published: Result<Vec<CoursePublishOutcome>, AppError> = artifact::publish_selected_courses(paths, &repository, target, &selection).await;
         let released: Result<(), AppError> = lock.release(&repository).await;
 
         repository::combine_with_release(published, released)
     })?;
 
-    log::info!(
-        "publish complete; [version={} latest={} shards={} recordings_uploaded={} recordings_already_present={}]",
-        report.version,
-        report.latest_manifest_url,
-        report.shards_published,
-        report.audio_published,
-        report.audio_already_present,
-    );
+    if target != RepositoryTargetKind::Dry {
+        artifact::drop_embedded_courses_not_taught_in_the_data(paths)?;
+    }
 
-    Ok(true)
+    Ok(report_outcomes(&outcomes))
 }
 
-/// Cloudflare R2 is the production repository, so a bundle with a test course is refused there.
-pub fn check_test_courses_publishable(target: &PublishTargetKind, bundle_manifest: &Manifest) -> Result<(), AppError> {
-    let test_course_ids: Vec<&str> = bundle_manifest.test_course_ids();
+/// `--bundle` names one course's bundle; `--course` names courses; neither publishes every course.
+pub fn select_courses(options: PublishOptions) -> Result<CourseSelectionKind, AppError> {
+    let Some(bundle_directory) = options.bundle else {
+        if options.course_ids.is_empty() {
+            return Ok(CourseSelectionKind::EveryCourse(options.unlisted_course_inclusion));
+        }
 
-    match target {
-        PublishTargetKind::CloudflareR2 if !test_course_ids.is_empty() => Err(AppError::from(format!(
-            "a bundle with a test course cannot be published to Cloudflare R2; rebuild without --{}; [version={} test_courses={}]",
-            build_command::INCLUDE_TEST_COURSES_FLAG,
-            bundle_manifest.version,
-            test_course_ids.join(","),
-        ))),
-        PublishTargetKind::CloudflareR2 | PublishTargetKind::Local { .. } | PublishTargetKind::Dry => Ok(()),
+        let mut course_ids: Vec<String> = options.course_ids;
+
+        course_ids.sort();
+        course_ids.dedup();
+
+        return Ok(CourseSelectionKind::Named(course_ids));
+    };
+    let bundle_manifest: CourseManifest = artifact::read_bundle_manifest(&bundle_directory)?;
+    let named_another_course: bool = options.course_ids.iter().any(|course_id| *course_id != bundle_manifest.course_id);
+
+    if named_another_course {
+        return Err(AppError::from(format!(
+            "--bundle names a bundle of another course than --{COURSE_FLAG}; [bundle_course_id={} course_ids={}]",
+            bundle_manifest.course_id,
+            options.course_ids.join(","),
+        )));
+    }
+
+    Ok(CourseSelectionKind::Bundle(bundle_directory))
+}
+
+/// `true` when every course published.
+fn report_outcomes(outcomes: &[CoursePublishOutcome]) -> bool {
+    let mut failed_course_ids: Vec<&str> = Vec::new();
+
+    for outcome in outcomes {
+        let Ok(report) = &outcome.result else {
+            failed_course_ids.push(&outcome.course_id);
+            continue;
+        };
+
+        log::info!(
+            "published a course; [course_id={} publication_label={} latest={} upload={} pointer={} index={} shards_uploaded={} recordings_uploaded={} recordings_already_present={}]",
+            report.course_id,
+            report.publication_label,
+            report.latest_manifest_url,
+            describe_upload(report.upload),
+            describe_pointer_change(report.pointer),
+            describe_index_change(report.index_change),
+            report.shards_uploaded,
+            report.recordings_uploaded,
+            report.recordings_already_present,
+        );
+    }
+
+    if !failed_course_ids.is_empty() {
+        eprintln!("publishing failed for some courses; [courses={} failed={}]", outcomes.len(), failed_course_ids.join(","));
+        return false;
+    }
+
+    log::info!("publish finished; [courses={}]", outcomes.len());
+
+    true
+}
+
+fn describe_upload(upload: PublicationUploadKind) -> &'static str {
+    match upload {
+        PublicationUploadKind::Uploaded => "uploaded",
+        PublicationUploadKind::AlreadyPresent => "already_present",
+    }
+}
+
+fn describe_pointer_change(pointer: PointerChangeKind) -> &'static str {
+    match pointer {
+        PointerChangeKind::Moved => "moved",
+        PointerChangeKind::AlreadyCurrent => "already_current",
+        PointerChangeKind::LeftOnAnotherPublication => "left_on_another_publication",
+    }
+}
+
+fn describe_index_change(index_change: CourseIndexChangeKind) -> &'static str {
+    match index_change {
+        CourseIndexChangeKind::Unchanged => "unchanged",
+        CourseIndexChangeKind::Added => "added",
+        CourseIndexChangeKind::Updated => "updated",
     }
 }
 
@@ -83,9 +161,9 @@ pub async fn create_cloudflare_r2_repository() -> Result<CloudflareR2ArtifactRep
     Ok(CloudflareR2ArtifactRepository::create(config).await)
 }
 
-async fn create_repository(paths: &WorkspacePaths, target: PublishTargetKind) -> Result<ArtifactRepositoryKind, AppError> {
-    match target {
-        PublishTargetKind::Local { root, public_base_url } => {
+pub async fn create_repository(paths: &WorkspacePaths, location: RepositoryLocationKind) -> Result<ArtifactRepositoryKind, AppError> {
+    match location {
+        RepositoryLocationKind::Local { root, public_base_url } => {
             let root: PathBuf = root
                 .or_else(|| dotenvy::var(ENV_LOCAL_REPOSITORY_ROOT).ok().map(PathBuf::from))
                 .unwrap_or_else(|| paths.local_repository_directory.clone());
@@ -93,79 +171,56 @@ async fn create_repository(paths: &WorkspacePaths, target: PublishTargetKind) ->
 
             Ok(ArtifactRepositoryKind::Local(LocalArtifactRepository::new(root, public_base_url)))
         },
-        PublishTargetKind::CloudflareR2 => Ok(ArtifactRepositoryKind::CloudflareR2(create_cloudflare_r2_repository().await?)),
-        PublishTargetKind::Dry => Ok(ArtifactRepositoryKind::Dry(DryArtifactRepository::new())),
+        RepositoryLocationKind::CloudflareR2 => Ok(ArtifactRepositoryKind::CloudflareR2(create_cloudflare_r2_repository().await?)),
+        RepositoryLocationKind::Dry => Ok(ArtifactRepositoryKind::Dry(DryArtifactRepository::new())),
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::BTreeMap;
-
-    use chrono::Utc;
-    use shared::artifact::{ManifestCourse, ManifestEntry, manifest};
+    use shared::course::Course;
 
     use super::*;
+    use crate::artifact::BuiltBundle;
+    use crate::audio_plan::AudioPlan;
+    use crate::test_courses::{self, FixtureWorkspace, SECOND_COURSE_ID, TEACHING_COURSE_ID};
 
-    const TEACHING_COURSE_ID: &str = "pt_br.en.teaching";
-    const TEST_COURSE_ID: &str = "pt_br.en.testing";
-
-    fn manifest_course(course_id: &str, test_course: bool) -> ManifestCourse {
-        ManifestCourse {
-            title: course_id.to_string(),
-            target_language: "pt-BR".to_string(),
-            source_language: "en".to_string(),
-            outline: ManifestEntry {
-                relative_path: format!("{}/{course_id}/course.sqlite.br", manifest::SUBDIR_DATA),
-                size_bytes: 0,
-                sha256: "0".repeat(64),
-            },
-            units: BTreeMap::new(),
-            test_course,
-        }
-    }
-
-    fn manifest_with_courses(course_test_flags: &[(&str, bool)]) -> Manifest {
-        Manifest {
-            manifest_schema_version: manifest::MANIFEST_SCHEMA_VERSION,
-            version: "2026-10-08+Springfield".to_string(),
-            artifact_created: Utc::now(),
-            courses: course_test_flags
-                .iter()
-                .map(|(course_id, test_course)| (course_id.to_string(), manifest_course(course_id, *test_course)))
-                .collect(),
-            voice_pipeline_revisions: BTreeMap::new(),
-        }
-    }
-
-    fn local_target() -> PublishTargetKind {
-        PublishTargetKind::Local {
-            root: None,
-            public_base_url: None,
+    fn options(course_ids: &[&str], bundle: Option<PathBuf>, unlisted_course_inclusion: UnlistedCourseInclusionKind) -> PublishOptions {
+        PublishOptions {
+            course_ids: course_ids.iter().map(|course_id| course_id.to_string()).collect(),
+            bundle,
+            unlisted_course_inclusion,
         }
     }
 
     #[test]
-    fn check_test_courses_publishable_refuses_a_test_course_for_cloudflare_r2() {
-        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false), (TEST_COURSE_ID, true)]);
+    fn select_courses_publishes_every_course_without_a_course_or_a_bundle() {
+        let selection: CourseSelectionKind = select_courses(options(&[], None, UnlistedCourseInclusionKind::Include)).unwrap();
 
-        let checked: Result<(), AppError> = check_test_courses_publishable(&PublishTargetKind::CloudflareR2, &bundle_manifest);
-
-        assert!(checked.unwrap_err().to_string().contains(TEST_COURSE_ID));
+        assert_eq!(selection, CourseSelectionKind::EveryCourse(UnlistedCourseInclusionKind::Include));
     }
 
     #[test]
-    fn check_test_courses_publishable_accepts_a_test_course_locally_and_in_a_dry_run() {
-        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false), (TEST_COURSE_ID, true)]);
+    fn select_courses_names_each_course_once() {
+        let selection: CourseSelectionKind =
+            select_courses(options(&[SECOND_COURSE_ID, TEACHING_COURSE_ID, SECOND_COURSE_ID], None, UnlistedCourseInclusionKind::Exclude)).unwrap();
 
-        assert!(check_test_courses_publishable(&local_target(), &bundle_manifest).is_ok());
-        assert!(check_test_courses_publishable(&PublishTargetKind::Dry, &bundle_manifest).is_ok());
+        assert_eq!(selection, CourseSelectionKind::Named(vec![SECOND_COURSE_ID.to_string(), TEACHING_COURSE_ID.to_string()]));
     }
 
     #[test]
-    fn check_test_courses_publishable_accepts_a_bundle_without_test_courses_for_cloudflare_r2() {
-        let bundle_manifest: Manifest = manifest_with_courses(&[(TEACHING_COURSE_ID, false)]);
+    fn select_courses_refuses_a_bundle_of_another_course_than_the_one_named() {
+        let workspace: FixtureWorkspace = FixtureWorkspace::new();
+        let mut plan: AudioPlan = AudioPlan::new();
+        let course: Course = test_courses::fixture_course(&mut plan, TEACHING_COURSE_ID, false);
+        let bundle: BuiltBundle = workspace.build_bundle(&course, &plan);
 
-        assert!(check_test_courses_publishable(&PublishTargetKind::CloudflareR2, &bundle_manifest).is_ok());
+        let matching: CourseSelectionKind =
+            select_courses(options(&[TEACHING_COURSE_ID], Some(bundle.directory.clone()), UnlistedCourseInclusionKind::Exclude)).unwrap();
+        let mismatched: Result<CourseSelectionKind, AppError> =
+            select_courses(options(&[SECOND_COURSE_ID], Some(bundle.directory.clone()), UnlistedCourseInclusionKind::Exclude));
+
+        assert_eq!(matching, CourseSelectionKind::Bundle(bundle.directory.clone()));
+        assert!(mismatched.is_err());
     }
 }

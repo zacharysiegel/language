@@ -1,6 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use shared::AppError;
+use shared::artifact::repository_key;
 use shared::filesystem;
 
 use crate::speech_engine::SpeechEngineKind;
@@ -56,5 +57,17 @@ impl WorkspacePaths {
 
     pub fn engine_clip_directory(&self, engine: SpeechEngineKind) -> PathBuf {
         self.clip_store_directory.join(engine.code())
+    }
+
+    pub fn course_bundles_directory(&self, course_id: &str) -> PathBuf {
+        self.bundles_directory.join(course_id)
+    }
+
+    pub fn local_repository_course_directory(&self, course_id: &str) -> PathBuf {
+        self.local_repository_directory.join(repository_key::course_directory_key(course_id))
+    }
+
+    pub fn embedded_course_directory(&self, course_id: &str) -> PathBuf {
+        self.embedded_bundle_directory.join(repository_key::course_directory_key(course_id))
     }
 }
