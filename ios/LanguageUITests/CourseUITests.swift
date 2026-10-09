@@ -130,21 +130,19 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(app.buttons["course-\(Self.courseId)"].waitForExistence(timeout: 5))
     }
 
-    func testUnitStatusIsSetByStartTheStatusControlAndPractice() throws {
+    func testUnitStatusIsSetByTheStatusControlAndPractice() throws {
         openUnit(Self.practicedUnitId)
         assertSelected(app.buttons["unit-status-not-started"])
         saveScreenshot("12-unit-status")
 
-        app.buttons["start-unit"].tap()
+        app.buttons["unit-status-in-progress"].tap()
         assertSelected(app.buttons["unit-status-in-progress"])
-        XCTAssertFalse(app.buttons["start-unit"].exists)
 
         app.buttons["unit-status-completed"].tap()
         assertSelected(app.buttons["unit-status-completed"])
 
         app.buttons["unit-status-not-started"].tap()
         assertSelected(app.buttons["unit-status-not-started"])
-        XCTAssertTrue(app.buttons["start-unit"].waitForExistence(timeout: 5))
 
         app.buttons["tab-practice"].tap()
         app.buttons["quick-practice"].tap()

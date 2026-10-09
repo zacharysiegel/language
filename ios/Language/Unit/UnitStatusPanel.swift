@@ -12,12 +12,6 @@ struct UnitStatusPanel: View {
         let status: UnitStatusRecord = progressStore.unitProgress(courseId: courseId, unitId: unitId).status
 
         VStack(alignment: .leading, spacing: .spaceSm) {
-            if status == .notStarted {
-                Button("Start this unit") { progressStore.startUnit(courseId: courseId, unitId: unitId) }
-                    .buttonStyle(SquareButtonStyle(isPrimary: true))
-                    .accessibilityIdentifier("start-unit")
-            }
-
             HStack(spacing: .spaceSm) {
                 MicroLabel(text: "Status")
 
