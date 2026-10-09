@@ -48,7 +48,8 @@ impl EmbeddedBundleMismatchKind {
 pub async fn check_embedded_bundle(paths: &WorkspacePaths, repository: &impl ArtifactRepository) -> Result<Vec<EmbeddedBundleMismatchKind>, AppError> {
     let embedded_index: Option<CourseIndex> = embedded_bundle::read_embedded_course_index(paths)?;
 
-    let Some(embedded_index) = embedded_index else {
+    let Some(embedded_index) = embedded_index
+    else {
         return Err(AppError::from(format!(
             "there is no embedded bundle; publishing to a repository writes it; [path={}]",
             paths.embedded_bundle_directory.display(),
@@ -107,7 +108,8 @@ async fn compare_course_publication(
 }
 
 fn describe_publication_label(course_id: &str, manifest_bytes: Option<&[u8]>) -> String {
-    let Some(manifest_bytes) = manifest_bytes else {
+    let Some(manifest_bytes) = manifest_bytes
+    else {
         return ABSENT_LABEL.to_string();
     };
 

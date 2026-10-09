@@ -37,7 +37,8 @@ where
 
                 loop {
                     let item_index: usize = next_item_index.fetch_add(1, Ordering::SeqCst);
-                    let Some(item) = items.get(item_index) else {
+                    let Some(item) = items.get(item_index)
+                    else {
                         return;
                     };
 

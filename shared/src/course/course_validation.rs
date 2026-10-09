@@ -132,7 +132,8 @@ impl IssueCollector<'_> {
     }
 
     fn check_literal(&mut self, location: &str, literal: &Option<String>, natural: &str) {
-        let Some(literal) = literal else {
+        let Some(literal) = literal
+        else {
             return;
         };
 

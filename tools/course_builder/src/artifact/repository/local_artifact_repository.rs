@@ -52,7 +52,8 @@ impl LocalArtifactRepository {
                 DirectoryEmptinessKind::NotEmpty => return Ok(()),
             }
 
-            let Some(parent) = directory.parent() else {
+            let Some(parent) = directory.parent()
+            else {
                 return Ok(());
             };
 

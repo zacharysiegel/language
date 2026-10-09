@@ -56,10 +56,12 @@ pub fn is_pointer_key(key: &str) -> bool {
         return true;
     }
 
-    let Some(within_courses) = key.strip_prefix(&format!("{COURSES_DIRECTORY}/")) else {
+    let Some(within_courses) = key.strip_prefix(&format!("{COURSES_DIRECTORY}/"))
+    else {
         return false;
     };
-    let Some((_course_id, within_course)) = within_courses.split_once('/') else {
+    let Some((_course_id, within_course)) = within_courses.split_once('/')
+    else {
         return false;
     };
 

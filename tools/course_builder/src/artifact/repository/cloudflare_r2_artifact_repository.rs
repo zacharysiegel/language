@@ -139,13 +139,16 @@ fn with_write_condition(request: PutObjectFluentBuilder, condition: WriteConditi
 }
 
 fn listed_object(object: &Object) -> Result<ListedObject, AppError> {
-    let Some(key) = object.key() else {
+    let Some(key) = object.key()
+    else {
         return Err(AppError::from("list_objects_v2 returned an object without a key"));
     };
-    let Some(last_modified) = object.last_modified() else {
+    let Some(last_modified) = object.last_modified()
+    else {
         return Err(AppError::from(format!("list_objects_v2 returned an object without LastModified; [key={key}]")));
     };
-    let Some(uploaded) = DateTime::<Utc>::from_timestamp(last_modified.secs(), last_modified.subsec_nanos()) else {
+    let Some(uploaded) = DateTime::<Utc>::from_timestamp(last_modified.secs(), last_modified.subsec_nanos())
+    else {
         return Err(AppError::from(format!("list_objects_v2 returned an unrepresentable LastModified; [key={key}]")));
     };
 
@@ -210,7 +213,8 @@ impl ArtifactRepository for CloudflareR2ArtifactRepository {
             .await
             .map_err(|error| AppError::from(format!("reading an object's body failed; [bucket={} key={key} error={error}]", self.bucket)))?;
 
-        let Some(entity_tag) = entity_tag else {
+        let Some(entity_tag) = entity_tag
+        else {
             return Err(AppError::from(format!("get_object returned no ETag; [bucket={} key={key}]", self.bucket)));
         };
 
