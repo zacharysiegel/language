@@ -6,7 +6,7 @@ use leptos_router::hooks::{use_params_map, use_query_map};
 use shared::course::{CourseOutline, Unit};
 
 use crate::course_data::{
-    self, CourseStore, ShardLoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
+    self, CourseStore, LoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
 };
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 use crate::unit::{
@@ -76,14 +76,14 @@ pub fn UnitPage() -> impl IntoView {
     let course_store: CourseStore = use_course_store();
     let course_id: Memo<String> = use_route_course_id();
     let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
-    let unit_state: Memo<Option<ShardLoadState<Unit>>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()));
+    let unit_state: Memo<Option<LoadState<Unit>>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()));
 
     let progress_store: ProgressStore = use_progress_store();
 
     remember_route_course(progress_store, course_id);
 
     Effect::new(move |_| {
-        let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(ShardLoadState::Loaded(_)));
+        let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(LoadState::Loaded(_)));
 
         if outline_loaded {
             course_store.ensure_unit_loaded(&course_id.get(), &unit_id.get());
@@ -102,11 +102,11 @@ pub fn UnitPage() -> impl IntoView {
         }
 
         match unit_state.get() {
-            Some(ShardLoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
-            Some(ShardLoadState::Failed(message)) => {
+            Some(LoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
+            Some(LoadState::Failed(message)) => {
                 view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any()
             },
-            Some(ShardLoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
+            Some(LoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
         }
     })
 }

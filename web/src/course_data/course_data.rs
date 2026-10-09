@@ -13,13 +13,6 @@ use shared::course_shard::{CourseShardContents, UnitShardContents};
 use crate::course_data::{self, COURSE_ID_PARAM, LoadedCoursePublication};
 use crate::platform;
 
-#[derive(Debug, Clone)]
-pub enum CourseIndexLoadState {
-    Loading,
-    Loaded(Arc<CourseIndexSource>),
-    Failed(String),
-}
-
 /// How this page load's request for the repository's course index has ended.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum RepositoryIndexLoadKind {
@@ -28,41 +21,21 @@ pub enum RepositoryIndexLoadKind {
     Failed,
 }
 
-/// How far a course's publication has loaded. Equality is by identity, so a memo over one course notifies only
-/// when that course's load moves on.
+/// How far a load has gone. Equality is by identity, so a memo over one entry notifies only when that entry's load
+/// moves on.
 #[derive(Debug, Clone)]
-pub enum CoursePublicationLoadState {
-    Loading,
-    Loaded(Arc<LoadedCoursePublication>),
-    Failed(String),
-}
-
-impl PartialEq for CoursePublicationLoadState {
-    fn eq(&self, other: &CoursePublicationLoadState) -> bool {
-        match (self, other) {
-            (CoursePublicationLoadState::Loading, CoursePublicationLoadState::Loading) => true,
-            (CoursePublicationLoadState::Loaded(left), CoursePublicationLoadState::Loaded(right)) => Arc::ptr_eq(left, right),
-            (CoursePublicationLoadState::Failed(left), CoursePublicationLoadState::Failed(right)) => left == right,
-            _ => false,
-        }
-    }
-}
-
-/// How far a course outline or a unit lesson has loaded. Equality is by identity, so a memo over one entry
-/// notifies only when that entry's load moves on.
-#[derive(Debug, Clone)]
-pub enum ShardLoadState<T> {
+pub enum LoadState<T> {
     Loading,
     Loaded(Arc<T>),
     Failed(String),
 }
 
-impl<T> PartialEq for ShardLoadState<T> {
-    fn eq(&self, other: &ShardLoadState<T>) -> bool {
+impl<T> PartialEq for LoadState<T> {
+    fn eq(&self, other: &LoadState<T>) -> bool {
         match (self, other) {
-            (ShardLoadState::Loading, ShardLoadState::Loading) => true,
-            (ShardLoadState::Loaded(left), ShardLoadState::Loaded(right)) => Arc::ptr_eq(left, right),
-            (ShardLoadState::Failed(left), ShardLoadState::Failed(right)) => left == right,
+            (LoadState::Loading, LoadState::Loading) => true,
+            (LoadState::Loaded(left), LoadState::Loaded(right)) => Arc::ptr_eq(left, right),
+            (LoadState::Failed(left), LoadState::Failed(right)) => left == right,
             _ => false,
         }
     }
@@ -81,18 +54,18 @@ pub type UnitKey = (String, String);
 
 #[derive(Clone, Copy)]
 pub struct CourseStore {
-    index: RwSignal<CourseIndexLoadState>,
+    index: RwSignal<LoadState<CourseIndexSource>>,
     repository_index: RwSignal<RepositoryIndexLoadKind>,
     /// By course id; a course is present once its publication has been requested.
-    publications: RwSignal<BTreeMap<String, CoursePublicationLoadState>>,
+    publications: RwSignal<BTreeMap<String, LoadState<LoadedCoursePublication>>>,
     /// Courses whose pointer is read once the repository index load ends.
     courses_awaiting_pointer: StoredValue<BTreeSet<String>>,
-    outlines: RwSignal<BTreeMap<String, ShardLoadState<CourseOutline>>>,
-    units: RwSignal<BTreeMap<UnitKey, ShardLoadState<Unit>>>,
+    outlines: RwSignal<BTreeMap<String, LoadState<CourseOutline>>>,
+    units: RwSignal<BTreeMap<UnitKey, LoadState<Unit>>>,
 }
 
 impl CourseStore {
-    pub fn index_state(&self) -> CourseIndexLoadState {
+    pub fn index_state(&self) -> LoadState<CourseIndexSource> {
         self.index.get()
     }
 
@@ -103,20 +76,20 @@ impl CourseStore {
     /// The shown course index's entry for the course; `None` before an index loads or for a course it does not list.
     pub fn index_entry(&self, course_id: &str) -> Option<CourseIndexEntry> {
         self.index.with(|index| match index {
-            CourseIndexLoadState::Loaded(source) => source.course_index.courses.get(course_id).cloned(),
-            CourseIndexLoadState::Loading | CourseIndexLoadState::Failed(_) => None,
+            LoadState::Loaded(source) => source.course_index.courses.get(course_id).cloned(),
+            LoadState::Loading | LoadState::Failed(_) => None,
         })
     }
 
-    pub fn publication_state(&self, course_id: &str) -> Option<CoursePublicationLoadState> {
+    pub fn publication_state(&self, course_id: &str) -> Option<LoadState<LoadedCoursePublication>> {
         self.publications.with(|publications| publications.get(course_id).cloned())
     }
 
-    pub fn outline_state(&self, course_id: &str) -> Option<ShardLoadState<CourseOutline>> {
+    pub fn outline_state(&self, course_id: &str) -> Option<LoadState<CourseOutline>> {
         self.outlines.with(|outlines| outlines.get(course_id).cloned())
     }
 
-    pub fn unit_state(&self, course_id: &str, unit_id: &str) -> Option<ShardLoadState<Unit>> {
+    pub fn unit_state(&self, course_id: &str, unit_id: &str) -> Option<LoadState<Unit>> {
         self.units.with(|units| units.get(&(course_id.to_string(), unit_id.to_string())).cloned())
     }
 
@@ -128,23 +101,23 @@ impl CourseStore {
             source.course_index.courses.len(),
         );
 
-        self.index.set(CourseIndexLoadState::Loaded(Arc::new(source)));
+        self.index.set(LoadState::Loaded(Arc::new(source)));
     }
 
     fn fail_course_index_unless_shown(&self, message: String) {
-        let nothing_shown: bool = matches!(self.index.get_untracked(), CourseIndexLoadState::Loading);
+        let nothing_shown: bool = matches!(self.index.get_untracked(), LoadState::Loading);
 
         if nothing_shown {
             log::error!("could not load the course index; [error={message}]");
-            self.index.set(CourseIndexLoadState::Failed(message));
+            self.index.set(LoadState::Failed(message));
         }
     }
 
     /// The shown course index when it was read from a repository, the only kind a course pointer is read through.
     fn shown_repository_index(&self) -> Option<Arc<CourseIndexSource>> {
         self.index.with_untracked(|index| match index {
-            CourseIndexLoadState::Loaded(source) if source.origin == ArtifactOriginKind::Repository => Some(source.clone()),
-            CourseIndexLoadState::Loaded(_) | CourseIndexLoadState::Loading | CourseIndexLoadState::Failed(_) => None,
+            LoadState::Loaded(source) if source.origin == ArtifactOriginKind::Repository => Some(source.clone()),
+            LoadState::Loaded(_) | LoadState::Loading | LoadState::Failed(_) => None,
         })
     }
 
@@ -168,7 +141,7 @@ impl CourseStore {
         }
 
         self.publications.update(|publications| {
-            publications.insert(course_id, CoursePublicationLoadState::Loaded(Arc::new(publication)));
+            publications.insert(course_id, LoadState::Loaded(Arc::new(publication)));
         });
 
         outcome
@@ -183,8 +156,8 @@ impl CourseStore {
 
     fn shown_publication(&self, course_id: &str) -> Option<Arc<LoadedCoursePublication>> {
         self.publications.with_untracked(|publications| match publications.get(course_id) {
-            Some(CoursePublicationLoadState::Loaded(publication)) => Some(publication.clone()),
-            Some(CoursePublicationLoadState::Loading | CoursePublicationLoadState::Failed(_)) | None => None,
+            Some(LoadState::Loaded(publication)) => Some(publication.clone()),
+            Some(LoadState::Loading | LoadState::Failed(_)) | None => None,
         })
     }
 
@@ -195,13 +168,13 @@ impl CourseStore {
 
     fn fail_publication_unless_shown(&self, course_id: &str, message: String) {
         self.publications.update(|publications| {
-            let shown_or_absent: bool = !matches!(publications.get(course_id), Some(CoursePublicationLoadState::Loading));
+            let shown_or_absent: bool = !matches!(publications.get(course_id), Some(LoadState::Loading));
 
             if shown_or_absent {
                 return;
             }
 
-            publications.insert(course_id.to_string(), CoursePublicationLoadState::Failed(message));
+            publications.insert(course_id.to_string(), LoadState::Failed(message));
         });
     }
 
@@ -214,7 +187,7 @@ impl CourseStore {
         }
 
         self.publications.update(|publications| {
-            publications.insert(course_id.to_string(), CoursePublicationLoadState::Loading);
+            publications.insert(course_id.to_string(), LoadState::Loading);
         });
 
         let store: CourseStore = *self;
@@ -315,7 +288,7 @@ impl CourseStore {
         }
 
         self.outlines.update(|outlines| {
-            outlines.insert(course_id.to_string(), ShardLoadState::Loading);
+            outlines.insert(course_id.to_string(), LoadState::Loading);
         });
 
         let store: CourseStore = *self;
@@ -333,10 +306,10 @@ impl CourseStore {
         }
 
         let course_id: String = publication.course_id().to_string();
-        let outline_state: ShardLoadState<CourseOutline> = match loaded {
+        let outline_state: LoadState<CourseOutline> = match loaded {
             Ok(contents) => {
                 platform::register_clip_audio(&publication.audio_base_url, &contents.clip_audio);
-                ShardLoadState::Loaded(Arc::new(contents.outline))
+                LoadState::Loaded(Arc::new(contents.outline))
             },
             Err(error) => {
                 let recovery: PublicationAdoptionKind = self.recover_from_shard_failure(publication).await;
@@ -346,7 +319,7 @@ impl CourseStore {
                 }
 
                 log::error!("could not load a course; [course_id={course_id} error={error}]");
-                ShardLoadState::Failed(error.message.clone())
+                LoadState::Failed(error.message.clone())
             },
         };
 
@@ -361,7 +334,7 @@ impl CourseStore {
         else {
             return;
         };
-        let Some(ShardLoadState::Loaded(outline)) = self.outlines.with_untracked(|outlines| outlines.get(course_id).cloned())
+        let Some(LoadState::Loaded(outline)) = self.outlines.with_untracked(|outlines| outlines.get(course_id).cloned())
         else {
             return;
         };
@@ -378,7 +351,7 @@ impl CourseStore {
         };
 
         self.units.update(|units| {
-            units.insert(unit_key.clone(), ShardLoadState::Loading);
+            units.insert(unit_key.clone(), LoadState::Loading);
         });
 
         let store: CourseStore = *self;
@@ -401,10 +374,10 @@ impl CourseStore {
             return;
         }
 
-        let unit_state: ShardLoadState<Unit> = match loaded {
+        let unit_state: LoadState<Unit> = match loaded {
             Ok(contents) => {
                 platform::register_clip_audio(&publication.audio_base_url, &contents.clip_audio);
-                ShardLoadState::Loaded(Arc::new(unit_outline.with_lesson(contents.lesson)))
+                LoadState::Loaded(Arc::new(unit_outline.with_lesson(contents.lesson)))
             },
             Err(error) => {
                 let recovery: PublicationAdoptionKind = self.recover_from_shard_failure(publication).await;
@@ -414,7 +387,7 @@ impl CourseStore {
                 }
 
                 log::error!("could not load a unit; [course_id={} unit_id={} error={error}]", unit_key.0, unit_key.1);
-                ShardLoadState::Failed(error.message.clone())
+                LoadState::Failed(error.message.clone())
             },
         };
 
@@ -426,7 +399,7 @@ impl CourseStore {
 
 pub fn provide_course_store() {
     let store: CourseStore = CourseStore {
-        index: RwSignal::new(CourseIndexLoadState::Loading),
+        index: RwSignal::new(LoadState::Loading),
         repository_index: RwSignal::new(RepositoryIndexLoadKind::Pending),
         publications: RwSignal::new(BTreeMap::new()),
         courses_awaiting_pointer: StoredValue::new(BTreeSet::new()),
@@ -512,9 +485,9 @@ where
     let store: CourseStore = use_course_store();
 
     move || match store.index_state() {
-        CourseIndexLoadState::Loading => status_view("Loading the courses…"),
-        CourseIndexLoadState::Failed(message) => failure_view("The course list", message),
-        CourseIndexLoadState::Loaded(course_index) => render(course_index).into_any(),
+        LoadState::Loading => status_view("Loading the courses…"),
+        LoadState::Failed(message) => failure_view("The course list", message),
+        LoadState::Loaded(course_index) => render(course_index).into_any(),
     }
 }
 
@@ -529,8 +502,8 @@ where
 {
     let store: CourseStore = use_course_store();
     let listed_in_the_index: Memo<bool> = Memo::new(move |_| store.index_entry(&course_id()).is_some());
-    let publication_state: Memo<Option<CoursePublicationLoadState>> = Memo::new(move |_| store.publication_state(&course_id()));
-    let outline_state: Memo<Option<ShardLoadState<CourseOutline>>> = Memo::new(move |_| store.outline_state(&course_id()));
+    let publication_state: Memo<Option<LoadState<LoadedCoursePublication>>> = Memo::new(move |_| store.publication_state(&course_id()));
+    let outline_state: Memo<Option<LoadState<CourseOutline>>> = Memo::new(move |_| store.outline_state(&course_id()));
 
     Effect::new(move |_| {
         if !listed_in_the_index.get() {
@@ -539,7 +512,7 @@ where
 
         store.ensure_publication_loaded(&course_id());
 
-        let publication_loaded: bool = matches!(publication_state.get(), Some(CoursePublicationLoadState::Loaded(_)));
+        let publication_loaded: bool = matches!(publication_state.get(), Some(LoadState::Loaded(_)));
 
         if publication_loaded {
             store.ensure_outline_loaded(&course_id());
@@ -550,14 +523,14 @@ where
         let repository_index_ended: bool = store.repository_index_state() != RepositoryIndexLoadKind::Pending;
 
         match (store.index_state(), publication_state.get(), outline_state.get()) {
-            (CourseIndexLoadState::Failed(message), _, _) => failure_view("The course list", message),
-            (CourseIndexLoadState::Loaded(_), _, _) if repository_index_ended && !listed_in_the_index.get() => {
+            (LoadState::Failed(message), _, _) => failure_view("The course list", message),
+            (LoadState::Loaded(_), _, _) if repository_index_ended && !listed_in_the_index.get() => {
                 view! { <p class="status">"That course does not exist."</p> }.into_any()
             },
-            (_, Some(CoursePublicationLoadState::Failed(message)), _) | (_, _, Some(ShardLoadState::Failed(message))) => {
+            (_, Some(LoadState::Failed(message)), _) | (_, _, Some(LoadState::Failed(message))) => {
                 failure_view("The course content", message)
             },
-            (_, _, Some(ShardLoadState::Loaded(outline))) => render(outline).into_any(),
+            (_, _, Some(LoadState::Loaded(outline))) => render(outline).into_any(),
             _ => status_view("Loading the course…"),
         }
     }
