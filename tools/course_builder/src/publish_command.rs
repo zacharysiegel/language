@@ -4,9 +4,9 @@ use shared::AppError;
 use shared::artifact::{Manifest, discovery};
 
 use crate::artifact::repository::{
-    ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository, ENV_LOCAL_REPOSITORY_ROOT,
+    self, ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository, ENV_LOCAL_REPOSITORY_ROOT,
     ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_PUBLISH_ACCESS_KEY_ID,
-    LocalArtifactRepository, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
+    LocalArtifactRepository, RepositoryLockKind, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
 };
 use crate::artifact::{self, PublishReport};
 use crate::build_command;
@@ -35,8 +35,12 @@ pub fn run_publish(paths: &WorkspacePaths, target: PublishTargetKind, bundle: Op
 
     let report: PublishReport = runtime.block_on(async {
         let repository: ArtifactRepositoryKind = create_repository(paths, target).await?;
+        let lock: RepositoryLockKind = repository::acquire_repository_lock(&repository).await?;
 
-        artifact::publish_bundle(&bundle_directory, &repository).await
+        let published: Result<PublishReport, AppError> = artifact::publish_bundle(&bundle_directory, &repository).await;
+        let released: Result<(), AppError> = lock.release(&repository).await;
+
+        repository::combine_with_release(published, released)
     })?;
 
     log::info!(

@@ -11,6 +11,7 @@ mod secrets;
 #[cfg(test)] // a helper only tests use
 mod test_courses;
 mod speech_engine;
+mod unlock_command;
 mod validate_command;
 mod version_label;
 mod work_pool;
@@ -45,6 +46,20 @@ enum CommandKind {
     Publish(PublishArguments),
     /// Apply `tools/course_builder/r2-cors.json` to the R2 bucket so the app's origin may read it.
     SetArtifactCors(SetArtifactCorsArguments),
+    /// Remove the repository lease a writing command left behind when it stopped without releasing it.
+    Unlock(UnlockArguments),
+}
+
+#[derive(Args)]
+struct UnlockArguments {
+    #[command(subcommand)]
+    target: UnlockTargetArgument,
+}
+
+#[derive(Subcommand)]
+enum UnlockTargetArgument {
+    /// Delete the lease object in the R2 bucket; reads the bucket settings as `publish cloudflare-r2` does.
+    CloudflareR2,
 }
 
 #[derive(Args)]
@@ -179,6 +194,9 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
             let action: CorsActionKind = if arguments.list { CorsActionKind::List } else { CorsActionKind::Apply };
 
             cors_command::run_set_artifact_cors(action)
+        },
+        CommandKind::Unlock(arguments) => match arguments.target {
+            UnlockTargetArgument::CloudflareR2 => unlock_command::run_unlock_cloudflare_r2(),
         },
     }
 }
