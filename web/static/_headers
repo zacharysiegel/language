@@ -1,0 +1,8 @@
+# Response headers for the Cloudflare Workers Assets deploy. The edge reads this file out of the deployed asset
+# directory and applies its rules; wrangler never uploads it as an asset.
+
+/discovery
+  # Extensionless, so the edge would send no Content-Type. One hour bounds how long a client keeps using a
+  # superseded repository base after this document is redeployed.
+  Content-Type: application/json
+  Cache-Control: public, max-age=3600
