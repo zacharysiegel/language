@@ -515,8 +515,8 @@ impl CoursePublication {
         Ok(lesson)
     }
 
-    /// Downloads into the recording cache the recordings `tab` of the opened unit `unit_id` plays with `engine`, each at
-    /// most once and never ahead of a play waiting for its recording, until `cancellation` is cancelled.
+    /// Downloads into the recording cache the recordings `tab` of unit `unit_id` plays with `engine`, each at most once
+    /// and never ahead of a play waiting for its recording, until `cancellation` is cancelled.
     pub async fn prefetch_unit_tab_recordings(
         &self,
         unit_id: String,
@@ -524,10 +524,16 @@ impl CoursePublication {
         engine: AudioEngineRecord,
         cancellation: Arc<PrefetchCancellation>,
     ) {
-        let Some(clips) = self.unit_tab_clips(&unit_id, tab)
-        else {
-            log::warn!("not prefetching the recordings of a unit that is not open; [unit_id={unit_id}]");
-            return;
+        let opened_clips: Result<Vec<SpokenClip>, AppErrorStatic> = match self.source.origin {
+            ArtifactOriginKind::Repository => self.open_unit_tab_clips(&self.library.http_fetch, &unit_id, tab).await,
+            ArtifactOriginKind::Embedded => self.open_unit_tab_clips(&DirectoryFetch, &unit_id, tab).await,
+        };
+        let clips: Vec<SpokenClip> = match opened_clips {
+            Ok(clips) => clips,
+            Err(error) => {
+                log::warn!("not prefetching the recordings of a unit that could not be opened; [unit_id={unit_id} error={error}]");
+                return;
+            },
         };
 
         let summary: RecordingPrefetchSummary =
@@ -585,8 +591,28 @@ impl CoursePublication {
         Ok(lesson_record)
     }
 
+    /// Opens the outline and the unit first when this publication has not.
+    async fn open_unit_tab_clips(
+        &self,
+        http_fetch: &impl HttpFetch,
+        unit_id: &str,
+        tab: UnitTabRecord,
+    ) -> Result<Vec<SpokenClip>, AppErrorStatic> {
+        if self.opened_outline.get().is_none() {
+            let _outline: CourseOutlineRecord = self.open_course(http_fetch).await?;
+        }
+
+        if !self.opened_lessons.contains_key(unit_id) {
+            let _lesson: UnitLessonRecord = self.open_unit(http_fetch, unit_id).await?;
+        }
+
+        let opened_clips: Option<Vec<SpokenClip>> = self.opened_unit_tab_clips(unit_id, tab);
+
+        opened_clips.ok_or_else(|| AppErrorStatic::from(format!("the course outline has no such unit; [unit_id={unit_id}]")))
+    }
+
     /// `None` until both the outline and the unit are opened.
-    fn unit_tab_clips(&self, unit_id: &str, tab: UnitTabRecord) -> Option<Vec<SpokenClip>> {
+    fn opened_unit_tab_clips(&self, unit_id: &str, tab: UnitTabRecord) -> Option<Vec<SpokenClip>> {
         let unit_outline: &UnitOutline = self.opened_outline.get()?.find_unit(unit_id)?;
         let lesson: Ref<'_, String, UnitLesson> = self.opened_lessons.get(unit_id)?;
 
@@ -751,9 +777,9 @@ mod tests {
         let publication: Arc<CoursePublication> = library.clone().load_embedded_course_publication(course_id.clone()).await.unwrap();
         let outline: CourseOutlineRecord = publication.load_course().await.unwrap();
         let unit_id: String = outline.units[0].id.clone();
-        let dialogue_clips_before_opening: Option<Vec<SpokenClip>> = publication.unit_tab_clips(&unit_id, UnitTabRecord::Dialogues);
+        let dialogue_clips_before_opening: Option<Vec<SpokenClip>> = publication.opened_unit_tab_clips(&unit_id, UnitTabRecord::Dialogues);
         let lesson: UnitLessonRecord = publication.load_unit(unit_id.clone()).await.unwrap();
-        let vocabulary_clips: Vec<SpokenClip> = publication.unit_tab_clips(&unit_id, UnitTabRecord::Vocabulary).unwrap();
+        let vocabulary_clips: Vec<SpokenClip> = publication.opened_unit_tab_clips(&unit_id, UnitTabRecord::Vocabulary).unwrap();
         let cached_shard_count: usize = cached_shard_names(cache_directory.path()).len();
 
         assert!(course_index.is_embedded());
@@ -766,6 +792,36 @@ mod tests {
         assert_eq!(cached_shard_count, 2);
         assert!(library.load_cached_course_index().await.is_none());
         assert!(library.clone().load_cached_course_publication(course_id).await.is_none());
+    }
+
+    #[tokio::test]
+    async fn open_unit_tab_clips_opens_the_outline_and_unit_a_publication_of_the_same_content_already_opened() {
+        let Some(embedded_directory) = embedded_bundle_directory()
+        else {
+            eprintln!("skipped: run ./scripts/dev/build-local-repository.sh to produce the embedded bundle");
+            return;
+        };
+
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let library: Arc<CourseLibrary> = create_library(Path::new("http://127.0.0.1:9"), cache_directory.path(), &embedded_directory);
+        let course_index: Arc<PublishedCourseIndex> = library.load_embedded_course_index().await.unwrap();
+        let course_id: String = course_index.courses()[0].id.clone();
+        let loaded_publication: Arc<CoursePublication> = library.clone().load_embedded_course_publication(course_id.clone()).await.unwrap();
+        let outline: CourseOutlineRecord = loaded_publication.load_course().await.unwrap();
+        let unit_id: String = outline.units[0].id.clone();
+        loaded_publication.load_unit(unit_id.clone()).await.unwrap();
+        let replacing_publication: Arc<CoursePublication> = library.clone().load_embedded_course_publication(course_id).await.unwrap();
+
+        let vocabulary_clips: Vec<SpokenClip> =
+            replacing_publication.open_unit_tab_clips(&DirectoryFetch, &unit_id, UnitTabRecord::Vocabulary).await.unwrap();
+        let expected_clips: Vec<SpokenClip> = loaded_publication.opened_unit_tab_clips(&unit_id, UnitTabRecord::Vocabulary).unwrap();
+        let unknown_unit: Result<Vec<SpokenClip>, AppErrorStatic> =
+            replacing_publication.open_unit_tab_clips(&DirectoryFetch, "no_such_unit", UnitTabRecord::Vocabulary).await;
+
+        assert_eq!(replacing_publication.manifest_sha256(), loaded_publication.manifest_sha256());
+        assert!(!vocabulary_clips.is_empty());
+        assert_eq!(vocabulary_clips, expected_clips);
+        assert!(unknown_unit.is_err());
     }
 
     #[tokio::test]
