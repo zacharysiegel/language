@@ -43,15 +43,14 @@ mod browser {
         finish: Function,
     }
 
-    /// The recordings of the shown version.
-    #[derive(Default)]
-    struct ClipAudioRegistry {
+    struct ClipRecording {
+        audio_sha256: String,
+        /// The recordings base of the publication whose shard registered the recording.
         audio_base_url: String,
-        audio_sha256_by_clip: BTreeMap<String, BTreeMap<VoiceEngineKind, String>>,
     }
 
     thread_local! {
-        static CLIP_AUDIO: RefCell<ClipAudioRegistry> = RefCell::new(ClipAudioRegistry::default());
+        static CLIP_RECORDINGS: RefCell<BTreeMap<String, BTreeMap<VoiceEngineKind, ClipRecording>>> = const { RefCell::new(BTreeMap::new()) };
         static SELECTED_ENGINE: Cell<AudioEngineKind> = const { Cell::new(AudioEngineKind::Auto) };
         static ACTIVE_CLIP: RefCell<Option<ActiveClip>> = const { RefCell::new(None) };
         static PLAYBACK_GENERATION: Cell<u64> = const { Cell::new(0) };
@@ -87,6 +86,32 @@ mod browser {
         }
     }
 
+    pub fn remove_stored_text(key: &str) {
+        let Some(storage) = local_storage()
+        else {
+            return;
+        };
+
+        let removed: Result<(), JsValue> = storage.remove_item(key);
+
+        if let Err(error) = removed {
+            log::warn!("could not remove from local storage; [key={key} error={error:?}]");
+        }
+    }
+
+    pub fn stored_keys_with_prefix(prefix: &str) -> Vec<String> {
+        let Some(storage) = local_storage()
+        else {
+            return Vec::new();
+        };
+        let key_count: u32 = storage.length().unwrap_or(0);
+
+        (0..key_count)
+            .filter_map(|position| storage.key(position).ok().flatten())
+            .filter(|key| key.starts_with(prefix))
+            .collect()
+    }
+
     pub fn now_milliseconds() -> i64 {
         js_sys::Date::now() as i64
     }
@@ -118,27 +143,18 @@ mod browser {
         SELECTED_ENGINE.with(|selected| selected.set(engine));
     }
 
-    pub fn reset_clip_audio(audio_base_url: &str, entries: &[ClipAudioEntry]) {
-        CLIP_AUDIO.with(|registry| {
-            *registry.borrow_mut() = ClipAudioRegistry {
-                audio_base_url: audio_base_url.to_string(),
-                audio_sha256_by_clip: BTreeMap::new(),
-            };
-        });
-
-        register_clip_audio(entries);
-    }
-
-    pub fn register_clip_audio(entries: &[ClipAudioEntry]) {
-        CLIP_AUDIO.with(|registry| {
+    /// Adds `entries` to the recordings every earlier call registered, each served under `audio_base_url`.
+    pub fn register_clip_audio(audio_base_url: &str, entries: &[ClipAudioEntry]) {
+        CLIP_RECORDINGS.with(|registry| {
             let mut registry = registry.borrow_mut();
 
             for entry in entries {
-                registry
-                    .audio_sha256_by_clip
-                    .entry(entry.clip_key.clone())
-                    .or_default()
-                    .insert(entry.engine, entry.audio_sha256.clone());
+                let clip_recording: ClipRecording = ClipRecording {
+                    audio_sha256: entry.audio_sha256.clone(),
+                    audio_base_url: audio_base_url.to_string(),
+                };
+
+                registry.entry(entry.clip_key.clone()).or_default().insert(entry.engine, clip_recording);
             }
         });
     }
@@ -148,14 +164,14 @@ mod browser {
         let clip_key: &str = clip.clip_key.as_deref()?;
         let preferred_engine: VoiceEngineKind = SELECTED_ENGINE.with(Cell::get).voice_engine_for_clip(&clip.fallback_text, &clip.voice_choice);
 
-        CLIP_AUDIO.with(|registry| {
+        CLIP_RECORDINGS.with(|registry| {
             let registry = registry.borrow();
-            let audio_sha256_by_engine: &BTreeMap<VoiceEngineKind, String> = registry.audio_sha256_by_clip.get(clip_key)?;
-            let audio_sha256: &String = audio_sha256_by_engine
+            let recording_by_engine: &BTreeMap<VoiceEngineKind, ClipRecording> = registry.get(clip_key)?;
+            let clip_recording: &ClipRecording = recording_by_engine
                 .get(&preferred_engine)
-                .or_else(|| audio_sha256_by_engine.values().next())?;
+                .or_else(|| recording_by_engine.values().next())?;
 
-            Some(fetch::join_url(&registry.audio_base_url, &artifact::audio_key(audio_sha256)))
+            Some(fetch::join_url(&clip_recording.audio_base_url, &artifact::audio_key(&clip_recording.audio_sha256)))
         })
     }
 
@@ -281,6 +297,12 @@ mod server {
 
     pub fn store_text(_key: &str, _text: &str) {}
 
+    pub fn remove_stored_text(_key: &str) {}
+
+    pub fn stored_keys_with_prefix(_prefix: &str) -> Vec<String> {
+        Vec::new()
+    }
+
     pub fn read_stored_progress() -> Option<String> {
         None
     }
@@ -301,9 +323,7 @@ mod server {
 
     pub fn set_audio_engine(_engine: AudioEngineKind) {}
 
-    pub fn reset_clip_audio(_audio_base_url: &str, _entries: &[ClipAudioEntry]) {}
-
-    pub fn register_clip_audio(_entries: &[ClipAudioEntry]) {}
+    pub fn register_clip_audio(_audio_base_url: &str, _entries: &[ClipAudioEntry]) {}
 
     pub async fn play_clip(_clip: &AudioClip, _slow: bool) {}
 

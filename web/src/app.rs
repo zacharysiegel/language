@@ -5,7 +5,7 @@ use leptos_router::{ParamSegment, StaticSegment};
 
 use crate::course_data::{
     self, COURSE_ID_PARAM, COURSE_SEGMENT, CourseStore, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
-    VersionLoadState, provide_course_store, use_course_store,
+    provide_course_store, use_course_store,
 };
 use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
@@ -78,12 +78,9 @@ fn active_course_id(path: &str, progress_store: ProgressStore) -> Option<String>
     course_data::course_id_in_path(path).or_else(|| progress_store.read(|progress| progress.settings.last_course_id.clone()))
 }
 
-/// The title the published course list gives the course; `None` before the list loads or for an unknown course.
+/// The title the course index gives the course; `None` before an index loads or for a course it does not list.
 fn published_course_title(course_store: CourseStore, course_id: &str) -> Option<String> {
-    match course_store.state() {
-        VersionLoadState::Loaded(version) => version.source.manifest.courses.get(course_id).map(|manifest_course| manifest_course.title.clone()),
-        VersionLoadState::Loading | VersionLoadState::Failed(_) => None,
-    }
+    course_store.index_entry(course_id).map(|index_entry| index_entry.title)
 }
 
 #[component]
@@ -105,7 +102,9 @@ fn NavigationBar() -> impl IntoView {
         progress_store.read(|progress| progress.course_progress(course_id).due_card_count(now_milliseconds))
     };
     let course_links = move || {
-        course_id().map(|course_id| {
+        let indexed_course_id: Option<String> = course_id().filter(|course_id| course_store.index_entry(course_id).is_some());
+
+        indexed_course_id.map(|course_id| {
             let due: usize = due_count(&course_id);
 
             view! {
