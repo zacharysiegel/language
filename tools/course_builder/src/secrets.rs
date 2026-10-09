@@ -28,6 +28,11 @@ pub fn read_environment(name: &str) -> Result<String, AppError> {
     dotenvy::var(name).map_err(|error| AppError::from(format!("missing environment variable; [name={name} error={error}]")))
 }
 
+/// `None` when the variable is unset or empty.
+pub fn read_optional_environment(name: &str) -> Option<String> {
+    dotenvy::var(name).ok().filter(|value| !value.is_empty())
+}
+
 /// A relative `SECR_STORE_PATH` is resolved against the workspace root.
 fn load_secret_store() -> Result<SecretStore, AppError> {
     let declared_store_path: String = read_environment(ENV_SECR_STORE_PATH)?;

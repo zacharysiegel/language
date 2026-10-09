@@ -32,10 +32,13 @@ pub const ENV_R2_ACCOUNT_ID: &str = "R2_ACCOUNT_ID";
 pub const ENV_R2_ARTIFACT_BUCKET: &str = "R2_ARTIFACT_BUCKET";
 pub const ENV_R2_ARTIFACT_PUBLIC_BASE_URL: &str = "R2_ARTIFACT_PUBLIC_BASE_URL";
 pub const ENV_R2_PUBLISH_ACCESS_KEY_ID: &str = "R2_PUBLISH_ACCESS_KEY_ID";
+pub const ENV_R2_JURISDICTION: &str = "R2_JURISDICTION";
 pub const SECRET_R2_PUBLISH_SECRET_ACCESS_KEY: &str = "cloudflare.r2.publish.secret_access_key";
 
 pub struct CloudflareR2Config {
     pub account_id: String,
+    /// The bucket's jurisdiction (`eu`, `fedramp`, `us`); `None` for a bucket created without one.
+    pub jurisdiction: Option<String>,
     pub bucket: String,
     pub access_key_id: String,
     pub secret_access_key: String,
@@ -52,7 +55,7 @@ impl CloudflareR2ArtifactRepository {
     pub async fn create(config: CloudflareR2Config) -> CloudflareR2ArtifactRepository {
         let credentials: Credentials =
             Credentials::new(config.access_key_id, config.secret_access_key, None, None, R2_CREDENTIALS_PROVIDER_NAME);
-        let endpoint_url: String = format!("https://{}.r2.cloudflarestorage.com", config.account_id);
+        let endpoint_url: String = r2_endpoint_url(&config.account_id, config.jurisdiction.as_deref());
 
         let sdk_config: aws_config::SdkConfig = aws_config::defaults(BehaviorVersion::latest())
             .endpoint_url(endpoint_url)
@@ -70,6 +73,14 @@ impl CloudflareR2ArtifactRepository {
             bucket,
             public_base_url,
         }
+    }
+}
+
+/* A bucket with a jurisdiction answers only on that jurisdiction's endpoint, and is absent from the default one. */
+pub fn r2_endpoint_url(account_id: &str, jurisdiction: Option<&str>) -> String {
+    match jurisdiction {
+        Some(jurisdiction) => format!("https://{account_id}.{jurisdiction}.r2.cloudflarestorage.com"),
+        None => format!("https://{account_id}.r2.cloudflarestorage.com"),
     }
 }
 
@@ -291,6 +302,12 @@ mod tests {
         content_type: artifact_repository::CONTENT_TYPE_MANIFEST,
         cache_control: repository_key::CACHE_CONTROL_POINTER,
     };
+
+    #[test]
+    fn r2_endpoint_url_names_the_jurisdiction_only_when_the_bucket_has_one() {
+        assert_eq!(r2_endpoint_url("abc", None), "https://abc.r2.cloudflarestorage.com");
+        assert_eq!(r2_endpoint_url("abc", Some("us")), "https://abc.us.r2.cloudflarestorage.com");
+    }
 
     #[tokio::test]
     async fn put_bytes_sends_if_none_match_for_an_absent_condition_and_reads_412_as_a_failed_precondition() {

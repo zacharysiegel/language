@@ -5,7 +5,7 @@ use shared::artifact::{CourseManifest, local_repository};
 
 use crate::artifact::repository::{
     self, ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository,
-    ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_PUBLISH_ACCESS_KEY_ID, LocalArtifactRepository,
+    ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_JURISDICTION, ENV_R2_PUBLISH_ACCESS_KEY_ID, LocalArtifactRepository,
     RepositoryLockKind, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
 };
 use crate::artifact::{self, CourseIndexChangeKind, CoursePublishOutcome, CourseSelectionKind, PointerChangeKind, PublicationUploadKind, RepositoryTargetKind, UnlistedCourseInclusionKind};
@@ -158,6 +158,7 @@ fn describe_index_change(index_change: CourseIndexChangeKind) -> &'static str {
 pub async fn create_cloudflare_r2_repository() -> Result<CloudflareR2ArtifactRepository, AppError> {
     let config: CloudflareR2Config = CloudflareR2Config {
         account_id: secrets::read_environment(ENV_R2_ACCOUNT_ID)?,
+        jurisdiction: secrets::read_optional_environment(ENV_R2_JURISDICTION),
         bucket: secrets::read_environment(ENV_R2_ARTIFACT_BUCKET)?,
         access_key_id: secrets::read_environment(ENV_R2_PUBLISH_ACCESS_KEY_ID)?,
         secret_access_key: secrets::master_decrypt_utf8(SECRET_R2_PUBLISH_SECRET_ACCESS_KEY)?,
