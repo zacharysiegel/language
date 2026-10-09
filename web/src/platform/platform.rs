@@ -9,6 +9,13 @@ pub struct AudioClip {
     pub voice_choice: VoiceChoiceKind,
 }
 
+/// How far a playback has got toward making sound.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum PlaybackPhaseKind {
+    WaitingForSound,
+    SoundStarted,
+}
+
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 pub use browser::*;
 #[cfg(not(feature = "hydrate"))] // has no browser APIs to call
@@ -36,6 +43,7 @@ mod browser {
     const CLIP_ENDED: &str = "ended";
     const CLIP_FAILED: &str = "failed";
     const CLIP_STOPPED: &str = "stopped";
+    const UTTERANCE_STARTED: &str = "started";
     const BROWSER_VOICE_LANGUAGE: &str = "pt-BR";
 
     struct ActiveClip {
@@ -176,12 +184,14 @@ mod browser {
         })
     }
 
-    pub async fn play_clip(clip: &AudioClip, slow: bool) {
+    /// Reports each wait for sound and each start of sound to `on_phase`.
+    pub async fn play_clip(clip: &AudioClip, slow: bool, on_phase: impl Fn(PlaybackPhaseKind)) {
         stop_audio();
-        play_without_stopping(clip, playback_rate(slow)).await;
+        play_without_stopping(clip, playback_rate(slow), &on_phase).await;
     }
 
-    pub async fn play_sequence(clips: Vec<AudioClip>, slow: bool) {
+    /// Reports each line's wait for sound and start of sound to `on_phase`.
+    pub async fn play_sequence(clips: Vec<AudioClip>, slow: bool, on_phase: impl Fn(PlaybackPhaseKind)) {
         stop_audio();
 
         let sequence_generation: u64 = PLAYBACK_GENERATION.with(Cell::get);
@@ -193,29 +203,31 @@ mod browser {
                 return;
             }
 
-            play_without_stopping(clip, playback_rate(slow)).await;
+            play_without_stopping(clip, playback_rate(slow), &on_phase).await;
         }
     }
 
-    async fn play_without_stopping(clip: &AudioClip, rate: f64) {
+    async fn play_without_stopping(clip: &AudioClip, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) {
+        on_phase(PlaybackPhaseKind::WaitingForSound);
+
         let url: Option<String> = clip_url(clip);
         let Some(url) = url
         else {
-            speak_with_browser_voice(&clip.fallback_text, rate).await;
+            speak_with_browser_voice(&clip.fallback_text, rate, on_phase).await;
             return;
         };
 
         let starting_generation: u64 = PLAYBACK_GENERATION.with(Cell::get);
-        let outcome: String = play_audio_file(&url, rate).await;
+        let outcome: String = play_audio_file(&url, rate, on_phase).await;
         let stopped_meanwhile: bool = PLAYBACK_GENERATION.with(Cell::get) != starting_generation;
 
         // A pause while play() is pending rejects it, which is a stop and not a load failure.
         if outcome == CLIP_FAILED && !stopped_meanwhile {
-            speak_with_browser_voice(&clip.fallback_text, rate).await;
+            speak_with_browser_voice(&clip.fallback_text, rate, on_phase).await;
         }
     }
 
-    async fn play_audio_file(url: &str, rate: f64) -> String {
+    async fn play_audio_file(url: &str, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) -> String {
         let Ok(audio) = HtmlAudioElement::new_with_src(url)
         else {
             return CLIP_FAILED.to_string();
@@ -229,9 +241,14 @@ mod browser {
             return CLIP_FAILED.to_string();
         };
 
-        if JsFuture::from(play_promise).await.is_err() {
+        // play() resolves once playback has begun.
+        let started: Result<JsValue, JsValue> = JsFuture::from(play_promise).await;
+
+        if started.is_err() {
             return CLIP_FAILED.to_string();
         }
+
+        on_phase(PlaybackPhaseKind::SoundStarted);
 
         let outcome: Result<JsValue, JsValue> = JsFuture::from(finished).await;
 
@@ -240,8 +257,8 @@ mod browser {
 
     fn finished_promise(audio: &HtmlAudioElement) -> Promise {
         Promise::new(&mut |resolve: Function, _reject: Function| {
-            let on_ended: JsValue = resolve_with(&resolve, CLIP_ENDED);
-            let on_error: JsValue = resolve_with(&resolve, CLIP_FAILED);
+            let on_ended: JsValue = resolve_with(&[resolve.clone()], CLIP_ENDED);
+            let on_error: JsValue = resolve_with(&[resolve.clone()], CLIP_FAILED);
 
             audio.set_onended(Some(on_ended.unchecked_ref()));
             audio.set_onerror(Some(on_error.unchecked_ref()));
@@ -255,15 +272,24 @@ mod browser {
         })
     }
 
-    fn resolve_with(resolve: &Function, outcome: &'static str) -> JsValue {
-        let resolve: Function = resolve.clone();
+    fn resolve_with(resolves: &[Function], outcome: &'static str) -> JsValue {
+        let resolves: Vec<Function> = resolves.to_vec();
 
         Closure::once_into_js(move || {
-            _ = resolve.call1(&JsValue::NULL, &JsValue::from_str(outcome));
+            for resolve in &resolves {
+                _ = resolve.call1(&JsValue::NULL, &JsValue::from_str(outcome));
+            }
         })
     }
 
-    async fn speak_with_browser_voice(text: &str, rate: f64) {
+    fn resolvable_promise() -> Option<(Promise, Function)> {
+        let mut captured_resolve: Option<Function> = None;
+        let promise: Promise = Promise::new(&mut |resolve: Function, _reject: Function| captured_resolve = Some(resolve));
+
+        captured_resolve.map(|resolve| (promise, resolve))
+    }
+
+    async fn speak_with_browser_voice(text: &str, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) {
         let Some(synthesis) = web_sys::window().and_then(|window| window.speech_synthesis().ok())
         else {
             return;
@@ -276,16 +302,28 @@ mod browser {
         utterance.set_lang(BROWSER_VOICE_LANGUAGE);
         utterance.set_rate(rate as f32);
 
-        let finished: Promise = Promise::new(&mut |resolve: Function, _reject: Function| {
-            let on_end: JsValue = resolve_with(&resolve, CLIP_ENDED);
-            let on_error: JsValue = resolve_with(&resolve, CLIP_FAILED);
+        let (Some((started, resolve_started)), Some((finished, resolve_finished))) = (resolvable_promise(), resolvable_promise())
+        else {
+            return;
+        };
+        let on_start: JsValue = resolve_with(&[resolve_started.clone()], UTTERANCE_STARTED);
+        // An utterance that ends or fails without starting also settles the wait for its start.
+        let on_end: JsValue = resolve_with(&[resolve_started.clone(), resolve_finished.clone()], CLIP_ENDED);
+        let on_error: JsValue = resolve_with(&[resolve_started, resolve_finished], CLIP_FAILED);
 
-            utterance.set_onend(Some(on_end.unchecked_ref()));
-            utterance.set_onerror(Some(on_error.unchecked_ref()));
-        });
+        utterance.set_onstart(Some(on_start.unchecked_ref()));
+        utterance.set_onend(Some(on_end.unchecked_ref()));
+        utterance.set_onerror(Some(on_error.unchecked_ref()));
 
         synthesis.cancel();
         synthesis.speak(&utterance);
+
+        let start_outcome: Result<JsValue, JsValue> = JsFuture::from(started).await;
+        let began_speaking: bool = start_outcome.ok().and_then(|value| value.as_string()).as_deref() == Some(UTTERANCE_STARTED);
+
+        if began_speaking {
+            on_phase(PlaybackPhaseKind::SoundStarted);
+        }
 
         _ = JsFuture::from(finished).await;
     }
@@ -330,7 +368,7 @@ mod server {
 
     pub fn register_clip_audio(_audio_base_url: &str, _entries: &[ClipAudioEntry]) {}
 
-    pub async fn play_clip(_clip: &AudioClip, _slow: bool) {}
+    pub async fn play_clip(_clip: &AudioClip, _slow: bool, _on_phase: impl Fn(PlaybackPhaseKind)) {}
 
-    pub async fn play_sequence(_clips: Vec<AudioClip>, _slow: bool) {}
+    pub async fn play_sequence(_clips: Vec<AudioClip>, _slow: bool, _on_phase: impl Fn(PlaybackPhaseKind)) {}
 }

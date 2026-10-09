@@ -11,6 +11,7 @@ use shared::course::{CourseOutline, Unit, UnitOutline};
 use shared::course_shard::{CourseShardContents, UnitShardContents};
 
 use crate::course_data::{self, COURSE_ID_PARAM, LoadedCoursePublication};
+use crate::pending_indication::PageLoadStatus;
 use crate::platform;
 
 /// How this page load's request for the repository's course index has ended.
@@ -463,8 +464,31 @@ pub fn use_route_course_id() -> Memo<String> {
     Memo::new(move |_| params.read().get(COURSE_ID_PARAM).unwrap_or_default())
 }
 
-fn status_view(message: &'static str) -> AnyView {
-    view! { <p class="status">{message}</p> }.into_any()
+/// What a course gate shows. Equality is by identity for the outline, so a memo over it notifies only when the gate
+/// moves on.
+#[derive(Debug, Clone)]
+enum CourseGateState {
+    Loading,
+    CourseListFailed(String),
+    CourseMissing,
+    CourseContentFailed(String),
+    Loaded(Arc<CourseOutline>),
+}
+
+impl PartialEq for CourseGateState {
+    fn eq(&self, other: &CourseGateState) -> bool {
+        match (self, other) {
+            (CourseGateState::Loading, CourseGateState::Loading) | (CourseGateState::CourseMissing, CourseGateState::CourseMissing) => true,
+            (CourseGateState::CourseListFailed(left), CourseGateState::CourseListFailed(right))
+            | (CourseGateState::CourseContentFailed(left), CourseGateState::CourseContentFailed(right)) => left == right,
+            (CourseGateState::Loaded(left), CourseGateState::Loaded(right)) => Arc::ptr_eq(left, right),
+            _ => false,
+        }
+    }
+}
+
+fn loading_view(message: &'static str) -> AnyView {
+    view! { <PageLoadStatus message /> }.into_any()
 }
 
 fn failure_view(subject: &'static str, message: String) -> AnyView {
@@ -485,7 +509,7 @@ where
     let store: CourseStore = use_course_store();
 
     move || match store.index_state() {
-        LoadState::Loading => status_view("Loading the courses…"),
+        LoadState::Loading => loading_view("Loading the courses…"),
         LoadState::Failed(message) => failure_view("The course list", message),
         LoadState::Loaded(course_index) => render(course_index).into_any(),
     }
@@ -519,19 +543,25 @@ where
         }
     });
 
-    move || {
+    let gate_state: Memo<CourseGateState> = Memo::new(move |_| {
         let repository_index_ended: bool = store.repository_index_state() != RepositoryIndexLoadKind::Pending;
 
         match (store.index_state(), publication_state.get(), outline_state.get()) {
-            (LoadState::Failed(message), _, _) => failure_view("The course list", message),
-            (LoadState::Loaded(_), _, _) if repository_index_ended && !listed_in_the_index.get() => {
-                view! { <p class="status">"That course does not exist."</p> }.into_any()
-            },
+            (LoadState::Failed(message), _, _) => CourseGateState::CourseListFailed(message),
+            (LoadState::Loaded(_), _, _) if repository_index_ended && !listed_in_the_index.get() => CourseGateState::CourseMissing,
             (_, Some(LoadState::Failed(message)), _) | (_, _, Some(LoadState::Failed(message))) => {
-                failure_view("The course content", message)
+                CourseGateState::CourseContentFailed(message)
             },
-            (_, _, Some(LoadState::Loaded(outline))) => render(outline).into_any(),
-            _ => status_view("Loading the course…"),
+            (_, _, Some(LoadState::Loaded(outline))) => CourseGateState::Loaded(outline),
+            _ => CourseGateState::Loading,
         }
+    });
+
+    move || match gate_state.get() {
+        CourseGateState::CourseListFailed(message) => failure_view("The course list", message),
+        CourseGateState::CourseMissing => view! { <p class="status">"That course does not exist."</p> }.into_any(),
+        CourseGateState::CourseContentFailed(message) => failure_view("The course content", message),
+        CourseGateState::Loaded(outline) => render(outline).into_any(),
+        CourseGateState::Loading => loading_view("Loading the course…"),
     }
 }

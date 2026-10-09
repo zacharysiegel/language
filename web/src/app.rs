@@ -7,9 +7,11 @@ use crate::course_data::{
     self, COURSE_ID_PARAM, COURSE_SEGMENT, CourseStore, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
     provide_course_store, use_course_store,
 };
+use crate::audio_player::{PlaybackAnnouncement, provide_playback_store};
 use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
 use crate::home::HomePage;
+use crate::pending_indication::{PageBusyStore, provide_page_busy_store, use_page_busy_store};
 use crate::platform;
 use crate::progress_state::{ProgressStore, provide_progress_store, use_progress_store};
 use crate::progress_view::ProgressPage;
@@ -52,11 +54,16 @@ mod ssr {
 pub fn App() -> impl IntoView {
     provide_course_store();
     provide_progress_store();
+    provide_playback_store();
+    provide_page_busy_store();
+
+    let page_busy_store: PageBusyStore = use_page_busy_store();
 
     view! {
         <Router>
             <NavigationBar />
-            <main>
+            <PlaybackAnnouncement />
+            <main aria-busy=move || page_busy_store.is_busy().then_some("true")>
                 <Routes fallback=|| view! { <p class="status">"Page not found."</p> }>
                     <Route path=StaticSegment("") view=CoursesPage />
                     <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM)) view=HomePage />

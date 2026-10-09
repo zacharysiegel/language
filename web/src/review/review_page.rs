@@ -5,7 +5,7 @@ use shared::course::{self, CourseOutline, UnitOutline, VocabularyItem};
 use shared::progress::{ReviewDirectionKind, VoiceChoiceKind};
 use shared::review::{ReviewCard, select_due_cards};
 
-use crate::audio_player::{PlayButton, audio_clip, play_in_background};
+use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
 use crate::course_data::{course_gate, use_route_course_id};
 use crate::platform::{self, AudioClip};
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
@@ -226,10 +226,11 @@ fn card_view(
 ) -> impl IntoView {
     let card_progress: CardProgress = CardProgress { index, total_count };
     let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target, VoiceChoiceKind::OwnText);
+    let playback_store: PlaybackStore = use_playback_store();
 
     Effect::new(move |_| {
         if prompt_is_target || revealed.get() {
-            play_in_background(autoplay_clip.clone(), false);
+            playback_store.play_at_normal_speed(autoplay_clip.clone());
         }
     });
 

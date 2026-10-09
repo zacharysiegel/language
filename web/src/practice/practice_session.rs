@@ -6,7 +6,7 @@ use shared::course::{Exercise, ExerciseKind};
 use shared::practice::SessionScore;
 use shared::progress::VoiceChoiceKind;
 
-use crate::audio_player::{PlayButton, audio_clip, play_in_background};
+use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
 use crate::practice::{ExerciseResult, exercise_body};
 
 const ENTER_KEY: &str = "Enter";
@@ -177,7 +177,9 @@ fn feedback_view(
 
     if SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
         if let Some(text) = &spoken_text {
-            play_in_background(audio_clip(&audio_path, text, VoiceChoiceKind::OwnText), false);
+            let playback_store: PlaybackStore = use_playback_store();
+
+            playback_store.play_at_normal_speed(audio_clip(&audio_path, text, VoiceChoiceKind::OwnText));
         }
     }
 

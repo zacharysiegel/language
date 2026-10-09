@@ -8,6 +8,7 @@ use shared::course::{CourseOutline, Unit};
 use crate::course_data::{
     self, CourseStore, LoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
 };
+use crate::pending_indication::PageLoadStatus;
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 use crate::unit::{
     DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, UnitStatusControl, VocabularySection,
@@ -80,7 +81,8 @@ pub fn UnitPage() -> impl IntoView {
     let course_store: CourseStore = use_course_store();
     let course_id: Memo<String> = use_route_course_id();
     let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
-    let unit_state: Memo<Option<LoadState<Unit>>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()));
+    // A unit not yet requested is loading too, so the status shown does not restart when the request begins.
+    let unit_state: Memo<LoadState<Unit>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()).unwrap_or(LoadState::Loading));
 
     let progress_store: ProgressStore = use_progress_store();
 
@@ -106,11 +108,9 @@ pub fn UnitPage() -> impl IntoView {
         }
 
         match unit_state.get() {
-            Some(LoadState::Loaded(unit)) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
-            Some(LoadState::Failed(message)) => {
-                view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any()
-            },
-            Some(LoadState::Loading) | None => view! { <p class="status">"Loading the unit…"</p> }.into_any(),
+            LoadState::Loaded(unit) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
+            LoadState::Failed(message) => view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any(),
+            LoadState::Loading => view! { <PageLoadStatus message="Loading the unit…" /> }.into_any(),
         }
     })
 }
