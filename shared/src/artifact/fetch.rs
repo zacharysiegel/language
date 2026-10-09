@@ -1,5 +1,6 @@
 use crate::AppErrorStatic;
-use crate::artifact::manifest;
+use crate::artifact::course_manifest::CourseManifest;
+use crate::artifact::{manifest, repository_key};
 use crate::http::{HttpCacheMode, HttpFetch, HttpRequest, HttpResponse};
 
 pub fn join_url(base_url: &str, key: &str) -> String {
@@ -73,10 +74,44 @@ pub async fn fetch_embedded_manifest(http_fetch: &impl HttpFetch, embedded_base_
     fetch_pointer(http_fetch, embedded_base_url, manifest::MANIFEST_FILENAME).await
 }
 
+pub async fn fetch_course_index(http_fetch: &impl HttpFetch, base_url: &str) -> Result<Vec<u8>, AppErrorStatic> {
+    fetch_pointer(http_fetch, base_url, repository_key::COURSE_INDEX_KEY).await
+}
+
+/// The course manifest bytes at `latest_manifest_key`, falling back to this reader's own schema pointer beside it
+/// when that pointer has been published by a newer schema version.
+pub async fn fetch_course_manifest_pointer(
+    http_fetch: &impl HttpFetch,
+    base_url: &str,
+    latest_manifest_key: &str,
+) -> Result<Vec<u8>, AppErrorStatic> {
+    let latest_bytes: Vec<u8> = fetch_pointer(http_fetch, base_url, latest_manifest_key).await?;
+    let fallback_key: Option<String> = CourseManifest::schema_fallback_key(latest_manifest_key, &latest_bytes);
+
+    match fallback_key {
+        Some(key) => fetch_pointer(http_fetch, base_url, &key).await,
+        None => Ok(latest_bytes),
+    }
+}
+
+/// `relative_path` is relative to the publication's directory.
+pub async fn fetch_publication_file(
+    http_fetch: &impl HttpFetch,
+    base_url: &str,
+    course_id: &str,
+    publication_label: &str,
+    relative_path: &str,
+) -> Result<Vec<u8>, AppErrorStatic> {
+    let key: String = repository_key::publication_file_key(course_id, publication_label, relative_path);
+
+    fetch_bytes(http_fetch, &join_url(base_url, &key), HttpCacheMode::Default).await
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeMap;
 
+    use crate::artifact::course_manifest;
     use crate::http::tests::MockHttpFetch;
 
     use super::*;
@@ -135,5 +170,42 @@ mod tests {
         let error: AppErrorStatic = fetch_pointer(&http_fetch, "/repository", "latest/manifest.json").await.unwrap_err();
 
         assert!(error.to_string().contains("status=404"));
+    }
+
+    #[tokio::test]
+    async fn fetch_course_manifest_pointer_returns_the_named_pointer_when_readable() {
+        let latest_manifest_key: String = repository_key::course_latest_manifest_key("pt_br.en.foundations");
+        let current_document: Vec<u8> =
+            format!(r#"{{"manifest_schema_version": {}}}"#, course_manifest::COURSE_MANIFEST_SCHEMA_VERSION).into_bytes();
+        let http_fetch: MockHttpFetch =
+            MockHttpFetch::new(BTreeMap::from([(format!("/repository/{latest_manifest_key}"), current_document.clone())]));
+
+        let bytes: Vec<u8> = fetch_course_manifest_pointer(&http_fetch, "/repository", &latest_manifest_key).await.unwrap();
+
+        assert_eq!(bytes, current_document);
+        assert_eq!(http_fetch.requested_urls().await.len(), 1);
+    }
+
+    #[tokio::test]
+    async fn fetch_course_manifest_pointer_falls_back_to_the_schema_pointer_beside_the_named_pointer() {
+        let latest_manifest_key: String = repository_key::course_latest_manifest_key("pt_br.en.foundations");
+        let schema_pointer_key: String =
+            repository_key::course_schema_pointer_key(&latest_manifest_key, course_manifest::COURSE_MANIFEST_SCHEMA_VERSION);
+        let newer_document: Vec<u8> = br#"{"manifest_schema_version": 99}"#.to_vec();
+        let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::from([
+            (format!("/repository/{latest_manifest_key}"), newer_document),
+            (format!("/repository/{schema_pointer_key}"), b"older reader's manifest".to_vec()),
+        ]));
+
+        let bytes: Vec<u8> = fetch_course_manifest_pointer(&http_fetch, "/repository", &latest_manifest_key).await.unwrap();
+
+        assert_eq!(bytes, b"older reader's manifest".to_vec());
+        assert_eq!(
+            http_fetch.requested_urls().await,
+            vec![
+                "/repository/courses/pt_br.en.foundations/latest/manifest.json".to_string(),
+                format!("/repository/courses/pt_br.en.foundations/latest/manifest.{}.json", course_manifest::COURSE_MANIFEST_SCHEMA_VERSION),
+            ],
+        );
     }
 }
