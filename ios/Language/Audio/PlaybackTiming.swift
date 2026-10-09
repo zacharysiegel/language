@@ -4,6 +4,7 @@ import OSLog
 /// A step on the way from a play request to sound.
 enum PlaybackStepKind {
     case recordingLookup
+    case sessionConfiguration
     case sessionActivation
     case playerCreation
     case playerPreparation
@@ -15,6 +16,8 @@ enum PlaybackStepKind {
         switch self {
         case .recordingLookup:
             return "recording_lookup"
+        case .sessionConfiguration:
+            return "session_configuration"
         case .sessionActivation:
             return "session_activation"
         case .playerCreation:
