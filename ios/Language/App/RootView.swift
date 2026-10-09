@@ -109,10 +109,10 @@ struct CourseIndexGate<Content: View>: View {
     var body: some View {
         switch courseStore.indexLoadState() {
         case .loading:
-            StatusMessage(text: "Loading the courses…")
+            PendingStatusMessage(text: "Loading the courses…")
         case .failed(let message):
             LoadFailure(message: message) {
-                Task { await courseStore.refresh(courseId: nil) }
+                await courseStore.refresh(courseId: nil)
             }
         case .loaded:
             content()
@@ -150,10 +150,10 @@ struct CourseGate<Content: View>: View {
                 outlineContent()
             case .failed(let message):
                 LoadFailure(message: message) {
-                    Task { await courseStore.retry(courseId: courseId) }
+                    await courseStore.retry(courseId: courseId)
                 }
             case .loading, .none:
-                StatusMessage(text: "Loading the course…")
+                PendingStatusMessage(text: "Loading the course…")
             }
         }
     }
@@ -163,7 +163,7 @@ struct CourseGate<Content: View>: View {
     private func missingCourse() -> some View {
         switch courseStore.repositoryIndexLoadState() {
         case .pending:
-            StatusMessage(text: "Loading the course…")
+            PendingStatusMessage(text: "Loading the course…")
         case .loaded, .failed:
             StatusMessage(text: "That course does not exist.")
         }
@@ -179,7 +179,7 @@ struct CourseGate<Content: View>: View {
                 Task { await courseStore.retry(courseId: courseId) }
             }
         case .loading, .none:
-            StatusMessage(text: "Loading the course…")
+            PendingStatusMessage(text: "Loading the course…")
         }
     }
 }
@@ -196,10 +196,16 @@ struct StatusMessage: View {
 }
 
 struct LoadFailure: View {
+    static let pendingAccessibilityValue: String = "Loading"
+
     let message: String
-    let onRetry: () -> Void
+    let onRetry: @MainActor () async -> Void
+
+    @State private var retry: PendingActivity = PendingActivity()
 
     var body: some View {
+        let isPending: Bool = retry.isIndicated()
+
         VStack(alignment: .leading, spacing: .spaceMd) {
             Text("The course could not be loaded.")
                 .font(.titleText)
@@ -207,8 +213,12 @@ struct LoadFailure: View {
             Text(message)
                 .font(.captionText)
                 .foregroundStyle(Color.inkMuted)
-            Button("Try again", action: onRetry)
-                .buttonStyle(SquareButtonStyle(isPrimary: true))
+            Button("Try again") {
+                retry.run(onRetry)
+            }
+            .buttonStyle(SquareButtonStyle(isPrimary: true, pending: isPending ? .pendingInPlaceOfLabel : .notPending))
+            .pendingAccessibility(isIndicated: isPending, value: Self.pendingAccessibilityValue)
+            .accessibilityIdentifier("try-again")
         }
         .padding(.spaceMd)
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

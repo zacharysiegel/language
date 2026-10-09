@@ -12,6 +12,9 @@ final class CourseUITests: XCTestCase {
     static let readingUnitId: String = "b1-01-present-perfect-participles"
     static let playedButtonIndexes: [Int] = [0, 0, 1, 2]
     static let clipPlaybackAllowance: TimeInterval = 3
+    /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
+    static let unreachableOrigin: String = "http://192.0.2.1:3002"
+    static let pendingRecordingValue: String = "Loading the recording"
 
     private var app: XCUIApplication!
 
@@ -206,7 +209,46 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(app.buttons["unit-status-not-started"].waitForExistence(timeout: 5))
     }
 
+    func testAPlayWaitingForItsRecordingShowsPendingUntilStopped() throws {
+        relaunchWithUnreachableRepository()
+        openUnit(Self.practicedUnitId)
+        app.buttons["tab-dialogues"].tap()
+
+        let playButton: XCUIElement = app.buttons.matching(identifier: "play").firstMatch
+        let playAllButton: XCUIElement = app.buttons["play-all"].firstMatch
+        let stopButton: XCUIElement = app.buttons["stop"].firstMatch
+
+        XCTAssertTrue(playButton.waitForExistence(timeout: 5))
+        XCTAssertEqual(playButton.value as? String ?? "", "")
+
+        playButton.tap()
+        assertValue(playButton, equals: Self.pendingRecordingValue, timeout: 5)
+        saveScreenshot("14-play-pending")
+        stopButton.tap()
+        assertValue(playButton, equals: "", timeout: 5)
+
+        playAllButton.tap()
+        assertValue(playAllButton, equals: Self.pendingRecordingValue, timeout: 5)
+        XCTAssertEqual(playButton.value as? String ?? "", "")
+        saveScreenshot("15-play-all-pending")
+        stopButton.tap()
+        assertValue(playAllButton, equals: "", timeout: 5)
+    }
+
     // MARK: - Choosing the course
+
+    /// Starts the app again with a cache of its own and neither the origin nor the static repository reachable.
+    private func relaunchWithUnreachableRepository() {
+        app.terminate()
+        app.launchArguments = [
+            "-LanguageProgressFile", "ui-test-progress-\(UUID().uuidString).json",
+            "-LanguageCacheDirectory", "ui-test-cache-\(UUID().uuidString)",
+            "-LanguageOrigin", Self.unreachableOrigin,
+            "-LanguageRepositoryBaseUrl", Self.unreachableOrigin,
+        ]
+        app.launch()
+        chooseTheCourseIfTheCourseListOpens()
+    }
 
     /// Opens the course under test when the app starts on the course list.
     private func chooseTheCourseIfTheCourseListOpens() {
@@ -293,6 +335,13 @@ final class CourseUITests: XCTestCase {
     private func assertSelected(_ element: XCUIElement) {
         let selected: XCTNSPredicateExpectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
         let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [selected], timeout: 5)
+
+        XCTAssertEqual(waitResult, .completed)
+    }
+
+    private func assertValue(_ element: XCUIElement, equals value: String, timeout: TimeInterval) {
+        let hasValue: XCTNSPredicateExpectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "value == %@", value), object: element)
+        let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [hasValue], timeout: timeout)
 
         XCTAssertEqual(waitResult, .completed)
     }

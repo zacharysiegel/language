@@ -35,7 +35,7 @@ final class AudioOutputInterruptionTests: XCTestCase {
         let recordingUrl: URL = try writeSilentRecording()
         let output: AudioOutput = AudioOutput()
         let playback: Task<PlaybackOutcome, Never> = Task {
-            await output.playRecording(path: recordingUrl.path, rate: 1.0)
+            await output.playRecording(path: recordingUrl.path, rate: 1.0, onSoundStarted: {})
         }
 
         try await waitUntilPlaying(output)

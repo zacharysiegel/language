@@ -265,6 +265,6 @@ struct ReviewCardView: View {
             return
         }
 
-        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
     }
 }
