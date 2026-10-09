@@ -10,6 +10,8 @@ final class CourseUITests: XCTestCase {
     static let courseId: String = "pt_br.en.foundations"
     static let practicedUnitId: String = "a1-01-greetings-introductions"
     static let readingUnitId: String = "b1-01-present-perfect-participles"
+    static let playedButtonIndexes: [Int] = [0, 0, 1, 2]
+    static let clipPlaybackAllowance: TimeInterval = 3
 
     private var app: XCUIApplication!
 
@@ -182,6 +184,26 @@ final class CourseUITests: XCTestCase {
         helpButton.tap()
         XCTAssertTrue(tip.waitForExistence(timeout: 5))
         assertGone(tip, timeout: 12)
+    }
+
+    func testPlayingClipsLeavesThePageUsable() throws {
+        openUnit(Self.practicedUnitId)
+        app.buttons["tab-vocabulary"].tap()
+
+        let playButtons: XCUIElementQuery = app.buttons.matching(identifier: "play")
+
+        XCTAssertTrue(playButtons.firstMatch.waitForExistence(timeout: 5))
+
+        for buttonIndex in Self.playedButtonIndexes {
+            let playButton: XCUIElement = playButtons.element(boundBy: buttonIndex)
+
+            scrollUntilHittable(playButton)
+            playButton.tap()
+            Thread.sleep(forTimeInterval: Self.clipPlaybackAllowance)
+        }
+
+        app.buttons["tab-overview"].tap()
+        XCTAssertTrue(app.buttons["unit-status-not-started"].waitForExistence(timeout: 5))
     }
 
     // MARK: - Choosing the course
