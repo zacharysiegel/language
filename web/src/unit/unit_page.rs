@@ -59,6 +59,10 @@ impl UnitTabKind {
     fn available_for(self, unit: &Unit) -> bool {
         self != UnitTabKind::Readings || !unit.readings.is_empty()
     }
+
+    fn available_tabs(unit: &Unit) -> Vec<UnitTabKind> {
+        UnitTabKind::ALL.into_iter().filter(|tab| tab.available_for(unit)).collect()
+    }
 }
 
 impl TryFrom<&str> for UnitTabKind {
@@ -112,9 +116,10 @@ pub fn UnitPage() -> impl IntoView {
 }
 
 fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> impl IntoView + use<> {
-    let tab_links: Vec<_> = UnitTabKind::ALL
-        .into_iter()
-        .filter(|tab| tab.available_for(&unit))
+    let available_tabs: Vec<UnitTabKind> = UnitTabKind::available_tabs(&unit);
+    let tab_links: Vec<_> = available_tabs
+        .iter()
+        .copied()
         .map(|tab| {
             view! {
                 <A href=course_data::unit_tab_path(&course.id, &unit.id, tab.code()) attr:class=if tab == active_tab { "tab active" } else { "tab" }>
@@ -124,17 +129,11 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
         })
         .collect();
 
-    let unit_position: usize = course.units.iter().position(|candidate| candidate.id == unit.id).unwrap_or(0);
-    let previous_target: Option<(String, String)> = unit_position
-        .checked_sub(1)
-        .and_then(|position| course.units.get(position))
-        .map(|previous| (course_data::unit_path(&course.id, &previous.id), format!("← {}", previous.title)));
-    let next_target: Option<(String, String)> = course
-        .units
-        .get(unit_position + 1)
-        .map(|next| (course_data::unit_path(&course.id, &next.id), format!("{} →", next.title)));
-    let previous_link = previous_target.map(|(href, label)| view! { <A href=href>{label}</A> });
-    let next_link = next_target.map(|(href, label)| view! { <A href=href>{label}</A> });
+    let tab_position: usize = available_tabs.iter().position(|tab| *tab == active_tab).unwrap_or(0);
+    let previous_tab: Option<UnitTabKind> = tab_position.checked_sub(1).and_then(|position| available_tabs.get(position).copied());
+    let next_tab: Option<UnitTabKind> = available_tabs.get(tab_position + 1).copied();
+    let previous_link = previous_tab.map(|tab| tab_step_link(course, &unit, tab, format!("← {}", tab.label())));
+    let next_link = next_tab.map(|tab| tab_step_link(course, &unit, tab, format!("{} →", tab.label())));
 
     let caption: String = format!("{} · {}", unit.level, unit.order);
     let title: String = unit.title.clone();
@@ -160,4 +159,8 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
             <span>{next_link}</span>
         </div>
     }
+}
+
+fn tab_step_link(course: &CourseOutline, unit: &Unit, tab: UnitTabKind, label: String) -> impl IntoView + use<> {
+    view! { <A href=course_data::unit_tab_path(&course.id, &unit.id, tab.code())>{label}</A> }
 }
