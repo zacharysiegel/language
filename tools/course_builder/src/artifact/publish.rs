@@ -10,7 +10,7 @@ use shared::artifact::{Manifest, content_address, manifest};
 
 use crate::artifact::artifact_bundle;
 use crate::artifact::repository::{
-    ArtifactRepositoryKind, CACHE_CONTROL_IMMUTABLE, CACHE_CONTROL_POINTER, CONTENT_TYPE_AUDIO, CONTENT_TYPE_MANIFEST,
+    self, ArtifactRepository, ArtifactRepositoryKind, CACHE_CONTROL_IMMUTABLE, CACHE_CONTROL_POINTER, CONTENT_TYPE_AUDIO, CONTENT_TYPE_MANIFEST,
     CONTENT_TYPE_SHARD, ObjectHeaders,
 };
 
@@ -45,7 +45,7 @@ pub async fn publish_bundle(bundle_directory: &Path, repository: &ArtifactReposi
     let referenced_audio_sha256s: BTreeSet<String> = artifact_bundle::referenced_audio_sha256s(bundle_directory, &bundle_manifest)?;
     let version: &str = &bundle_manifest.version;
 
-    let existing_version_keys: BTreeSet<String> = repository.existing_keys(version).await?;
+    let existing_version_keys: BTreeSet<String> = repository::list_keys(repository, &format!("{version}/")).await?;
 
     if !existing_version_keys.is_empty() {
         return Err(AppError::from(format!("the repository already has this version; aborting publish; [version={version}]")));
@@ -93,7 +93,7 @@ async fn publish_audio(
     referenced_audio_sha256s: &BTreeSet<String>,
     repository: &ArtifactRepositoryKind,
 ) -> Result<(usize, usize), AppError> {
-    let existing_keys: BTreeSet<String> = repository.existing_keys(manifest::SUBDIR_AUDIO).await?;
+    let existing_keys: BTreeSet<String> = repository::list_keys(repository, &format!("{}/", manifest::SUBDIR_AUDIO)).await?;
     let mut published_count: usize = 0;
 
     for audio_sha256 in referenced_audio_sha256s {
