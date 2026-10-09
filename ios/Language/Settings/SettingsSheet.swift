@@ -1,6 +1,9 @@
 import SwiftUI
 
 struct SettingsSheet: View {
+    /// The course open behind the sheet, if any.
+    let courseId: String?
+
     @Environment(ProgressStore.self) private var progressStore
     @Environment(CourseStore.self) private var courseStore
     @Environment(\.dismiss) private var dismiss
@@ -68,24 +71,29 @@ struct SettingsSheet: View {
         }
     }
 
+    @ViewBuilder
     private func courseContentSection() -> some View {
-        VStack(alignment: .leading, spacing: .spaceSm) {
-            MicroLabel(text: "Course content")
+        if let courseId {
+            VStack(alignment: .leading, spacing: .spaceSm) {
+                MicroLabel(text: "Course content")
 
-            if let version = courseStore.shownVersion() {
-                Text("Published as \(version.version())").font(.dataText)
-                Text(version.isEmbedded() ? "The copy included in the app" : "Downloaded from \(version.repositoryBaseUrl())")
-                    .font(.captionText)
-                    .foregroundStyle(Color.inkMuted)
-            }
+                if let publication = courseStore.shownPublication(courseId: courseId) {
+                    Text("Published as \(publication.publicationLabel())")
+                        .font(.dataText)
+                        .accessibilityIdentifier("publication-label")
+                    Text(publication.isEmbedded() ? "The copy included in the app" : "Downloaded from \(publication.repositoryBaseUrl())")
+                        .font(.captionText)
+                        .foregroundStyle(Color.inkMuted)
+                }
 
-            Button("Check for updated course content") {
-                Task { await courseStore.refresh() }
-            }
-            .buttonStyle(SquareButtonStyle(isCompact: true))
+                Button("Check for updated course content") {
+                    Task { await courseStore.refresh(courseId: courseId) }
+                }
+                .buttonStyle(SquareButtonStyle(isCompact: true))
 
-            if let message = courseStore.lastUpdateMessage() {
-                Text(message).font(.captionText).foregroundStyle(Color.inkMuted)
+                if let message = courseStore.updateMessage(courseId: courseId) {
+                    Text(message).font(.captionText).foregroundStyle(Color.inkMuted)
+                }
             }
         }
     }

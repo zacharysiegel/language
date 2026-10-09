@@ -3,6 +3,8 @@ import XCTest
 
 /// Exercises the Rust core through the generated bindings the app uses.
 final class CoreIntegrationTests: XCTestCase {
+    static let recordedCourseId: String = "pt_br.en.foundations"
+
     private var temporaryDirectory: URL!
 
     override func setUp() {
@@ -14,7 +16,7 @@ final class CoreIntegrationTests: XCTestCase {
         try? FileManager.default.removeItem(at: temporaryDirectory)
     }
 
-    func testEmbeddedCourseOpensAndAUnitLoads() async throws {
+    func testEmbeddedIndexAndPublicationOpenAndAUnitLoads() async throws {
         let embeddedDirectory: URL = try XCTUnwrap(Bundle.main.url(forResource: CoreEnvironment.embeddedBundleDirectoryName, withExtension: nil))
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
             appOrigin: "http://127.0.0.1:9",
@@ -22,40 +24,58 @@ final class CoreIntegrationTests: XCTestCase {
             embeddedBundleDirectory: embeddedDirectory.path,
         ))
 
-        let version: CourseVersion = try await library.loadEmbeddedCourse()
-        let courseId: String = try XCTUnwrap(version.courses().first?.id)
-        let outline: CourseOutlineRecord = try await version.loadCourse(courseId: courseId)
-        let lesson: UnitLessonRecord = try await version.loadUnit(courseId: courseId, unitId: outline.units[0].id)
+        let courseIndex: PublishedCourseIndex = try await library.loadEmbeddedCourseIndex()
+        let courseId: String = try XCTUnwrap(courseIndex.courses().first?.id)
+        let publication: CoursePublication = try await library.loadEmbeddedCoursePublication(courseId: courseId)
+        let outline: CourseOutlineRecord = try await publication.loadCourse()
+        let lesson: UnitLessonRecord = try await publication.loadUnit(unitId: outline.units[0].id)
 
-        XCTAssertTrue(version.isEmbedded())
+        XCTAssertTrue(courseIndex.isEmbedded())
+        XCTAssertTrue(publication.isEmbedded())
+        XCTAssertEqual(publication.courseId(), courseId)
+        XCTAssertFalse(publication.publicationLabel().isEmpty)
         XCTAssertEqual(outline.targetLanguageName, "Portuguese")
         XCTAssertFalse(outline.units.isEmpty)
         XCTAssertFalse(lesson.exercises.isEmpty)
     }
 
     /* Needs the local repository served by `./scripts/dev/serve.sh`; skipped when it is not running. */
-    func testLatestCourseAndARecordingDownloadFromTheLocalServer() async throws {
+    func testLatestPublicationsAndARecordingDownloadFromTheLocalServer() async throws {
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
             appOrigin: "http://127.0.0.1:3000",
             cacheDirectory: temporaryDirectory.path,
             embeddedBundleDirectory: temporaryDirectory.path,
         ))
-        let latest: CourseVersion
+        let courseIndex: PublishedCourseIndex
 
         do {
-            latest = try await library.loadLatestCourse()
+            courseIndex = try await library.loadLatestCourseIndex()
         } catch {
             throw XCTSkip("the local server is not running: \(error)")
         }
 
-        let courseId: String = try XCTUnwrap(latest.courses().first?.id)
-        let outline: CourseOutlineRecord = try await latest.loadCourse(courseId: courseId)
-        let item: VocabularyItemRecord = try XCTUnwrap(outline.units.first?.vocabulary.first)
-        let path: String? = try await latest.recordingPath(clipKey: try XCTUnwrap(item.clipKey), engine: .kokoro, spokenText: item.target, voiceChoice: .ownText)
-        let cached: CourseVersion? = await library.loadCachedCourse()
+        var latestByCourseId: [String: CoursePublication] = [:]
 
+        for course in courseIndex.courses() {
+            latestByCourseId[course.id] = try await library.loadLatestCoursePublication(courseIndex: courseIndex, courseId: course.id)
+        }
+
+        for (courseId, latest) in latestByCourseId {
+            let cached: CoursePublication? = await library.loadCachedCoursePublication(courseId: courseId)
+
+            XCTAssertEqual(cached?.manifestSha256(), latest.manifestSha256())
+            XCTAssertEqual(cached?.publicationLabel(), latest.publicationLabel())
+        }
+
+        let latest: CoursePublication = try XCTUnwrap(latestByCourseId[Self.recordedCourseId])
+        let outline: CourseOutlineRecord = try await latest.loadCourse()
+        let item: VocabularyItemRecord = try XCTUnwrap(outline.units.first?.vocabulary.first)
+        let path: String? = try await library.recordingPath(clipKey: try XCTUnwrap(item.clipKey), engine: .kokoro, spokenText: item.target, voiceChoice: .ownText)
+        let cachedIndex: PublishedCourseIndex? = await library.loadCachedCourseIndex()
+
+        XCTAssertFalse(courseIndex.isEmbedded())
+        XCTAssertEqual(cachedIndex?.courses().count, courseIndex.courses().count)
         XCTAssertTrue(FileManager.default.fileExists(atPath: try XCTUnwrap(path)))
-        XCTAssertEqual(cached?.version(), latest.version())
     }
 
     func testUnreachableRepositoryThrows() async throws {
@@ -66,7 +86,7 @@ final class CoreIntegrationTests: XCTestCase {
         ))
 
         do {
-            _ = try await library.loadLatestCourse()
+            _ = try await library.loadLatestCourseIndex()
             XCTFail("an unreachable repository loaded")
         } catch CoreError.Failure(let message, let backtrace) {
             XCTAssertTrue(message.contains("127.0.0.1:9"))

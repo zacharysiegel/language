@@ -191,7 +191,6 @@ struct ReviewCardView: View {
     let onExit: () -> Void
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
@@ -266,6 +265,6 @@ struct ReviewCardView: View {
             return
         }
 
-        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), engine: progressStore.settings().audioEngine, slow: false)
     }
 }

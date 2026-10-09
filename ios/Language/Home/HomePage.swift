@@ -18,7 +18,7 @@ struct HomePage: View {
             .padding(.spaceMd)
             .readableWidth()
         }
-        .refreshable { await courseStore.refresh() }
+        .refreshable { await courseStore.refresh(courseId: outline.id) }
         .navigationTitle("Course")
         .navigationBarTitleDisplayMode(.inline)
     }

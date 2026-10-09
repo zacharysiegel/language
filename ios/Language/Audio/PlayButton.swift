@@ -7,14 +7,13 @@ struct PlayButton: View {
     var label: String? = nil
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
         Button {
             let settings: SettingsRecord = progressStore.settings()
 
-            audioPlayer.play(clip, version: courseStore.shownVersion(), engine: settings.audioEngine, slow: slow || settings.slowAudio)
+            audioPlayer.play(clip, engine: settings.audioEngine, slow: slow || settings.slowAudio)
         } label: {
             HStack(spacing: .spaceXs) {
                 if slow {
@@ -47,7 +46,6 @@ struct PlayAllButton: View {
     let clips: [AudioClip]
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
@@ -55,7 +53,7 @@ struct PlayAllButton: View {
             Button {
                 let settings: SettingsRecord = progressStore.settings()
 
-                audioPlayer.playSequence(clips, version: courseStore.shownVersion(), engine: settings.audioEngine, slow: settings.slowAudio)
+                audioPlayer.playSequence(clips, engine: settings.audioEngine, slow: settings.slowAudio)
             } label: {
                 Label("Play all", systemImage: "play.fill")
             }

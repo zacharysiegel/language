@@ -12,9 +12,11 @@ crate-type = ["staticlib", "lib"]
 shared = { workspace = true }
 uniffi = { workspace = true, features = ["tokio"] }
 chrono = { workspace = true }
+dashmap = { workspace = true }
 log = { workspace = true }
 minimer = { workspace = true }
 serde_json = { workspace = true }
+tokio = { workspace = true, features = ["sync"] }
 
 [dev-dependencies]
 tempfile = { workspace = true }

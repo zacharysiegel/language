@@ -16,12 +16,14 @@ final class AudioPlayer {
     static let slowRate: Float = 0.7
     static let systemVoiceLanguage: String = "pt-BR"
 
+    private let library: CourseLibrary?
     private var playbackGeneration: Int = 0
     private var activePlayback: ClipPlayback?
     private let speechSynthesizer: AVSpeechSynthesizer = AVSpeechSynthesizer()
     private let speechDelegate: SpeechDelegate = SpeechDelegate()
 
-    init() {
+    init(library: CourseLibrary?) {
+        self.library = library
         speechSynthesizer.delegate = speechDelegate
         try? AVAudioSession.sharedInstance().setCategory(.playback, mode: .spokenAudio)
     }
@@ -34,17 +36,17 @@ final class AudioPlayer {
         speechDelegate.finishCurrent()
     }
 
-    func play(_ clip: AudioClip, version: CourseVersion?, engine: AudioEngineRecord, slow: Bool) {
+    func play(_ clip: AudioClip, engine: AudioEngineRecord, slow: Bool) {
         stop()
 
         let generation: Int = playbackGeneration
 
         Task {
-            await playWithoutStopping(clip, version: version, engine: engine, slow: slow, generation: generation)
+            await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
         }
     }
 
-    func playSequence(_ clips: [AudioClip], version: CourseVersion?, engine: AudioEngineRecord, slow: Bool) {
+    func playSequence(_ clips: [AudioClip], engine: AudioEngineRecord, slow: Bool) {
         stop()
 
         let generation: Int = playbackGeneration
@@ -55,13 +57,13 @@ final class AudioPlayer {
                     return
                 }
 
-                await playWithoutStopping(clip, version: version, engine: engine, slow: slow, generation: generation)
+                await playWithoutStopping(clip, engine: engine, slow: slow, generation: generation)
             }
         }
     }
 
-    private func playWithoutStopping(_ clip: AudioClip, version: CourseVersion?, engine: AudioEngineRecord, slow: Bool, generation: Int) async {
-        let recordingPath: String? = await findRecording(clip, version: version, engine: engine)
+    private func playWithoutStopping(_ clip: AudioClip, engine: AudioEngineRecord, slow: Bool, generation: Int) async {
+        let recordingPath: String? = await findRecording(clip, engine: engine)
 
         guard playbackGeneration == generation else {
             return
@@ -79,13 +81,13 @@ final class AudioPlayer {
         }
     }
 
-    private func findRecording(_ clip: AudioClip, version: CourseVersion?, engine: AudioEngineRecord) async -> String? {
-        guard let clipKey = clip.clipKey, let version else {
+    private func findRecording(_ clip: AudioClip, engine: AudioEngineRecord) async -> String? {
+        guard let clipKey = clip.clipKey, let library else {
             return nil
         }
 
         do {
-            return try await version.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text, voiceChoice: clip.voiceChoice)
+            return try await library.recordingPath(clipKey: clipKey, engine: engine, spokenText: clip.text, voiceChoice: clip.voiceChoice)
         } catch {
             _ = CoreErrorReport.record(error, while: "finding the recording of clip \(clipKey)")
             return nil

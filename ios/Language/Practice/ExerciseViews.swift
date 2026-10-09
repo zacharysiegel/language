@@ -46,7 +46,6 @@ struct ListeningControls: View {
     let clip: AudioClip
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
@@ -55,7 +54,7 @@ struct ListeningControls: View {
             PlayButton(clip: clip, slow: true)
         }
         .onAppear {
-            audioPlayer.play(clip, version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
+            audioPlayer.play(clip, engine: progressStore.settings().audioEngine, slow: false)
         }
     }
 }
@@ -285,7 +284,6 @@ struct MatchView: View {
     let onSubmit: (ExerciseResult) -> Void
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     @State private var leftOrder: [Int]
@@ -364,7 +362,7 @@ struct MatchView: View {
     private func playTarget(_ pairIndex: Int) {
         let pair: PhrasePairRecord = pairs[pairIndex]
 
-        audioPlayer.play(AudioClip(clipKey: pair.clipKey, text: pair.target), version: courseStore.shownVersion(), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(AudioClip(clipKey: pair.clipKey, text: pair.target), engine: progressStore.settings().audioEngine, slow: false)
     }
 
     private func resolveSelection() {

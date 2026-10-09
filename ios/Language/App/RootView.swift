@@ -44,7 +44,7 @@ struct RootView: View {
         }
         .tint(Color.accentActive)
         .sheet(isPresented: $settingsPresented) {
-            SettingsSheet()
+            SettingsSheet(courseId: courseId)
         }
         .sheet(isPresented: $coursesPresented) {
             NavigationStack {
@@ -53,15 +53,8 @@ struct RootView: View {
         }
     }
 
-    /// The course the learner opened last, else the only published course.
     private func activeCourseId() -> String? {
-        let courses: [CourseSummaryRecord] = courseStore.courses()
-
-        if let lastCourseId = progressStore.lastCourseId(), courses.contains(where: { course in course.id == lastCourseId }) {
-            return lastCourseId
-        }
-
-        return courses.count == 1 ? courses[0].id : nil
+        courseStore.activeCourseId(lastCourseId: progressStore.lastCourseId())
     }
 
     private func courseTitle(courseId: String) -> String? {
@@ -70,7 +63,7 @@ struct RootView: View {
 
     private func navigationRoot<Content: View>(courseId: String?, @ViewBuilder content: @escaping (CourseOutlineRecord) -> Content) -> some View {
         NavigationStack {
-            VersionGate {
+            CourseIndexGate {
                 if let courseId {
                     CourseGate(courseId: courseId, content: content)
                 } else {
@@ -107,19 +100,19 @@ struct RootView: View {
     }
 }
 
-/// Shows its content once a version of the courses has loaded, and a status message before that.
-struct VersionGate<Content: View>: View {
+/// Shows its content once a course index has loaded, and a status message before that.
+struct CourseIndexGate<Content: View>: View {
     @ViewBuilder let content: () -> Content
 
     @Environment(CourseStore.self) private var courseStore
 
     var body: some View {
-        switch courseStore.loadState() {
+        switch courseStore.indexLoadState() {
         case .loading:
             StatusMessage(text: "Loading the courses…")
         case .failed(let message):
             LoadFailure(message: message) {
-                Task { await courseStore.start() }
+                Task { await courseStore.refresh(courseId: nil) }
             }
         case .loaded:
             content()
@@ -127,7 +120,7 @@ struct VersionGate<Content: View>: View {
     }
 }
 
-/// Shows its content with the course's outline, loading it if needed.
+/// Shows its content with the course's publication and outline, loading them if needed.
 struct CourseGate<Content: View>: View {
     let courseId: String
     @ViewBuilder let content: (CourseOutlineRecord) -> Content
@@ -136,23 +129,58 @@ struct CourseGate<Content: View>: View {
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
-        Group {
-            switch courseStore.outlineState(courseId: courseId) {
-            case .loaded(let outline):
-                content(outline)
+        gatedContent()
+            .onAppear {
+                courseStore.ensurePublicationLoaded(courseId: courseId)
+                courseStore.ensureOutlineLoaded(courseId: courseId)
+                progressStore.rememberCourse(courseId: courseId)
+            }
+            .onChange(of: courseStore.shownContentKey(courseId: courseId)) {
+                courseStore.ensureOutlineLoaded(courseId: courseId)
+            }
+    }
+
+    @ViewBuilder
+    private func gatedContent() -> some View {
+        if !courseStore.listsCourse(courseId: courseId) {
+            missingCourse()
+        } else {
+            switch courseStore.publicationState(courseId: courseId) {
+            case .loaded:
+                outlineContent()
             case .failed(let message):
                 LoadFailure(message: message) {
-                    Task { await courseStore.refresh() }
+                    Task { await courseStore.retry(courseId: courseId) }
                 }
             case .loading, .none:
                 StatusMessage(text: "Loading the course…")
             }
         }
-        .onAppear {
-            courseStore.ensureOutlineLoaded(courseId: courseId)
-            progressStore.rememberCourse(courseId: courseId)
+    }
+
+    /* Only the repository's course index can tell that a course does not exist; a cached or included one may be behind. */
+    @ViewBuilder
+    private func missingCourse() -> some View {
+        switch courseStore.repositoryIndexLoadState() {
+        case .pending:
+            StatusMessage(text: "Loading the course…")
+        case .loaded, .failed:
+            StatusMessage(text: "That course does not exist.")
         }
-        .onChange(of: courseStore.shownVersion()?.version()) { courseStore.ensureOutlineLoaded(courseId: courseId) }
+    }
+
+    @ViewBuilder
+    private func outlineContent() -> some View {
+        switch courseStore.outlineState(courseId: courseId) {
+        case .loaded(let outline):
+            content(outline)
+        case .failed(let message):
+            LoadFailure(message: message) {
+                Task { await courseStore.retry(courseId: courseId) }
+            }
+        case .loading, .none:
+            StatusMessage(text: "Loading the course…")
+        }
     }
 }
 

@@ -60,7 +60,6 @@ struct ExerciseSession: View {
     let onExit: () -> Void
 
     @Environment(AudioPlayer.self) private var audioPlayer
-    @Environment(CourseStore.self) private var courseStore
     @Environment(ProgressStore.self) private var progressStore
 
     @State private var activeExercises: [ExerciseRecord]?
@@ -208,7 +207,6 @@ struct ExerciseSession: View {
         if exercise.speaksAfterAnswer(), let spokenText = exerciseSpokenText(exercise: exercise) {
             audioPlayer.play(
                 AudioClip(clipKey: exercise.clipKey(), text: spokenText),
-                version: courseStore.shownVersion(),
                 engine: progressStore.settings().audioEngine,
                 slow: false,
             )

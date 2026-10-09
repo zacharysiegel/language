@@ -117,6 +117,11 @@ final class CourseUITests: XCTestCase {
 
         app.buttons["settings"].firstMatch.tap()
         XCTAssertTrue(app.buttons["voice-kokoro"].waitForExistence(timeout: 5))
+
+        let publicationLabel: XCUIElement = app.staticTexts["publication-label"]
+
+        XCTAssertTrue(publicationLabel.waitForExistence(timeout: 10))
+        XCTAssertTrue(publicationLabel.label.hasPrefix("Published as "), publicationLabel.label)
         saveScreenshot("11-settings")
     }
 
