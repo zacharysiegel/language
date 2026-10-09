@@ -28,6 +28,30 @@ enum UnitTabKind: String, CaseIterable, Hashable {
     func isAvailable(for lesson: UnitLessonRecord) -> Bool {
         self != .readings || !lesson.readings.isEmpty
     }
+
+    func record() -> UnitTabRecord {
+        switch self {
+        case .overview:
+            return .overview
+        case .grammar:
+            return .grammar
+        case .dialogues:
+            return .dialogues
+        case .readings:
+            return .readings
+        case .vocabulary:
+            return .vocabulary
+        case .practice:
+            return .practice
+        }
+    }
+}
+
+/// What a shown tab's recording prefetch depends on; a change of any restarts it.
+private struct RecordingPrefetchRequest: Equatable {
+    let tab: UnitTabKind
+    let engine: AudioEngineRecord
+    let contentKey: String?
 }
 
 struct UnitPage: View {
@@ -37,6 +61,7 @@ struct UnitPage: View {
 
     @Environment(CourseStore.self) private var courseStore
     @Environment(AudioPlayer.self) private var audioPlayer
+    @Environment(ProgressStore.self) private var progressStore
     @State private var activeTab: UnitTabKind?
     @State private var isStatusHelpShown: Bool = false
 
@@ -79,6 +104,11 @@ struct UnitPage: View {
 
     private func loadedView(unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
         let tab: UnitTabKind = activeTab ?? initialTab
+        let prefetchRequest: RecordingPrefetchRequest = RecordingPrefetchRequest(
+            tab: tab,
+            engine: progressStore.settings().audioEngine,
+            contentKey: courseStore.shownContentKey(courseId: courseId),
+        )
 
         return ScrollView {
             VStack(alignment: .leading, spacing: .spaceMd) {
@@ -96,6 +126,17 @@ struct UnitPage: View {
             UnitStatusHelpTip(onClose: closeStatusHelp)
         }
         .navigationTitle(unit.title)
+        .task(id: prefetchRequest, priority: .utility) {
+            await prefetchRecordings(prefetchRequest, unitId: unit.id)
+        }
+    }
+
+    private func prefetchRecordings(_ request: RecordingPrefetchRequest, unitId: String) async {
+        guard let publication = courseStore.shownPublication(courseId: courseId) else {
+            return
+        }
+
+        await RecordingPrefetch.prefetchTab(request.tab, unitId: unitId, publication: publication, engine: request.engine)
     }
 
     private func tabRow(lesson: UnitLessonRecord, active: UnitTabKind) -> some View {

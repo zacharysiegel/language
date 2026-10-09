@@ -2,23 +2,25 @@ use std::collections::BTreeMap;
 use std::fs;
 use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 
 use dashmap::DashMap;
 use dashmap::mapref::one::Ref;
 use shared::artifact::{
     self, ArtifactOriginKind, CourseIndexSource, CourseManifest, CourseManifestSource, FilesystemArtifactCache, ManifestEntry,
-    content_address, course_manifest, discovery, fetch, manifest, repository_key,
+    content_address, course_manifest, discovery, fetch,
 };
+use shared::course::{CourseOutline, Dialogue, Exercise, GrammarNote, Reading, SpokenClip, UnitLesson, UnitOutline, VocabularyItem};
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
 use shared::filesystem;
-use shared::http::{DirectoryFetch, HttpCacheMode, HttpFetch, ReqwestHttpFetch};
+use shared::http::{DirectoryFetch, HttpFetch, ReqwestHttpFetch};
 use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 use shared::{AppError, AppErrorStatic};
 
-use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord};
+use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord, UnitTabRecord};
 use crate::ffi_error::CoreError;
 use crate::progress_book::{AudioEngineRecord, VoiceChoiceRecord};
+use crate::recording_cache::{ClipRecording, PrefetchCancellation, RecordingCache, RecordingPrefetchSummary};
 
 const SHARD_CACHE_DIRECTORY: &str = "shards";
 const AUDIO_CACHE_DIRECTORY: &str = "audio";
@@ -40,14 +42,6 @@ pub struct CoreConfiguration {
     pub embedded_bundle_directory: String,
 }
 
-/// Where one engine's recording of a clip is fetched from.
-#[derive(Debug, Clone, PartialEq, Eq)]
-struct ClipRecording {
-    audio_sha256: String,
-    /// The recordings base of the publication whose shard named this recording.
-    audio_base_url: String,
-}
-
 /// Opens the course index and each course's publications for a native app.
 #[derive(uniffi::Object)]
 pub struct CourseLibrary {
@@ -55,6 +49,7 @@ pub struct CourseLibrary {
     http_fetch: ReqwestHttpFetch,
     /// By clip key, then by speech engine.
     clip_recordings: DashMap<String, BTreeMap<VoiceEngineKind, ClipRecording>>,
+    recording_cache: RecordingCache,
     /// Held by every write of the remembered index or a remembered manifest, through the shard retain that follows it.
     cache_update_lock: tokio::sync::Mutex<()>,
 }
@@ -137,10 +132,13 @@ impl CourseLibrary {
 
 impl CourseLibrary {
     fn create(configuration: CoreConfiguration, http_fetch: ReqwestHttpFetch) -> CourseLibrary {
+        let recording_cache: RecordingCache = RecordingCache::create(PathBuf::from(&configuration.cache_directory).join(AUDIO_CACHE_DIRECTORY));
+
         CourseLibrary {
             configuration,
             http_fetch,
             clip_recordings: DashMap::new(),
+            recording_cache,
             cache_update_lock: tokio::sync::Mutex::new(()),
         }
     }
@@ -385,27 +383,25 @@ impl CourseLibrary {
             return Ok(None);
         };
 
-        let path: PathBuf = self.cached_recording(http_fetch, &recording).await?;
+        let path: PathBuf = self.recording_cache.foreground_recording(http_fetch, &recording).await?;
 
         Ok(Some(path.display().to_string()))
     }
 
-    async fn cached_recording(&self, http_fetch: &impl HttpFetch, recording: &ClipRecording) -> Result<PathBuf, AppErrorStatic> {
-        let audio_directory: PathBuf = self.cache_directory().join(AUDIO_CACHE_DIRECTORY);
-        let path: PathBuf = audio_directory.join(format!("{}.{}", recording.audio_sha256, manifest::AUDIO_FILE_EXTENSION));
+    /* Each clip's recording is the one a play of it would fetch. */
+    pub(crate) async fn prefetch_clip_recordings(
+        &self,
+        http_fetch: &impl HttpFetch,
+        clips: &[SpokenClip],
+        engine: AudioEngineKind,
+        cancellation: &PrefetchCancellation,
+    ) -> RecordingPrefetchSummary {
+        let recordings: Vec<ClipRecording> = clips
+            .iter()
+            .filter_map(|clip| self.clip_recording_for(&clip.clip_key, engine.voice_engine_for_clip(&clip.spoken_text, &clip.voice_choice)))
+            .collect();
 
-        if path.exists() {
-            return Ok(path);
-        }
-
-        let url: String = fetch::join_url(&recording.audio_base_url, &repository_key::audio_key(&recording.audio_sha256));
-        let bytes: Vec<u8> = fetch::fetch_bytes(http_fetch, &url, HttpCacheMode::Default).await?;
-
-        content_address::verify_sha256(&url, &bytes, &recording.audio_sha256)?;
-        create_directory(&audio_directory)?;
-        filesystem::write_atomically(&path, &bytes)?;
-
-        Ok(path)
+        self.recording_cache.prefetch(http_fetch, recordings, cancellation).await
     }
 }
 
@@ -434,7 +430,7 @@ fn read_cached_file(path: &Path) -> Result<Option<Vec<u8>>, AppErrorStatic> {
     }
 }
 
-fn create_directory(path: &Path) -> Result<(), AppErrorStatic> {
+pub(crate) fn create_directory(path: &Path) -> Result<(), AppErrorStatic> {
     fs::create_dir_all(path).map_err(|error| AppErrorStatic::from(format!("creating a cache directory failed; [path={} error={error}]", path.display())))
 }
 
@@ -468,6 +464,9 @@ pub struct CoursePublication {
     source: CourseManifestSource,
     manifest_sha256: String,
     audio_base_url: String,
+    opened_outline: OnceLock<CourseOutline>,
+    /// By unit id.
+    opened_lessons: DashMap<String, UnitLesson>,
 }
 
 #[uniffi::export(async_runtime = "tokio")]
@@ -515,6 +514,33 @@ impl CoursePublication {
 
         Ok(lesson)
     }
+
+    /// Downloads into the recording cache the recordings `tab` of the opened unit `unit_id` plays with `engine`, each at
+    /// most once and never ahead of a play waiting for its recording, until `cancellation` is cancelled.
+    pub async fn prefetch_unit_tab_recordings(
+        &self,
+        unit_id: String,
+        tab: UnitTabRecord,
+        engine: AudioEngineRecord,
+        cancellation: Arc<PrefetchCancellation>,
+    ) {
+        let Some(clips) = self.unit_tab_clips(&unit_id, tab)
+        else {
+            log::warn!("not prefetching the recordings of a unit that is not open; [unit_id={unit_id}]");
+            return;
+        };
+
+        let summary: RecordingPrefetchSummary =
+            self.library.prefetch_clip_recordings(&self.library.http_fetch, &clips, engine.into(), &cancellation).await;
+
+        log::info!(
+            "prefetched a unit tab's recordings; [unit_id={unit_id} tab={tab:?} already_cached={} downloaded={} failed={} cancelled={}]",
+            summary.already_cached_count,
+            summary.downloaded_count,
+            summary.failed_count,
+            summary.cancelled_count,
+        );
+    }
 }
 
 impl CoursePublication {
@@ -527,6 +553,8 @@ impl CoursePublication {
             source,
             manifest_sha256,
             audio_base_url,
+            opened_outline: OnceLock::new(),
+            opened_lessons: DashMap::new(),
         })
     }
 
@@ -536,7 +564,11 @@ impl CoursePublication {
 
         self.library.register_clip_audio(&contents.clip_audio, &self.audio_base_url);
 
-        Ok((&contents.outline).into())
+        let outline_record: CourseOutlineRecord = (&contents.outline).into();
+        /* A publication's outline never changes, so a second open's copy is the same. */
+        let _already_opened: Result<(), CourseOutline> = self.opened_outline.set(contents.outline);
+
+        Ok(outline_record)
     }
 
     pub(crate) async fn open_unit(&self, http_fetch: &impl HttpFetch, unit_id: &str) -> Result<UnitLessonRecord, AppErrorStatic> {
@@ -546,7 +578,19 @@ impl CoursePublication {
 
         self.library.register_clip_audio(&contents.clip_audio, &self.audio_base_url);
 
-        Ok((&contents.lesson).into())
+        let lesson_record: UnitLessonRecord = (&contents.lesson).into();
+
+        self.opened_lessons.insert(unit_id.to_string(), contents.lesson);
+
+        Ok(lesson_record)
+    }
+
+    /// `None` until both the outline and the unit are opened.
+    fn unit_tab_clips(&self, unit_id: &str, tab: UnitTabRecord) -> Option<Vec<SpokenClip>> {
+        let unit_outline: &UnitOutline = self.opened_outline.get()?.find_unit(unit_id)?;
+        let lesson: Ref<'_, String, UnitLesson> = self.opened_lessons.get(unit_id)?;
+
+        Some(tab_spoken_clips(tab, unit_outline, &lesson))
     }
 
     async fn load_shard(&self, http_fetch: &impl HttpFetch, entry: &ManifestEntry) -> Result<Vec<u8>, AppErrorStatic> {
@@ -554,12 +598,22 @@ impl CoursePublication {
     }
 }
 
+fn tab_spoken_clips(tab: UnitTabRecord, unit_outline: &UnitOutline, lesson: &UnitLesson) -> Vec<SpokenClip> {
+    match tab {
+        UnitTabRecord::Overview => Vec::new(),
+        UnitTabRecord::Grammar => lesson.grammar.iter().flat_map(GrammarNote::spoken_clips).collect(),
+        UnitTabRecord::Dialogues => lesson.dialogues.iter().flat_map(Dialogue::spoken_clips).collect(),
+        UnitTabRecord::Readings => lesson.readings.iter().flat_map(Reading::spoken_clips).collect(),
+        UnitTabRecord::Vocabulary => unit_outline.vocabulary.iter().flat_map(VocabularyItem::spoken_clips).collect(),
+        UnitTabRecord::Practice => lesson.exercises.iter().flat_map(Exercise::spoken_clips).collect(),
+    }
+}
 
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
 
-    use shared::artifact::{CourseIndex, CourseIndexEntry, course_index};
+    use shared::artifact::{CourseIndex, CourseIndexEntry, course_index, manifest, repository_key};
 
     use super::*;
 
@@ -696,7 +750,10 @@ mod tests {
         let course_id: String = course_index.courses()[0].id.clone();
         let publication: Arc<CoursePublication> = library.clone().load_embedded_course_publication(course_id.clone()).await.unwrap();
         let outline: CourseOutlineRecord = publication.load_course().await.unwrap();
-        let lesson: UnitLessonRecord = publication.load_unit(outline.units[0].id.clone()).await.unwrap();
+        let unit_id: String = outline.units[0].id.clone();
+        let dialogue_clips_before_opening: Option<Vec<SpokenClip>> = publication.unit_tab_clips(&unit_id, UnitTabRecord::Dialogues);
+        let lesson: UnitLessonRecord = publication.load_unit(unit_id.clone()).await.unwrap();
+        let vocabulary_clips: Vec<SpokenClip> = publication.unit_tab_clips(&unit_id, UnitTabRecord::Vocabulary).unwrap();
         let cached_shard_count: usize = cached_shard_names(cache_directory.path()).len();
 
         assert!(course_index.is_embedded());
@@ -704,6 +761,8 @@ mod tests {
         assert_eq!(publication.course_id(), course_id);
         assert!(!outline.units.is_empty());
         assert!(!lesson.exercises.is_empty());
+        assert_eq!(dialogue_clips_before_opening, None);
+        assert!(!vocabulary_clips.is_empty());
         assert_eq!(cached_shard_count, 2);
         assert!(library.load_cached_course_index().await.is_none());
         assert!(library.clone().load_cached_course_publication(course_id).await.is_none());
@@ -856,6 +915,44 @@ mod tests {
 
         assert_eq!(fs::read(found.unwrap()).unwrap(), recording_bytes.to_vec());
         assert_eq!(unregistered, None);
+    }
+
+    #[tokio::test]
+    async fn prefetch_clip_recordings_downloads_the_recording_set_each_clips_voice_choice_picks() {
+        let app_origin: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let repository: PathBuf = repository_directory(app_origin.path());
+        let neural_sha256: String = content_address::sha256_hex(b"neural");
+        let macos_sha256: String = content_address::sha256_hex(b"macos");
+        write_file(&repository.join(repository_key::audio_key(&neural_sha256)), b"neural");
+        write_file(&repository.join(repository_key::audio_key(&macos_sha256)), b"macos");
+        let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), cache_directory.path());
+        let clip_audio_entries: Vec<ClipAudioEntry> = [(VoiceEngineKind::Kokoro, &neural_sha256), (VoiceEngineKind::MacosSay, &macos_sha256)]
+            .into_iter()
+            .map(|(engine, audio_sha256)| ClipAudioEntry {
+                clip_key: "short-line".to_string(),
+                engine,
+                audio_sha256: audio_sha256.clone(),
+                audio_size_bytes: 6,
+            })
+            .collect();
+        library.register_clip_audio(&clip_audio_entries, &repository.display().to_string());
+        let short_line_of_a_long_dialogue: SpokenClip = SpokenClip {
+            clip_key: "short-line".to_string(),
+            spoken_text: "Oi!".to_string(),
+            voice_choice: VoiceChoiceKind::WholeDialogue {
+                line_texts: vec!["Oi!".to_string(), "Tudo bem com você hoje?".to_string()],
+            },
+        };
+
+        let summary: RecordingPrefetchSummary = library
+            .prefetch_clip_recordings(&DirectoryFetch, &[short_line_of_a_long_dialogue], AudioEngineKind::Auto, &PrefetchCancellation::new())
+            .await;
+        let audio_directory: PathBuf = cache_directory.path().join(AUDIO_CACHE_DIRECTORY);
+
+        assert_eq!(summary.downloaded_count, 1);
+        assert!(audio_directory.join(format!("{neural_sha256}.{}", manifest::AUDIO_FILE_EXTENSION)).exists());
+        assert!(!audio_directory.join(format!("{macos_sha256}.{}", manifest::AUDIO_FILE_EXTENSION)).exists());
     }
 
     #[tokio::test]

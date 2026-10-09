@@ -7,9 +7,11 @@ pub mod course_records;
 pub mod ffi_error;
 pub mod practice_functions;
 pub mod progress_book;
+pub mod recording_cache;
 
 pub use course_library::*;
 pub use course_records::*;
 pub use ffi_error::*;
 pub use practice_functions::*;
 pub use progress_book::*;
+pub use recording_cache::*;
