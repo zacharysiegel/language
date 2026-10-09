@@ -219,9 +219,8 @@ impl CourseLibrary {
         };
 
         let source: CourseManifestSource = artifact::parse_cached_course_manifest(manifest_bytes, repository_base_url.trim(), course_id)?;
-        let audio_base_url: String = source.repository_base_url.clone();
 
-        Ok(Some(CoursePublication::open(self.clone(), source, audio_base_url)))
+        Ok(Some(CoursePublication::open(self.clone(), source)))
     }
 
     pub(crate) async fn open_latest_course_publication(
@@ -234,25 +233,14 @@ impl CourseLibrary {
 
         self.remember_course_publication(&source).await?;
 
-        let audio_base_url: String = source.repository_base_url.clone();
-
-        Ok(CoursePublication::open(self.clone(), source, audio_base_url))
+        Ok(CoursePublication::open(self.clone(), source))
     }
 
     async fn open_embedded_course_publication(self: &Arc<Self>, course_id: &str) -> Result<Arc<CoursePublication>, AppErrorStatic> {
-        let embedded_bundle_directory: &str = &self.configuration.embedded_bundle_directory;
-        let embedded_index: Arc<PublishedCourseIndex> = self.open_embedded_course_index().await?;
-        let Some(entry) = embedded_index.source.course_index.courses.get(course_id)
-        else {
-            return Err(AppErrorStatic::from(format!(
-                "the bundle included in the app has no such course; [course_id={course_id} embedded_bundle_directory={embedded_bundle_directory}]",
-            )));
-        };
-
         let source: CourseManifestSource =
-            artifact::load_embedded_course_manifest(&DirectoryFetch, embedded_bundle_directory, course_id, entry).await?;
+            artifact::load_embedded_course_manifest(&DirectoryFetch, &self.configuration.embedded_bundle_directory, course_id).await?;
 
-        Ok(CoursePublication::open(self.clone(), source, self.static_repository_base_url()))
+        Ok(CoursePublication::open(self.clone(), source))
     }
 
     async fn remember_course_index(&self, source: &CourseIndexSource) -> Result<(), AppErrorStatic> {
@@ -263,18 +251,20 @@ impl CourseLibrary {
         filesystem::write_atomically(&cache_directory.join(CACHED_COURSE_INDEX_FILE), &source.course_index_bytes)?;
         filesystem::write_atomically(&cache_directory.join(CACHED_COURSE_INDEX_BASE_URL_FILE), source.repository_base_url.as_bytes())?;
 
-        self.forget_courses_not_listed(source)?;
+        let forgotten_course_ids: Vec<String> = source.course_index.course_ids_not_listed(self.remembered_course_ids()?);
+
+        if forgotten_course_ids.is_empty() {
+            return Ok(());
+        }
+
+        self.forget_courses(&forgotten_course_ids)?;
 
         self.retain_shards_of_remembered_publications().await
     }
 
-    fn forget_courses_not_listed(&self, source: &CourseIndexSource) -> Result<(), AppErrorStatic> {
-        for course_id in self.remembered_course_ids()? {
-            if source.course_index.courses.contains_key(&course_id) {
-                continue;
-            }
-
-            let course_directory: PathBuf = self.cached_course_directory(&course_id);
+    fn forget_courses(&self, course_ids: &[String]) -> Result<(), AppErrorStatic> {
+        for course_id in course_ids {
+            let course_directory: PathBuf = self.cached_course_directory(course_id);
 
             fs::remove_dir_all(&course_directory).map_err(|error| {
                 AppErrorStatic::from(format!("forgetting a course failed; [path={} error={error}]", course_directory.display()))
@@ -470,10 +460,6 @@ impl PublishedCourseIndex {
     pub fn is_embedded(&self) -> bool {
         self.source.origin == ArtifactOriginKind::Embedded
     }
-
-    pub fn repository_base_url(&self) -> String {
-        self.source.repository_base_url.clone()
-    }
 }
 
 /// One publication of one course, opened from a repository, from this device's cache of one, or from the bundle
@@ -534,8 +520,9 @@ impl CoursePublication {
 }
 
 impl CoursePublication {
-    fn open(library: Arc<CourseLibrary>, source: CourseManifestSource, audio_base_url: String) -> Arc<CoursePublication> {
+    fn open(library: Arc<CourseLibrary>, source: CourseManifestSource) -> Arc<CoursePublication> {
         let manifest_sha256: String = content_address::sha256_hex(&source.manifest_bytes);
+        let audio_base_url: String = artifact::recordings_base_url(&source, &library.static_repository_base_url());
 
         Arc::new(CoursePublication {
             library,
