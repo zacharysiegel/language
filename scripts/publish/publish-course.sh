@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Publishes courses' newest bundles under build/artifacts/ to a repository: `local` (build/repository/, which the
-# web server serves at /repository), `cloudflare-r2`, or `dry` (logs each write without making it). Without
+# Publishes courses' newest bundles under build/artifacts/ to a repository: `local` (build/repository/, which
+# `repository_server` serves), `cloudflare-r2`, or `dry` (logs each write without making it). Without
 # --course, it publishes every course the repository's index lists; --include-unlisted-courses adds every built
 # course the index does not list yet. Publishing to `local` or `cloudflare-r2` also refreshes those courses in the
 # embedded bundle. Cloudflare R2 refuses a test course.

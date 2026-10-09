@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Builds every course, the test courses included, and publishes every course data/courses/ holds to the local
-# repository (build/repository/), which the web server serves at /repository. Arguments are passed to the build.
+# repository (build/repository/), which `repository_server` serves. Arguments are passed to the build.
 #
 # Usage:
 #   ./scripts/dev/build-local-repository.sh

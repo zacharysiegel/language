@@ -8,9 +8,6 @@ pub const DISCOVERY_SCHEMA_VERSION: u32 = 1;
 /* The app's own origin serves the discovery document at this path, so a client commits to it and nothing else. */
 pub const DISCOVERY_PATH: &str = "/discovery";
 
-/* Used when discovery cannot be read, and to decide whether the first manifest request already went to the right place. */
-pub const STATIC_REPOSITORY_BASE_URL: &str = "/repository";
-
 pub const EMBEDDED_BUNDLE_BASE_URL: &str = "/embedded";
 
 /* Compared against `minimum_client_version`; bumped when a client build can no longer read what is published. */

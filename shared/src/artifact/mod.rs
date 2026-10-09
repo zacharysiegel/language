@@ -9,6 +9,7 @@ pub mod fetch;
 #[cfg(not(target_arch = "wasm32"))]
 pub mod filesystem_cache;
 pub mod load;
+pub mod local_repository;
 pub mod manifest;
 pub mod repository_key;
 pub mod schema_version;
@@ -24,6 +25,7 @@ pub use fetch::*;
 #[cfg(not(target_arch = "wasm32"))]
 pub use filesystem_cache::*;
 pub use load::*;
+pub use local_repository::*;
 pub use manifest::*;
 pub use repository_key::*;
 pub use schema_version::*;
