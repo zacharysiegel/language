@@ -1,4 +1,5 @@
 use shared::course::{Exercise, FillBlankExercise};
+use shared::pending_indication;
 use shared::practice::{self, AnswerStatus, SessionScore};
 use shared::review;
 
@@ -57,6 +58,11 @@ pub fn pass_percent() -> u32 {
 #[uniffi::export]
 pub fn quick_practice_exercise_count() -> u32 {
     practice::QUICK_PRACTICE_EXERCISE_COUNT as u32
+}
+
+#[uniffi::export]
+pub fn pending_indication_delay_milliseconds() -> u32 {
+    pending_indication::PENDING_INDICATION_DELAY_MILLISECONDS
 }
 
 #[uniffi::export]
