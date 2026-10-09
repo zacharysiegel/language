@@ -55,7 +55,8 @@ impl FrameFeatures {
 /// Cuts the hissing bursts Kokoro sometimes adds at the start, end or clause boundaries of a clip where the phonemes have no fricative.
 pub fn remove_spurious_noise(samples: &[f32], phonemes: &str) -> Vec<f32> {
     let features: FrameFeatures = frame_features(samples);
-    let Some((first_active, end_active)) = active_frame_range(&features) else {
+    let Some((first_active, end_active)) = active_frame_range(&features)
+    else {
         return samples.to_vec();
     };
 
@@ -174,7 +175,8 @@ fn classify_run(features: &FrameFeatures, start: usize, end: usize, first_active
 
 fn select_removals(runs: &[NoiseRun], phonemes: &str) -> Vec<NoiseRun> {
     let symbols: Vec<char> = phonemes.chars().filter(|symbol| !IGNORED_SYMBOLS.contains(*symbol)).collect();
-    let Some(last_symbol) = symbols.last() else {
+    let Some(last_symbol) = symbols.last()
+    else {
         return Vec::new();
     };
     let starts_with_stressed_vowel: bool = starts_with_stressed_vowel(phonemes);

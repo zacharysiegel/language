@@ -77,7 +77,8 @@ mod browser {
     }
 
     pub fn store_text(key: &str, text: &str) {
-        let Some(storage) = local_storage() else {
+        let Some(storage) = local_storage()
+        else {
             return;
         };
 
@@ -215,14 +216,16 @@ mod browser {
     }
 
     async fn play_audio_file(url: &str, rate: f64) -> String {
-        let Ok(audio) = HtmlAudioElement::new_with_src(url) else {
+        let Ok(audio) = HtmlAudioElement::new_with_src(url)
+        else {
             return CLIP_FAILED.to_string();
         };
 
         audio.set_playback_rate(rate);
 
         let finished: Promise = finished_promise(&audio);
-        let Ok(play_promise) = audio.play() else {
+        let Ok(play_promise) = audio.play()
+        else {
             return CLIP_FAILED.to_string();
         };
 
@@ -261,10 +264,12 @@ mod browser {
     }
 
     async fn speak_with_browser_voice(text: &str, rate: f64) {
-        let Some(synthesis) = web_sys::window().and_then(|window| window.speech_synthesis().ok()) else {
+        let Some(synthesis) = web_sys::window().and_then(|window| window.speech_synthesis().ok())
+        else {
             return;
         };
-        let Ok(utterance) = SpeechSynthesisUtterance::new_with_text(text) else {
+        let Ok(utterance) = SpeechSynthesisUtterance::new_with_text(text)
+        else {
             return;
         };
 

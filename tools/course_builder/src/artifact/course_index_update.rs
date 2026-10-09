@@ -47,7 +47,8 @@ pub fn empty_course_index() -> CourseIndex {
 pub async fn read_course_index(repository: &impl ArtifactRepository) -> Result<StoredCourseIndex, AppError> {
     let stored_object: Option<StoredObject> = repository.get_object(repository_key::COURSE_INDEX_KEY).await?;
 
-    let Some(stored_object) = stored_object else {
+    let Some(stored_object) = stored_object
+    else {
         return Ok(StoredCourseIndex {
             course_index: empty_course_index(),
             entity_tag: None,

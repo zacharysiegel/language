@@ -99,7 +99,8 @@ impl HttpConnector for RecordingHttpClient {
             if_none_match: request.headers().get("If-None-Match").map(str::to_string),
         };
         let canned_response: Option<CannedResponse> = self.canned_responses.lock().unwrap().pop_front();
-        let Some(canned_response) = canned_response else {
+        let Some(canned_response) = canned_response
+        else {
             panic!("a request no canned response answers; [method={} uri={}]", recorded_request.method, recorded_request.uri);
         };
 

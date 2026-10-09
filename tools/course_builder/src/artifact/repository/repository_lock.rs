@@ -157,7 +157,8 @@ pub enum LeaseRemovalKind {
 pub async fn remove_repository_lease(repository: &impl ArtifactRepository) -> Result<LeaseRemovalKind, AppError> {
     let current_lease: Option<StoredObject> = repository.get_object(repository_key::REPOSITORY_LOCK_KEY).await?;
 
-    let Some(current_lease) = current_lease else {
+    let Some(current_lease) = current_lease
+    else {
         return Ok(LeaseRemovalKind::NotHeld);
     };
 
@@ -289,7 +290,8 @@ mod tests {
         let first_lease: RepositoryLease = acquire_repository_lease(&repository, &holder_on("first-host")).await.unwrap();
         let second_attempt: Result<RepositoryLease, AppError> = acquire_repository_lease(&repository, &holder_on("second-host")).await;
 
-        let Err(second_error) = second_attempt else {
+        let Err(second_error) = second_attempt
+        else {
             panic!("a second lease was granted while the first was held");
         };
 
@@ -346,7 +348,8 @@ mod tests {
         let attempt: Result<RepositoryLease, AppError> = acquire_repository_lease(&http_client.repository(), &holder_on("this-host")).await;
         let recorded_requests: Vec<RecordedRequest> = http_client.recorded_requests();
 
-        let Err(error) = attempt else {
+        let Err(error) = attempt
+        else {
             panic!("a lease was granted while another was held");
         };
 

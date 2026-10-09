@@ -340,7 +340,8 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
         let pairs: Arc<MatchExercise> = pairs.clone();
 
         move || {
-            let (Some(left_index), Some(right_index)) = (selected_left.get_untracked(), selected_right.get_untracked()) else {
+            let (Some(left_index), Some(right_index)) = (selected_left.get_untracked(), selected_right.get_untracked())
+            else {
                 return;
             };
 

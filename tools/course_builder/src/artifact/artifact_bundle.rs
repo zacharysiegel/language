@@ -219,7 +219,8 @@ fn link_audio_files(
     fs::create_dir_all(bundle_directory.join(manifest::SUBDIR_AUDIO))?;
 
     for audio_sha256 in &recordings_list.recording_sha256s {
-        let Some(source_path) = file_by_audio_sha256.get(audio_sha256) else {
+        let Some(source_path) = file_by_audio_sha256.get(audio_sha256)
+        else {
             return Err(AppError::from(format!("a recording the shards name is not in the clip store; [sha256={audio_sha256}]")));
         };
 
@@ -361,7 +362,8 @@ pub fn relabel_bundle(paths: &WorkspacePaths, bundle: &BuiltBundle, taken_labels
 
     relabeled_manifest.publication_label = publication_label.clone();
 
-    let Some(course_bundles_directory) = bundle.directory.parent() else {
+    let Some(course_bundles_directory) = bundle.directory.parent()
+    else {
         return Err(AppError::from(format!("a bundle directory has no parent; [path={}]", bundle.directory.display())));
     };
     let relabeled_directory: PathBuf = course_bundles_directory.join(&publication_label);

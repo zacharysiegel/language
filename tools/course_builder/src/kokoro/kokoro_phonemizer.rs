@@ -134,7 +134,8 @@ fn locate_espeak_data_directory() -> Result<PathBuf, String> {
     let mut newest: Option<(std::time::SystemTime, PathBuf)> = None;
 
     for profile_directory in executable.ancestors().skip(1).take(2) {
-        let Ok(build_entries) = fs::read_dir(profile_directory.join("build")) else {
+        let Ok(build_entries) = fs::read_dir(profile_directory.join("build"))
+        else {
             continue;
         };
 
@@ -159,7 +160,8 @@ fn locate_espeak_data_directory() -> Result<PathBuf, String> {
 
 fn espeak_phonemes(words: &str) -> String {
     let mode: i32 = (((TIE_CHARACTER as u32) << 8) | espeak_rs_sys::espeakPHONEMES_TIE | espeak_rs_sys::espeakINITIALIZE_PHONEME_IPA) as i32;
-    let Ok(c_words) = CString::new(words) else {
+    let Ok(c_words) = CString::new(words)
+    else {
         return String::new();
     };
     let mut cursor: *const c_char = c_words.as_ptr();

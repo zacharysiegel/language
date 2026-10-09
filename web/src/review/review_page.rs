@@ -151,7 +151,8 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
         let course_id: String = course.id.clone();
 
         move |remembered: bool| {
-            let Some(item) = items.get(current_index.get_untracked()) else {
+            let Some(item) = items.get(current_index.get_untracked())
+            else {
                 return;
             };
             let now_milliseconds: i64 = platform::now_milliseconds();
