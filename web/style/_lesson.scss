@@ -1,3 +1,5 @@
+@use "tokens" as *;
+
 .lesson-header {
     display: flex;
     flex-direction: column;
@@ -12,9 +14,20 @@
     margin-top: var(--space-xs);
 }
 
-.unit-status-help {
-    flex-basis: 100%;
-    margin: 0;
+/* Too narrow for the help tooltip beside its button, so the tooltip spans the status row instead. */
+@media (max-width: $breakpoint-narrow) {
+    .unit-status-control {
+        position: relative;
+    }
+
+    .unit-status-control .tooltip-anchor {
+        position: static;
+    }
+
+    .unit-status-control .tooltip {
+        right: 0;
+        width: auto;
+    }
 }
 
 .tabs {

@@ -158,6 +158,32 @@ final class CourseUITests: XCTestCase {
         assertSelected(app.buttons["unit-status-in-progress"])
     }
 
+    func testUnitStatusHelpFloatsOverThePageAndCloses() throws {
+        openUnit(Self.practicedUnitId)
+
+        let helpButton: XCUIElement = app.buttons["unit-status-help"]
+        let tip: XCUIElement = app.descendants(matching: .any)["unit-status-help-tip"]
+        let tabFrameBeforeOpening: CGRect = app.buttons["tab-overview"].frame
+
+        helpButton.tap()
+        XCTAssertTrue(tip.waitForExistence(timeout: 5))
+        XCTAssertEqual(app.buttons["tab-overview"].frame, tabFrameBeforeOpening)
+        saveScreenshot("13-unit-status-help")
+
+        app.buttons["unit-status-help-close"].tap()
+        assertGone(tip, timeout: 5)
+
+        helpButton.tap()
+        XCTAssertTrue(tip.waitForExistence(timeout: 5))
+        app.buttons["add-words"].coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).tap()
+        assertGone(tip, timeout: 5)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "added")).count, 0)
+
+        helpButton.tap()
+        XCTAssertTrue(tip.waitForExistence(timeout: 5))
+        assertGone(tip, timeout: 12)
+    }
+
     // MARK: - Choosing the course
 
     /// Opens the course under test when the app starts on the course list.
@@ -245,6 +271,13 @@ final class CourseUITests: XCTestCase {
     private func assertSelected(_ element: XCUIElement) {
         let selected: XCTNSPredicateExpectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "isSelected == true"), object: element)
         let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [selected], timeout: 5)
+
+        XCTAssertEqual(waitResult, .completed)
+    }
+
+    private func assertGone(_ element: XCUIElement, timeout: TimeInterval) {
+        let gone: XCTNSPredicateExpectation = XCTNSPredicateExpectation(predicate: NSPredicate(format: "exists == false"), object: element)
+        let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [gone], timeout: timeout)
 
         XCTAssertEqual(waitResult, .completed)
     }

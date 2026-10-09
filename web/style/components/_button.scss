@@ -84,6 +84,11 @@ button.help {
     font-size: var(--type-size-data);
 }
 
+button.help[aria-expanded="true"] {
+    border-color: var(--color-accent-hover);
+    color: var(--color-accent-hover);
+}
+
 button.play-slow {
     font-family: var(--font-mono);
     font-size: var(--type-size-caption);

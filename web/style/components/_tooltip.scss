@@ -1,0 +1,43 @@
+// A box floating over the page next to the control it explains; opening it moves nothing.
+.tooltip-anchor {
+    position: relative;
+    display: inline-flex;
+}
+
+.tooltip {
+    position: absolute;
+    z-index: var(--layer-floating);
+    top: calc(100% + var(--space-sm));
+    left: 0;
+    width: var(--width-tooltip);
+    padding: var(--space-sm) var(--space-lg) var(--space-sm) var(--space-sm);
+    background: var(--color-paper);
+    border: var(--border-ink);
+    border-radius: var(--radius-default);
+    box-shadow: var(--shadow-floating);
+    font-size: var(--type-size-caption);
+    line-height: var(--type-line-height-body);
+}
+
+.tooltip ol {
+    list-style: decimal;
+    padding-left: var(--space-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+button.tooltip-close {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: var(--size-button-icon);
+    height: var(--size-button-icon);
+    padding: 0;
+    border: none;
+    background: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: var(--type-size-data);
+}

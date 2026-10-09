@@ -33,6 +33,10 @@
     --border-active:         var(--border-width-hairline) solid var(--color-accent-active);
     --border-rule:           var(--border-width-hairline) solid var(--color-rule);
 
+    --shadow-offset:         4px;
+    --shadow-floating:       var(--shadow-offset) var(--shadow-offset) 0 var(--color-ink); // a solid shadow with no blur
+    --layer-floating:        1; // a z-index above the page's own content
+
     --size-icon-glyph:       0.8125rem; // approx. 16px
     --size-button-icon:      1.4375rem; // approx. 29px: the glyph, the padding either side of it, and the hairline
     --size-tag:              1.125rem; // approx. 22.5px: the tag's line box, the padding either side of it, and the hairline
@@ -40,6 +44,7 @@
 
     --width-page:            46rem; // approx. 920px; a measure that keeps prose readable
     --width-measure:         40rem; // approx. 800px
+    --width-tooltip:         20rem; // approx. 400px
 
     --radius-default:        0;
     --radius-input:          1px;
