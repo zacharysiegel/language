@@ -1,0 +1,11 @@
+# Cloudflare Workers Assets deploy with no Worker script; the edge serves the asset directory as it is.
+name = "language-web"
+compatibility_date = "2026-08-17"
+
+routes = [
+    { pattern = "language.zach.ro", custom_domain = true },
+]
+
+[assets]
+# Resolved relative to this file.
+directory = "../target/deploy-site"

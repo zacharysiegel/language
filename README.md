@@ -40,6 +40,10 @@ Add the app's origin to `tools/course_builder/r2-cors.json` and apply it with `c
 
 Every command that writes R2 holds a lease for its whole run. If one stops without releasing it, `cargo run --release --package course_builder -- unlock cloudflare-r2` removes the lease. Recordings no publication names stay on R2 until `cargo run --release --package course_builder -- remove-unused-recordings cloudflare-r2`.
 
+## Deploying the site
+
+`./scripts/build/deploy-site.sh --build` writes `target/deploy-site/`, the committed discovery document with `repository_base_url` set to https://repository.language.zach.ro (or `LANGUAGE_REPOSITORY_BASE_URL`) and `web/static/_headers`, and deploys it with `npx wrangler deploy` to Cloudflare Workers Assets at https://language.zach.ro (`web/wrangler.toml`). It needs `jq` and Node; authenticate once with `npx wrangler login`. `--dry-run` stops before uploading.
+
 ## Releasing the apps
 
 Before building the web or iOS app for release, publish to Cloudflare R2 after any local publish, since every publish refreshes the embedded bundle, then run `./scripts/release/check-embedded-bundle.sh`. It fails unless the embedded bundle lists exactly the courses R2's index lists, each at the publication R2's latest pointer names.
@@ -76,5 +80,6 @@ cargo run --package course_builder -- validate --all
 ./scripts/publish/remove-course.sh local --course <course id>
 ./scripts/dev/build-local-repository.sh
 ./scripts/release/check-embedded-bundle.sh
+./scripts/build/deploy-site.sh --build
 cargo test
 ```
