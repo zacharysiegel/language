@@ -304,13 +304,18 @@ fn find_index_entry<'a>(course_index: &'a CourseIndexSource, course_id: &str) ->
     })
 }
 
-/// `entry` is `course_id`'s entry in the index of the bundle at `embedded_base_url`.
+/// The publication of `course_id` that the index of the bundle at `embedded_base_url` names.
 pub async fn load_embedded_course_manifest(
     http_fetch: &impl HttpFetch,
     embedded_base_url: &str,
     course_id: &str,
-    entry: &CourseIndexEntry,
 ) -> Result<CourseManifestSource, AppErrorStatic> {
+    let embedded_index: CourseIndexSource = load_embedded_course_index(http_fetch, embedded_base_url).await?;
+    let entry: &CourseIndexEntry = embedded_index.course_index.courses.get(course_id).ok_or_else(|| {
+        AppErrorStatic::from(format!(
+            "the bundle included in the app does not include the course; [course_id={course_id} embedded_base_url={embedded_base_url}]",
+        ))
+    })?;
     let manifest_bytes: Vec<u8> = fetch::fetch_pointer(http_fetch, embedded_base_url, &entry.latest_manifest_key).await?;
     let manifest: CourseManifest = course_manifest::parse_course_manifest(&manifest_bytes, Some(course_id))?;
 
@@ -336,6 +341,15 @@ pub fn parse_cached_course_manifest(
         manifest,
         manifest_bytes,
     })
+}
+
+/// The base `source`'s recordings are fetched from; the bundle included in the app holds none, so its recordings come
+/// from the static repository.
+pub fn recordings_base_url(source: &CourseManifestSource, static_repository_base_url: &str) -> String {
+    match source.origin {
+        ArtifactOriginKind::Repository => source.repository_base_url.clone(),
+        ArtifactOriginKind::Embedded => static_repository_base_url.to_string(),
+    }
 }
 
 /// A shard's decompressed bytes, ready to open as a database.
@@ -755,14 +769,22 @@ mod tests {
             ("/embedded/course-index.json".to_string(), course_index_json(&[COURSE_ID])),
             (course_pointer_url("/embedded", COURSE_ID), course_manifest_json(COURSE_ID, b"abc")),
         ]));
-        let course_index: CourseIndexSource = load_embedded_course_index(&http_fetch, "/embedded").await.unwrap();
-        let entry: &CourseIndexEntry = &course_index.course_index.courses[COURSE_ID];
 
-        let source: CourseManifestSource = load_embedded_course_manifest(&http_fetch, "/embedded", COURSE_ID, entry).await.unwrap();
+        let source: CourseManifestSource = load_embedded_course_manifest(&http_fetch, "/embedded", COURSE_ID).await.unwrap();
+        let missing: Result<CourseManifestSource, AppErrorStatic> = load_embedded_course_manifest(&http_fetch, "/embedded", OTHER_COURSE_ID).await;
 
         assert_eq!(source.origin, ArtifactOriginKind::Embedded);
         assert_eq!(source.repository_base_url, "/embedded");
         assert_eq!(source.manifest.course_id, COURSE_ID);
+        assert_eq!(recordings_base_url(&source, "/repository"), "/repository");
+        assert!(missing.is_err_and(|error| error.to_string().contains(OTHER_COURSE_ID)));
+    }
+
+    #[test]
+    fn recordings_base_url_of_a_repository_publication_is_its_repository() {
+        let source: CourseManifestSource = course_manifest_source_at("https://r2.example/repository", b"abc");
+
+        assert_eq!(recordings_base_url(&source, "/repository"), "https://r2.example/repository");
     }
 
     #[test]
@@ -904,14 +926,13 @@ mod send_bound {
         let http_fetch: ReqwestHttpFetch = ReqwestHttpFetch::create().unwrap();
         let cache: FilesystemArtifactCache = FilesystemArtifactCache::create(std::path::PathBuf::from("/tmp/send-bound"));
         let course_index: CourseIndexSource = course_index_source();
-        let index_entry: CourseIndexEntry = course_index.course_index.courses["pt_br.en.foundations"].clone();
         let source: CourseManifestSource = course_manifest_source();
         let entry: ManifestEntry = source.manifest.outline.clone();
 
         assert_send(discover_course_index(&http_fetch, "http://127.0.0.1/discovery", "http://127.0.0.1/repository"));
         assert_send(load_embedded_course_index(&DirectoryFetch, "/embedded"));
         assert_send(fetch_latest_course_manifest(&http_fetch, &course_index, "pt_br.en.foundations"));
-        assert_send(load_embedded_course_manifest(&DirectoryFetch, "/embedded", "pt_br.en.foundations", &index_entry));
+        assert_send(load_embedded_course_manifest(&DirectoryFetch, "/embedded", "pt_br.en.foundations"));
         assert_send(load_publication_shard(&http_fetch, &cache, &source, &entry));
         assert_send(load_publication_shard(&DirectoryFetch, &cache, &source, &entry));
         assert_send(load_publication_shard_bytes(&http_fetch, &cache, &source, &entry));

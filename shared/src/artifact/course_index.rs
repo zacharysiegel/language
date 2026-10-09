@@ -27,6 +27,13 @@ pub struct CourseIndexEntry {
     pub test_course: bool,
 }
 
+impl CourseIndex {
+    /// The ids among `course_ids` that the index does not list, in their order.
+    pub fn course_ids_not_listed(&self, course_ids: impl IntoIterator<Item = String>) -> Vec<String> {
+        course_ids.into_iter().filter(|course_id| !self.courses.contains_key(course_id)).collect()
+    }
+}
+
 pub fn parse_course_index(bytes: &[u8]) -> Result<CourseIndex, AppError> {
     schema_version::require_schema_version(bytes, COURSE_INDEX_SCHEMA_VERSION_FIELD, COURSE_INDEX_SCHEMA_VERSION)?;
 
@@ -105,6 +112,16 @@ mod tests {
 
         assert_eq!(course_index, reparsed);
         assert!(produced.starts_with("{\n  \"course_index_schema_version\""));
+    }
+
+    #[test]
+    fn course_ids_not_listed_keeps_the_ids_the_index_omits() {
+        let course_index: CourseIndex = parse_course_index(valid_index_json().as_bytes()).unwrap();
+        let remembered_course_ids: Vec<String> = vec!["pt_br.en.travel".to_string(), COURSE_ID.to_string(), "es.en.foundations".to_string()];
+
+        let omitted_course_ids: Vec<String> = course_index.course_ids_not_listed(remembered_course_ids);
+
+        assert_eq!(omitted_course_ids, vec!["pt_br.en.travel".to_string(), "es.en.foundations".to_string()]);
     }
 
     #[test]

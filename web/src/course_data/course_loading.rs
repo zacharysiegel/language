@@ -31,7 +31,7 @@ pub use server::*;
 mod browser {
     use std::collections::BTreeSet;
 
-    use shared::artifact::{self, ArtifactCache, CourseIndexEntry, CourseIndexSource, CourseManifest, CourseManifestSource, ManifestEntry, discovery};
+    use shared::artifact::{self, ArtifactCache, CourseIndexSource, CourseManifest, CourseManifestSource, ManifestEntry, discovery};
     use shared::course_shard::{self, CourseShardContents, UnitShardContents};
     use shared::{AppError, AppErrorStatic};
 
@@ -99,10 +99,7 @@ mod browser {
             artifact::parse_cached_course_manifest(manifest_text.into_bytes(), &repository_base_url, course_id);
 
         match parsed {
-            Ok(source) => Some(LoadedCoursePublication {
-                source,
-                audio_base_url: repository_base_url,
-            }),
+            Ok(source) => Some(loaded_publication(source)),
             Err(error) => {
                 log::warn!("could not read a cached course manifest; [course_id={course_id} error={error}]");
                 None
@@ -116,28 +113,21 @@ mod browser {
 
         remember_course_publication(&source).await;
 
-        Ok(LoadedCoursePublication {
-            audio_base_url: source.repository_base_url.clone(),
-            source,
-        })
+        Ok(loaded_publication(source))
     }
 
-    /// The course's publication in the bundle included in the app; its recordings are fetched from the static repository.
+    /// The course's publication in the bundle included in the app.
     pub async fn load_embedded_course_publication(course_id: &str) -> Result<LoadedCoursePublication, AppError> {
-        let embedded_index: CourseIndexSource = load_embedded_course_index().await?;
-        let entry: &CourseIndexEntry = embedded_index
-            .course_index
-            .courses
-            .get(course_id)
-            .ok_or_else(|| AppError::from(format!("the embedded bundle does not include the course; [course_id={course_id}]")))?;
+        let source: CourseManifestSource = artifact::load_embedded_course_manifest(&BrowserFetch, discovery::EMBEDDED_BUNDLE_BASE_URL, course_id).await?;
 
-        let source: CourseManifestSource =
-            artifact::load_embedded_course_manifest(&BrowserFetch, discovery::EMBEDDED_BUNDLE_BASE_URL, course_id, entry).await?;
+        Ok(loaded_publication(source))
+    }
 
-        Ok(LoadedCoursePublication {
+    fn loaded_publication(source: CourseManifestSource) -> LoadedCoursePublication {
+        LoadedCoursePublication {
+            audio_base_url: artifact::recordings_base_url(&source, discovery::STATIC_REPOSITORY_BASE_URL),
             source,
-            audio_base_url: discovery::STATIC_REPOSITORY_BASE_URL.to_string(),
-        })
+        }
     }
 
     pub async fn load_course_shard(publication: &LoadedCoursePublication) -> Result<CourseShardContents, AppError> {
@@ -169,10 +159,7 @@ mod browser {
         platform::store_text(COURSE_INDEX_STORAGE_KEY, &course_index_text);
         platform::store_text(COURSE_INDEX_BASE_URL_STORAGE_KEY, &source.repository_base_url);
 
-        let forgotten_course_ids: Vec<String> = stored_course_manifest_ids()
-            .into_iter()
-            .filter(|course_id| !source.course_index.courses.contains_key(course_id))
-            .collect();
+        let forgotten_course_ids: Vec<String> = source.course_index.course_ids_not_listed(stored_course_manifest_ids());
 
         if forgotten_course_ids.is_empty() {
             return;
