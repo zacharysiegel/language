@@ -191,7 +191,7 @@ pub async fn remove_unused_recordings(repository: &impl ArtifactRepository) -> R
             return Ok(0);
         },
     };
-    let named_audio_keys: BTreeSet<String> = named_sha256s.iter().map(|audio_sha256| manifest::audio_key(audio_sha256)).collect();
+    let named_audio_keys: BTreeSet<String> = named_sha256s.iter().map(|audio_sha256| repository_key::audio_key(audio_sha256)).collect();
     let stored_audio_keys: BTreeSet<String> = repository::list_keys(repository, &format!("{}/", manifest::SUBDIR_AUDIO)).await?;
     let unused_audio_keys: Vec<String> = stored_audio_keys.difference(&named_audio_keys).cloned().collect();
 
@@ -386,15 +386,15 @@ mod tests {
 
         let second_recordings: BTreeSet<String> = artifact_bundle::read_bundle_recordings(&second_bundle.directory).unwrap().recording_sha256s;
 
-        repository.insert(&manifest::audio_key(&"0".repeat(64)), b"a recording no publication names");
+        repository.insert(&repository_key::audio_key(&"0".repeat(64)), b"a recording no publication names");
         apply_course_retention(&repository, TEACHING_COURSE_ID, PublicationGraceKind::None, repository.now()).await.unwrap();
         remove_unused_recordings(&repository).await.unwrap();
 
         let stored_audio_keys: BTreeSet<String> = repository.contents().into_keys().filter(|key| key.starts_with("audio/")).collect();
 
         assert_eq!(publication_labels(&repository, TEACHING_COURSE_ID).len(), PUBLICATIONS_KEPT_PER_COURSE);
-        assert!(second_recordings.iter().all(|audio_sha256| stored_audio_keys.contains(&manifest::audio_key(audio_sha256))));
-        assert!(!stored_audio_keys.contains(&manifest::audio_key(&"0".repeat(64))));
+        assert!(second_recordings.iter().all(|audio_sha256| stored_audio_keys.contains(&repository_key::audio_key(audio_sha256))));
+        assert!(!stored_audio_keys.contains(&repository_key::audio_key(&"0".repeat(64))));
         assert_eq!(stored_audio_keys.len(), 2 * test_courses::RECORDINGS_PER_FIXTURE_COURSE);
     }
 
@@ -408,13 +408,13 @@ mod tests {
 
         publish_bundle(&workspace, &repository, RepositoryTargetKind::Dry, &bundle).await;
         repository.insert(&repository_key::publication_recordings_key(TEACHING_COURSE_ID, &bundle.manifest.publication_label), b"not json");
-        repository.insert(&manifest::audio_key(&"0".repeat(64)), b"a recording no publication names");
+        repository.insert(&repository_key::audio_key(&"0".repeat(64)), b"a recording no publication names");
 
         let named: RecordingsNamedKind = recordings_named_by_publications(&repository).await.unwrap();
         let removed_count: usize = remove_unused_recordings(&repository).await.unwrap();
 
         assert!(matches!(named, RecordingsNamedKind::Unknown { .. }));
         assert_eq!(removed_count, 0);
-        assert!(repository.bytes_at(&manifest::audio_key(&"0".repeat(64))).is_some());
+        assert!(repository.bytes_at(&repository_key::audio_key(&"0".repeat(64))).is_some());
     }
 }

@@ -55,7 +55,7 @@ pub async fn remove_course(
 
 #[cfg(test)]
 mod tests {
-    use shared::artifact::{CourseIndex, manifest};
+    use shared::artifact::CourseIndex;
     use shared::course::Course;
 
     use super::*;
@@ -93,7 +93,7 @@ mod tests {
             .unwrap()
             .recording_sha256s
             .iter()
-            .any(|audio_sha256| repository.bytes_at(&manifest::audio_key(audio_sha256)).is_some());
+            .any(|audio_sha256| repository.bytes_at(&repository_key::audio_key(audio_sha256)).is_some());
 
         let every_course_outcomes: Vec<CoursePublishOutcome> = publish::publish_selected_courses(
             &workspace.paths,
