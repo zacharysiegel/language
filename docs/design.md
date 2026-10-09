@@ -12,6 +12,7 @@ The visual identity follows Eafora's: sharp, white paper and red ink, square cor
 - Icons are single-stroke, 1.25px, no fill, in `currentColor`.
 - Focus looks exactly like hover.
 - Progress is a thin red bar over a hairline. There are no spinners.
+- A control whose request is still on its way shows a static ellipsis in place of its glyph, in red, once the pending indication delay has passed; a loading page shows its status line after the same delay.
 
 ## Where it lives
 

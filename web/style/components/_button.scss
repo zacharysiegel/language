@@ -103,3 +103,33 @@ button.play-slow {
     stroke-width: 1.25;
     fill: none;
 }
+
+// A glyph and the pending glyph that stands in for it share one box, so a control keeps its size while pending.
+.glyph-slot {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.glyph-slot .pending-glyph {
+    position: absolute;
+    inset: 0;
+    margin: auto;
+}
+
+button.pending .glyph-resting {
+    visibility: hidden;
+}
+
+.pending-glyph {
+    stroke-linecap: square;
+}
+
+// Red marks the one active thing: here, the request still on its way.
+button.play.pending,
+button.play.pending:hover:not(:disabled),
+button.play.pending:focus-visible {
+    border-color: var(--color-accent-active);
+    color: var(--color-accent-active);
+}

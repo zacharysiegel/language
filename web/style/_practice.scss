@@ -57,9 +57,18 @@ input.typed.inline {
 }
 
 button.choice {
+    position: relative;
     text-align: left;
     padding: var(--space-sm) var(--space-md);
     font-size: var(--type-size-body);
+}
+
+// Overlaid in the padding in ink, because red on a choice means wrong.
+button.choice .pending-glyph {
+    position: absolute;
+    top: 0;
+    right: var(--space-xs);
+    color: var(--color-ink);
 }
 
 // Red is "the one you are on": the pair half currently held.

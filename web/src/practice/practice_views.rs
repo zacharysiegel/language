@@ -11,7 +11,8 @@ use shared::course::{
 use shared::practice::{AnswerStatus, check_typed_answer, shuffled, shuffled_avoiding_identity};
 use shared::progress::VoiceChoiceKind;
 
-use crate::audio_player::{PlayButton, audio_clip, play_in_background};
+use crate::audio_player::{PlayButton, PlaybackStore, PlaybackTarget, audio_clip, indicated_pending, use_playback_store};
+use crate::pending_indication::PendingIcon;
 use crate::platform::{self, AudioClip};
 
 const WRONG_FLASH_MILLISECONDS: u64 = 500;
@@ -103,8 +104,9 @@ fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<Exer
 fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.choices[exercise.answer_index]);
     let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
+    let playback_store: PlaybackStore = use_playback_store();
 
-    Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
+    Effect::new(move |_| playback_store.play_at_normal_speed(autoplay_clip.clone()));
 
     view! {
         <div class="row">
@@ -226,8 +228,9 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.hint_source);
     let accepted_answers: Vec<String> = vec![exercise.audio_target.clone()];
     let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
+    let playback_store: PlaybackStore = use_playback_store();
 
-    Effect::new(move |_| play_in_background(autoplay_clip.clone(), false));
+    Effect::new(move |_| playback_store.play_at_normal_speed(autoplay_clip.clone()));
 
     view! {
         <form on:submit=move |event: SubmitEvent| {
@@ -335,6 +338,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
     let matched_pair_indexes: RwSignal<Vec<usize>> = RwSignal::new(Vec::new());
     let flashing_wrong: RwSignal<Vec<usize>> = RwSignal::new(Vec::new());
     let mistake_count: RwSignal<u32> = RwSignal::new(0);
+    let playback_store: PlaybackStore = use_playback_store();
 
     let resolve_selection = {
         let pairs: Arc<MatchExercise> = pairs.clone();
@@ -377,6 +381,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
             let pair = pairs.pairs[pair_index].clone();
             let resolve_selection = resolve_selection.clone();
             let clip: AudioClip = audio_clip(&pair.clip_key, &pair.target, VoiceChoiceKind::OwnText);
+            let pending: Memo<bool> = indicated_pending(playback_store, PlaybackTarget::for_clip(&clip, false));
 
             view! {
                 <button
@@ -385,14 +390,17 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
                     class:selected=move || selected_left.get() == Some(pair_index)
                     class:right=move || matched_pair_indexes.get().contains(&pair_index)
                     class:wrong=move || selected_left.get().is_none() && flashing_wrong.get().contains(&pair_index)
+                    class:pending=pending
+                    aria-busy=move || pending.get().then_some("true")
                     disabled=move || matched_pair_indexes.get().contains(&pair_index)
                     on:click=move |_| {
                         selected_left.set(Some(pair_index));
-                        play_in_background(clip.clone(), false);
+                        playback_store.play_at_normal_speed(clip.clone());
                         resolve_selection();
                     }
                 >
                     {pair.target.clone()}
+                    {move || pending.get().then(|| view! { <PendingIcon /> })}
                 </button>
             }
         })
