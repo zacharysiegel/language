@@ -71,17 +71,9 @@ struct UnitPage: View {
                 .font(.bodyText)
                 .foregroundStyle(Color.accentActive)
                 .padding(.spaceMd)
-        case .none:
-            Text("Loading the unit…")
-                .font(.bodyText)
-                .foregroundStyle(Color.inkMuted)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        case .none, .loading:
+            PendingStatusMessage(text: "Loading the unit…")
                 .onChange(of: courseStore.outline(courseId: courseId)?.id) { ensureLoaded() }
-        case .loading:
-            Text("Loading the unit…")
-                .font(.bodyText)
-                .foregroundStyle(Color.inkMuted)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
 

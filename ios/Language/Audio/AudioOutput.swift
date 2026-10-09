@@ -77,8 +77,8 @@ actor AudioOutput {
         _ = speechSynthesizerCreatingIfAbsent()
     }
 
-    /// Returns once the recording has ended, failed, been stopped or been interrupted.
-    func playRecording(path: String, rate: Float) async -> PlaybackOutcome {
+    /// Returns once the recording has ended, failed, been stopped or been interrupted; `onSoundStarted` runs when it starts playing.
+    func playRecording(path: String, rate: Float, onSoundStarted: @escaping @Sendable () -> Void) async -> PlaybackOutcome {
         prepareIfUnprepared()
         stopCurrentPlayback(endingWith: .stopped)
 
@@ -106,7 +106,7 @@ actor AudioOutput {
         currentPlayback = .recording(player, delegate)
 
         let outcome: PlaybackOutcome = await withTaskCancellationHandler {
-            Self.startPlaying(player, completion: completion)
+            Self.startPlaying(player, completion: completion, onSoundStarted: onSoundStarted)
 
             return await completion.outcome()
         } onCancel: {
@@ -118,8 +118,8 @@ actor AudioOutput {
         return outcome
     }
 
-    /// Returns once the utterance has ended, been stopped or been interrupted.
-    func speak(_ text: String, rate: Float) async -> PlaybackOutcome {
+    /// Returns once the utterance has ended, been stopped or been interrupted; `onSoundStarted` runs when the voice starts speaking it.
+    func speak(_ text: String, rate: Float, onSoundStarted: @escaping @Sendable () -> Void) async -> PlaybackOutcome {
         prepareIfUnprepared()
         stopCurrentPlayback(endingWith: .stopped)
 
@@ -141,7 +141,7 @@ actor AudioOutput {
         utterance.voice = voice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * rate
 
-        let delegate: SpeechUtteranceDelegate = SpeechUtteranceDelegate(utterance: utterance, completion: PlaybackCompletion())
+        let delegate: SpeechUtteranceDelegate = SpeechUtteranceDelegate(utterance: utterance, completion: PlaybackCompletion(), onStart: onSoundStarted)
         let completion: PlaybackCompletion = delegate.completion
 
         synthesizer.delegate = delegate
@@ -367,13 +367,15 @@ actor AudioOutput {
         PlaybackTiming.end(preparation)
     }
 
-    private static func startPlaying(_ player: AVAudioPlayer, completion: PlaybackCompletion) {
+    private static func startPlaying(_ player: AVAudioPlayer, completion: PlaybackCompletion, onSoundStarted: @Sendable () -> Void) {
         let playStart: PlaybackStepInterval = PlaybackTiming.begin(.playStart)
         let started: Bool = player.play()
 
         PlaybackTiming.end(playStart)
 
-        if !started {
+        if started {
+            onSoundStarted()
+        } else {
             completion.finish(.failed)
         }
     }
@@ -473,14 +475,24 @@ private final class RecordingPlayerDelegate: NSObject, AVAudioPlayerDelegate, Se
     }
 }
 
-/// Finishes one utterance's completion, ignoring callbacks for utterances spoken before it.
+/// Reports one utterance's start and finishes its completion, ignoring callbacks for utterances spoken before it.
 private final class SpeechUtteranceDelegate: NSObject, AVSpeechSynthesizerDelegate, Sendable {
     let completion: PlaybackCompletion
     private let utteranceIdentifier: ObjectIdentifier
+    private let onStart: @Sendable () -> Void
 
-    init(utterance: AVSpeechUtterance, completion: PlaybackCompletion) {
+    init(utterance: AVSpeechUtterance, completion: PlaybackCompletion, onStart: @escaping @Sendable () -> Void) {
         self.utteranceIdentifier = ObjectIdentifier(utterance)
         self.completion = completion
+        self.onStart = onStart
+    }
+
+    func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didStart utterance: AVSpeechUtterance) {
+        guard ObjectIdentifier(utterance) == utteranceIdentifier else {
+            return
+        }
+
+        onStart()
     }
 
     func speechSynthesizer(_ synthesizer: AVSpeechSynthesizer, didFinish utterance: AVSpeechUtterance) {

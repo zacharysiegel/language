@@ -20,13 +20,22 @@ struct HairlineRule: View {
     }
 }
 
+/// How a square button shows that what it started is still running.
+enum SquareButtonPendingKind {
+    case notPending
+    /// The label shows its own pending glyph; the button outlines it.
+    case pendingWithinLabel
+    case pendingInPlaceOfLabel
+}
+
 /// A square, hairline-bordered button: ink by default, filled red when `isPrimary`.
 struct SquareButtonStyle: ButtonStyle {
     var isPrimary: Bool = false
     var isCompact: Bool = false
+    var pending: SquareButtonPendingKind = .notPending
 
     func makeBody(configuration: Configuration) -> some View {
-        SquareButtonBody(configuration: configuration, isPrimary: isPrimary, isCompact: isCompact)
+        SquareButtonBody(configuration: configuration, isPrimary: isPrimary, isCompact: isCompact, pending: pending)
     }
 }
 
@@ -34,12 +43,14 @@ private struct SquareButtonBody: View {
     let configuration: ButtonStyleConfiguration
     let isPrimary: Bool
     let isCompact: Bool
+    let pending: SquareButtonPendingKind
 
     @Environment(\.isEnabled) private var isEnabled
 
     var body: some View {
         configuration.label
             .font(.bodyText)
+            .pendingGlyphSwap(isIndicated: pending == .pendingInPlaceOfLabel, glyphFont: .bodyText)
             .padding(.horizontal, isCompact ? .spaceSm : .spaceMd)
             .padding(.vertical, isCompact ? .spaceXs : .spaceSm)
             .foregroundStyle(foreground())
@@ -50,7 +61,11 @@ private struct SquareButtonBody: View {
     }
 
     private func foreground() -> Color {
-        isPrimary ? Color.paper : Color.ink
+        if isPrimary {
+            return Color.paper
+        }
+
+        return pending == .pendingInPlaceOfLabel ? Color.accentActive : Color.ink
     }
 
     private func background() -> Color {
@@ -62,7 +77,11 @@ private struct SquareButtonBody: View {
     }
 
     private func border() -> Color {
-        isPrimary ? Color.accentActive : Color.ink
+        if isPrimary {
+            return Color.accentActive
+        }
+
+        return pending == .notPending ? Color.ink : Color.accentActive
     }
 }
 

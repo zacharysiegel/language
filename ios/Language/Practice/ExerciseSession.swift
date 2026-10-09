@@ -209,6 +209,7 @@ struct ExerciseSession: View {
                 AudioClip(clipKey: exercise.clipKey(), text: spokenText),
                 engine: progressStore.settings().audioEngine,
                 slow: false,
+                control: .normalSpeed,
             )
         }
     }

@@ -1,12 +1,16 @@
 import SwiftUI
 
 struct SettingsSheet: View {
+    static let checkingMessage: String = "Checking for updated course content…"
+    static let checkingAccessibilityValue: String = "Checking"
+
     /// The course open behind the sheet, if any.
     let courseId: String?
 
     @Environment(ProgressStore.self) private var progressStore
     @Environment(CourseStore.self) private var courseStore
     @Environment(\.dismiss) private var dismiss
+    @State private var updateCheck: PendingActivity = PendingActivity()
 
     var body: some View {
         NavigationStack {
@@ -86,15 +90,31 @@ struct SettingsSheet: View {
                         .foregroundStyle(Color.inkMuted)
                 }
 
-                Button("Check for updated course content") {
-                    Task { await courseStore.refresh(courseId: courseId) }
-                }
-                .buttonStyle(SquareButtonStyle(isCompact: true))
-
-                if let message = courseStore.updateMessage(courseId: courseId) {
-                    Text(message).font(.captionText).foregroundStyle(Color.inkMuted)
-                }
+                updateCheckButton(courseId: courseId)
+                updateCheckMessage(courseId: courseId)
             }
+        }
+    }
+
+    private func updateCheckButton(courseId: String) -> some View {
+        let isPending: Bool = updateCheck.isIndicated()
+
+        return Button("Check for updated course content") {
+            updateCheck.run {
+                await courseStore.refresh(courseId: courseId)
+            }
+        }
+        .buttonStyle(SquareButtonStyle(isCompact: true, pending: isPending ? .pendingInPlaceOfLabel : .notPending))
+        .pendingAccessibility(isIndicated: isPending, value: Self.checkingAccessibilityValue)
+        .accessibilityIdentifier("check-for-updated-content")
+    }
+
+    @ViewBuilder
+    private func updateCheckMessage(courseId: String) -> some View {
+        if updateCheck.isIndicated() {
+            Text(Self.checkingMessage).font(.captionText).foregroundStyle(Color.inkMuted)
+        } else if let message = courseStore.updateMessage(courseId: courseId) {
+            Text(message).font(.captionText).foregroundStyle(Color.inkMuted)
         }
     }
 }

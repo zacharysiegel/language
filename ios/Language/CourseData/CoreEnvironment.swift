@@ -5,6 +5,7 @@ struct CoreEnvironment {
     static let originInfoKey: String = "LanguageOrigin"
     static let repositoryBaseUrlInfoKey: String = "LanguageRepositoryBaseUrl"
     static let progressFileArgumentKey: String = "LanguageProgressFile"
+    static let cacheDirectoryArgumentKey: String = "LanguageCacheDirectory"
     static let embeddedBundleDirectoryName: String = "embedded_bundle"
     static let cacheDirectoryName: String = "artifacts"
     static let progressFileName: String = "language-progress.json"
@@ -12,13 +13,14 @@ struct CoreEnvironment {
     let configuration: CoreConfiguration
     let progressPath: String
 
-    /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>`, `-LanguageRepositoryBaseUrl <url>`
-    /// and `-LanguageProgressFile <name>` override the origin, the static repository and the progress file's name.
+    /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>`, `-LanguageRepositoryBaseUrl <url>`,
+    /// `-LanguageProgressFile <name>` and `-LanguageCacheDirectory <name>` override the origin, the static repository,
+    /// the progress file's name and the cache directory's name.
     static func standard() -> CoreEnvironment {
         let fileManager: FileManager = .default
         let cachesDirectory: URL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
         let supportDirectory: URL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let cacheDirectory: URL = cachesDirectory.appendingPathComponent(cacheDirectoryName, isDirectory: true)
+        let cacheDirectory: URL = cachesDirectory.appendingPathComponent(UserDefaults.standard.string(forKey: cacheDirectoryArgumentKey) ?? cacheDirectoryName, isDirectory: true)
 
         prepareCacheDirectory(cacheDirectory)
         try? fileManager.createDirectory(at: supportDirectory, withIntermediateDirectories: true)

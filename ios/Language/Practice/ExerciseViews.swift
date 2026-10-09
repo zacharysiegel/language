@@ -54,7 +54,7 @@ struct ListeningControls: View {
             PlayButton(clip: clip, slow: true)
         }
         .onAppear {
-            audioPlayer.play(clip, engine: progressStore.settings().audioEngine, slow: false)
+            audioPlayer.play(clip, engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
         }
     }
 }
@@ -309,6 +309,8 @@ struct MatchView: View {
             HStack(alignment: .top, spacing: .spaceSm) {
                 VStack(spacing: .spaceSm) {
                     ForEach(leftOrder, id: \.self) { pairIndex in
+                        let isPending: Bool = audioPlayer.isIndicatedPending(clip: Self.targetClip(pairs[pairIndex]), control: .normalSpeed)
+
                         Button {
                             selectedLeft = pairIndex
                             playTarget(pairIndex)
@@ -317,7 +319,16 @@ struct MatchView: View {
                             Text(pairs[pairIndex].target)
                         }
                         .buttonStyle(ChoiceButtonStyle(mark: leftMark(pairIndex)))
+                        .overlay(alignment: .topTrailing) {
+                            if isPending {
+                                PendingGlyph(font: PlayButton.glyphFont)
+                                    .foregroundStyle(Color.ink)
+                                    .padding(.top, .spaceXs / 2)
+                                    .padding(.trailing, .spaceXs)
+                            }
+                        }
                         .disabled(matchedPairIndexes.contains(pairIndex))
+                        .pendingAccessibility(isIndicated: isPending, value: PlayButton.pendingAccessibilityValue)
                         .accessibilityIdentifier("match-left")
                     }
                 }
@@ -359,10 +370,14 @@ struct MatchView: View {
         return selectedRight == pairIndex ? .selected : .unmarked
     }
 
+    private static func targetClip(_ pair: PhrasePairRecord) -> AudioClip {
+        AudioClip(clipKey: pair.clipKey, text: pair.target)
+    }
+
     private func playTarget(_ pairIndex: Int) {
         let pair: PhrasePairRecord = pairs[pairIndex]
 
-        audioPlayer.play(AudioClip(clipKey: pair.clipKey, text: pair.target), engine: progressStore.settings().audioEngine, slow: false)
+        audioPlayer.play(Self.targetClip(pair), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
     }
 
     private func resolveSelection() {
