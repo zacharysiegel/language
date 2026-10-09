@@ -86,7 +86,7 @@ struct UnitPage: View {
                 UnitStatusPanel(courseId: courseId, unitId: unit.id)
                 tabRow(lesson: lesson, active: tab)
                 section(tab: tab, unit: unit, lesson: lesson)
-                unitNavigation(unit: unit)
+                tabNavigation(lesson: lesson, active: tab)
             }
             .padding(.spaceMd)
             .readableWidth()
@@ -141,25 +141,34 @@ struct UnitPage: View {
     }
 
     @ViewBuilder
-    private func unitNavigation(unit: UnitOutlineRecord) -> some View {
-        if let units = courseStore.outline(courseId: courseId)?.units, let position = units.firstIndex(where: { candidate in candidate.id == unit.id }) {
+    private func tabNavigation(lesson: UnitLessonRecord, active: UnitTabKind) -> some View {
+        let availableTabs: [UnitTabKind] = UnitTabKind.allCases.filter { tab in tab.isAvailable(for: lesson) }
+
+        if let position = availableTabs.firstIndex(of: active) {
             HStack(alignment: .top) {
                 if position > 0 {
-                    NavigationLink(value: UnitDestination(courseId: courseId, unitId: units[position - 1].id, tab: .overview)) {
-                        Text("← \(units[position - 1].title)").font(.captionText).foregroundStyle(Color.accentLink)
-                    }
+                    tabStepButton(availableTabs[position - 1], label: "← \(availableTabs[position - 1].label())")
                 }
 
                 Spacer()
 
-                if position + 1 < units.count {
-                    NavigationLink(value: UnitDestination(courseId: courseId, unitId: units[position + 1].id, tab: .overview)) {
-                        Text("\(units[position + 1].title) →").font(.captionText).foregroundStyle(Color.accentLink)
-                    }
-                    .accessibilityIdentifier("next-unit")
+                if position + 1 < availableTabs.count {
+                    tabStepButton(availableTabs[position + 1], label: "\(availableTabs[position + 1].label()) →")
+                        .accessibilityIdentifier("next-tab")
                 }
             }
             .padding(.top, .spaceLg)
         }
     }
+
+    private func tabStepButton(_ tab: UnitTabKind, label: String) -> some View {
+        Button {
+            audioPlayer.stop()
+            activeTab = tab
+        } label: {
+            Text(label).font(.captionText).foregroundStyle(Color.accentLink)
+        }
+        .buttonStyle(.plain)
+    }
+
 }
