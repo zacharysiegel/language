@@ -3,13 +3,15 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::{use_params_map, use_query_map};
-use shared::course::{CourseOutline, Unit};
+use shared::course::{CourseOutline, Dialogue, Exercise, GrammarNote, Reading, SpokenClip, Unit, VocabularyItem};
+use shared::progress::AudioEngineKind;
 
 use crate::course_data::{
     self, CourseStore, LoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
 };
 use crate::pending_indication::PageLoadStatus;
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
+use crate::recording_prefetch::{self, RecordingPrefetchId};
 use crate::unit::{
     DialoguesSection, GrammarSection, OverviewSection, PracticeSection, ReadingsSection, UnitStatusControl, VocabularySection,
 };
@@ -64,6 +66,17 @@ impl UnitTabKind {
     fn available_tabs(unit: &Unit) -> Vec<UnitTabKind> {
         UnitTabKind::ALL.into_iter().filter(|tab| tab.available_for(unit)).collect()
     }
+
+    fn spoken_clips(self, unit: &Unit) -> Vec<SpokenClip> {
+        match self {
+            UnitTabKind::Overview => Vec::new(),
+            UnitTabKind::Vocabulary => unit.vocabulary.iter().flat_map(VocabularyItem::spoken_clips).collect(),
+            UnitTabKind::Dialogues => unit.dialogues.iter().flat_map(Dialogue::spoken_clips).collect(),
+            UnitTabKind::Grammar => unit.grammar.iter().flat_map(GrammarNote::spoken_clips).collect(),
+            UnitTabKind::Readings => unit.readings.iter().flat_map(Reading::spoken_clips).collect(),
+            UnitTabKind::Practice => unit.exercises.iter().flat_map(Exercise::spoken_clips).collect(),
+        }
+    }
 }
 
 impl TryFrom<&str> for UnitTabKind {
@@ -83,10 +96,19 @@ pub fn UnitPage() -> impl IntoView {
     let unit_id: Memo<String> = Memo::new(move |_| params.read().get(UNIT_ID_PARAM).unwrap_or_default());
     // A unit not yet requested is loading too, so the status shown does not restart when the request begins.
     let unit_state: Memo<LoadState<Unit>> = Memo::new(move |_| course_store.unit_state(&course_id.get(), &unit_id.get()).unwrap_or(LoadState::Loading));
+    let active_tab: Memo<UnitTabKind> = Memo::new(move |_| {
+        query
+            .read()
+            .get(TAB_QUERY_KEY)
+            .and_then(|code| UnitTabKind::try_from(code.as_str()).ok())
+            .unwrap_or(UnitTabKind::Overview)
+    });
 
     let progress_store: ProgressStore = use_progress_store();
+    let audio_engine: Memo<AudioEngineKind> = Memo::new(move |_| progress_store.read(|progress| progress.settings.audio_engine));
 
     remember_route_course(progress_store, course_id);
+    prefetch_shown_tab_recordings(unit_state, active_tab, audio_engine);
 
     Effect::new(move |_| {
         let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(LoadState::Loaded(_)));
@@ -97,22 +119,31 @@ pub fn UnitPage() -> impl IntoView {
     });
 
     course_gate(move || course_id.get(), move |course: Arc<CourseOutline>| {
-        let active_tab: UnitTabKind = query
-            .read()
-            .get(TAB_QUERY_KEY)
-            .and_then(|code| UnitTabKind::try_from(code.as_str()).ok())
-            .unwrap_or(UnitTabKind::Overview);
-
         if course.find_unit(&unit_id.get()).is_none() {
             return view! { <p class="status">"That unit does not exist."</p> }.into_any();
         }
 
         match unit_state.get() {
-            LoadState::Loaded(unit) => unit_view(&course, (*unit).clone(), active_tab).into_any(),
+            LoadState::Loaded(unit) => unit_view(&course, (*unit).clone(), active_tab.get()).into_any(),
             LoadState::Failed(message) => view! { <p class="status error">"This unit could not be loaded. ("{message}")"</p> }.into_any(),
             LoadState::Loading => view! { <PageLoadStatus message="Loading the unit…" /> }.into_any(),
         }
     })
+}
+
+/// Downloads the recordings the shown tab can play, until another tab or unit is shown or the Voice setting changes.
+fn prefetch_shown_tab_recordings(unit_state: Memo<LoadState<Unit>>, active_tab: Memo<UnitTabKind>, audio_engine: Memo<AudioEngineKind>) {
+    Effect::new(move |_| {
+        let LoadState::Loaded(unit) = unit_state.get()
+        else {
+            return;
+        };
+
+        let spoken_clips: Vec<SpokenClip> = active_tab.get().spoken_clips(&unit);
+        let prefetch_id: RecordingPrefetchId = recording_prefetch::start_prefetch(spoken_clips, audio_engine.get());
+
+        on_cleanup(move || recording_prefetch::cancel_prefetch(prefetch_id));
+    });
 }
 
 fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> impl IntoView + use<> {

@@ -128,9 +128,7 @@ pub fn VocabularySection(unit: Unit) -> impl IntoView {
 
 #[component]
 fn DialogueView(dialogue: Dialogue) -> impl IntoView {
-    let voice_choice: VoiceChoiceKind = VoiceChoiceKind::WholeDialogue {
-        line_texts: dialogue.lines.iter().map(|line| line.target.clone()).collect(),
-    };
+    let voice_choice: VoiceChoiceKind = dialogue.voice_choice();
     let clips: Vec<AudioClip> = dialogue
         .lines
         .iter()

@@ -14,6 +14,7 @@ pub mod platform;
 pub mod practice;
 pub mod progress_state;
 pub mod progress_view;
+pub mod recording_prefetch;
 pub mod review;
 pub mod unit;
 
