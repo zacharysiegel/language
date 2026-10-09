@@ -435,3 +435,14 @@ impl From<&UnitLesson> for UnitLessonRecord {
         }
     }
 }
+
+/// The parts of a unit a learner moves between.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum UnitTabRecord {
+    Overview,
+    Grammar,
+    Dialogues,
+    Readings,
+    Vocabulary,
+    Practice,
+}
