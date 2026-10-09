@@ -20,6 +20,7 @@ final class CoreIntegrationTests: XCTestCase {
         let embeddedDirectory: URL = try XCTUnwrap(Bundle.main.url(forResource: CoreEnvironment.embeddedBundleDirectoryName, withExtension: nil))
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
             appOrigin: "http://127.0.0.1:9",
+            staticRepositoryBaseUrl: "http://127.0.0.1:9",
             cacheDirectory: temporaryDirectory.path,
             embeddedBundleDirectory: embeddedDirectory.path,
         ))
@@ -39,10 +40,11 @@ final class CoreIntegrationTests: XCTestCase {
         XCTAssertFalse(lesson.exercises.isEmpty)
     }
 
-    /* Needs the local repository served by `./scripts/dev/serve.sh`; skipped when it is not running. */
+    /* Needs the app's server and the local repository's, both started by `./scripts/dev/serve.sh`; skipped when they are not running. */
     func testLatestPublicationsAndARecordingDownloadFromTheLocalServer() async throws {
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
             appOrigin: "http://127.0.0.1:3000",
+            staticRepositoryBaseUrl: "http://127.0.0.1:3002",
             cacheDirectory: temporaryDirectory.path,
             embeddedBundleDirectory: temporaryDirectory.path,
         ))
@@ -81,6 +83,7 @@ final class CoreIntegrationTests: XCTestCase {
     func testUnreachableRepositoryThrows() async throws {
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
             appOrigin: "http://127.0.0.1:9",
+            staticRepositoryBaseUrl: "http://127.0.0.1:9",
             cacheDirectory: temporaryDirectory.path,
             embeddedBundleDirectory: temporaryDirectory.path,
         ))

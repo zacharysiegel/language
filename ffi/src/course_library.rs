@@ -32,8 +32,10 @@ const LEGACY_CACHE_FILES: [&str; 2] = ["current-manifest.json", "current-reposit
 
 #[derive(Debug, Clone, uniffi::Record)]
 pub struct CoreConfiguration {
-    /// The origin that serves `/discovery` and the static repository at `/repository`.
+    /// The origin that serves `/discovery`.
     pub app_origin: String,
+    /// Where the course index is looked for when discovery cannot be read, and where the embedded bundle's recordings are served.
+    pub static_repository_base_url: String,
     pub cache_directory: String,
     pub embedded_bundle_directory: String,
 }
@@ -173,10 +175,6 @@ impl CourseLibrary {
         FilesystemArtifactCache::create(self.cache_directory().join(SHARD_CACHE_DIRECTORY))
     }
 
-    fn static_repository_base_url(&self) -> String {
-        fetch::join_url(&self.configuration.app_origin, discovery::STATIC_REPOSITORY_BASE_URL.trim_start_matches('/'))
-    }
-
     fn open_cached_course_index(&self) -> Result<Option<Arc<PublishedCourseIndex>>, AppErrorStatic> {
         let cache_directory: PathBuf = self.cache_directory();
         let cached_files: Option<(Vec<u8>, String)> =
@@ -193,8 +191,8 @@ impl CourseLibrary {
 
     pub(crate) async fn open_latest_course_index(&self, http_fetch: &impl HttpFetch) -> Result<Arc<PublishedCourseIndex>, AppErrorStatic> {
         let discovery_url: String = fetch::join_url(&self.configuration.app_origin, discovery::DISCOVERY_PATH.trim_start_matches('/'));
-        let static_base_url: String = self.static_repository_base_url();
-        let source: CourseIndexSource = artifact::discover_course_index(http_fetch, &discovery_url, &static_base_url).await?;
+        let source: CourseIndexSource =
+            artifact::discover_course_index(http_fetch, &discovery_url, &self.configuration.static_repository_base_url).await?;
 
         self.remember_course_index(&source).await?;
 
@@ -522,7 +520,7 @@ impl CoursePublication {
 impl CoursePublication {
     fn open(library: Arc<CourseLibrary>, source: CourseManifestSource) -> Arc<CoursePublication> {
         let manifest_sha256: String = content_address::sha256_hex(&source.manifest_bytes);
-        let audio_base_url: String = artifact::recordings_base_url(&source, &library.static_repository_base_url());
+        let audio_base_url: String = artifact::recordings_base_url(&source, &library.configuration.static_repository_base_url);
 
         Arc::new(CoursePublication {
             library,
@@ -566,11 +564,13 @@ mod tests {
     use super::*;
 
     const COURSE_A: &str = "pt_br.en.course_a";
+    const REPOSITORY_DIRECTORY_NAME: &str = "repository";
     const COURSE_B: &str = "pt_br.en.course_b";
 
     fn create_library(app_origin: &Path, cache_directory: &Path, embedded_bundle_directory: &Path) -> Arc<CourseLibrary> {
         CourseLibrary::new(CoreConfiguration {
             app_origin: app_origin.display().to_string(),
+            static_repository_base_url: repository_directory(app_origin).display().to_string(),
             cache_directory: cache_directory.display().to_string(),
             embedded_bundle_directory: embedded_bundle_directory.display().to_string(),
         })
@@ -578,7 +578,7 @@ mod tests {
     }
 
     fn repository_directory(app_origin: &Path) -> PathBuf {
-        app_origin.join(discovery::STATIC_REPOSITORY_BASE_URL.trim_start_matches('/'))
+        app_origin.join(REPOSITORY_DIRECTORY_NAME)
     }
 
     fn fixture_manifest(course_id: &str, publication_label: &str, outline_sha256: &str) -> CourseManifest {

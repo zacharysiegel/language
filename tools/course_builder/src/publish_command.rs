@@ -1,10 +1,10 @@
 use std::path::PathBuf;
 
 use shared::AppError;
-use shared::artifact::{CourseManifest, discovery};
+use shared::artifact::{CourseManifest, local_repository};
 
 use crate::artifact::repository::{
-    self, ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository, ENV_LOCAL_REPOSITORY_ROOT,
+    self, ArtifactRepositoryKind, CloudflareR2ArtifactRepository, CloudflareR2Config, DryArtifactRepository,
     ENV_R2_ACCOUNT_ID, ENV_R2_ARTIFACT_BUCKET, ENV_R2_ARTIFACT_PUBLIC_BASE_URL, ENV_R2_PUBLISH_ACCESS_KEY_ID, LocalArtifactRepository,
     RepositoryLockKind, SECRET_R2_PUBLISH_SECRET_ACCESS_KEY,
 };
@@ -171,9 +171,9 @@ pub async fn create_repository(paths: &WorkspacePaths, location: RepositoryLocat
     match location {
         RepositoryLocationKind::Local { root, public_base_url } => {
             let root: PathBuf = root
-                .or_else(|| dotenvy::var(ENV_LOCAL_REPOSITORY_ROOT).ok().map(PathBuf::from))
+                .or_else(|| dotenvy::var(local_repository::ENV_LOCAL_REPOSITORY_ROOT).ok().map(PathBuf::from))
                 .unwrap_or_else(|| paths.local_repository_directory.clone());
-            let public_base_url: String = public_base_url.unwrap_or_else(|| discovery::STATIC_REPOSITORY_BASE_URL.to_string());
+            let public_base_url: String = public_base_url.unwrap_or_else(|| local_repository::LOCAL_REPOSITORY_BASE_URL.to_string());
 
             Ok(ArtifactRepositoryKind::Local(LocalArtifactRepository::new(root, public_base_url)))
         },

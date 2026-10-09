@@ -9,8 +9,10 @@ settings:
     SWIFT_VERSION: "6.0"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "1"
-    # The origin that serves /discovery and /repository; the simulator reaches the Mac's own server here.
+    # The origin that serves /discovery; the simulator reaches the Mac's own server here.
     LANGUAGE_ORIGIN: "http://127.0.0.1:3000"
+    # Where the latest manifest is looked for when discovery cannot be read, and the embedded bundle's recordings.
+    LANGUAGE_REPOSITORY_BASE_URL: "http://127.0.0.1:3002"
 targets:
   Language:
     type: application
@@ -39,6 +41,7 @@ targets:
           UIApplicationSupportsMultipleScenes: false
         UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait", "UIInterfaceOrientationLandscapeLeft", "UIInterfaceOrientationLandscapeRight"]
         LanguageOrigin: $(LANGUAGE_ORIGIN)
+        LanguageRepositoryBaseUrl: $(LANGUAGE_REPOSITORY_BASE_URL)
         NSLocalNetworkUsageDescription: The course is downloaded from a server on your local network.
         NSAppTransportSecurity:
           NSAllowsLocalNetworking: true

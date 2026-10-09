@@ -12,8 +12,6 @@ use crate::artifact::repository::artifact_repository::{
     self, ArtifactRepository, ListedObject, ObjectHeaders, StoredObject, WriteConditionKind, WriteOutcomeKind,
 };
 
-pub const ENV_LOCAL_REPOSITORY_ROOT: &str = "LANGUAGE_LOCAL_REPOSITORY_ROOT";
-
 pub struct LocalArtifactRepository {
     root: PathBuf,
     public_base_url: String,

@@ -37,6 +37,7 @@ mod browser {
 
     use super::LoadedCoursePublication;
     use crate::artifact_client::{BrowserFetch, OpfsArtifactCache};
+    use crate::course_data::static_discovery;
     use crate::platform;
 
     const COURSE_INDEX_STORAGE_KEY: &str = "language.artifact.course-index";
@@ -77,8 +78,8 @@ mod browser {
 
     /// The course index the repository serves now; remembered, and the courses it omits forgotten.
     pub async fn load_latest_course_index() -> Result<CourseIndexSource, AppError> {
-        let source: CourseIndexSource =
-            artifact::discover_course_index(&BrowserFetch, discovery::DISCOVERY_PATH, discovery::STATIC_REPOSITORY_BASE_URL).await?;
+        let static_base_url: String = static_discovery::static_repository_base_url()?;
+        let source: CourseIndexSource = artifact::discover_course_index(&BrowserFetch, discovery::DISCOVERY_PATH, &static_base_url).await?;
 
         remember_course_index(&source).await;
 
@@ -95,11 +96,11 @@ mod browser {
     pub async fn load_cached_course_publication(course_id: &str) -> Option<LoadedCoursePublication> {
         let manifest_text: String = platform::read_stored_text(&course_manifest_storage_key(course_id))?;
         let repository_base_url: String = platform::read_stored_text(&course_manifest_base_url_storage_key(course_id))?;
-        let parsed: Result<CourseManifestSource, AppError> =
-            artifact::parse_cached_course_manifest(manifest_text.into_bytes(), &repository_base_url, course_id);
+        let loaded: Result<LoadedCoursePublication, AppError> =
+            artifact::parse_cached_course_manifest(manifest_text.into_bytes(), &repository_base_url, course_id).and_then(loaded_publication);
 
-        match parsed {
-            Ok(source) => Some(loaded_publication(source)),
+        match loaded {
+            Ok(publication) => Some(publication),
             Err(error) => {
                 log::warn!("could not read a cached course manifest; [course_id={course_id} error={error}]");
                 None
@@ -113,21 +114,23 @@ mod browser {
 
         remember_course_publication(&source).await;
 
-        Ok(loaded_publication(source))
+        loaded_publication(source)
     }
 
     /// The course's publication in the bundle included in the app.
     pub async fn load_embedded_course_publication(course_id: &str) -> Result<LoadedCoursePublication, AppError> {
         let source: CourseManifestSource = artifact::load_embedded_course_manifest(&BrowserFetch, discovery::EMBEDDED_BUNDLE_BASE_URL, course_id).await?;
 
-        Ok(loaded_publication(source))
+        loaded_publication(source)
     }
 
-    fn loaded_publication(source: CourseManifestSource) -> LoadedCoursePublication {
-        LoadedCoursePublication {
-            audio_base_url: artifact::recordings_base_url(&source, discovery::STATIC_REPOSITORY_BASE_URL),
+    fn loaded_publication(source: CourseManifestSource) -> Result<LoadedCoursePublication, AppError> {
+        let static_base_url: String = static_discovery::static_repository_base_url()?;
+
+        Ok(LoadedCoursePublication {
+            audio_base_url: artifact::recordings_base_url(&source, &static_base_url),
             source,
-        }
+        })
     }
 
     pub async fn load_course_shard(publication: &LoadedCoursePublication) -> Result<CourseShardContents, AppError> {

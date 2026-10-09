@@ -1,7 +1,7 @@
 use std::path::{Path, PathBuf};
 
 use shared::AppError;
-use shared::artifact::repository_key;
+use shared::artifact::{local_repository, repository_key};
 use shared::filesystem;
 
 use crate::speech_engine::SpeechEngineKind;
@@ -12,7 +12,6 @@ const UNITS_DIRECTORY_NAME: &str = "units";
 const SPEECH_MODELS_DIRECTORY: &str = "models";
 const CLIP_STORE_DIRECTORY: &str = "build/clips";
 const BUNDLES_DIRECTORY: &str = "build/artifacts";
-const LOCAL_REPOSITORY_DIRECTORY: &str = "build/repository";
 const EMBEDDED_BUNDLE_DIRECTORY: &str = "web/static/embedded";
 
 pub struct WorkspacePaths {
@@ -38,7 +37,7 @@ impl WorkspacePaths {
             speech_models_directory: root.join(SPEECH_MODELS_DIRECTORY),
             clip_store_directory: root.join(CLIP_STORE_DIRECTORY),
             bundles_directory: root.join(BUNDLES_DIRECTORY),
-            local_repository_directory: root.join(LOCAL_REPOSITORY_DIRECTORY),
+            local_repository_directory: root.join(local_repository::DEFAULT_LOCAL_REPOSITORY_DIRECTORY),
             embedded_bundle_directory: root.join(EMBEDDED_BUNDLE_DIRECTORY),
         }
     }

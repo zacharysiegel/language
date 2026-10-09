@@ -192,7 +192,7 @@ struct PublishArguments {
 
 #[derive(Subcommand)]
 enum PublishTargetArgument {
-    /// Copy into a directory that the web server serves at `/repository`.
+    /// Copy into a directory that `repository_server` serves.
     Local {
         /// The repository directory; `LANGUAGE_LOCAL_REPOSITORY_ROOT`, else `build/repository/`, when omitted.
         #[arg(long)]

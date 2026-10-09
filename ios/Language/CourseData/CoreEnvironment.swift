@@ -3,6 +3,7 @@ import Foundation
 /// Where the app keeps its cache and progress, and where it finds its course.
 struct CoreEnvironment {
     static let originInfoKey: String = "LanguageOrigin"
+    static let repositoryBaseUrlInfoKey: String = "LanguageRepositoryBaseUrl"
     static let progressFileArgumentKey: String = "LanguageProgressFile"
     static let embeddedBundleDirectoryName: String = "embedded_bundle"
     static let cacheDirectoryName: String = "artifacts"
@@ -11,8 +12,8 @@ struct CoreEnvironment {
     let configuration: CoreConfiguration
     let progressPath: String
 
-    /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>` and
-    /// `-LanguageProgressFile <name>` override the origin and the progress file's name.
+    /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>`, `-LanguageRepositoryBaseUrl <url>`
+    /// and `-LanguageProgressFile <name>` override the origin, the static repository and the progress file's name.
     static func standard() -> CoreEnvironment {
         let fileManager: FileManager = .default
         let cachesDirectory: URL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -27,7 +28,8 @@ struct CoreEnvironment {
 
         return CoreEnvironment(
             configuration: CoreConfiguration(
-                appOrigin: appOrigin(),
+                appOrigin: declaredUrl(infoKey: originInfoKey, fallback: "http://127.0.0.1:3000"),
+                staticRepositoryBaseUrl: declaredUrl(infoKey: repositoryBaseUrlInfoKey, fallback: "http://127.0.0.1:3002"),
                 cacheDirectory: cacheDirectory.path,
                 embeddedBundleDirectory: embeddedDirectory.path,
             ),
@@ -35,11 +37,11 @@ struct CoreEnvironment {
         )
     }
 
-    private static func appOrigin() -> String {
-        let launchOverride: String? = UserDefaults.standard.string(forKey: originInfoKey)
-        let declared: String? = Bundle.main.object(forInfoDictionaryKey: originInfoKey) as? String
+    private static func declaredUrl(infoKey: String, fallback: String) -> String {
+        let launchOverride: String? = UserDefaults.standard.string(forKey: infoKey)
+        let declared: String? = Bundle.main.object(forInfoDictionaryKey: infoKey) as? String
 
-        return launchOverride ?? declared ?? "http://127.0.0.1:3000"
+        return launchOverride ?? declared ?? fallback
     }
 
     /* The cache is reproducible from the repository, so it stays out of device backups. */
