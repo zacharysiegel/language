@@ -1,3 +1,4 @@
+pub mod course_clips;
 pub mod course_identity;
 pub mod course_model;
 pub mod course_outline;
@@ -6,6 +7,7 @@ pub mod curriculum_model;
 pub mod language_names;
 pub mod target_language_rules;
 
+pub use course_clips::*;
 pub use course_identity::*;
 pub use course_model::*;
 pub use course_outline::*;
