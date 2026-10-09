@@ -386,3 +386,9 @@ Each phase is a branch stacked on the previous one, compiles, and passes `cargo 
 - When the repository index stops listing a course, clients forget it and delete its cached files at once; progress is kept.
 - A release requires every embedded publication to match R2's current pointer (the release check above).
 - `build-local-repository.sh` publishes every course in `data/courses/` with `--include-unlisted-courses`.
+
+## Deviations
+
+- Phase 1: `repository_key.rs` also has `COURSE_LATEST_DIRECTORY`, `course_latest_directory_key(course_id)` (ends in `/`) and `RECORDINGS_FILENAME`; `CACHE_CONTROL_POINTER` and `CACHE_CONTROL_IMMUTABLE` are added to shared beside `cache_control_for_key`, and the copies in `web/src/server.rs` and `artifact_repository.rs` are left for phase 4 to delete.
+- Phase 1: `parse_course_manifest` also rejects an empty `publication_label`.
+- Phase 1: `CourseManifest` has `file_entries()` and `find_unit(unit_id)`, and `course_index.rs` has `COURSE_INDEX_SCHEMA_VERSION_FIELD`; `manifest::validate_entry` is now `pub`.
