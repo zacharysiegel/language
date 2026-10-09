@@ -6,6 +6,7 @@ use std::fs;
 use std::path::{Path, PathBuf};
 
 use chrono::{DateTime, Utc};
+use futures_util::{TryStreamExt, stream};
 use shared::AppError;
 use shared::artifact::{self, CourseIndex, CourseIndexEntry, CourseManifest, content_address, course_manifest, manifest, repository_key};
 
@@ -21,6 +22,8 @@ use crate::course_source;
 use crate::workspace::WorkspacePaths;
 
 const MAX_RELABEL_ATTEMPTS: usize = 8;
+/* Each upload is a small file, so a run is bound by request latency rather than bandwidth. */
+const RECORDING_UPLOAD_CONCURRENCY: usize = 16;
 
 /// The kind of repository a command writes, which decides the rules it follows.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -486,23 +489,24 @@ async fn upload_missing_recordings(
     recordings: &BTreeSet<String>,
 ) -> Result<(usize, usize), AppError> {
     let stored_audio_keys: BTreeSet<String> = repository::list_keys(repository, &format!("{}/", manifest::SUBDIR_AUDIO)).await?;
-    let mut uploaded_count: usize = 0;
+    let missing_audio_sha256s: Vec<&String> =
+        recordings.iter().filter(|audio_sha256| !stored_audio_keys.contains(&repository_key::audio_key(audio_sha256))).collect();
+    let uploaded_count: usize = missing_audio_sha256s.len();
 
-    for audio_sha256 in recordings {
-        let key: String = repository_key::audio_key(audio_sha256);
-
-        if stored_audio_keys.contains(&key) {
-            continue;
-        }
-
-        let source_path: PathBuf = artifact_bundle::audio_file_path(bundle_directory, audio_sha256);
-
-        verify_audio_file(&source_path, audio_sha256)?;
-        repository.put_file(&key, &source_path, ObjectHeaders::for_key(&key)).await?;
-        uploaded_count += 1;
-    }
+    stream::iter(missing_audio_sha256s.into_iter().map(Ok))
+        .try_for_each_concurrent(RECORDING_UPLOAD_CONCURRENCY, |audio_sha256| upload_recording(repository, bundle_directory, audio_sha256))
+        .await?;
 
     Ok((uploaded_count, recordings.len() - uploaded_count))
+}
+
+async fn upload_recording(repository: &impl ArtifactRepository, bundle_directory: &Path, audio_sha256: &str) -> Result<(), AppError> {
+    let key: String = repository_key::audio_key(audio_sha256);
+    let source_path: PathBuf = artifact_bundle::audio_file_path(bundle_directory, audio_sha256);
+
+    verify_audio_file(&source_path, audio_sha256)?;
+
+    repository.put_file(&key, &source_path, ObjectHeaders::for_key(&key)).await
 }
 
 async fn upload_missing_shards(repository: &impl ArtifactRepository, bundle: &BuiltBundle, stored_publication_keys: &BTreeSet<String>) -> Result<usize, AppError> {
