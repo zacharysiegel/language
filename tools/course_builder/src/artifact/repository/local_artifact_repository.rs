@@ -160,6 +160,13 @@ fn condition_is_met(condition: &WriteConditionKind, current_object: Option<&Stor
     }
 }
 
+fn mark_uploaded_now(path: &Path) -> Result<(), AppError> {
+    let file: fs::File = fs::OpenOptions::new().write(true).open(path)?;
+
+    file.set_modified(SystemTime::now())
+        .map_err(|error| AppError::from(format!("setting an object's upload time failed; [path={} error={error}]", path.display())))
+}
+
 fn collect_files_recursively(directory: &Path, key_prefix: &str, listed_objects: &mut Vec<ListedObject>) -> Result<(), AppError> {
     for directory_entry in fs::read_dir(directory)? {
         let directory_entry: fs::DirEntry = directory_entry?;
@@ -194,7 +201,9 @@ impl ArtifactRepository for LocalArtifactRepository {
             tokio::fs::create_dir_all(parent).await?;
         }
 
+        // A copy on macOS keeps the source file's modification time.
         tokio::fs::copy(source_path, &destination).await?;
+        mark_uploaded_now(&destination)?;
 
         Ok(())
     }
@@ -277,6 +286,8 @@ impl ArtifactRepository for LocalArtifactRepository {
 
 #[cfg(test)]
 mod tests {
+    use std::time::Duration;
+
     use super::*;
 
     const PUBLICATION_HEADERS: ObjectHeaders = ObjectHeaders {
@@ -357,6 +368,28 @@ mod tests {
         let listed: Result<Vec<ListedObject>, AppError> = repository.list_objects("courses/pt_br.en.foundations/2026-10-08+charlotte").await;
 
         assert!(listed.is_err());
+    }
+
+    #[tokio::test]
+    async fn list_objects_reports_the_time_put_file_wrote_not_the_source_file_time() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let repository: LocalArtifactRepository = repository_in(&workspace_directory);
+        let source_path: PathBuf = workspace_directory.path().join("manifest.json");
+        let source_built: SystemTime = SystemTime::UNIX_EPOCH + Duration::from_secs(86_400);
+        let key: &str = "courses/pt_br.en.foundations/2026-10-08+duluth/manifest.json";
+
+        fs::write(&source_path, b"{}").unwrap();
+        fs::File::options().write(true).open(&source_path).unwrap().set_modified(source_built).unwrap();
+
+        let before_upload: DateTime<Utc> = DateTime::<Utc>::from(SystemTime::now()) - chrono::Duration::seconds(1);
+
+        repository.put_file(key, &source_path, PUBLICATION_HEADERS).await.unwrap();
+
+        let listed_objects: Vec<ListedObject> = repository.list_objects("courses/").await.unwrap();
+
+        assert_eq!(listed_objects.len(), 1);
+        assert_eq!(listed_objects[0].key, key);
+        assert!(listed_objects[0].uploaded >= before_upload);
     }
 
     #[tokio::test]
