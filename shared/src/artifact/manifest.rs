@@ -126,7 +126,7 @@ pub fn schema_fallback_key(latest_manifest_bytes: &[u8]) -> Option<String> {
     Some(schema_pointer_key(MANIFEST_SCHEMA_VERSION))
 }
 
-fn validate_entry(entry: &ManifestEntry) -> Result<(), AppError> {
+pub fn validate_entry(entry: &ManifestEntry) -> Result<(), AppError> {
     if !content_address::is_sha256_hex(&entry.sha256) {
         return Err(AppError::from(format!(
             "manifest entry has a malformed sha256; [relative_path={} sha256={}]",

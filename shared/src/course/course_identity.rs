@@ -8,22 +8,27 @@ pub fn language_id_part(language_tag: &str) -> String {
     language_tag.to_lowercase().replace('-', "_")
 }
 
+/// Three dot-separated parts, each lowercase letters, digits and underscores.
+pub fn is_well_formed_course_id(course_id: &str) -> bool {
+    let parts: Vec<&str> = course_id.split(COURSE_ID_SEPARATOR).collect();
+
+    parts.len() == COURSE_ID_PART_COUNT
+        && parts
+            .iter()
+            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'))
+}
+
 /// The problem with the curriculum's id, if any. An id is `<target language>.<source language>.<curriculum name>`, each
 /// part lowercase letters, digits and underscores, and the language parts agree with the declared languages.
 pub fn course_id_issue(curriculum: &Curriculum) -> Option<String> {
-    let parts: Vec<&str> = curriculum.id.split(COURSE_ID_SEPARATOR).collect();
-    let parts_well_formed: bool = parts.len() == COURSE_ID_PART_COUNT
-        && parts
-            .iter()
-            .all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_'));
-
-    if !parts_well_formed {
+    if !is_well_formed_course_id(&curriculum.id) {
         return Some(format!(
             "course id must be <target language>.<source language>.<curriculum name> in lowercase letters, digits and underscores; [id={}]",
             curriculum.id,
         ));
     }
 
+    let parts: Vec<&str> = curriculum.id.split(COURSE_ID_SEPARATOR).collect();
     let expected_target: String = language_id_part(&curriculum.target_language);
     let expected_source: String = language_id_part(&curriculum.source_language);
 
@@ -57,6 +62,19 @@ mod tests {
     fn language_id_part_lowercases_and_replaces_hyphens() {
         assert_eq!(language_id_part("pt-BR"), "pt_br");
         assert_eq!(language_id_part("en"), "en");
+    }
+
+    #[test]
+    fn is_well_formed_course_id_accepts_three_lowercase_parts_only() {
+        assert!(is_well_formed_course_id("pt_br.en.foundations"));
+        assert!(is_well_formed_course_id("pt_br.en.test_course_2"));
+
+        assert!(!is_well_formed_course_id("pt_br.en"));
+        assert!(!is_well_formed_course_id("pt_br.en.foundations.extra"));
+        assert!(!is_well_formed_course_id("pt_br..foundations"));
+        assert!(!is_well_formed_course_id("pt-br.en.foundations"));
+        assert!(!is_well_formed_course_id("pt_br.en.Foundations"));
+        assert!(!is_well_formed_course_id("pt_br.en.found/ations"));
     }
 
     #[test]
