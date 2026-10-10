@@ -516,7 +516,8 @@ impl CoursePublication {
     }
 
     /// Downloads into the recording cache the recordings `tab` of unit `unit_id` plays with `engine`, each at most once
-    /// and never ahead of a play waiting for its recording, until `cancellation` is cancelled.
+    /// and never ahead of a play waiting for its recording, until `cancellation` is cancelled or the repository cannot be
+    /// reached.
     pub async fn prefetch_unit_tab_recordings(
         &self,
         unit_id: String,
@@ -540,11 +541,12 @@ impl CoursePublication {
             self.library.prefetch_clip_recordings(&self.library.http_fetch, &clips, engine.into(), &cancellation).await;
 
         log::info!(
-            "prefetched a unit tab's recordings; [unit_id={unit_id} tab={tab:?} already_cached={} downloaded={} failed={} cancelled={}]",
+            "prefetched a unit tab's recordings; [unit_id={unit_id} tab={tab:?} end={:?} already_cached={} downloaded={} failed={} remaining={}]",
+            summary.end,
             summary.already_cached_count,
             summary.downloaded_count,
             summary.failed_count,
-            summary.cancelled_count,
+            summary.remaining_count,
         );
     }
 }
