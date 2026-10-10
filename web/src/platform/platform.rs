@@ -43,9 +43,10 @@ mod browser {
     use wasm_bindgen_futures::JsFuture;
     use shared::artifact::{self, fetch};
     use shared::course_shard::VoiceEngineKind;
-    use web_sys::{HtmlAudioElement, SpeechSynthesisUtterance, Storage};
+    use web_sys::{Blob, HtmlAudioElement, SpeechSynthesisUtterance, Storage, Url};
 
     use super::*;
+    use crate::recording_prefetch::{self, InFlightRecording};
 
     const PROGRESS_STORAGE_KEY: &str = "language.progress.v2";
     const UNREADABLE_PROGRESS_STORAGE_KEY: &str = "language.progress.v2.unreadable";
@@ -253,7 +254,11 @@ mod browser {
 
         RECORDING_WAIT_GENERATION.with(|wait_generation| wait_generation.set(Some(starting_generation)));
 
-        let outcome: String = play_audio_file(&url, rate, &on_recording_phase).await;
+        let in_flight_recording: Option<InFlightRecording> = recording_prefetch::give_way_to_play(&url);
+        let outcome: String = match in_flight_recording {
+            Some(in_flight_recording) => play_in_flight_recording(in_flight_recording, &url, rate, &on_recording_phase, starting_generation).await,
+            None => play_audio_file(&url, rate, &on_recording_phase).await,
+        };
 
         end_recording_wait(starting_generation);
 
@@ -272,6 +277,43 @@ mod browser {
                 wait_generation.set(None);
             }
         });
+    }
+
+    // Plays `url` itself when the download fails.
+    async fn play_in_flight_recording(
+        in_flight_recording: InFlightRecording,
+        url: &str,
+        rate: f64,
+        on_phase: &impl Fn(PlaybackPhaseKind),
+        starting_generation: u64,
+    ) -> String {
+        let recording: Option<Blob> = in_flight_recording.recording().await;
+        let stopped_meanwhile: bool = PLAYBACK_GENERATION.with(Cell::get) != starting_generation;
+
+        if stopped_meanwhile {
+            return CLIP_STOPPED.to_string();
+        }
+
+        let Some(recording) = recording
+        else {
+            return play_audio_file(url, rate, on_phase).await;
+        };
+
+        play_recording_blob(&recording, rate, on_phase).await
+    }
+
+    async fn play_recording_blob(recording: &Blob, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) -> String {
+        let created: Result<String, JsValue> = Url::create_object_url_with_blob(recording);
+        let Ok(object_url) = created
+        else {
+            return CLIP_FAILED.to_string();
+        };
+
+        let outcome: String = play_audio_file(&object_url, rate, on_phase).await;
+
+        _ = Url::revoke_object_url(&object_url);
+
+        outcome
     }
 
     async fn play_audio_file(url: &str, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) -> String {
