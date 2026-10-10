@@ -12,7 +12,7 @@ pub use server::*;
 
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 mod browser {
-    use std::cell::{Cell, RefCell};
+    use std::cell::{Cell, RefCell, RefMut};
     use std::collections::{BTreeSet, VecDeque};
 
     use js_sys::{Function, Promise, Reflect};
@@ -119,7 +119,7 @@ mod browser {
     /// the queue, which no longer holds `recording_url`. Returns the download of `recording_url` when one is in flight.
     pub fn give_way_to_play(recording_url: &str) -> Option<InFlightRecording> {
         let yielded_downloads: Vec<DownloadInFlight> = ACTIVE_RUN.with(|active| {
-            let mut active = active.borrow_mut();
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
             let Some(run) = active.as_mut()
             else {
                 return Vec::new();
@@ -180,7 +180,7 @@ mod browser {
 
     fn wait_for_download_in_flight(recording_url: &str) -> Option<InFlightRecording> {
         ACTIVE_RUN.with(|active| {
-            let mut active = active.borrow_mut();
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
             let download: &mut DownloadInFlight = active
                 .as_mut()?
                 .downloads_in_flight
@@ -275,7 +275,7 @@ mod browser {
         };
 
         ACTIVE_RUN.with(|active| {
-            let mut active = active.borrow_mut();
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
             let run: &mut PrefetchRun = active.as_mut().filter(|run| run.prefetch_id == prefetch_id)?;
             let url: String = run.queued_urls.pop_front()?;
             let download_id: u64 = run.next_download_id;
@@ -331,7 +331,7 @@ mod browser {
 
     fn take_download_in_flight(prefetch_id: RecordingPrefetchId, download_id: u64) -> Option<DownloadInFlight> {
         ACTIVE_RUN.with(|active| {
-            let mut active = active.borrow_mut();
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
             let run: &mut PrefetchRun = active.as_mut().filter(|run| run.prefetch_id == prefetch_id)?;
             let position: usize = run.downloads_in_flight.iter().position(|download| download.download_id == download_id)?;
 
@@ -341,7 +341,10 @@ mod browser {
 
     fn forget_queued_url(prefetch_id: RecordingPrefetchId, url: &str) {
         ACTIVE_RUN.with(|active| {
-            if let Some(run) = active.borrow_mut().as_mut().filter(|run| run.prefetch_id == prefetch_id) {
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
+            let current_run: Option<&mut PrefetchRun> = active.as_mut().filter(|run| run.prefetch_id == prefetch_id);
+
+            if let Some(run) = current_run {
                 run.queued_urls.retain(|queued_url| queued_url != url);
             }
         });
@@ -349,7 +352,7 @@ mod browser {
 
     fn note_repository_answered(prefetch_id: RecordingPrefetchId) {
         let first_answer: bool = ACTIVE_RUN.with(|active| {
-            let mut active = active.borrow_mut();
+            let mut active: RefMut<'_, Option<PrefetchRun>> = active.borrow_mut();
             let Some(run) = active.as_mut().filter(|run| run.prefetch_id == prefetch_id)
             else {
                 return false;
