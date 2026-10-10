@@ -16,8 +16,8 @@ use crate::course_library;
 
 const PREFETCH_CONCURRENCY: usize = 4;
 const UNCONFIRMED_CONNECTION_PREFETCH_CONCURRENCY: usize = 1;
-/// The in-flight map's reference and one claim's.
-const UNSHARED_IN_FLIGHT_DOWNLOAD_REFERENCE_COUNT: usize = 2;
+/// The in-flight map's own reference, with no claim holding the download.
+const UNCLAIMED_IN_FLIGHT_DOWNLOAD_REFERENCE_COUNT: usize = 1;
 
 /// Where one engine's recording of a clip is fetched from.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -209,7 +209,7 @@ impl RecordingCache {
         let claim: InFlightDownloadClaim<'_> = InFlightDownloadClaim::join(&self.downloads_in_flight, &recording.audio_sha256);
 
         claim
-            .download
+            .download()
             .get_or_try_init(|| self.download(http_fetch, recording, path))
             .await
             .cloned()
@@ -259,7 +259,8 @@ fn log_prefetch_failure(recording: &ClipRecording, failure: &RecordingDownloadEr
 struct InFlightDownloadClaim<'cache> {
     downloads_in_flight: &'cache DashMap<String, Arc<OnceCell<PathBuf>>>,
     audio_sha256: String,
-    download: Arc<OnceCell<PathBuf>>,
+    /// `None` only while the claim is being dropped.
+    download: Option<Arc<OnceCell<PathBuf>>>,
 }
 
 impl<'cache> InFlightDownloadClaim<'cache> {
@@ -269,16 +270,30 @@ impl<'cache> InFlightDownloadClaim<'cache> {
         InFlightDownloadClaim {
             downloads_in_flight,
             audio_sha256: audio_sha256.to_string(),
-            download,
+            download: Some(download),
         }
+    }
+
+    fn download(&self) -> &OnceCell<PathBuf> {
+        self.download.as_deref().expect("a claim holds its download until it is dropped")
     }
 }
 
 impl Drop for InFlightDownloadClaim<'_> {
     fn drop(&mut self) {
+        let Some(download) = self.download.take()
+        else {
+            return;
+        };
+
+        let download_pointer: *const OnceCell<PathBuf> = Arc::as_ptr(&download);
+
+        /* This claim's reference goes first, so the last claim to finish sees only the map's. */
+        drop(download);
+
         /* The shard lock `remove_if` holds keeps a new claim from cloning the entry between the count and the removal. */
         self.downloads_in_flight.remove_if(&self.audio_sha256, |_, in_flight| {
-            Arc::ptr_eq(in_flight, &self.download) && Arc::strong_count(in_flight) == UNSHARED_IN_FLIGHT_DOWNLOAD_REFERENCE_COUNT
+            Arc::as_ptr(in_flight) == download_pointer && Arc::strong_count(in_flight) == UNCLAIMED_IN_FLIGHT_DOWNLOAD_REFERENCE_COUNT
         });
     }
 }
@@ -500,12 +515,39 @@ impl PrefetchCancellation {
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Barrier;
+
     use shared::http::DirectoryFetch;
 
     use super::*;
 
     /// Races the run of each concurrency test repeats to surface.
     const REPEAT_COUNT: usize = 20;
+
+    #[test]
+    fn in_flight_entry_leaves_the_map_when_two_claims_finish_at_once() {
+        const ATTEMPT_COUNT: usize = 2_000;
+
+        for _ in 0..ATTEMPT_COUNT {
+            let downloads_in_flight: DashMap<String, Arc<OnceCell<PathBuf>>> = DashMap::new();
+            let first_claim: InFlightDownloadClaim<'_> = InFlightDownloadClaim::join(&downloads_in_flight, "recording");
+            let second_claim: InFlightDownloadClaim<'_> = InFlightDownloadClaim::join(&downloads_in_flight, "recording");
+            let release: Barrier = Barrier::new(2);
+
+            std::thread::scope(|scope| {
+                scope.spawn(|| {
+                    release.wait();
+                    drop(first_claim);
+                });
+                scope.spawn(|| {
+                    release.wait();
+                    drop(second_claim);
+                });
+            });
+
+            assert!(downloads_in_flight.is_empty());
+        }
+    }
 
     #[derive(Debug, Default)]
     struct FetchGate {
