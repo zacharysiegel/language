@@ -65,7 +65,7 @@ fn first_column_runs(rows: &[Vec<String>]) -> Vec<&[Vec<String>]> {
     rows.chunk_by(|previous, next| previous.first() == next.first()).collect()
 }
 
-/// The row's cell at `lead_column` leads; every later cell becomes a field.
+/// The row's cell at `lead_column` leads; every later cell with text becomes a field.
 fn table_row(headers: &[String], row: &[String], lead_column: usize) -> GroupedTableRow {
     let lead: GroupedTableField = GroupedTableField {
         header: cell(headers, lead_column),
@@ -75,6 +75,7 @@ fn table_row(headers: &[String], row: &[String], lead_column: usize) -> GroupedT
         .iter()
         .enumerate()
         .skip(lead_column + 1)
+        .filter(|(_, value)| !value.trim().is_empty())
         .map(|(column, value)| GroupedTableField {
             header: cell(headers, column),
             value: value.clone(),
@@ -199,6 +200,25 @@ mod tests {
         };
 
         assert_eq!(headings, vec!["gender", "plural", "gender"]);
+    }
+
+    #[test]
+    fn grouped_table_leaves_out_a_field_whose_cell_is_empty() {
+        let table: GrammarTable = GrammarTable {
+            headers: vec!["Expression".to_string(), "Natural".to_string(), "Use".to_string()],
+            rows: vec![
+                vec!["sei lá".to_string(), "I have no idea".to_string(), "informal".to_string()],
+                vec!["vale a pena".to_string(), "it is worth the effort".to_string(), String::new()],
+            ],
+        };
+
+        let GroupedTable::Stacked { rows } = grouped_table(&table)
+        else {
+            panic!("a table whose first cells never repeat was grouped");
+        };
+
+        assert_eq!(rows[0].fields, vec![field("Natural", "I have no idea"), field("Use", "informal")]);
+        assert_eq!(rows[1].fields, vec![field("Natural", "it is worth the effort")]);
     }
 
     #[test]
