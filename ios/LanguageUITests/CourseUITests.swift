@@ -14,6 +14,14 @@ final class CourseUITests: XCTestCase {
     static let firstUnitId: String = "a1-02-sounds-alphabet"
     static let firstUnitLabelPrefix: String = "A1.1."
     static let jumpedNoteNumber: Int = 4
+    static let momentumJumpedNoteNumber: Int = 2
+    /* Longer than a fast fling's deceleration. */
+    static let momentumSettleDuration: TimeInterval = 3
+    /* XCUIApplicationInteractionOptionSkipPreEventQuiescence | XCUIApplicationInteractionOptionSkipPostEventQuiescence, private to XCUIAutomation. */
+    static let skipQuiescenceInteractionOptions: UInt = 0b11
+    /* The app's idle hide delay and fade, with room for a slow simulator. */
+    static let indexRailHideAllowance: TimeInterval = 3
+    static let layoutTolerance: CGFloat = 1
     static let groupedTableUnitId: String = "a1-00-how-portuguese-works"
     static let groupedTableNoteTitle: String = "Gender, number and agreement"
     static let stackedTableUnitId: String = "a1-09-shopping-colors-prices"
@@ -258,23 +266,69 @@ final class CourseUITests: XCTestCase {
         XCTAssertEqual(itemLabels.element(boundBy: 0).label, "\(Self.firstUnitLabelPrefix)1")
         XCTAssertEqual(itemLabels.element(boundBy: 1).label, "\(Self.firstUnitLabelPrefix)2")
         assertSelected(railEntry(1))
-        try assertNothingReachesUnder(railEntry(1))
-        saveScreenshot("16-unit-item-index-rail")
 
         let jumpedLabel: XCUIElement = itemLabels.element(boundBy: Self.jumpedNoteNumber - 1)
 
         XCTAssertFalse(jumpedLabel.isHittable)
         XCTAssertEqual(railEntry(Self.jumpedNoteNumber).label, "Go to note \(Self.firstUnitLabelPrefix)\(Self.jumpedNoteNumber)")
-        railEntry(Self.jumpedNoteNumber).tap()
+
+        withTheIndexRailShown {
+            self.railEntry(Self.jumpedNoteNumber).tap()
+        }
+
         assertNearTopOfThePage(jumpedLabel)
         assertSelected(railEntry(Self.jumpedNoteNumber))
-        try assertNothingReachesUnder(railEntry(1))
         saveScreenshot("17-unit-item-index-jump")
 
-        railEntry(1).press(forDuration: 0.1, thenDragTo: railEntry(noteCount))
+        withTheIndexRailShown {
+            self.railEntry(1).press(forDuration: 0.1, thenDragTo: self.railEntry(noteCount))
+        }
+
         XCTAssertTrue(itemLabels.element(boundBy: noteCount - 1).isHittable)
         assertSelected(railEntry(noteCount))
         saveScreenshot("18-unit-item-index-drag")
+    }
+
+    @MainActor
+    func testTheIndexRailIsShownOnlyWhileScrollingAndTakesNoWidth() throws {
+        openUnit(Self.firstUnitId)
+        app.buttons["tab-grammar"].tap()
+        XCTAssertTrue(app.staticTexts["unit-item-label"].firstMatch.waitForExistence(timeout: 5))
+        assertTheIndexRailLetsTouchesThrough(itemNumber: Self.jumpedNoteNumber)
+        saveScreenshot("16-unit-item-index-at-rest")
+
+        assertTheContentIsInsetEquallyFromBothEdges()
+
+        performWithoutWaitingForTheAppToIdle {
+            self.app.swipeUp(velocity: .slow)
+            XCTAssertTrue(self.railEntry(1).isHittable)
+            self.saveScreenshot("16-unit-item-index-while-scrolling")
+        }
+
+        Thread.sleep(forTimeInterval: Self.indexRailHideAllowance)
+        assertTheIndexRailLetsTouchesThrough(itemNumber: Self.jumpedNoteNumber)
+    }
+
+    @MainActor
+    func testTheIndexRailJumpsDuringMomentumScrolling() throws {
+        openUnit(Self.firstUnitId)
+        app.buttons["tab-grammar"].tap()
+
+        let itemLabels: XCUIElementQuery = app.staticTexts.matching(identifier: "unit-item-label")
+        let jumpedLabel: XCUIElement = itemLabels.element(boundBy: Self.momentumJumpedNoteNumber - 1)
+
+        XCTAssertTrue(itemLabels.firstMatch.waitForExistence(timeout: 5))
+
+        performWithoutWaitingForTheAppToIdle {
+            self.app.swipeUp(velocity: .fast)
+            self.railEntry(Self.momentumJumpedNoteNumber).tap()
+        }
+
+        assertSelected(railEntry(Self.momentumJumpedNoteNumber))
+        assertNearTopOfThePage(jumpedLabel)
+        Thread.sleep(forTimeInterval: Self.momentumSettleDuration)
+        assertNearTopOfThePage(jumpedLabel)
+        saveScreenshot("21-unit-item-index-momentum-jump")
     }
 
     @MainActor
@@ -435,8 +489,11 @@ final class CourseUITests: XCTestCase {
     private func openPrinciplesNote(unitId: String, noteNumber: Int) {
         openUnit(unitId)
         app.buttons["tab-grammar"].tap()
-        XCTAssertTrue(railEntry(noteNumber).waitForExistence(timeout: 5))
-        railEntry(noteNumber).tap()
+        XCTAssertTrue(app.staticTexts["unit-item-label"].firstMatch.waitForExistence(timeout: 5))
+
+        withTheIndexRailShown {
+            self.railEntry(noteNumber).tap()
+        }
     }
 
     private func groupedTableKeyLabel(_ header: String) -> XCUIElement {
@@ -475,28 +532,44 @@ final class CourseUITests: XCTestCase {
         XCTAssertLessThan(element.frame.minY, navigationBarBottom + app.frame.height / 4)
     }
 
-    /// Fails when any text on screen extends to the left edge of the rail or past it.
-    @MainActor
-    private func assertNothingReachesUnder(_ railEntry: XCUIElement) throws {
-        let railLeadingEdge: CGFloat = railEntry.frame.minX
+    /// Fails when the page's content column keeps further from the trailing edge than from the leading edge.
+    private func assertTheContentIsInsetEquallyFromBothEdges() {
         let screenFrame: CGRect = app.frame
-        let textFrames: [CGRect] = try Self.staticTextFrames(in: app.snapshot())
-        /* A table cell scrolled out of its sideways scroll view reports a frame past the screen. */
-        let onScreenTextFrames: [CGRect] = textFrames.filter { textFrame in screenFrame.contains(textFrame) && !textFrame.isEmpty }
+        let tabRowFrame: CGRect = app.scrollViews["unit-tabs"].frame
 
-        XCTAssertFalse(onScreenTextFrames.isEmpty)
+        XCTAssertFalse(tabRowFrame.isEmpty)
+        XCTAssertEqual(screenFrame.maxX - tabRowFrame.maxX, tabRowFrame.minX - screenFrame.minX, accuracy: Self.layoutTolerance)
+    }
 
-        for textFrame in onScreenTextFrames {
-            XCTAssertLessThanOrEqual(textFrame.maxX, railLeadingEdge)
+    /// Fails when a tap where the rail's entry for `itemNumber` is drawn jumps to that box.
+    private func assertTheIndexRailLetsTouchesThrough(itemNumber: Int) {
+        let entry: XCUIElement = railEntry(itemNumber)
+        let entryFrame: CGRect = entry.frame
+        let entryCenter: XCUICoordinate = app.coordinate(withNormalizedOffset: .zero).withOffset(CGVector(dx: entryFrame.midX, dy: entryFrame.midY))
+
+        XCTAssertFalse(entry.isSelected)
+        entryCenter.tap()
+        XCTAssertFalse(entry.isSelected)
+    }
+
+    /// Scrolls the page a little, which shows the index rail, and runs `railActions` before it can hide again.
+    private func withTheIndexRailShown(_ railActions: @escaping () -> Void) {
+        performWithoutWaitingForTheAppToIdle {
+            self.app.swipeUp(velocity: .slow)
+            railActions()
         }
     }
 
-    @MainActor
-    private static func staticTextFrames(in snapshot: XCUIElementSnapshot) -> [CGRect] {
-        let ownFrames: [CGRect] = snapshot.elementType == .staticText ? [snapshot.frame] : []
-        let childFrames: [CGRect] = snapshot.children.flatMap { child in staticTextFrames(in: child) }
+    /// Synthesizes each event of `actions` as soon as it is reached, without waiting for scrolling or animation to finish.
+    private func performWithoutWaitingForTheAppToIdle(_ actions: @escaping () -> Void) {
+        typealias PerformWithInteractionOptions = @convention(c) (AnyObject, Selector, UInt, @convention(block) () -> Void) -> Void
 
-        return ownFrames + childFrames
+        /* A private XCUIApplication function; no public API skips the wait for the app to idle. */
+        let selector: Selector = NSSelectorFromString("_performWithInteractionOptions:block:")
+        let implementation: IMP = app.method(for: selector)
+        let performWithInteractionOptions: PerformWithInteractionOptions = unsafeBitCast(implementation, to: PerformWithInteractionOptions.self)
+
+        performWithInteractionOptions(app, selector, Self.skipQuiescenceInteractionOptions, actions)
     }
 
     private func scrollUntilHittable(_ element: XCUIElement) {
