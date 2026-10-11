@@ -87,9 +87,70 @@
     line-height: var(--type-line-height-prose);
 }
 
-.grammar-note h3 {
+.grammar-note .unit-item-header {
     padding-bottom: var(--space-xs);
     border-bottom: var(--border-rule);
+}
+
+.unit-item {
+    scroll-margin-top: var(--space-md);
+}
+
+// Focused only as the destination of an index jump, which needs no mark of its own.
+.unit-item:focus {
+    outline: none;
+}
+
+.unit-item-header {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+/* The index sits just outside the page column when the margin has room for it, else at the viewport edge with
+   the page's right padding widened to keep it off the content. */
+main:has(.unit-item-index) {
+    padding-right: max(var(--space-md), calc(var(--size-index-entry) + var(--space-xs) - max(0px, (100% - var(--width-page)) / 2)));
+}
+
+.unit-item-index {
+    position: fixed;
+    top: 50%;
+    right: max(0px, calc((100% - var(--width-page)) / 2 - var(--size-index-entry)));
+    transform: translateY(-50%);
+    z-index: var(--layer-floating);
+}
+
+.unit-item-index ol {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-paper);
+    touch-action: none;
+    user-select: none;
+}
+
+.unit-item-index button {
+    width: var(--size-index-entry);
+    height: var(--size-index-entry);
+    padding: 0;
+    border: none;
+    border-right: var(--border-width-hairline) solid transparent;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: var(--type-size-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-muted);
+}
+
+// The rule beside an entry marks only the current one, so hover leaves it off.
+.unit-item-index button:hover:not([aria-current]),
+.unit-item-index button:focus-visible:not([aria-current]) {
+    border-right-color: transparent;
+}
+
+.unit-item-index button[aria-current] {
+    color: var(--color-accent-active);
+    border-right-color: var(--color-accent-active);
 }
 
 ul.vocabulary {
