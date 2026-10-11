@@ -13,9 +13,11 @@ struct MicroLabel: View {
 }
 
 struct HairlineRule: View {
+    var color: Color = Color.rule
+
     var body: some View {
         Rectangle()
-            .fill(Color.rule)
+            .fill(color)
             .frame(height: .hairline)
     }
 }

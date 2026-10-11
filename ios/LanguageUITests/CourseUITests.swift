@@ -14,6 +14,10 @@ final class CourseUITests: XCTestCase {
     static let firstUnitId: String = "a1-02-sounds-alphabet"
     static let firstUnitLabelPrefix: String = "A1.1."
     static let jumpedNoteNumber: Int = 4
+    static let groupedTableUnitId: String = "a1-00-how-portuguese-works"
+    static let groupedTableNoteTitle: String = "Gender, number and agreement"
+    static let stackedTableUnitId: String = "a1-09-shopping-colors-prices"
+    static let stackedTableNoteTitle: String = "Demonstratives: este, esse, aquele"
     static let playedButtonIndexes: [Int] = [0, 0, 1, 2]
     static let clipPlaybackAllowance: TimeInterval = 3
     /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
@@ -273,6 +277,39 @@ final class CourseUITests: XCTestCase {
         saveScreenshot("18-unit-item-index-drag")
     }
 
+    @MainActor
+    func testPrinciplesTablesAreGroupedByTheirFirstColumnAtCompactWidth() throws {
+        let (noteNumber, table): (Int, [String: Any]) = try Self.readGrammarTable(unitId: Self.groupedTableUnitId, noteTitle: Self.groupedTableNoteTitle)
+        let headers: [String] = table["headers"] as? [String] ?? []
+        let firstRow: [String] = (table["rows"] as? [[String]] ?? []).first ?? []
+
+        openPrinciplesNote(unitId: Self.groupedTableUnitId, noteNumber: noteNumber)
+
+        let firstHeading: XCUIElement = app.staticTexts.matching(NSPredicate(format: "identifier == %@ AND label == %@", "grouped-table-heading", firstRow[0])).firstMatch
+
+        XCTAssertTrue(firstHeading.waitForExistence(timeout: 5))
+        scrollUntilHittable(firstHeading)
+        XCTAssertTrue(app.staticTexts[headers[0].uppercased()].exists)
+        XCTAssertTrue(groupedTableRow(headers: Array(headers.dropFirst()), cells: Array(firstRow.dropFirst())).isHittable)
+        saveScreenshot("19-grouped-table")
+    }
+
+    @MainActor
+    func testPrinciplesTablesWithoutARepeatedFirstColumnAreStackedAtCompactWidth() throws {
+        let (noteNumber, table): (Int, [String: Any]) = try Self.readGrammarTable(unitId: Self.stackedTableUnitId, noteTitle: Self.stackedTableNoteTitle)
+        let headers: [String] = table["headers"] as? [String] ?? []
+        let firstRow: [String] = (table["rows"] as? [[String]] ?? []).first ?? []
+
+        openPrinciplesNote(unitId: Self.stackedTableUnitId, noteNumber: noteNumber)
+
+        let firstTableRow: XCUIElement = groupedTableRow(headers: headers, cells: firstRow)
+
+        XCTAssertTrue(firstTableRow.waitForExistence(timeout: 5))
+        scrollUntilHittable(firstTableRow)
+        XCTAssertEqual(app.staticTexts.matching(identifier: "grouped-table-heading").count, 0)
+        saveScreenshot("20-stacked-table")
+    }
+
     // MARK: - Choosing the course
 
     /// Starts the app again with a cache of its own and neither the origin nor the static repository reachable.
@@ -389,6 +426,33 @@ final class CourseUITests: XCTestCase {
         let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [gone], timeout: timeout)
 
         XCTAssertEqual(waitResult, .completed)
+    }
+
+    // MARK: - Grammar tables
+
+    private func openPrinciplesNote(unitId: String, noteNumber: Int) {
+        openUnit(unitId)
+        app.buttons["tab-grammar"].tap()
+        XCTAssertTrue(railEntry(noteNumber).waitForExistence(timeout: 5))
+        railEntry(noteNumber).tap()
+    }
+
+    /// The row of a grouped or stacked table whose spoken text starts with its lead and ends with its last cell, each after its header.
+    private func groupedTableRow(headers: [String], cells: [String]) -> XCUIElement {
+        let leadPair: String = "\(headers.first ?? ""): \(cells.first ?? "")"
+        let lastPair: String = "\(headers.last ?? ""): \(cells.last ?? "")"
+        let predicate: NSPredicate = NSPredicate(format: "identifier == %@ AND label BEGINSWITH %@ AND label CONTAINS %@", "grouped-table-row", leadPair, lastPair)
+
+        return app.descendants(matching: .any).matching(predicate).firstMatch
+    }
+
+    /// The note titled `noteTitle`, numbered from 1, and its table.
+    private static func readGrammarTable(unitId: String, noteTitle: String) throws -> (Int, [String: Any]) {
+        let notes: [[String: Any]] = try readUnit(unitId)["grammar"] as? [[String: Any]] ?? []
+        let noteIndex: Int = try XCTUnwrap(notes.firstIndex { note in note["title"] as? String == noteTitle })
+        let table: [String: Any] = try XCTUnwrap(notes[noteIndex]["table"] as? [String: Any])
+
+        return (noteIndex + 1, table)
     }
 
     // MARK: - The box index rail

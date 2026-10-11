@@ -24,6 +24,7 @@ extension CGFloat {
     static let floatingTipMaximumWidth: CGFloat = 320
     static let unitItemIndexRailWidth: CGFloat = 28
     static let unitItemIndexEntryMaximumHeight: CGFloat = 32
+    static let tableFieldLabelWidth: CGFloat = 96
 }
 
 /* The web's type scale, one or two points larger for a phone's reading distance. */
