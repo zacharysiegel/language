@@ -6,6 +6,7 @@ pub mod course_validation;
 pub mod curriculum_model;
 pub mod language_names;
 pub mod target_language_rules;
+pub mod unit_item_label;
 
 pub use course_clips::*;
 pub use course_identity::*;
@@ -14,3 +15,4 @@ pub use course_outline::*;
 pub use course_validation::*;
 pub use curriculum_model::*;
 pub use language_names::*;
+pub use unit_item_label::*;
