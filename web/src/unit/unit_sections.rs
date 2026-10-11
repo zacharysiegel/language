@@ -191,10 +191,12 @@ fn GrammarNoteView(note: GrammarNote) -> impl IntoView {
             .collect();
 
         view! {
-            <table class="grid paradigm">
-                <thead><tr>{header_cells}</tr></thead>
-                <tbody>{body_rows}</tbody>
-            </table>
+            <div class="table-scroll">
+                <table class="grid paradigm">
+                    <thead><tr>{header_cells}</tr></thead>
+                    <tbody>{body_rows}</tbody>
+                </table>
+            </div>
         }
     });
     let examples: Vec<_> = note.examples.iter().map(|example| view! { <PhraseRow pair=example.clone() /> }).collect();

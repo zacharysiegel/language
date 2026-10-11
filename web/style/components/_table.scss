@@ -4,6 +4,11 @@ table.grid {
     font-size: var(--type-size-data);
 }
 
+// A table wider than its column scrolls within it, so the page itself stays as wide as the viewport.
+.table-scroll {
+    overflow-x: auto;
+}
+
 table.grid th {
     font-size: var(--type-size-label);
     font-weight: 600;
