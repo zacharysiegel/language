@@ -1,8 +1,16 @@
 # Response headers for the Cloudflare Workers Assets deploy. The edge reads this file out of the deployed asset
 # directory and applies its rules; wrangler never uploads it as an asset.
+#
+# A path with no rule keeps the edge's default `Cache-Control: public, max-age=0, must-revalidate` and an ETag,
+# which is what index.html needs: a stable name served at every route, with bytes that change every build.
 
 /discovery
   # Extensionless, so the edge would send no Content-Type. One hour bounds how long a client keeps using a
   # superseded repository base after this document is redeployed.
   Content-Type: application/json
   Cache-Control: public, max-age=3600
+
+/pkg/*
+  # Immutable is only correct while every file name here carries a content hash, which
+  # ./scripts/build/verify-site-tree.sh checks before a deploy.
+  Cache-Control: public, max-age=31536000, immutable

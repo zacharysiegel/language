@@ -42,7 +42,7 @@ Every command that writes R2 holds a lease for its whole run. If one stops witho
 
 ## Deploying the site
 
-`./scripts/build/deploy-site.sh --build` writes `target/deploy-site/`, the committed discovery document with `repository_base_url` set to https://repository.language.zach.ro (or `LANGUAGE_REPOSITORY_BASE_URL`) and `web/static/_headers`, and deploys it with `npx wrangler deploy` to Cloudflare Workers Assets at https://language.zach.ro (`web/wrangler.toml`). It needs `jq` and Node; authenticate once with `npx wrangler login`. `--dry-run` stops before uploading.
+`./scripts/build/deploy-site.sh --build` writes `target/deploy-site/` with `./scripts/build/build-site.sh`: a release build with content-hashed file names, the static shell (`index.html`, written by `target/release/web prerender`) that every route serves and the client renders over, `web/static` (the embedded bundle and `_headers` included), and the committed discovery document with `repository_base_url` set to https://repository.language.zach.ro (or `LANGUAGE_REPOSITORY_BASE_URL`, which is also compiled into the client). `./scripts/build/verify-site-tree.sh` checks the tree, and `npx wrangler deploy` uploads it to Cloudflare Workers Assets at https://language.zach.ro (`web/wrangler.toml`). The build leaves `target/site`, which `cargo leptos watch` serves, alone. It needs `cargo-leptos`, `jq` and Node; authenticate once with `npx wrangler login`. `--dry-run` stops before uploading.
 
 ## Releasing the apps
 

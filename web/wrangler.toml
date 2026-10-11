@@ -9,3 +9,6 @@ routes = [
 [assets]
 # Resolved relative to this file.
 directory = "../target/deploy-site"
+# A path that matches no file is answered with index.html at 200, so a deep link reaches the client's router. A
+# fetch for a missing file under /embedded gets the same document.
+not_found_handling = "single-page-application"

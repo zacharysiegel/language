@@ -82,7 +82,7 @@ clients: /discovery -> course-index.json -> course list; opening a course -> its
 
 - Local (the Mac mini): `cargo leptos serve --release` (or `serve.sh` for development) serves the app and the committed `web/static/discovery` at `/discovery`; `repository_server` (started by `serve.sh`) serves `build/repository/` at http://127.0.0.1:3002, the address that document names, with the repository's headers and cross-origin reads allowed. Nothing else is needed.
 - R2: the bucket, token and public domain are set up by hand in the Cloudflare dashboard, as for Eafora. `course_builder set-artifact-cors` applies `tools/course_builder/r2-cors.json` to the bucket (the token needs bucket admin permission), then publish with `cloudflare-r2`. The bucket's public domain is https://repository.language.zach.ro.
-- Site: `./scripts/build/deploy-site.sh` deploys `target/deploy-site/`, the committed discovery document rewritten to name https://repository.language.zach.ro and `web/static/_headers`, to Cloudflare Workers Assets at https://language.zach.ro, as Eafora deploys `app.eafora.org`.
+- Site: `./scripts/build/deploy-site.sh` deploys `target/deploy-site/` to Cloudflare Workers Assets at https://language.zach.ro, as Eafora deploys `app.eafora.org`: a release build of the app, one static shell for every route (any path that is not a file is answered with `index.html`), `web/static` and the committed discovery document rewritten to name https://repository.language.zach.ro, which is also compiled into the client as its static repository. Over the static shell the client renders from scratch; over the dev server's render it hydrates.
 
 ## Deviations from the original proposal
 
@@ -92,7 +92,7 @@ clients: /discovery -> course-index.json -> course list; opening a course -> its
 - Publication labels are `<date>+<city>` rather than `<date>+<Nobel laureate>`, unique within a course rather than globally, and checked against the course's local bundles, its publications in the local repository and the embedded bundle, and, at publish, the target's publications of the course, since there is no database.
 - The CORS policy is applied through the S3 API by `course_builder set-artifact-cors` rather than by a `wrangler` script.
 - `build` synthesizes; there is no separate `synthesize` command.
-- The deployed site holds the discovery document and not the app, which is not prerendered.
+- The deployed site serves one static shell at every route rather than a prerendered document per route, since a page's content comes from the course data the client loads.
 - The local repository is `build/repository/`, served by its own server, rather than `web/static/repository/` served with the app's static files: cargo-leptos copies the whole static directory again on every change in it, and the repository holds every recording.
 - The embedded bundle holds every shard and no recordings, rather than three foundation units.
 - The repository trait reads objects with their entity tags, writes conditionally, lists objects with their upload times and deletes, which Eafora's does not, for resumable publishing, retention and the repository lock.
