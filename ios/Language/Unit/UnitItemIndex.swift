@@ -124,8 +124,7 @@ struct UnitItemIndexRail: View {
                     entry(itemNumber: itemIndex + 1, itemLabel: itemLabel, height: entryHeight)
                 }
             }
-            .background(Color.paper)
-            .overlay(Rectangle().stroke(Color.rule, lineWidth: .hairline))
+            .shadowedBox(shadowOffset: .smallBoxShadowOffset)
             .contentShape(Rectangle())
             .highPriorityGesture(jumpGesture(entryHeight: entryHeight))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -176,10 +175,11 @@ struct UnitItemIndexRail: View {
             onJump(itemNumber)
         } label: {
             Text("\(itemNumber)")
-                .font(.labelText)
-                .monospacedDigit()
-                .foregroundStyle(isCurrent ? Color.accentActive : Color.inkMuted)
+                .font(.indexEntryText)
+                .fontWeight(isCurrent ? .bold : .regular)
+                .foregroundStyle(isCurrent ? Color.ink : Color.inkMuted)
                 .frame(width: .unitItemIndexRailWidth, height: height)
+                .background(isCurrent ? Color.accentTint : Color.clear)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Go to \(itemNoun) \(itemLabel)")
