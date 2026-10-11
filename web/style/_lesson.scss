@@ -107,32 +107,31 @@
     gap: var(--space-xs);
 }
 
-/* The index sits just outside the page column when the margin has room for it, else over the content at the
-   viewport edge. It takes no layout space and shows only while it is in use; a hidden index stays focusable. */
+/* The index sits just outside the page column when the margin has room for it, else at the viewport edge with
+   the page's right padding widened to keep it off the content. */
+main:has(.unit-item-index) {
+    padding-right: max(var(--space-md), calc(var(--size-index-entry) + var(--space-xs) - max(0px, (100% - var(--width-page)) / 2)));
+}
+
 .unit-item-index {
     position: fixed;
     top: 50%;
     right: max(0px, calc((100% - var(--width-page)) / 2 - var(--size-index-entry)));
     transform: translateY(-50%);
     z-index: var(--layer-floating);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--duration-fade);
-}
-
-.unit-item-index.shown,
-.unit-item-index:focus-within {
-    opacity: 1;
-    pointer-events: auto;
 }
 
 .unit-item-index ol {
     display: flex;
     flex-direction: column;
-    border: var(--border-rule);
     background: var(--color-paper);
     touch-action: none;
     user-select: none;
+}
+
+/* A list item would otherwise take the page's line height, taller than its entry. */
+.unit-item-index li {
+    display: flex;
 }
 
 .unit-item-index button {
