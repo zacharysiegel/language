@@ -6,7 +6,7 @@ use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
 use crate::platform::AudioClip;
 use crate::practice::ExerciseSession;
 use crate::progress_state::{ProgressStore, use_progress_store};
-use crate::unit::{UnitItemArticle, UnitItemIndex, UnitItemKind, unit_item_index};
+use crate::unit::{GrammarTableView, UnitItemArticle, UnitItemIndex, UnitItemKind, unit_item_index};
 
 pub fn paragraphs(text: &str) -> Vec<impl IntoView + use<>> {
     text.split("\n\n")
@@ -181,27 +181,7 @@ pub fn DialoguesSection(unit: Unit) -> impl IntoView {
 
 #[component]
 fn GrammarNoteView(note: GrammarNote, label: String) -> impl IntoView {
-    let table = note.table.clone().map(|table| {
-        let header_cells: Vec<_> = table.headers.iter().map(|header| view! { <th>{header.clone()}</th> }).collect();
-        let body_rows: Vec<_> = table
-            .rows
-            .iter()
-            .map(|row| {
-                let cells: Vec<_> = row.iter().map(|cell| view! { <td>{cell.clone()}</td> }).collect();
-
-                view! { <tr>{cells}</tr> }
-            })
-            .collect();
-
-        view! {
-            <div class="table-scroll">
-                <table class="grid paradigm">
-                    <thead><tr>{header_cells}</tr></thead>
-                    <tbody>{body_rows}</tbody>
-                </table>
-            </div>
-        }
-    });
+    let table = note.table.clone().map(|table| view! { <GrammarTableView table /> });
     let examples: Vec<_> = note.examples.iter().map(|example| view! { <PhraseRow pair=example.clone() /> }).collect();
 
     view! {

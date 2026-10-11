@@ -1,3 +1,5 @@
+@use "../tokens" as *;
+
 table.grid {
     width: 100%;
     border-collapse: collapse;
@@ -34,4 +36,72 @@ table.grid.paradigm td:first-child {
 // A figure or reference reads as one token, so it never breaks across lines.
 table.grid td.numeric {
     white-space: nowrap;
+}
+
+// A narrow screen lays a table out as labelled rows instead.
+.grouped-table {
+    display: none;
+    font-size: var(--type-size-data);
+}
+
+@media (max-width: $breakpoint-narrow) {
+    .table-scroll {
+        display: none;
+    }
+
+    .grouped-table {
+        display: block;
+    }
+}
+
+.grouped-table-key {
+    display: flex;
+    flex-direction: column;
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+    padding-bottom: var(--space-xs);
+    border-bottom: var(--border-ink);
+}
+
+.grouped-table-group + .grouped-table-group {
+    margin-top: var(--space-sm);
+}
+
+// A heading is a cell of the table, often Portuguese, so it keeps its case.
+.grouped-table-heading {
+    padding: var(--space-sm) 0 var(--space-xs);
+    border-bottom: var(--border-ink);
+}
+
+.grouped-table-row {
+    padding: var(--space-sm) 0;
+    border-bottom: var(--border-rule);
+}
+
+.grouped-table-lead {
+    font-weight: 600;
+}
+
+.grouped-table-field {
+    display: flex;
+    align-items: baseline;
+    gap: var(--space-sm);
+    margin-top: var(--space-xs);
+}
+
+.grouped-table-field dt {
+    flex: 0 0 var(--width-field-label);
+    font-size: var(--type-size-label);
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-ink-muted);
+}
+
+.grouped-table-field dd {
+    min-width: 0;
+    overflow-wrap: anywhere;
 }
