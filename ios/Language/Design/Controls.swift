@@ -169,6 +169,8 @@ struct PanelModifier: ViewModifier {
 
 /// A paper box with an ink outline and a solid ink block offset down and to the right behind it.
 struct ShadowedBoxModifier: ViewModifier {
+    let shadowOffset: CGFloat
+
     func body(content: Content) -> some View {
         content
             .background(Color.paper)
@@ -176,7 +178,7 @@ struct ShadowedBoxModifier: ViewModifier {
             .background(
                 Rectangle()
                     .fill(Color.ink)
-                    .offset(x: .boxShadowOffset, y: .boxShadowOffset),
+                    .offset(x: shadowOffset, y: shadowOffset),
             )
     }
 }
@@ -186,8 +188,8 @@ extension View {
         modifier(PanelModifier())
     }
 
-    func shadowedBox() -> some View {
-        modifier(ShadowedBoxModifier())
+    func shadowedBox(shadowOffset: CGFloat = .boxShadowOffset) -> some View {
+        modifier(ShadowedBoxModifier(shadowOffset: shadowOffset))
     }
 
     /// Keeps prose to a readable measure on wide screens, centred.

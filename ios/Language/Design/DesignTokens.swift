@@ -7,6 +7,7 @@ extension Color {
     static let accentHover = Color(red: 0.71, green: 0.0, blue: 0.0) // #b50000
     static let accentLink = Color(red: 0.0, green: 0.314, blue: 1.0) // #0050ff
     static let rule = Color(white: 0.831) // #d4d4d4
+    static let accentTint = Color(red: 0.984, green: 0.902, blue: 0.902) // #fbe6e6
     static let inkMuted = Color(white: 0.333) // #555555
     static let goodText = Color(red: 0.0, green: 0.42, blue: 0.13)
 }
@@ -21,9 +22,10 @@ extension CGFloat {
     static let buttonIconSize: CGFloat = 30
     static let measure: CGFloat = 640
     static let boxShadowOffset: CGFloat = 4
+    static let smallBoxShadowOffset: CGFloat = 2
     static let floatingTipMaximumWidth: CGFloat = 320
-    static let unitItemIndexRailWidth: CGFloat = 28
-    static let unitItemIndexEntryMaximumHeight: CGFloat = 32
+    static let unitItemIndexRailWidth: CGFloat = 20
+    static let unitItemIndexEntryMaximumHeight: CGFloat = 21
     static let tableFieldLabelWidth: CGFloat = 96
 }
 
@@ -33,6 +35,7 @@ extension Font {
     static let dataText = Font.system(size: 14).monospacedDigit()
     static let labelText = Font.system(size: 11, weight: .semibold)
     static let captionText = Font.system(size: 12)
+    static let indexEntryText = Font.system(size: 10).monospacedDigit()
     static let titleText = Font.system(size: 17, weight: .semibold)
     static let headingText = Font.system(size: 22, weight: .semibold)
     static let figureText = Font.system(size: 38, weight: .semibold).monospacedDigit()
