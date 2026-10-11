@@ -142,10 +142,22 @@ main:has(.unit-item-index) {
     color: var(--color-ink-muted);
 }
 
-// The rule beside an entry marks only the current one, so hover leaves it off.
+/* Red and the rule mark only the current entry. A touch screen keeps :hover on the last entry tapped, so only a
+   pointer that can hover darkens an entry. */
 .unit-item-index button:hover:not([aria-current]),
 .unit-item-index button:focus-visible:not([aria-current]) {
     border-right-color: transparent;
+    color: var(--color-ink-muted);
+}
+
+@media (hover: hover) {
+    .unit-item-index button:hover:not([aria-current]) {
+        color: var(--color-ink);
+    }
+}
+
+.unit-item-index button:focus-visible:not([aria-current]) {
+    color: var(--color-ink);
 }
 
 .unit-item-index button[aria-current] {
