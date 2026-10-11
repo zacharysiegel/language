@@ -92,6 +92,7 @@ Rules for each section:
 - `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `part_of_speech` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `target` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `target` value within the unit.
 - `dialogues`: 2 to 3 dialogues, each with 6 to 14 lines, 2 to 4 distinct speakers, speaker names consistent within a dialogue and `gender` of `f` or `m` on every line matching the speaker. Dialogues must use the unit's vocabulary and grammar focus in realistic situations. A dialogue id must be unique within the unit (`d1`, `d2`, ...).
 - `grammar`: 2 to 4 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, Brazilian usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
+- Table headers on a phone: a narrow screen shows a table as labelled rows. The first column leads each row (or, where consecutive rows repeat their first cell, that cell becomes a group heading and the second column leads), and every later header becomes an uppercase label in a column about 11 letters wide beside its value. Keep each of those headers to one line: a word or two that names the column (`Sound`, `English sound`, `Literal`, `Natural`, `Syllables`, `Default`, `Why`, `Example`). Two lines are acceptable only where one cannot carry the meaning (`Masculine plural`, `você, ele, ela, a gente`); the validator warns at two lines and rejects more. Put explanations of a convention in the note's explanation, not in a header. Give the same column concept the same header in every unit.
 - `culture`: one note of at least 200 characters.
 - `readings`: optional at A1 and A2 (omit the key or use `[]`), required at B1 and B2 (at least 1; 2 for B2 units). A reading has at least 2 paragraphs of real connected text at the level, and at least 2 (ideally 3 to 4) `multiple_choice` comprehension questions.
 - `exercises`: at least 22 in total, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30 exercises. Cover the whole unit: vocabulary, the grammar notes, and the dialogues.
@@ -131,7 +132,7 @@ The learner types what they hear. Keep it short (3 to 10 words) and unambiguous 
 ```json
 {"type": "match", "prompt": "Match the Portuguese with the English", "pairs": [{"target": "o pai", "source": "the father"}, {"target": "a mãe", "source": "the mother"}, {"target": "o irmão", "source": "the brother"}, {"target": "a irmã", "source": "the sister"}]}
 ```
-4 to 6 pairs, all unambiguous.
+4 to 6 pairs, all unambiguous. A phone shows the two sides in two narrow columns, so keep each side to a short phrase (about 35 characters at most); a full sentence of explanation belongs in `explanation`.
 
 ## Quality bar
 
