@@ -111,7 +111,7 @@ struct UnitItemIndexRail: View {
     let onJump: (Int) -> Void
 
     @State private var isShown: Bool = false
-    @State private var draggedItemNumber: Int?
+    @GestureState private var draggedItemNumber: Int?
     @AccessibilityFocusState private var accessibilityFocusedItemNumber: Int?
     @FocusState private var keyboardFocusedItemNumber: Int?
 
@@ -138,6 +138,13 @@ struct UnitItemIndexRail: View {
             await updateShown(isInUse: isInUse())
         }
         .sensoryFeedback(.impact(weight: .light), trigger: draggedItemNumber) { _, newItemNumber in newItemNumber != nil }
+        .onChange(of: draggedItemNumber) { _, newItemNumber in
+            guard let newItemNumber else {
+                return
+            }
+
+            onJump(newItemNumber)
+        }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(itemNoun.capitalized) index")
         .accessibilityIdentifier("unit-item-index")
@@ -188,16 +195,8 @@ struct UnitItemIndexRail: View {
     /* A drag of no distance is a tap, so one gesture serves both. */
     private func jumpGesture(entryHeight: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
-            .onChanged { drag in
-                let itemNumber: Int = itemNumber(atY: drag.location.y, entryHeight: entryHeight)
-
-                if itemNumber != draggedItemNumber {
-                    draggedItemNumber = itemNumber
-                    onJump(itemNumber)
-                }
-            }
-            .onEnded { _ in
-                draggedItemNumber = nil
+            .updating($draggedItemNumber) { drag, draggedItemNumber, _ in
+                draggedItemNumber = itemNumber(atY: drag.location.y, entryHeight: entryHeight)
             }
     }
 
