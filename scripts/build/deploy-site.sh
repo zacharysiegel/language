@@ -9,7 +9,7 @@
 #   ./scripts/build/deploy-site.sh --dry-run
 #
 # Deploys whatever is already in target/deploy-site; pass --build to produce it first. Either way the tree is
-# verified before anything is uploaded.
+# verified, and its embedded bundle checked against Cloudflare R2, before anything is uploaded.
 
 set -euo pipefail
 
@@ -44,6 +44,9 @@ if [[ "${RUN_BUILD}" == true ]]; then
 fi
 
 "${SCRIPT_DIR}/verify-site-tree.sh" "${SITE_DIR}"
+
+# The site ships the embedded bundle, which must name only publications Cloudflare R2 serves.
+"${REPO_ROOT}/scripts/release/check-embedded-bundle.sh"
 
 printf '\ndeploying %s\n' "${SITE_DIR}"
 cd "${WEB_DIR}"
