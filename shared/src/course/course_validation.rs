@@ -22,6 +22,8 @@ const MINIMUM_READING_QUESTIONS: usize = 2;
 const MINIMUM_EXERCISES: usize = 22;
 const MAXIMUM_SPOKEN_CHARACTERS: usize = 220;
 const MAXIMUM_ORDER_WORDS_DISTRACTORS: usize = 3;
+// A phone shows the two sides of a match in two narrow columns.
+const MAXIMUM_MATCH_SIDE_CHARACTERS: usize = 35;
 
 // A line of the phone label column in half letter widths, measured at the narrower iOS width.
 const TABLE_FIELD_LABEL_LINE_HALF_WIDTHS: usize = 23;
@@ -265,7 +267,22 @@ fn check_match(collector: &mut IssueCollector, location: &str, exercise: &MatchE
     }
 
     for (pair_index, pair) in exercise.pairs.iter().enumerate() {
-        collector.check_pair(&format!("{location}.pairs[{pair_index}]"), pair);
+        let pair_location: String = format!("{location}.pairs[{pair_index}]");
+
+        collector.check_pair(&pair_location, pair);
+        check_match_side_length(collector, &format!("{pair_location}.target"), &pair.target);
+        check_match_side_length(collector, &format!("{pair_location}.source"), &pair.source);
+    }
+}
+
+fn check_match_side_length(collector: &mut IssueCollector, location: &str, side: &str) {
+    let character_count: usize = side.chars().count();
+
+    if character_count > MAXIMUM_MATCH_SIDE_CHARACTERS {
+        collector.error(
+            location,
+            format!("match side is too long for a phone ({character_count} characters, at most {MAXIMUM_MATCH_SIDE_CHARACTERS})"),
+        );
     }
 }
 
@@ -680,5 +697,24 @@ mod tests {
                 (SeverityKind::Error, "grammar[0].table.headers[3]"),
             ],
         );
+    }
+
+    #[test]
+    fn check_match_side_length_rejects_a_side_longer_than_the_maximum() {
+        let fitting_side: String = "a".repeat(MAXIMUM_MATCH_SIDE_CHARACTERS);
+        let long_side: String = "ã".repeat(MAXIMUM_MATCH_SIDE_CHARACTERS + 1);
+        let mut collector: IssueCollector = IssueCollector {
+            unit_id: "unit",
+            target_language: "pt-BR",
+            issues: Vec::new(),
+        };
+
+        check_match_side_length(&mut collector, "exercises[0].pairs[0].source", &fitting_side);
+        check_match_side_length(&mut collector, "exercises[0].pairs[1].source", &long_side);
+
+        let graded_locations: Vec<(SeverityKind, &str)> =
+            collector.issues.iter().map(|issue| (issue.severity, issue.location.as_str())).collect();
+
+        assert_eq!(graded_locations, vec![(SeverityKind::Error, "exercises[0].pairs[1].source")]);
     }
 }
