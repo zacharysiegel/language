@@ -3,8 +3,8 @@ use std::fmt;
 
 use crate::course::{
     CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
-    ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind,
-    TranslateToTargetExercise, Unit, VocabularyItem, target_language_rules,
+    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair,
+    Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table, target_language_rules,
 };
 
 const MINIMUM_OBJECTIVES: usize = 3;
@@ -22,6 +22,14 @@ const MINIMUM_READING_QUESTIONS: usize = 2;
 const MINIMUM_EXERCISES: usize = 22;
 const MAXIMUM_SPOKEN_CHARACTERS: usize = 220;
 const MAXIMUM_ORDER_WORDS_DISTRACTORS: usize = 3;
+
+// A line of the phone label column in half letter widths, measured at the narrower iOS width.
+const TABLE_FIELD_LABEL_LINE_HALF_WIDTHS: usize = 23;
+const TABLE_FIELD_LABEL_LETTER_HALF_WIDTHS: usize = 2;
+const TABLE_FIELD_LABEL_SPACE_HALF_WIDTHS: usize = 2;
+const TABLE_FIELD_LABEL_NARROW_CHARACTER_HALF_WIDTHS: usize = 1;
+const TABLE_FIELD_LABEL_NARROW_CHARACTERS: &str = "IÍií,.;:!?'()/";
+const TABLE_FIELD_LABEL_MAXIMUM_LINES: usize = 2;
 
 const MINIMUM_EXERCISES_BY_KIND: [(ExerciseKind, usize); 7] = [
     (ExerciseKind::MultipleChoice, 5),
@@ -430,6 +438,67 @@ fn check_grammar_note(collector: &mut IssueCollector, location: &str, note: &Gra
 
         if malformed {
             collector.error(&format!("{location}.table"), "table needs headers and rows as wide as the headers");
+            return;
+        }
+
+        check_table_field_labels(collector, &format!("{location}.table"), table);
+    }
+}
+
+/// The lines a header takes as the label beside a value in a phone layout, wrapping between words.
+fn table_field_label_line_count(header: &str) -> usize {
+    let mut line_count: usize = 0;
+    let mut current_line_half_widths: usize = 0;
+
+    for word in header.split_whitespace() {
+        let word_half_widths: usize = table_field_label_half_widths(word);
+        let widened_line_half_widths: usize = current_line_half_widths + TABLE_FIELD_LABEL_SPACE_HALF_WIDTHS + word_half_widths;
+
+        if line_count > 0 && widened_line_half_widths <= TABLE_FIELD_LABEL_LINE_HALF_WIDTHS {
+            current_line_half_widths = widened_line_half_widths;
+            continue;
+        }
+
+        // A word wider than a line overflows or breaks, so it counts every line it fills.
+        let word_line_count: usize = word_half_widths.div_ceil(TABLE_FIELD_LABEL_LINE_HALF_WIDTHS);
+
+        line_count += word_line_count;
+        current_line_half_widths = word_half_widths - (word_line_count - 1) * TABLE_FIELD_LABEL_LINE_HALF_WIDTHS;
+    }
+
+    line_count
+}
+
+fn table_field_label_half_widths(word: &str) -> usize {
+    word.chars()
+        .map(|character| {
+            if TABLE_FIELD_LABEL_NARROW_CHARACTERS.contains(character) {
+                TABLE_FIELD_LABEL_NARROW_CHARACTER_HALF_WIDTHS
+            } else {
+                TABLE_FIELD_LABEL_LETTER_HALF_WIDTHS
+            }
+        })
+        .sum()
+}
+
+/// Checks the headers set as labels beside their values on a phone; the group and lead headers span the full width.
+fn check_table_field_labels(collector: &mut IssueCollector, location: &str, table: &GrammarTable) {
+    let lead_column: usize = match grouped_table::grouped_table(table) {
+        GroupedTable::Grouped { .. } => 1,
+        GroupedTable::Stacked { .. } => 0,
+    };
+
+    for (column, header) in table.headers.iter().enumerate().skip(lead_column + 1) {
+        let line_count: usize = table_field_label_line_count(header);
+        let header_location: String = format!("{location}.headers[{column}]");
+
+        if line_count > TABLE_FIELD_LABEL_MAXIMUM_LINES {
+            collector.error(
+                &header_location,
+                format!("header \"{header}\" takes {line_count} lines beside its value on a phone (at most {TABLE_FIELD_LABEL_MAXIMUM_LINES})"),
+            );
+        } else if line_count > 1 {
+            collector.warning(&header_location, format!("header \"{header}\" takes {line_count} lines beside its value on a phone"));
         }
     }
 }
@@ -555,4 +624,61 @@ pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, 
     check_exercises(&mut collector, &unit.exercises);
 
     collector.issues
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn table_field_label_line_count_wraps_between_words_within_a_line() {
+        assert_eq!(table_field_label_line_count("Sound"), 1);
+        assert_eq!(table_field_label_line_count("Accent when"), 1);
+        assert_eq!(table_field_label_line_count("English sound"), 2);
+        assert_eq!(table_field_label_line_count("você, ele, ela, a gente"), 2);
+        assert_eq!(table_field_label_line_count("Sounds like, for an English speaker"), 4);
+    }
+
+    #[test]
+    fn table_field_label_line_count_counts_narrow_characters_as_half_a_letter() {
+        assert_eq!(table_field_label_line_count("Subjunctive?"), 1);
+        assert_eq!(table_field_label_line_count("Fact (indicative)"), 2);
+    }
+
+    #[test]
+    fn table_field_label_line_count_counts_every_line_a_long_word_fills() {
+        assert_eq!(table_field_label_line_count("Comprehensibility"), 2);
+        assert_eq!(table_field_label_line_count("No commitment (subjunctive)"), 3);
+    }
+
+    #[test]
+    fn check_table_field_labels_skips_the_lead_column_and_grades_by_line_count() {
+        let table: GrammarTable = GrammarTable {
+            headers: vec![
+                "A long lead header that spans the width".to_string(),
+                "Sound".to_string(),
+                "English sound".to_string(),
+                "Sounds like, for an English speaker".to_string(),
+            ],
+            rows: vec![vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]],
+        };
+        let mut collector: IssueCollector = IssueCollector {
+            unit_id: "unit",
+            target_language: "pt-BR",
+            issues: Vec::new(),
+        };
+
+        check_table_field_labels(&mut collector, "grammar[0].table", &table);
+
+        let graded_locations: Vec<(SeverityKind, &str)> =
+            collector.issues.iter().map(|issue| (issue.severity, issue.location.as_str())).collect();
+
+        assert_eq!(
+            graded_locations,
+            vec![
+                (SeverityKind::Warning, "grammar[0].table.headers[2]"),
+                (SeverityKind::Error, "grammar[0].table.headers[3]"),
+            ],
+        );
+    }
 }
