@@ -289,7 +289,8 @@ final class CourseUITests: XCTestCase {
 
         XCTAssertTrue(firstHeading.waitForExistence(timeout: 5))
         scrollUntilHittable(firstHeading)
-        XCTAssertTrue(app.staticTexts[headers[0].uppercased()].exists)
+        XCTAssertTrue(groupedTableKeyLabel(headers[0]).exists)
+        XCTAssertTrue(groupedTableKeyLabel(headers[1]).exists)
         XCTAssertTrue(groupedTableRow(headers: Array(headers.dropFirst()), cells: Array(firstRow.dropFirst())).isHittable)
         saveScreenshot("19-grouped-table")
     }
@@ -307,6 +308,7 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(firstTableRow.waitForExistence(timeout: 5))
         scrollUntilHittable(firstTableRow)
         XCTAssertEqual(app.staticTexts.matching(identifier: "grouped-table-heading").count, 0)
+        XCTAssertTrue(groupedTableKeyLabel(headers[0]).exists)
         saveScreenshot("20-stacked-table")
     }
 
@@ -435,6 +437,10 @@ final class CourseUITests: XCTestCase {
         app.buttons["tab-grammar"].tap()
         XCTAssertTrue(railEntry(noteNumber).waitForExistence(timeout: 5))
         railEntry(noteNumber).tap()
+    }
+
+    private func groupedTableKeyLabel(_ header: String) -> XCUIElement {
+        app.staticTexts.matching(NSPredicate(format: "identifier == %@ AND label == %@", "grouped-table-key", header.uppercased())).firstMatch
     }
 
     /// The row of a grouped or stacked table whose spoken text starts with its lead and ends with its last cell, each after its header.
