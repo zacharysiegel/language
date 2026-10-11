@@ -10,6 +10,10 @@ final class CourseUITests: XCTestCase {
     static let courseId: String = "pt_br.en.foundations"
     static let practicedUnitId: String = "a1-01-greetings-introductions"
     static let readingUnitId: String = "b1-01-present-perfect-participles"
+    /* The unit captioned "A1 · 1". */
+    static let firstUnitId: String = "a1-02-sounds-alphabet"
+    static let firstUnitLabelPrefix: String = "A1.1."
+    static let jumpedNoteNumber: Int = 4
     static let playedButtonIndexes: [Int] = [0, 0, 1, 2]
     static let clipPlaybackAllowance: TimeInterval = 3
     /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
@@ -235,6 +239,40 @@ final class CourseUITests: XCTestCase {
         assertValue(playAllButton, equals: "", timeout: 5)
     }
 
+    @MainActor
+    func testPrinciplesNotesAreLabelledAndTheIndexRailJumpsToThem() throws {
+        let unit: [String: Any] = try Self.readUnit(Self.firstUnitId)
+        let noteCount: Int = (unit["grammar"] as? [[String: Any]] ?? []).count
+
+        openUnit(Self.firstUnitId)
+        app.buttons["tab-grammar"].tap()
+
+        let itemLabels: XCUIElementQuery = app.staticTexts.matching(identifier: "unit-item-label")
+
+        XCTAssertTrue(itemLabels.firstMatch.waitForExistence(timeout: 5))
+        XCTAssertEqual(itemLabels.count, noteCount)
+        XCTAssertEqual(itemLabels.element(boundBy: 0).label, "\(Self.firstUnitLabelPrefix)1")
+        XCTAssertEqual(itemLabels.element(boundBy: 1).label, "\(Self.firstUnitLabelPrefix)2")
+        assertSelected(railEntry(1))
+        try assertNothingReachesUnder(railEntry(1))
+        saveScreenshot("16-unit-item-index-rail")
+
+        let jumpedLabel: XCUIElement = itemLabels.element(boundBy: Self.jumpedNoteNumber - 1)
+
+        XCTAssertFalse(jumpedLabel.isHittable)
+        XCTAssertEqual(railEntry(Self.jumpedNoteNumber).label, "Go to note \(Self.firstUnitLabelPrefix)\(Self.jumpedNoteNumber)")
+        railEntry(Self.jumpedNoteNumber).tap()
+        assertNearTopOfThePage(jumpedLabel)
+        assertSelected(railEntry(Self.jumpedNoteNumber))
+        try assertNothingReachesUnder(railEntry(1))
+        saveScreenshot("17-unit-item-index-jump")
+
+        railEntry(1).press(forDuration: 0.1, thenDragTo: railEntry(noteCount))
+        XCTAssertTrue(itemLabels.element(boundBy: noteCount - 1).isHittable)
+        assertSelected(railEntry(noteCount))
+        saveScreenshot("18-unit-item-index-drag")
+    }
+
     // MARK: - Choosing the course
 
     /// Starts the app again with a cache of its own and neither the origin nor the static repository reachable.
@@ -351,6 +389,44 @@ final class CourseUITests: XCTestCase {
         let waitResult: XCTWaiter.Result = XCTWaiter().wait(for: [gone], timeout: timeout)
 
         XCTAssertEqual(waitResult, .completed)
+    }
+
+    // MARK: - The box index rail
+
+    private func railEntry(_ itemNumber: Int) -> XCUIElement {
+        app.buttons["unit-item-index-\(itemNumber)"]
+    }
+
+    private func assertNearTopOfThePage(_ element: XCUIElement) {
+        let navigationBarBottom: CGFloat = app.navigationBars.firstMatch.frame.maxY
+
+        XCTAssertTrue(element.isHittable)
+        XCTAssertGreaterThanOrEqual(element.frame.minY, navigationBarBottom)
+        XCTAssertLessThan(element.frame.minY, navigationBarBottom + app.frame.height / 4)
+    }
+
+    /// Fails when any text on screen extends to the left edge of the rail or past it.
+    @MainActor
+    private func assertNothingReachesUnder(_ railEntry: XCUIElement) throws {
+        let railLeadingEdge: CGFloat = railEntry.frame.minX
+        let screenFrame: CGRect = app.frame
+        let textFrames: [CGRect] = try Self.staticTextFrames(in: app.snapshot())
+        /* A table cell scrolled out of its sideways scroll view reports a frame past the screen. */
+        let onScreenTextFrames: [CGRect] = textFrames.filter { textFrame in screenFrame.contains(textFrame) && !textFrame.isEmpty }
+
+        XCTAssertFalse(onScreenTextFrames.isEmpty)
+
+        for textFrame in onScreenTextFrames {
+            XCTAssertLessThanOrEqual(textFrame.maxX, railLeadingEdge)
+        }
+    }
+
+    @MainActor
+    private static func staticTextFrames(in snapshot: XCUIElementSnapshot) -> [CGRect] {
+        let ownFrames: [CGRect] = snapshot.elementType == .staticText ? [snapshot.frame] : []
+        let childFrames: [CGRect] = snapshot.children.flatMap { child in staticTextFrames(in: child) }
+
+        return ownFrames + childFrames
     }
 
     private func scrollUntilHittable(_ element: XCUIElement) {

@@ -99,16 +99,19 @@ struct VocabularyRow: View {
 }
 
 struct DialoguesSection: View {
+    let unit: UnitOutlineRecord
     let dialogues: [DialogueRecord]
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
             TranslationToggle()
 
-            ForEach(dialogues, id: \.id) { dialogue in
+            ForEach(Array(dialogues.enumerated()), id: \.element.id) { dialogueIndex, dialogue in
                 let voiceChoice: VoiceChoiceRecord = Self.voiceChoice(dialogue)
+                let itemNumber: Int = dialogueIndex + 1
 
                 VStack(alignment: .leading, spacing: .spaceSm) {
+                    UnitItemLabel(text: unit.itemLabel(itemNumber: itemNumber))
                     Text(dialogue.title).font(.titleText)
                     Text(dialogue.context).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
                     PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target, voiceChoice: voiceChoice) })
@@ -118,6 +121,7 @@ struct DialoguesSection: View {
                     }
                 }
                 .panel()
+                .unitIndexItem(itemNumber: itemNumber)
             }
         }
     }
@@ -128,14 +132,18 @@ struct DialoguesSection: View {
 }
 
 struct GrammarSection: View {
+    let unit: UnitOutlineRecord
     let notes: [GrammarNoteRecord]
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
             TranslationToggle()
 
-            ForEach(Array(notes.enumerated()), id: \.offset) { _, note in
+            ForEach(Array(notes.enumerated()), id: \.offset) { noteIndex, note in
+                let itemNumber: Int = noteIndex + 1
+
                 VStack(alignment: .leading, spacing: .spaceSm) {
+                    UnitItemLabel(text: unit.itemLabel(itemNumber: itemNumber))
                     Text(note.title).font(.titleText)
                     Paragraphs(text: note.explanation)
 
@@ -148,8 +156,20 @@ struct GrammarSection: View {
                     }
                 }
                 .panel()
+                .unitIndexItem(itemNumber: itemNumber)
             }
         }
+    }
+}
+
+/// The `<level>.<unit>.<box>` label at the head of a box of a unit tab.
+struct UnitItemLabel: View {
+    let text: String
+
+    var body: some View {
+        MicroLabel(text: text)
+            .monospacedDigit()
+            .accessibilityIdentifier("unit-item-label")
     }
 }
 
@@ -188,14 +208,18 @@ struct ParadigmTable: View {
 }
 
 struct ReadingsSection: View {
+    let unit: UnitOutlineRecord
     let readings: [ReadingRecord]
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
             TranslationToggle()
 
-            ForEach(readings, id: \.id) { reading in
-                ReadingPanel(reading: reading)
+            ForEach(Array(readings.enumerated()), id: \.element.id) { readingIndex, reading in
+                let itemNumber: Int = readingIndex + 1
+
+                ReadingPanel(reading: reading, itemLabel: unit.itemLabel(itemNumber: itemNumber))
+                    .unitIndexItem(itemNumber: itemNumber)
             }
         }
     }
@@ -203,11 +227,13 @@ struct ReadingsSection: View {
 
 struct ReadingPanel: View {
     let reading: ReadingRecord
+    let itemLabel: String
 
     @State private var questionsOpen: Bool = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
+            UnitItemLabel(text: itemLabel)
             Text(reading.title).font(.titleText)
             PlayAllButton(clips: reading.paragraphs.map { paragraph in AudioClip(clipKey: paragraph.clipKey, text: paragraph.target) })
 
