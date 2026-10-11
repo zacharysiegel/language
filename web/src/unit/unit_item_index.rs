@@ -238,7 +238,7 @@ pub fn UnitItemIndex(item_kind: UnitItemKind, labels: Vec<String>) -> impl IntoV
     });
 
     let start_drag = move |event: PointerEvent| {
-        if event.button() != PRIMARY_POINTER_BUTTON {
+        if event.button() != PRIMARY_POINTER_BUTTON || !event.is_primary() {
             return;
         }
 
@@ -286,7 +286,16 @@ pub fn UnitItemIndex(item_kind: UnitItemKind, labels: Vec<String>) -> impl IntoV
         }
     };
 
-    let end_drag = move |_: PointerEvent| {
+    let end_drag = move |event: PointerEvent| {
+        let RailDragState::Pressed(pointer_id) = presence.drag.get_value()
+        else {
+            return;
+        };
+
+        if pointer_id != event.pointer_id() {
+            return;
+        }
+
         presence.drag.set_value(RailDragState::Idle);
         presence.hide_once_idle();
     };
