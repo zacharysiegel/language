@@ -146,7 +146,7 @@ struct UnitItemIndexRail: View {
         .accessibilityIdentifier("unit-item-index-\(itemNumber)")
         .accessibilityFocused($focusedItemNumber, equals: itemNumber)
         .accessibilityAdjustableAction { direction in
-            adjust(direction)
+            adjust(direction, fromItemNumber: itemNumber)
         }
     }
 
@@ -172,14 +172,14 @@ struct UnitItemIndexRail: View {
         return min(max(itemIndex, 0), itemLabels.count - 1) + 1
     }
 
-    private func adjust(_ direction: AccessibilityAdjustmentDirection) {
+    private func adjust(_ direction: AccessibilityAdjustmentDirection, fromItemNumber startItemNumber: Int) {
         let targetItemNumber: Int
 
         switch direction {
         case .increment:
-            targetItemNumber = min(currentItemNumber + 1, itemLabels.count)
+            targetItemNumber = min(startItemNumber + 1, itemLabels.count)
         case .decrement:
-            targetItemNumber = max(currentItemNumber - 1, 1)
+            targetItemNumber = max(startItemNumber - 1, 1)
         @unknown default:
             return
         }
