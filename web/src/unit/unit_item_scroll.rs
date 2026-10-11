@@ -13,20 +13,36 @@ pub use server::*;
 
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 mod browser {
-    use leptos::prelude::{document, window};
+    use leptos::prelude::{document, request_animation_frame, window};
     use leptos::wasm_bindgen::JsCast;
-    use web_sys::{DomRect, FocusOptions, HtmlCollection, HtmlElement};
+    use web_sys::{
+        CssStyleDeclaration,
+        DomRect,
+        FocusOptions,
+        HtmlCollection,
+        HtmlElement,
+        ScrollBehavior,
+        ScrollIntoViewOptions,
+        ScrollLogicalPosition,
+    };
 
     use super::*;
 
-    /// Scrolls the item's top to the top of the viewport, less the item's scroll margin.
+    const OVERFLOW_PROPERTY: &str = "overflow";
+    const OVERFLOW_HIDDEN: &str = "hidden";
+
+    /// Scrolls the item's top at once to the top of the viewport, less the item's scroll margin, ending a smooth scroll still in motion.
     pub fn jump_to_item(element_id: &str, focus_change: ItemFocusChangeKind) {
         let Some(item) = document().get_element_by_id(element_id)
         else {
             return;
         };
 
-        item.scroll_into_view();
+        let scroll_options: ScrollIntoViewOptions = ScrollIntoViewOptions::new();
+
+        scroll_options.set_behavior(ScrollBehavior::Instant);
+        scroll_options.set_block(ScrollLogicalPosition::Start);
+        item.scroll_into_view_with_scroll_into_view_options(&scroll_options);
 
         if focus_change == ItemFocusChangeKind::KeepFocus {
             return;
@@ -80,6 +96,35 @@ mod browser {
     pub fn capture_pointer(rail: &Element, pointer_id: i32) {
         _ = rail.set_pointer_capture(pointer_id);
     }
+
+    /// Keeps the page from scrolling until a frame has drawn, which ends a fling, and then calls `after_hold`.
+    pub fn hold_page_still(after_hold: impl FnOnce() + 'static) {
+        let Some(root_style) = root_style()
+        else {
+            after_hold();
+            return;
+        };
+
+        let prior_overflow: String = root_style.get_property_value(OVERFLOW_PROPERTY).unwrap_or_default();
+
+        _ = root_style.set_property(OVERFLOW_PROPERTY, OVERFLOW_HIDDEN);
+
+        // The second frame is the first one the compositor draws with the page unscrollable.
+        request_animation_frame(move || {
+            request_animation_frame(move || {
+                after_hold();
+
+                // An empty value removes the declaration, restoring the stylesheet's overflow.
+                _ = root_style.set_property(OVERFLOW_PROPERTY, &prior_overflow);
+            });
+        });
+    }
+
+    fn root_style() -> Option<CssStyleDeclaration> {
+        let root: HtmlElement = document().document_element()?.dyn_into::<HtmlElement>().ok()?;
+
+        Some(root.style())
+    }
 }
 
 #[cfg(not(feature = "hydrate"))] // has no browser APIs to call
@@ -101,4 +146,6 @@ mod server {
     }
 
     pub fn capture_pointer(_rail: &Element, _pointer_id: i32) {}
+
+    pub fn hold_page_still(_after_hold: impl FnOnce() + 'static) {}
 }
