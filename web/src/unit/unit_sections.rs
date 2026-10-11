@@ -6,6 +6,7 @@ use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
 use crate::platform::AudioClip;
 use crate::practice::ExerciseSession;
 use crate::progress_state::{ProgressStore, use_progress_store};
+use crate::unit::{UnitItemArticle, UnitItemIndex, UnitItemKind, unit_item_index};
 
 pub fn paragraphs(text: &str) -> Vec<impl IntoView + use<>> {
     text.split("\n\n")
@@ -127,7 +128,7 @@ pub fn VocabularySection(unit: Unit) -> impl IntoView {
 }
 
 #[component]
-fn DialogueView(dialogue: Dialogue) -> impl IntoView {
+fn DialogueView(dialogue: Dialogue, label: String) -> impl IntoView {
     let voice_choice: VoiceChoiceKind = dialogue.voice_choice();
     let clips: Vec<AudioClip> = dialogue
         .lines
@@ -153,31 +154,33 @@ fn DialogueView(dialogue: Dialogue) -> impl IntoView {
         .collect();
 
     view! {
-        <article class="dialogue panel">
-            <h3>{dialogue.title.clone()}</h3>
+        <UnitItemArticle kind_class="dialogue" label title=dialogue.title.clone()>
             <p class="muted">{dialogue.context.clone()}</p>
             <PlayAllButton clips />
             <ul class="lines">{lines}</ul>
-        </article>
+        </UnitItemArticle>
     }
 }
 
 #[component]
 pub fn DialoguesSection(unit: Unit) -> impl IntoView {
+    let labels: Vec<String> = unit_item_index::unit_item_labels(&unit, unit.dialogues.len());
     let dialogues: Vec<_> = unit
         .dialogues
         .iter()
-        .map(|dialogue| view! { <DialogueView dialogue=dialogue.clone() /> })
+        .zip(labels.iter().cloned())
+        .map(|(dialogue, label)| view! { <DialogueView dialogue=dialogue.clone() label /> })
         .collect();
 
     view! {
         <div class="row"><TranslationToggle /></div>
         {dialogues}
+        <UnitItemIndex item_kind=UnitItemKind::Dialogue labels />
     }
 }
 
 #[component]
-fn GrammarNoteView(note: GrammarNote) -> impl IntoView {
+fn GrammarNoteView(note: GrammarNote, label: String) -> impl IntoView {
     let table = note.table.clone().map(|table| {
         let header_cells: Vec<_> = table.headers.iter().map(|header| view! { <th>{header.clone()}</th> }).collect();
         let body_rows: Vec<_> = table
@@ -202,27 +205,33 @@ fn GrammarNoteView(note: GrammarNote) -> impl IntoView {
     let examples: Vec<_> = note.examples.iter().map(|example| view! { <PhraseRow pair=example.clone() /> }).collect();
 
     view! {
-        <article class="grammar-note panel">
-            <h3>{note.title.clone()}</h3>
+        <UnitItemArticle kind_class="grammar-note" label title=note.title.clone()>
             {paragraphs(&note.explanation)}
             {table}
             <ul class="lines">{examples}</ul>
-        </article>
+        </UnitItemArticle>
     }
 }
 
 #[component]
 pub fn GrammarSection(unit: Unit) -> impl IntoView {
-    let notes: Vec<_> = unit.grammar.iter().map(|note| view! { <GrammarNoteView note=note.clone() /> }).collect();
+    let labels: Vec<String> = unit_item_index::unit_item_labels(&unit, unit.grammar.len());
+    let notes: Vec<_> = unit
+        .grammar
+        .iter()
+        .zip(labels.iter().cloned())
+        .map(|(note, label)| view! { <GrammarNoteView note=note.clone() label /> })
+        .collect();
 
     view! {
         <div class="row"><TranslationToggle /></div>
         {notes}
+        <UnitItemIndex item_kind=UnitItemKind::GrammarNote labels />
     }
 }
 
 #[component]
-fn ReadingView(reading: Reading) -> impl IntoView {
+fn ReadingView(reading: Reading, label: String) -> impl IntoView {
     let questions_open: RwSignal<bool> = RwSignal::new(false);
     let clips: Vec<AudioClip> = reading
         .paragraphs
@@ -238,8 +247,7 @@ fn ReadingView(reading: Reading) -> impl IntoView {
     let title: String = reading.title.clone();
 
     view! {
-        <article class="reading panel">
-            <h3>{reading.title.clone()}</h3>
+        <UnitItemArticle kind_class="reading" label title=reading.title.clone()>
             <PlayAllButton clips />
             <ul class="lines paragraphs">{paragraph_rows}</ul>
             {move || {
@@ -262,16 +270,23 @@ fn ReadingView(reading: Reading) -> impl IntoView {
                     .into_any()
                 }
             }}
-        </article>
+        </UnitItemArticle>
     }
 }
 
 #[component]
 pub fn ReadingsSection(unit: Unit) -> impl IntoView {
-    let readings: Vec<_> = unit.readings.iter().map(|reading| view! { <ReadingView reading=reading.clone() /> }).collect();
+    let labels: Vec<String> = unit_item_index::unit_item_labels(&unit, unit.readings.len());
+    let readings: Vec<_> = unit
+        .readings
+        .iter()
+        .zip(labels.iter().cloned())
+        .map(|(reading, label)| view! { <ReadingView reading=reading.clone() label /> })
+        .collect();
 
     view! {
         <div class="row"><TranslationToggle /></div>
         {readings}
+        <UnitItemIndex item_kind=UnitItemKind::Reading labels />
     }
 }
