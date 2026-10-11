@@ -13,6 +13,8 @@ pub use server::*;
 
 #[cfg(feature = "hydrate")] // needs the browser APIs the server build lacks
 mod browser {
+    use std::cell::RefCell;
+
     use leptos::prelude::{document, request_animation_frame, window};
     use leptos::wasm_bindgen::JsCast;
     use web_sys::{
@@ -30,6 +32,16 @@ mod browser {
 
     const OVERFLOW_PROPERTY: &str = "overflow";
     const OVERFLOW_HIDDEN: &str = "hidden";
+
+    thread_local! {
+        static PAGE_HOLD: RefCell<Option<PageHold>> = const { RefCell::new(None) };
+    }
+
+    /// Overlapping holds of the page, of which only the last to end restores the overflow saved by the first.
+    struct PageHold {
+        prior_overflow: String,
+        active_hold_count: usize,
+    }
 
     /// Scrolls the item's top at once to the top of the viewport, less the item's scroll margin, ending a smooth scroll still in motion.
     pub fn jump_to_item(element_id: &str, focus_change: ItemFocusChangeKind) {
@@ -97,7 +109,7 @@ mod browser {
         _ = rail.set_pointer_capture(pointer_id);
     }
 
-    /// Keeps the page from scrolling until a frame has drawn, which ends a fling, and then calls `after_hold`.
+    /// Keeps the page from scrolling until a frame has drawn, then calls `after_hold`.
     pub fn hold_page_still(after_hold: impl FnOnce() + 'static) {
         let Some(root_style) = root_style()
         else {
@@ -105,18 +117,53 @@ mod browser {
             return;
         };
 
-        let prior_overflow: String = root_style.get_property_value(OVERFLOW_PROPERTY).unwrap_or_default();
-
-        _ = root_style.set_property(OVERFLOW_PROPERTY, OVERFLOW_HIDDEN);
+        begin_page_hold(&root_style);
 
         // The second frame is the first one the compositor draws with the page unscrollable.
         request_animation_frame(move || {
             request_animation_frame(move || {
                 after_hold();
-
-                // An empty value removes the declaration, restoring the stylesheet's overflow.
-                _ = root_style.set_property(OVERFLOW_PROPERTY, &prior_overflow);
+                end_page_hold(&root_style);
             });
+        });
+    }
+
+    fn begin_page_hold(root_style: &CssStyleDeclaration) {
+        PAGE_HOLD.with_borrow_mut(|page_hold| {
+            if let Some(active_page_hold) = page_hold {
+                active_page_hold.active_hold_count += 1;
+                return;
+            }
+
+            let prior_overflow: String = root_style.get_property_value(OVERFLOW_PROPERTY).unwrap_or_default();
+
+            _ = root_style.set_property(OVERFLOW_PROPERTY, OVERFLOW_HIDDEN);
+            *page_hold = Some(PageHold {
+                prior_overflow,
+                active_hold_count: 1,
+            });
+        });
+    }
+
+    fn end_page_hold(root_style: &CssStyleDeclaration) {
+        PAGE_HOLD.with_borrow_mut(|page_hold| {
+            let Some(active_page_hold) = page_hold.as_mut()
+            else {
+                return;
+            };
+
+            active_page_hold.active_hold_count -= 1;
+
+            if active_page_hold.active_hold_count > 0 {
+                return;
+            }
+
+            let ended_page_hold: Option<PageHold> = page_hold.take();
+
+            // An empty value removes the declaration, restoring the stylesheet's overflow.
+            if let Some(ended_page_hold) = ended_page_hold {
+                _ = root_style.set_property(OVERFLOW_PROPERTY, &ended_page_hold.prior_overflow);
+            }
         });
     }
 

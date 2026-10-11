@@ -15,7 +15,7 @@ final class ScrollMomentumStopper {
             return
         }
 
-        /* Ends the deceleration, which assigning contentOffset does not. */
+        // Ends the deceleration.
         scrollView.setContentOffset(scrollView.contentOffset, animated: false)
     }
 }
