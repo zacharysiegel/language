@@ -57,32 +57,52 @@ struct GroupedTableView: View {
         VStack(alignment: .leading, spacing: 0) {
             switch layout {
             case .grouped(let firstColumnHeader, let groups):
-                MicroLabel(text: firstColumnHeader)
-                    .fixedSize(horizontal: false, vertical: true)
+                GroupedTableKey(headers: [firstColumnHeader] + Self.leadHeader(groups.first?.rows ?? []))
 
                 ForEach(Array(groups.enumerated()), id: \.offset) { _, group in
                     GroupedTableHeading(text: group.heading)
                     GroupedTableRows(rows: group.rows)
                 }
             case .stacked(let rows):
-                HairlineRule(color: Color.ink)
+                GroupedTableKey(headers: Self.leadHeader(rows))
                 GroupedTableRows(rows: rows)
             }
         }
     }
+
+    private static func leadHeader(_ rows: [GroupedTableRowRecord]) -> [String] {
+        rows.first.map { row in [row.lead.header] } ?? []
+    }
 }
 
+/// The names of the columns shown as group headings and as row leads, above the rows.
+struct GroupedTableKey: View {
+    let headers: [String]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spaceXs) {
+            ForEach(Array(headers.enumerated()), id: \.offset) { _, header in
+                MicroLabel(text: header)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("grouped-table-key")
+            }
+
+            HairlineRule(color: Color.ink)
+        }
+    }
+}
+
+/// A group's heading, which keeps its cell's case.
 struct GroupedTableHeading: View {
     let text: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceXs) {
-            Text(text.uppercased())
-                .font(.labelText)
-                .tracking(0.6)
+            Text(text)
+                .font(.bodyText)
+                .fontWeight(.semibold)
                 .foregroundStyle(Color.ink)
                 .fixedSize(horizontal: false, vertical: true)
-                .accessibilityLabel(text)
                 .accessibilityAddTraits(.isHeader)
                 .accessibilityIdentifier("grouped-table-heading")
 
