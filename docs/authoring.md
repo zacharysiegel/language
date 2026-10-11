@@ -132,7 +132,7 @@ The learner types what they hear. Keep it short (3 to 10 words) and unambiguous 
 ```json
 {"type": "match", "prompt": "Match the Portuguese with the English", "pairs": [{"target": "o pai", "source": "the father"}, {"target": "a mãe", "source": "the mother"}, {"target": "o irmão", "source": "the brother"}, {"target": "a irmã", "source": "the sister"}]}
 ```
-4 to 6 pairs, all unambiguous. A phone shows the two sides in two narrow columns, so keep each side to a short phrase (about 35 characters at most); a full sentence of explanation belongs in `explanation`.
+4 to 6 pairs, all unambiguous. A phone shows the two sides in two narrow columns, so keep each side to a short phrase of at most 35 characters, which the validator enforces; a full sentence of explanation belongs in `explanation`.
 
 ## Quality bar
 
