@@ -22,6 +22,8 @@ extension CGFloat {
     static let measure: CGFloat = 640
     static let boxShadowOffset: CGFloat = 4
     static let floatingTipMaximumWidth: CGFloat = 320
+    static let unitItemIndexRailWidth: CGFloat = 28
+    static let unitItemIndexEntryMaximumHeight: CGFloat = 32
 }
 
 /* The web's type scale, one or two points larger for a phone's reading distance. */

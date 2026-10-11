@@ -29,6 +29,33 @@ enum UnitTabKind: String, CaseIterable, Hashable {
         self != .readings || !lesson.readings.isEmpty
     }
 
+    /// What one box of the tab is called, for a tab made of a series of boxes.
+    func indexedItemNoun() -> String? {
+        switch self {
+        case .grammar:
+            return "note"
+        case .dialogues:
+            return "dialogue"
+        case .readings:
+            return "reading"
+        case .overview, .vocabulary, .practice:
+            return nil
+        }
+    }
+
+    func indexedItemCount(in lesson: UnitLessonRecord) -> Int {
+        switch self {
+        case .grammar:
+            return lesson.grammar.count
+        case .dialogues:
+            return lesson.dialogues.count
+        case .readings:
+            return lesson.readings.count
+        case .overview, .vocabulary, .practice:
+            return 0
+        }
+    }
+
     func record() -> UnitTabRecord {
         switch self {
         case .overview:
@@ -64,6 +91,7 @@ struct UnitPage: View {
     @Environment(ProgressStore.self) private var progressStore
     @State private var activeTab: UnitTabKind?
     @State private var isStatusHelpShown: Bool = false
+    @State private var itemIndexTracker: UnitItemIndexTracker = UnitItemIndexTracker()
 
     var body: some View {
         content()
@@ -110,17 +138,47 @@ struct UnitPage: View {
             contentKey: courseStore.shownContentKey(courseId: courseId),
         )
 
-        return ScrollView {
-            VStack(alignment: .leading, spacing: .spaceMd) {
-                PageHeader(caption: "\(unit.levelCode) · \(unit.order)", title: unit.title)
-                UnitStatusPanel(courseId: courseId, unitId: unit.id, isHelpShown: $isStatusHelpShown)
-                tabRow(lesson: lesson, active: tab)
-                section(tab: tab, unit: unit, lesson: lesson)
-                tabNavigation(lesson: lesson, active: tab)
+        let itemLabels: [String] = Self.indexedItemLabels(tab: tab, unit: unit, lesson: lesson)
+        let itemNoun: String? = itemLabels.count >= UnitItemIndex.minimumItemCount ? tab.indexedItemNoun() : nil
+
+        return ScrollViewReader { scrollProxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: .spaceMd) {
+                    PageHeader(caption: "\(unit.levelCode) · \(unit.order)", title: unit.title)
+                    UnitStatusPanel(courseId: courseId, unitId: unit.id, isHelpShown: $isStatusHelpShown)
+                    tabRow(lesson: lesson, active: tab)
+                    section(tab: tab, unit: unit, lesson: lesson)
+                    tabNavigation(lesson: lesson, active: tab)
+                }
+                .padding([.top, .leading, .bottom], .spaceMd)
+                .padding(.trailing, itemNoun == nil ? .spaceMd : .unitItemIndexRailWidth)
+                .readableWidth()
+                .id(tab)
+                .coordinateSpace(.named(UnitItemIndex.contentCoordinateSpaceName))
             }
-            .padding(.spaceMd)
-            .readableWidth()
-            .id(tab)
+            .onPreferenceChange(UnitItemContentTopsPreferenceKey.self) { contentTops in
+                itemIndexTracker.recordItemContentTops(contentTops)
+            }
+            .onScrollGeometryChange(for: CGFloat.self) { geometry in
+                geometry.visibleRect.minY + geometry.contentInsets.top
+            } action: { _, visibleContentTop in
+                itemIndexTracker.recordVisibleContentTop(visibleContentTop)
+            }
+            .onScrollPhaseChange { _, newPhase in
+                if newPhase == .interacting {
+                    itemIndexTracker.recordLearnerScroll()
+                }
+            }
+            .onChange(of: tab) {
+                itemIndexTracker.recordTabChange()
+            }
+            .overlay(alignment: .trailing) {
+                if let itemNoun {
+                    UnitItemIndexRail(itemLabels: itemLabels, itemNoun: itemNoun, currentItemNumber: itemIndexTracker.currentItemNumber()) { itemNumber in
+                        jumpToItem(itemNumber, scrollProxy: scrollProxy)
+                    }
+                }
+            }
         }
         .floatingTip(isShown: isStatusHelpShown, autoCloseDuration: UnitStatusPanel.helpAutoCloseDuration, onDismiss: closeStatusHelp) {
             UnitStatusHelpTip(onClose: closeStatusHelp)
@@ -129,6 +187,17 @@ struct UnitPage: View {
         .task(id: prefetchRequest, priority: .utility) {
             await prefetchRecordings(prefetchRequest, unitId: unit.id)
         }
+    }
+
+    private static func indexedItemLabels(tab: UnitTabKind, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> [String] {
+        let itemCount: Int = tab.indexedItemCount(in: lesson)
+
+        return (0..<itemCount).map { itemIndex in unit.itemLabel(itemNumber: itemIndex + 1) }
+    }
+
+    private func jumpToItem(_ itemNumber: Int, scrollProxy: ScrollViewProxy) {
+        itemIndexTracker.recordJump(itemNumber: itemNumber)
+        scrollProxy.scrollTo(UnitItemAnchor(itemNumber: itemNumber), anchor: .top)
     }
 
     private func prefetchRecordings(_ request: RecordingPrefetchRequest, unitId: String) async {
@@ -172,11 +241,11 @@ struct UnitPage: View {
         case .overview:
             OverviewSection(courseId: courseId, unit: unit, lesson: lesson)
         case .grammar:
-            GrammarSection(notes: lesson.grammar)
+            GrammarSection(unit: unit, notes: lesson.grammar)
         case .dialogues:
-            DialoguesSection(dialogues: lesson.dialogues)
+            DialoguesSection(unit: unit, dialogues: lesson.dialogues)
         case .readings:
-            ReadingsSection(readings: lesson.readings)
+            ReadingsSection(unit: unit, readings: lesson.readings)
         case .vocabulary:
             VocabularySection(items: unit.vocabulary)
         case .practice:
