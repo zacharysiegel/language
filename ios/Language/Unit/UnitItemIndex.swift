@@ -3,6 +3,9 @@ import SwiftUI
 enum UnitItemIndex {
     static let minimumItemCount: Int = Int(unitItemIndexMinimumItemCount())
     static let contentCoordinateSpaceName: String = "unit-content"
+    /* About as long as the system scroll indicator stays after scrolling stops. */
+    static let idleHideDelay: Duration = .milliseconds(1500)
+    static let fadeDuration: TimeInterval = 0.2
 }
 
 /// The scroll target of a box of a unit tab, numbered from 1.
@@ -97,16 +100,20 @@ final class UnitItemIndexTracker {
     }
 }
 
-/// A column of box numbers at the page's trailing edge; tapping or dragging along it jumps to a box.
+/// A column of box numbers over the page's trailing edge; tapping or dragging along it jumps to a box.
+/// It is shown while the page scrolls or the rail is in use, and hidden after `UnitItemIndex.idleHideDelay` without either.
 struct UnitItemIndexRail: View {
     /// One label per box, in box order.
     let itemLabels: [String]
     let itemNoun: String
     let currentItemNumber: Int
+    let isPageScrolling: Bool
     let onJump: (Int) -> Void
 
+    @State private var isShown: Bool = false
     @State private var draggedItemNumber: Int?
-    @AccessibilityFocusState private var focusedItemNumber: Int?
+    @AccessibilityFocusState private var accessibilityFocusedItemNumber: Int?
+    @FocusState private var keyboardFocusedItemNumber: Int?
 
     var body: some View {
         GeometryReader { geometry in
@@ -117,15 +124,42 @@ struct UnitItemIndexRail: View {
                     entry(itemNumber: itemIndex + 1, itemLabel: itemLabel, height: entryHeight)
                 }
             }
+            .background(Color.paper)
+            .overlay(Rectangle().stroke(Color.rule, lineWidth: .hairline))
             .contentShape(Rectangle())
             .highPriorityGesture(jumpGesture(entryHeight: entryHeight))
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .frame(width: .unitItemIndexRailWidth)
+        .opacity(isShown ? 1 : 0)
+        .animation(.easeOut(duration: UnitItemIndex.fadeDuration), value: isShown)
+        .allowsHitTesting(isShown)
+        .task(id: isInUse()) {
+            await updateShown(isInUse: isInUse())
+        }
         .sensoryFeedback(.impact(weight: .light), trigger: draggedItemNumber) { _, newItemNumber in newItemNumber != nil }
         .accessibilityElement(children: .contain)
         .accessibilityLabel("\(itemNoun.capitalized) index")
         .accessibilityIdentifier("unit-item-index")
+    }
+
+    private func isInUse() -> Bool {
+        isPageScrolling || draggedItemNumber != nil || accessibilityFocusedItemNumber != nil || keyboardFocusedItemNumber != nil
+    }
+
+    private func updateShown(isInUse: Bool) async {
+        guard !isInUse else {
+            isShown = true
+            return
+        }
+
+        do {
+            try await Task.sleep(for: UnitItemIndex.idleHideDelay)
+        } catch {
+            return
+        }
+
+        isShown = false
     }
 
     private func entry(itemNumber: Int, itemLabel: String, height: CGFloat) -> some View {
@@ -144,7 +178,8 @@ struct UnitItemIndexRail: View {
         .accessibilityLabel("Go to \(itemNoun) \(itemLabel)")
         .accessibilityAddTraits(isCurrent ? .isSelected : [])
         .accessibilityIdentifier("unit-item-index-\(itemNumber)")
-        .accessibilityFocused($focusedItemNumber, equals: itemNumber)
+        .accessibilityFocused($accessibilityFocusedItemNumber, equals: itemNumber)
+        .focused($keyboardFocusedItemNumber, equals: itemNumber)
         .accessibilityAdjustableAction { direction in
             adjust(direction, fromItemNumber: itemNumber)
         }
@@ -185,6 +220,6 @@ struct UnitItemIndexRail: View {
         }
 
         onJump(targetItemNumber)
-        focusedItemNumber = targetItemNumber
+        accessibilityFocusedItemNumber = targetItemNumber
     }
 }

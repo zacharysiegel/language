@@ -92,6 +92,8 @@ struct UnitPage: View {
     @State private var activeTab: UnitTabKind?
     @State private var isStatusHelpShown: Bool = false
     @State private var itemIndexTracker: UnitItemIndexTracker = UnitItemIndexTracker()
+    @State private var pageScrollPhase: ScrollPhase = .idle
+    @State private var pageScrollMomentumStopper: ScrollMomentumStopper = ScrollMomentumStopper()
 
     var body: some View {
         content()
@@ -150,11 +152,11 @@ struct UnitPage: View {
                     section(tab: tab, unit: unit, lesson: lesson)
                     tabNavigation(lesson: lesson, active: tab)
                 }
-                .padding([.top, .leading, .bottom], .spaceMd)
-                .padding(.trailing, itemNoun == nil ? .spaceMd : .unitItemIndexRailWidth)
+                .padding(.spaceMd)
                 .readableWidth()
                 .id(tab)
                 .coordinateSpace(.named(UnitItemIndex.contentCoordinateSpaceName))
+                .scrollMomentumStopper(pageScrollMomentumStopper)
             }
             .onPreferenceChange(UnitItemContentTopsPreferenceKey.self) { contentTops in
                 itemIndexTracker.recordItemContentTops(contentTops)
@@ -165,18 +167,20 @@ struct UnitPage: View {
                 itemIndexTracker.recordVisibleContentTop(visibleContentTop)
             }
             .onScrollPhaseChange { _, newPhase in
-                if newPhase == .interacting {
-                    itemIndexTracker.recordLearnerScroll()
-                }
+                recordPageScrollPhase(newPhase)
             }
             .onChange(of: tab) {
                 itemIndexTracker.recordTabChange()
             }
             .overlay(alignment: .trailing) {
                 if let itemNoun {
-                    UnitItemIndexRail(itemLabels: itemLabels, itemNoun: itemNoun, currentItemNumber: itemIndexTracker.currentItemNumber()) { itemNumber in
-                        jumpToItem(itemNumber, scrollProxy: scrollProxy)
-                    }
+                    UnitItemIndexRail(
+                        itemLabels: itemLabels,
+                        itemNoun: itemNoun,
+                        currentItemNumber: itemIndexTracker.currentItemNumber(),
+                        isPageScrolling: pageScrollPhase.isScrolling,
+                        onJump: { itemNumber in jumpToItem(itemNumber, scrollProxy: scrollProxy) },
+                    )
                 }
             }
         }
@@ -195,7 +199,16 @@ struct UnitPage: View {
         return (0..<itemCount).map { itemIndex in unit.itemLabel(itemNumber: itemIndex + 1) }
     }
 
+    private func recordPageScrollPhase(_ phase: ScrollPhase) {
+        pageScrollPhase = phase
+
+        if phase == .interacting {
+            itemIndexTracker.recordLearnerScroll()
+        }
+    }
+
     private func jumpToItem(_ itemNumber: Int, scrollProxy: ScrollViewProxy) {
+        pageScrollMomentumStopper.stopMomentum()
         itemIndexTracker.recordJump(itemNumber: itemNumber)
         scrollProxy.scrollTo(UnitItemAnchor(itemNumber: itemNumber), anchor: .top)
     }
@@ -233,6 +246,7 @@ struct UnitPage: View {
                 }
             }
         }
+        .accessibilityIdentifier("unit-tabs")
     }
 
     @ViewBuilder
