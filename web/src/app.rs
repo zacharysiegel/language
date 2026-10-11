@@ -19,8 +19,11 @@ use crate::review::ReviewPage;
 use crate::unit::UnitPage;
 use shared::progress::AudioEngineKind;
 
+/// The id of the static shell's placeholder content, which no other document holds.
+pub const STATIC_SHELL_ELEMENT_ID: &str = "static-shell";
+
 #[cfg(feature = "ssr")] // the wasm32 client never renders the document shell
-pub use ssr::shell;
+pub use ssr::*;
 
 #[cfg(feature = "ssr")] // the wasm32 client never renders the document shell
 mod ssr {
@@ -28,22 +31,50 @@ mod ssr {
     use leptos::prelude::*;
     use leptos_meta::HashedStylesheet;
 
-    use super::App;
+    use super::{App, STATIC_SHELL_ELEMENT_ID};
 
+    #[component]
+    fn DocumentHead(options: LeptosOptions) -> impl IntoView {
+        view! {
+            <head>
+                <meta charset="utf-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1" />
+                <title>"Language"</title>
+                <HashedStylesheet options=options.clone() id="leptos" />
+                <AutoReload options=options.clone() />
+                <HydrationScripts options />
+            </head>
+        }
+    }
+
+    /// The document for the requested route.
     pub fn shell(options: LeptosOptions) -> impl IntoView {
         view! {
             <!DOCTYPE html>
             <html lang="en">
-                <head>
-                    <meta charset="utf-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1" />
-                    <title>"Language"</title>
-                    <HashedStylesheet options=options.clone() id="leptos" />
-                    <AutoReload options=options.clone() />
-                    <HydrationScripts options />
-                </head>
+                <DocumentHead options />
                 <body>
                     <App />
+                </body>
+            </html>
+        }
+    }
+
+    /// The one document a static host serves at every route.
+    pub fn static_shell(options: LeptosOptions) -> impl IntoView {
+        view! {
+            <!DOCTYPE html>
+            <html lang="en">
+                <DocumentHead options />
+                <body>
+                    <nav class="chrome">
+                        <a href="/" class="chrome-brand" title="All courses">
+                            <span class="chrome-brand-name">"Language"</span>
+                        </a>
+                    </nav>
+                    <main id=STATIC_SHELL_ELEMENT_ID aria-busy="true">
+                        <p class="status" role="status">"Loading…"</p>
+                    </main>
                 </body>
             </html>
         }
