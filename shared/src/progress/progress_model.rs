@@ -266,6 +266,15 @@ impl CourseProgress {
     pub fn due_card_count(&self, now_milliseconds: i64) -> usize {
         self.cards.values().filter(|card| card.due_milliseconds <= now_milliseconds).count()
     }
+
+    /// The earliest due time of the course's cards that is later than `now_milliseconds`; `None` when no card is due later.
+    pub fn next_due_milliseconds_after(&self, now_milliseconds: i64) -> Option<i64> {
+        self.cards
+            .values()
+            .map(|card| card.due_milliseconds)
+            .filter(|due_milliseconds| *due_milliseconds > now_milliseconds)
+            .min()
+    }
 }
 
 /// Everything the learner has done, in every course.
@@ -298,6 +307,14 @@ impl Progress {
 
     pub fn course_progress_mut(&mut self, course_id: &str) -> &mut CourseProgress {
         self.courses.entry(course_id.to_string()).or_default()
+    }
+
+    /// The earliest due time, in any course, of a card that is due later than `now_milliseconds`.
+    pub fn next_due_milliseconds_after(&self, now_milliseconds: i64) -> Option<i64> {
+        self.courses
+            .values()
+            .filter_map(|course_progress| course_progress.next_due_milliseconds_after(now_milliseconds))
+            .min()
     }
 
     /// A full practice records an attempt at the unit and, when passed, adds the unit's words to the course's review
@@ -510,6 +527,46 @@ mod tests {
         assert_eq!(course_progress.cards["a:0"].due_milliseconds, 2_000);
         assert_eq!(course_progress.cards["a:0"].box_index, 1);
         assert_eq!(course_progress.due_card_count(2_000), 3);
+    }
+
+    fn course_progress_with_cards_due_at(due_milliseconds: &[i64]) -> CourseProgress {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+
+        for (card_index, due) in due_milliseconds.iter().enumerate() {
+            let card_id: String = format!("a:{card_index}");
+
+            course_progress.cards.insert(card_id.clone(), ReviewCard::new(card_id, *due));
+        }
+
+        course_progress
+    }
+
+    #[test]
+    fn next_due_milliseconds_after_is_the_earliest_card_due_later_than_now() {
+        let course_progress: CourseProgress = course_progress_with_cards_due_at(&[500, 1_000, 3_000, 2_000]);
+
+        assert_eq!(course_progress.next_due_milliseconds_after(1_000), Some(2_000));
+        assert_eq!(course_progress.next_due_milliseconds_after(999), Some(1_000));
+        assert_eq!(course_progress.next_due_milliseconds_after(0), Some(500));
+    }
+
+    #[test]
+    fn next_due_milliseconds_after_is_none_when_every_card_is_due_by_now() {
+        let course_progress: CourseProgress = course_progress_with_cards_due_at(&[500, 1_000]);
+
+        assert_eq!(course_progress.next_due_milliseconds_after(1_000), None);
+        assert_eq!(CourseProgress::default().next_due_milliseconds_after(0), None);
+    }
+
+    #[test]
+    fn progress_next_due_milliseconds_after_is_the_earliest_across_courses() {
+        let mut progress: Progress = Progress::default();
+        progress.courses.insert(COURSE_ID.to_string(), course_progress_with_cards_due_at(&[5_000, 100]));
+        progress.courses.insert("es.en.foundations".to_string(), course_progress_with_cards_due_at(&[3_000]));
+        progress.courses.insert("fr.en.foundations".to_string(), CourseProgress::default());
+
+        assert_eq!(progress.next_due_milliseconds_after(1_000), Some(3_000));
+        assert_eq!(progress.next_due_milliseconds_after(5_000), None);
     }
 
     #[test]
