@@ -12,7 +12,6 @@ use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
 use crate::home::HomePage;
 use crate::pending_indication::{PageBusyStore, provide_page_busy_store, use_page_busy_store};
-use crate::platform;
 use crate::progress_state::{ProgressStore, provide_progress_store, use_progress_store};
 use crate::progress_view::ProgressPage;
 use crate::review::ReviewPage;
@@ -134,16 +133,11 @@ fn NavigationBar() -> impl IntoView {
         course_title.map(|course_title| view! { <span class="chrome-course">{course_title}</span> })
     };
 
-    let due_count = move |course_id: &str| {
-        let now_milliseconds: i64 = platform::now_milliseconds();
-
-        progress_store.read(|progress| progress.course_progress(course_id).due_card_count(now_milliseconds))
-    };
     let course_links = move || {
         let indexed_course_id: Option<String> = course_id().filter(|course_id| course_store.index_entry(course_id).is_some());
 
         indexed_course_id.map(|course_id| {
-            let due: usize = due_count(&course_id);
+            let due: usize = progress_store.due_card_count(&course_id);
 
             view! {
                 <A href=course_data::course_path(&course_id) exact=true>"Course"</A>
