@@ -8,6 +8,15 @@ struct GlossaryEntry: Identifiable {
     let searchKeys: [String]
 }
 
+/// Consecutive shown entries of one level.
+struct GlossaryLevelRun {
+    let id: String
+    let levelCode: String
+    let entries: [GlossaryEntry]
+    /// Set on the first run of each level.
+    let indexRailEntryNumber: Int?
+}
+
 struct GlossaryPage: View {
     let outline: CourseOutlineRecord
 
@@ -15,33 +24,71 @@ struct GlossaryPage: View {
     @State private var levelFilter: String?
     @State private var entries: [GlossaryEntry] = []
     @State private var indexedCourseId: String?
+    @State private var indexRailTracker: IndexRailTracker = IndexRailTracker()
 
     var body: some View {
         let matching: [GlossaryEntry] = matchingEntries()
+        let levelRuns: [GlossaryLevelRun] = Self.levelRuns(matching)
+        let indexRailEntries: [IndexRailEntry] = Self.indexRailEntries(levelRuns)
 
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 0, pinnedViews: []) {
-                PageHeader(caption: "\(matching.count) entries", title: "Glossary")
-                    .padding(.bottom, .spaceMd)
+        ScrollViewReader { scrollProxy in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    PageHeader(caption: "\(matching.count) entries", title: "Glossary")
+                        .padding(.bottom, .spaceMd)
 
-                levelPicker()
-                    .padding(.bottom, .spaceMd)
+                    levelPicker()
+                        .padding(.bottom, .spaceMd)
 
-                HairlineRule()
-
-                ForEach(matching) { entry in
-                    GlossaryRow(courseId: outline.id, entry: entry)
                     HairlineRule()
+
+                    ForEach(levelRuns, id: \.id) { levelRun in
+                        levelRunView(levelRun)
+                    }
                 }
+                .padding(.spaceMd)
+                .readableWidth()
+                .indexRailContent(indexRailTracker)
             }
-            .padding(.spaceMd)
-            .readableWidth()
+            .indexRailScrollTracking(indexRailTracker)
+            .onChange(of: indexRailEntries) {
+                indexRailTracker.recordContentChange()
+            }
+            .overlay(alignment: .trailing) {
+                IndexRail(
+                    entries: indexRailEntries,
+                    railAccessibilityLabel: "Level index",
+                    railAccessibilityIdentifier: "glossary-level-index",
+                    tracker: indexRailTracker,
+                    scrollProxy: scrollProxy,
+                )
+            }
         }
         .searchable(text: $searchText, prompt: "Search \(outline.targetLanguageName) or \(outline.sourceLanguageName)")
         .navigationTitle("Glossary")
         .navigationBarTitleDisplayMode(.inline)
         .onAppear { indexIfNeeded() }
         .onChange(of: outline.id) { indexIfNeeded() }
+    }
+
+    @ViewBuilder
+    private func levelRunView(_ levelRun: GlossaryLevelRun) -> some View {
+        if let indexRailEntryNumber = levelRun.indexRailEntryNumber {
+            levelRunRows(levelRun)
+                .indexRailTarget(entryNumber: indexRailEntryNumber)
+        } else {
+            levelRunRows(levelRun)
+        }
+    }
+
+    /* Each run is a stack of its own, so a run's top is known while its rows are not built. */
+    private func levelRunRows(_ levelRun: GlossaryLevelRun) -> some View {
+        LazyVStack(alignment: .leading, spacing: 0) {
+            ForEach(levelRun.entries) { entry in
+                GlossaryRow(courseId: outline.id, entry: entry)
+                HairlineRule()
+            }
+        }
     }
 
     private func levelPicker() -> some View {
@@ -63,6 +110,35 @@ struct GlossaryPage: View {
             let textMatches: Bool = query.isEmpty || entry.searchKeys.contains { key in key.contains(query) }
 
             return levelMatches && textMatches
+        }
+    }
+
+    private static func levelRuns(_ shownEntries: [GlossaryEntry]) -> [GlossaryLevelRun] {
+        var levelRuns: [GlossaryLevelRun] = []
+        var indexedLevelCodes: Set<String> = []
+        var runStart: Int = shownEntries.startIndex
+
+        while runStart < shownEntries.endIndex {
+            let levelCode: String = shownEntries[runStart].unit.levelCode
+            let runEnd: Int = shownEntries[runStart...].firstIndex { entry in entry.unit.levelCode != levelCode } ?? shownEntries.endIndex
+            let isFirstRunOfItsLevel: Bool = indexedLevelCodes.insert(levelCode).inserted
+
+            levelRuns.append(GlossaryLevelRun(
+                id: shownEntries[runStart].id,
+                levelCode: levelCode,
+                entries: Array(shownEntries[runStart..<runEnd]),
+                indexRailEntryNumber: isFirstRunOfItsLevel ? indexedLevelCodes.count : nil,
+            ))
+
+            runStart = runEnd
+        }
+
+        return levelRuns
+    }
+
+    private static func indexRailEntries(_ levelRuns: [GlossaryLevelRun]) -> [IndexRailEntry] {
+        levelRuns.filter { levelRun in levelRun.indexRailEntryNumber != nil }.map { levelRun in
+            IndexRailEntry(visibleText: levelRun.levelCode, accessibilityLabel: "Go to level \(levelRun.levelCode)")
         }
     }
 
