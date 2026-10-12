@@ -1,0 +1,71 @@
+.item-index-target {
+    scroll-margin-top: var(--space-md);
+}
+
+// Focused only as the destination of an index jump, which needs no mark of its own.
+.item-index-target:focus {
+    outline: none;
+}
+
+/* The index sits just outside the page column when the margin has room for it, else at the viewport edge with
+   the page's right padding widened to keep it off the content. */
+main:has(.item-index) {
+    padding-right: max(var(--space-md), calc(var(--size-index-entry) + var(--space-xs) - max(0px, (100% - var(--width-page)) / 2)));
+}
+
+.item-index {
+    position: fixed;
+    top: 50%;
+    right: max(0px, calc((100% - var(--width-page)) / 2 - var(--size-index-entry)));
+    transform: translateY(-50%);
+    z-index: var(--layer-floating);
+}
+
+.item-index ol {
+    display: flex;
+    flex-direction: column;
+    background: var(--color-paper);
+    touch-action: none;
+    user-select: none;
+}
+
+/* A list item would otherwise take the page's line height, taller than its entry. */
+.item-index li {
+    display: flex;
+}
+
+.item-index button {
+    width: var(--size-index-entry);
+    height: var(--size-index-entry);
+    padding: 0;
+    border: none;
+    border-right: var(--border-width-hairline) solid transparent;
+    background: none;
+    font-family: var(--font-mono);
+    font-size: var(--type-size-caption);
+    font-variant-numeric: tabular-nums;
+    color: var(--color-ink-muted);
+}
+
+/* Red and the rule mark only the current entry. A touch screen keeps :hover on the last entry tapped, so only a
+   pointer that can hover darkens an entry. */
+.item-index button:hover:not([aria-current]),
+.item-index button:focus-visible:not([aria-current]) {
+    border-right-color: transparent;
+    color: var(--color-ink-muted);
+}
+
+@media (hover: hover) {
+    .item-index button:hover:not([aria-current]) {
+        color: var(--color-ink);
+    }
+}
+
+.item-index button:focus-visible:not([aria-current]) {
+    color: var(--color-ink);
+}
+
+.item-index button[aria-current] {
+    color: var(--color-accent-active);
+    border-right-color: var(--color-accent-active);
+}
