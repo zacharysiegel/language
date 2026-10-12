@@ -33,6 +33,7 @@ final class CourseUITests: XCTestCase {
     /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
     static let unreachableOrigin: String = "http://192.0.2.1:3002"
     static let pendingRecordingValue: String = "Loading the recording"
+    static let jumpedGlossaryLevelCode: String = "B1"
 
     private var app: XCUIApplication!
 
@@ -335,6 +336,33 @@ final class CourseUITests: XCTestCase {
     }
 
     @MainActor
+    func testTheGlossaryLevelRailJumpsToTheFirstWordOfALevel() throws {
+        let firstLevelWord: String = try Self.readFirstVocabularyTarget(levelCode: Self.jumpedGlossaryLevelCode)
+
+        XCTAssertTrue(app.buttons["unit-\(Self.practicedUnitId)"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Glossary"].tap()
+        XCTAssertTrue(app.staticTexts["Glossary"].waitForExistence(timeout: 5))
+
+        let levelEntry: XCUIElement = glossaryRailEntry(levelCode: Self.jumpedGlossaryLevelCode)
+
+        XCTAssertTrue(levelEntry.waitForExistence(timeout: 5))
+        XCTAssertEqual(levelEntry.label, "Go to level \(Self.jumpedGlossaryLevelCode)")
+
+        app.buttons[Self.jumpedGlossaryLevelCode].firstMatch.tap()
+        assertGone(levelEntry, timeout: 5)
+        app.buttons["All levels"].firstMatch.tap()
+        XCTAssertTrue(levelEntry.waitForExistence(timeout: 5))
+
+        withTheIndexRailShown {
+            levelEntry.tap()
+            self.saveScreenshot("22-glossary-level-index-jump")
+        }
+
+        assertNearTopOfThePage(app.staticTexts[firstLevelWord].firstMatch)
+        assertSelected(levelEntry)
+    }
+
+    @MainActor
     func testPrinciplesTablesAreGroupedByTheirFirstColumnAtCompactWidth() throws {
         let (noteNumber, table): (Int, [String: Any]) = try Self.readGrammarTable(unitId: Self.groupedTableUnitId, noteTitle: Self.groupedTableNoteTitle)
         let headers: [String] = table["headers"] as? [String] ?? []
@@ -527,6 +555,10 @@ final class CourseUITests: XCTestCase {
         app.buttons["unit-item-index-\(itemNumber)"]
     }
 
+    private func glossaryRailEntry(levelCode: String) -> XCUIElement {
+        app.buttons["glossary-level-index-\(levelCode)"]
+    }
+
     private func assertNearTopOfThePage(_ element: XCUIElement) {
         let navigationBarBottom: CGFloat = app.navigationBars.firstMatch.frame.maxY
 
@@ -604,11 +636,24 @@ final class CourseUITests: XCTestCase {
         return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     }
 
-    private static func readCourseTitle() throws -> String {
+    /// The first word of the first unit of the level in curriculum order.
+    private static func readFirstVocabularyTarget(levelCode: String) throws -> String {
+        let curriculumUnits: [[String: Any]] = try readCurriculum()["units"] as? [[String: Any]] ?? []
+        let levelUnit: [String: Any] = try XCTUnwrap(curriculumUnits.first { curriculumUnit in curriculumUnit["level"] as? String == levelCode })
+        let levelUnitId: String = try XCTUnwrap(levelUnit["id"] as? String)
+        let vocabulary: [[String: Any]] = try readUnit(levelUnitId)["vocabulary"] as? [[String: Any]] ?? []
+
+        return try XCTUnwrap(vocabulary.first?["target"] as? String)
+    }
+
+    private static func readCurriculum() throws -> [String: Any] {
         let path: URL = repositoryRoot.appendingPathComponent("data/courses/\(courseId)/curriculum.json")
         let data: Data = try Data(contentsOf: path)
-        let curriculum: [String: Any] = try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
 
-        return curriculum["title"] as? String ?? ""
+        return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
+    }
+
+    private static func readCourseTitle() throws -> String {
+        try readCurriculum()["title"] as? String ?? ""
     }
 }
