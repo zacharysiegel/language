@@ -9,6 +9,7 @@ pub mod course_data;
 pub mod courses;
 pub mod glossary;
 pub mod home;
+pub mod item_index;
 pub mod pending_indication;
 pub mod platform;
 pub mod practice;
