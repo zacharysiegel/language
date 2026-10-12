@@ -1,7 +1,10 @@
+use serde::{Deserialize, Serialize};
+
 const PUNCTUATION_CHARACTERS: &str = ".,!?;:\"“”¿¡…";
 const APOSTROPHE_VARIANTS: &str = "’‘`´";
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum AnswerStatus {
     Correct,
     AccentMistake,

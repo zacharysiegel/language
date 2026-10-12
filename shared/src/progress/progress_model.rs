@@ -3,8 +3,10 @@ use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
 
 use crate::AppError;
+use crate::course::Exercise;
 use crate::course_shard::VoiceEngineKind;
 use crate::practice::{PASS_PROPORTION, PracticeModeKind, SessionScore};
+use crate::progress::{PausedPractice, PausedPracticeStateKind, SavedExerciseResult};
 use crate::review::ReviewCard;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -182,6 +184,9 @@ pub struct CourseProgress {
     pub cards: BTreeMap<String, ReviewCard>,
     #[serde(default)]
     pub units: BTreeMap<String, UnitProgress>,
+    /// By unit id.
+    #[serde(default)]
+    pub paused_practices: BTreeMap<String, PausedPractice>,
 }
 
 impl CourseProgress {
@@ -220,6 +225,34 @@ impl CourseProgress {
     /// Keeps the best score and the attempt count.
     pub fn set_unit_status(&mut self, unit_id: &str, status: UnitStatusKind) {
         self.units.entry(unit_id.to_string()).or_default().status = status;
+    }
+
+    /// Replaces any paused practice of the unit.
+    pub fn start_full_practice(&mut self, unit_id: &str, exercises: &[Exercise]) -> PausedPractice {
+        let paused_practice: PausedPractice = PausedPractice::new(exercises);
+
+        self.paused_practices.insert(unit_id.to_string(), paused_practice.clone());
+
+        paused_practice
+    }
+
+    /// Does nothing when the unit has no paused practice.
+    pub fn record_full_practice_result(&mut self, unit_id: &str, result: SavedExerciseResult) {
+        if let Some(paused_practice) = self.paused_practices.get_mut(unit_id) {
+            paused_practice.record_result(result);
+        }
+    }
+
+    pub fn paused_practice_state(&self, unit_id: &str, exercises: &[Exercise]) -> PausedPracticeStateKind {
+        match self.paused_practices.get(unit_id) {
+            None => PausedPracticeStateKind::NotPaused,
+            Some(paused_practice) if paused_practice.matches_exercises(exercises) => PausedPracticeStateKind::Resumable(paused_practice.clone()),
+            Some(_) => PausedPracticeStateKind::ExercisesChanged,
+        }
+    }
+
+    pub fn clear_paused_practice(&mut self, unit_id: &str) {
+        self.paused_practices.remove(unit_id);
     }
 
     pub fn add_cards_if_missing(&mut self, card_ids: impl Iterator<Item = String>, now_milliseconds: i64) -> usize {
@@ -317,8 +350,8 @@ impl Progress {
             .min()
     }
 
-    /// A full practice records an attempt at the unit and, when passed, adds the unit's words to the course's review
-    /// deck; a quick practice only starts the unit.
+    /// A full practice records an attempt at the unit, ends its paused practice and, when passed, adds the unit's
+    /// words to the course's review deck; a quick practice only starts the unit.
     pub fn record_practice_session(
         &mut self,
         course_id: &str,
@@ -339,6 +372,7 @@ impl Progress {
 
         let course_progress: &mut CourseProgress = self.course_progress_mut(course_id);
 
+        course_progress.clear_paused_practice(unit_id);
         course_progress.record_unit_attempt(unit_id, score.proportion(), PASS_PROPORTION);
 
         let words_added_count: usize = if score.passed() {
@@ -354,11 +388,28 @@ impl Progress {
             words_added_count,
         }
     }
+
+    /// Records the unit's paused practice as a full practice session; `None` while it has unanswered questions or when
+    /// the unit has no paused practice.
+    pub fn finish_full_practice(&mut self, course_id: &str, unit_id: &str, vocabulary_count: usize, now_milliseconds: i64) -> Option<PracticeOutcome> {
+        let paused_practice: &PausedPractice = self.courses.get(course_id)?.paused_practices.get(unit_id)?;
+
+        if !paused_practice.is_every_question_answered() {
+            return None;
+        }
+
+        let score: SessionScore = paused_practice.score();
+        let outcome: PracticeOutcome = self.record_practice_session(course_id, unit_id, PracticeModeKind::Full, score, vocabulary_count, now_milliseconds);
+
+        Some(outcome)
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::course::MultipleChoiceExercise;
+    use crate::practice::AnswerStatus;
 
     const COURSE_ID: &str = "pt_br.en.foundations";
 
@@ -604,6 +655,191 @@ mod tests {
         assert_eq!(course_progress.unit_progress("quick").attempt_count, 0);
         assert_eq!(course_progress.unit_progress("failed").status, UnitStatusKind::InProgress);
         assert_eq!(course_progress.unit_progress("passed").status, UnitStatusKind::Completed);
+    }
+
+    fn choice(prompt: &str) -> Exercise {
+        Exercise::MultipleChoice(MultipleChoiceExercise {
+            prompt: prompt.to_string(),
+            choices: vec!["sim".to_string(), "não".to_string()],
+            answer_index: 0,
+            explanation: None,
+        })
+    }
+
+    fn unit_exercises() -> Vec<Exercise> {
+        ["a", "b", "c", "d", "e"].into_iter().map(choice).collect()
+    }
+
+    fn result(status: AnswerStatus) -> SavedExerciseResult {
+        SavedExerciseResult {
+            status,
+            answer_text: "sim".to_string(),
+        }
+    }
+
+    fn resumable(state: PausedPracticeStateKind) -> PausedPractice {
+        match state {
+            PausedPracticeStateKind::Resumable(paused_practice) => paused_practice,
+            other => panic!("expected a resumable paused practice; [state={other:?}]"),
+        }
+    }
+
+    #[test]
+    fn paused_practice_state_is_not_paused_until_a_full_practice_starts() {
+        let course_progress: CourseProgress = CourseProgress::default();
+
+        assert_eq!(course_progress.paused_practice_state("u", &unit_exercises()), PausedPracticeStateKind::NotPaused);
+    }
+
+    #[test]
+    fn a_paused_practice_resumes_at_the_next_question_with_its_results() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.start_full_practice("u", &exercises);
+
+        course_progress.record_full_practice_result("u", result(AnswerStatus::Correct));
+        course_progress.record_full_practice_result("u", result(AnswerStatus::Wrong));
+
+        let paused_practice: PausedPractice = resumable(course_progress.paused_practice_state("u", &exercises));
+
+        assert_eq!(paused_practice.next_question_index(), 2);
+        assert_eq!(paused_practice.question_count(), 5);
+        assert_eq!(paused_practice.results, vec![result(AnswerStatus::Correct), result(AnswerStatus::Wrong)]);
+        assert_eq!(course_progress.paused_practice_state("other", &exercises), PausedPracticeStateKind::NotPaused);
+    }
+
+    #[test]
+    fn start_full_practice_replaces_the_paused_practice() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.start_full_practice("u", &exercises);
+        course_progress.record_full_practice_result("u", result(AnswerStatus::Correct));
+
+        course_progress.start_full_practice("u", &exercises);
+
+        assert_eq!(resumable(course_progress.paused_practice_state("u", &exercises)).next_question_index(), 0);
+    }
+
+    #[test]
+    fn record_full_practice_result_without_a_paused_practice_does_nothing() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+
+        course_progress.record_full_practice_result("u", result(AnswerStatus::Correct));
+
+        assert_eq!(course_progress, CourseProgress::default());
+    }
+
+    #[test]
+    fn paused_practice_state_reports_changed_exercises() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.start_full_practice("u", &unit_exercises());
+        course_progress.record_full_practice_result("u", result(AnswerStatus::Correct));
+
+        let mut changed_exercises: Vec<Exercise> = unit_exercises();
+        changed_exercises[3] = choice("rewritten");
+
+        assert_eq!(course_progress.paused_practice_state("u", &changed_exercises), PausedPracticeStateKind::ExercisesChanged);
+        assert_eq!(course_progress.paused_practice_state("u", &unit_exercises()[..4]), PausedPracticeStateKind::ExercisesChanged);
+    }
+
+    #[test]
+    fn clear_paused_practice_leaves_the_other_units_paused() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.start_full_practice("u", &exercises);
+        course_progress.start_full_practice("v", &exercises);
+
+        course_progress.clear_paused_practice("u");
+
+        assert_eq!(course_progress.paused_practice_state("u", &exercises), PausedPracticeStateKind::NotPaused);
+        assert_eq!(resumable(course_progress.paused_practice_state("v", &exercises)).question_count(), 5);
+    }
+
+    #[test]
+    fn progress_saved_before_paused_practices_existed_reads_without_any() {
+        let text: String = format!(r#"{{"courses": {{"{COURSE_ID}": {{"cards": {{}}, "units": {{"u": {{"status": "in_progress"}}}}}}}}}}"#);
+        let progress: Progress = Progress::from_json(&text).unwrap();
+        let course_progress: CourseProgress = progress.course_progress(COURSE_ID);
+
+        assert!(course_progress.paused_practices.is_empty());
+        assert_eq!(course_progress.unit_progress("u").status, UnitStatusKind::InProgress);
+    }
+
+    #[test]
+    fn a_paused_practice_round_trips_through_json() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let mut progress: Progress = Progress::default();
+        progress.course_progress_mut(COURSE_ID).start_full_practice("u", &exercises);
+        progress.course_progress_mut(COURSE_ID).record_full_practice_result("u", result(AnswerStatus::AccentMistake));
+
+        let read_back: Progress = Progress::from_json(&progress.to_json().unwrap()).unwrap();
+
+        assert_eq!(read_back, progress);
+        assert_eq!(resumable(read_back.course_progress(COURSE_ID).paused_practice_state("u", &exercises)).next_question_index(), 1);
+    }
+
+    #[test]
+    fn finishing_a_resumed_full_practice_matches_an_uninterrupted_one() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let statuses: [AnswerStatus; 5] =
+            [AnswerStatus::Correct, AnswerStatus::AccentMistake, AnswerStatus::Correct, AnswerStatus::Correct, AnswerStatus::Wrong];
+        let uninterrupted_score: SessionScore = SessionScore { correct_count: 4, total_count: 5 };
+
+        let mut uninterrupted: Progress = Progress::default();
+        let uninterrupted_outcome: PracticeOutcome =
+            uninterrupted.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, uninterrupted_score, 3, 1_000);
+
+        let mut before_pause: Progress = Progress::default();
+        before_pause.course_progress_mut(COURSE_ID).start_full_practice("u", &exercises);
+
+        for status in &statuses[..2] {
+            before_pause.course_progress_mut(COURSE_ID).record_full_practice_result("u", result(*status));
+        }
+
+        let mut resumed: Progress = Progress::from_json(&before_pause.to_json().unwrap()).unwrap();
+
+        for status in &statuses[2..] {
+            resumed.course_progress_mut(COURSE_ID).record_full_practice_result("u", result(*status));
+        }
+
+        let resumed_outcome: Option<PracticeOutcome> = resumed.finish_full_practice(COURSE_ID, "u", 3, 1_000);
+
+        assert_eq!(resumed_outcome, Some(uninterrupted_outcome));
+        assert_eq!(uninterrupted_outcome, PracticeOutcome { passed: true, words_added_count: 3 });
+        assert_eq!(resumed, uninterrupted);
+        assert_eq!(resumed.course_progress(COURSE_ID).paused_practice_state("u", &exercises), PausedPracticeStateKind::NotPaused);
+    }
+
+    #[test]
+    fn finish_full_practice_waits_for_every_question_to_be_answered() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let mut progress: Progress = Progress::default();
+        progress.course_progress_mut(COURSE_ID).start_full_practice("u", &exercises);
+        progress.course_progress_mut(COURSE_ID).record_full_practice_result("u", result(AnswerStatus::Correct));
+
+        let outcome: Option<PracticeOutcome> = progress.finish_full_practice(COURSE_ID, "u", 3, 0);
+
+        assert_eq!(outcome, None);
+        assert_eq!(progress.course_progress(COURSE_ID).unit_progress("u").attempt_count, 0);
+        assert_eq!(resumable(progress.course_progress(COURSE_ID).paused_practice_state("u", &exercises)).next_question_index(), 1);
+        assert_eq!(progress.finish_full_practice(COURSE_ID, "unpaused", 3, 0), None);
+    }
+
+    #[test]
+    fn a_quick_practice_keeps_the_paused_full_practice_and_a_full_one_ends_it() {
+        let exercises: Vec<Exercise> = unit_exercises();
+        let score: SessionScore = SessionScore { correct_count: 9, total_count: 10 };
+        let mut progress: Progress = Progress::default();
+        progress.course_progress_mut(COURSE_ID).start_full_practice("u", &exercises);
+        progress.course_progress_mut(COURSE_ID).record_full_practice_result("u", result(AnswerStatus::Correct));
+
+        progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Quick, score, 3, 0);
+
+        assert_eq!(resumable(progress.course_progress(COURSE_ID).paused_practice_state("u", &exercises)).next_question_index(), 1);
+
+        progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, score, 3, 0);
+
+        assert_eq!(progress.course_progress(COURSE_ID).paused_practice_state("u", &exercises), PausedPracticeStateKind::NotPaused);
     }
 
     #[test]
