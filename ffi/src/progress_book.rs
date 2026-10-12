@@ -298,19 +298,24 @@ impl ProgressBook {
             .ok_or_else(|| CoreError::arising("the words were not queued".to_string()))
     }
 
-    pub fn due_card_count(&self, course_id: String) -> u32 {
-        self.lock().course_progress(&course_id).due_card_count(now_milliseconds()) as u32
+    pub fn due_card_count(&self, course_id: String, now_milliseconds: i64) -> u32 {
+        self.lock().course_progress(&course_id).due_card_count(now_milliseconds) as u32
+    }
+
+    /// The earliest due time, in any course, of a card that is due later than `now_milliseconds`.
+    pub fn next_due_milliseconds_after(&self, now_milliseconds: i64) -> Option<i64> {
+        self.lock().next_due_milliseconds_after(now_milliseconds)
     }
 
     pub fn card_count(&self, course_id: String) -> u32 {
         self.lock().course_progress(&course_id).cards.len() as u32
     }
 
-    /// The ids of up to `limit` of the course's cards due now, in the order they should be reviewed.
-    pub fn due_card_ids(&self, course_id: String, limit: u32) -> Vec<String> {
+    /// The ids of up to `limit` of the course's cards due by `now_milliseconds`, in the order they should be reviewed.
+    pub fn due_card_ids(&self, course_id: String, limit: u32, now_milliseconds: i64) -> Vec<String> {
         let course_progress: CourseProgress = self.lock().course_progress(&course_id);
 
-        review::select_due_cards(course_progress.cards.values(), now_milliseconds(), limit as usize)
+        review::select_due_cards(course_progress.cards.values(), now_milliseconds, limit as usize)
             .into_iter()
             .map(|card| card.id.clone())
             .collect()
@@ -429,7 +434,7 @@ mod tests {
 
         assert_eq!(reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()).status, UnitStatusRecord::Completed);
         assert_eq!(reopened.card_count(COURSE_ID.to_string()), 4);
-        assert_eq!(reopened.due_card_count(COURSE_ID.to_string()), 4);
+        assert_eq!(reopened.due_card_count(COURSE_ID.to_string(), now_milliseconds()), 4);
         assert_eq!(reopened.card_count("es.en.foundations".to_string()), 0);
     }
 
@@ -476,10 +481,28 @@ mod tests {
         let book: Arc<ProgressBook> = book_in(&directory);
         book.queue_unit_vocabulary(COURSE_ID.to_string(), "u".to_string(), 2).unwrap();
 
-        let first_due: String = book.due_card_ids(COURSE_ID.to_string(), 10)[0].clone();
+        let first_due: String = book.due_card_ids(COURSE_ID.to_string(), 10, now_milliseconds())[0].clone();
         book.grade_card(COURSE_ID.to_string(), first_due, true).unwrap();
 
-        assert_eq!(book.due_card_count(COURSE_ID.to_string()), 1);
+        assert_eq!(book.due_card_count(COURSE_ID.to_string(), now_milliseconds()), 1);
+    }
+
+    #[test]
+    fn due_reads_follow_the_time_they_are_given() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.queue_unit_vocabulary(COURSE_ID.to_string(), "u".to_string(), 2).unwrap();
+        let first_due: String = book.due_card_ids(COURSE_ID.to_string(), 10, now_milliseconds())[0].clone();
+        book.grade_card(COURSE_ID.to_string(), first_due.clone(), false).unwrap();
+
+        let graded_milliseconds: i64 = now_milliseconds();
+        let next_due_milliseconds: i64 = book.next_due_milliseconds_after(graded_milliseconds).unwrap();
+
+        assert!(next_due_milliseconds > graded_milliseconds);
+        assert_eq!(book.due_card_count(COURSE_ID.to_string(), next_due_milliseconds - 1), 1);
+        assert_eq!(book.due_card_count(COURSE_ID.to_string(), next_due_milliseconds), 2);
+        assert!(book.due_card_ids(COURSE_ID.to_string(), 10, next_due_milliseconds).contains(&first_due));
+        assert_eq!(book.next_due_milliseconds_after(next_due_milliseconds), None);
     }
 
     #[test]

@@ -26,6 +26,7 @@ struct LanguageApp: App {
                 .task { await courseStore.start() }
                 .onChange(of: scenePhase) { _, phase in
                     if phase == .active {
+                        progressStore.advanceReviewClock()
                         Task { await courseStore.refresh(courseId: courseStore.activeCourseId(lastCourseId: progressStore.lastCourseId())) }
                     }
                 }

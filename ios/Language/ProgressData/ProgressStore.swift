@@ -5,12 +5,19 @@ import Observation
 @MainActor
 @Observable
 final class ProgressStore {
+    /* The device's clock can change while the store waits for the next card to come due. */
+    static let reviewClockMaximumWait: Duration = .seconds(3600)
+
     private let book: ProgressBook
     private var changeCount: Int = 0
     private var errorMessage: String?
+    /// The time every due read is taken at.
+    private var reviewClockMilliseconds: Int64 = 0
+    @ObservationIgnored private var reviewClockAdvance: Task<Void, Never>?
 
     init(environment: CoreEnvironment) {
         book = ProgressBook.open(path: environment.progressPath)
+        advanceReviewClock()
     }
 
     func settings() -> SettingsRecord {
@@ -37,7 +44,7 @@ final class ProgressStore {
 
     func dueCardCount(courseId: String) -> Int {
         _ = changeCount
-        return Int(book.dueCardCount(courseId: courseId))
+        return Int(book.dueCardCount(courseId: courseId, nowMilliseconds: reviewClockMilliseconds))
     }
 
     func cardCount(courseId: String) -> Int {
@@ -47,12 +54,20 @@ final class ProgressStore {
 
     func dueCardIds(courseId: String, limit: Int) -> [String] {
         _ = changeCount
-        return book.dueCardIds(courseId: courseId, limit: UInt32(limit))
+        return book.dueCardIds(courseId: courseId, limit: UInt32(limit), nowMilliseconds: reviewClockMilliseconds)
     }
 
     func countByBox(courseId: String) -> [Int] {
         _ = changeCount
         return book.countByBox(courseId: courseId).map { count in Int(count) }
+    }
+
+    /// Moves the time due reads are taken at to the present, and again when the next card comes due.
+    func advanceReviewClock() {
+        let now: Int64 = Self.currentMilliseconds()
+
+        reviewClockMilliseconds = now
+        scheduleReviewClockAdvance(now: now)
     }
 
     /// The course the learner opened last.
@@ -148,5 +163,32 @@ final class ProgressStore {
         }
 
         changeCount += 1
+        advanceReviewClock()
+    }
+
+    private func scheduleReviewClockAdvance(now: Int64) {
+        let wait: Duration = reviewClockWait(now: now)
+
+        reviewClockAdvance?.cancel()
+        reviewClockAdvance = Task { [weak self] in
+            do {
+                try await Task.sleep(for: wait)
+            } catch {
+                return
+            }
+
+            self?.advanceReviewClock()
+        }
+    }
+
+    private func reviewClockWait(now: Int64) -> Duration {
+        let nextDueMilliseconds: Int64? = book.nextDueMillisecondsAfter(nowMilliseconds: now)
+        let untilNextDue: Duration = nextDueMilliseconds.map { nextDue in .milliseconds(nextDue - now) } ?? Self.reviewClockMaximumWait
+
+        return min(untilNextDue, Self.reviewClockMaximumWait)
+    }
+
+    private static func currentMilliseconds() -> Int64 {
+        Int64((Date().timeIntervalSince1970 * 1000).rounded(.down))
     }
 }
