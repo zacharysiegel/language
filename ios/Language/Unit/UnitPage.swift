@@ -181,6 +181,7 @@ struct UnitPage: View {
                         isPageScrolling: pageScrollPhase.isScrolling,
                         onJump: { itemNumber in jumpToItem(itemNumber, scrollProxy: scrollProxy) },
                     )
+                    .padding(.trailing, .unitItemIndexEdgeInset)
                 }
             }
         }
