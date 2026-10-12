@@ -16,8 +16,31 @@ use crate::progress_state::{remember_route_course, use_progress_store};
 
 const ALL_LEVELS_CODE: &str = "all";
 const LEVEL_INDEX_LABEL: &str = "Level index";
+const UNIT_INDEX_LABEL: &str = "Unit index";
 /// Rows built per animation frame, so the page paints and takes input between batches.
 const GLOSSARY_ROWS_PER_FRAME: usize = 300;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum GlossaryRailKind {
+    Levels,
+    Units,
+}
+
+impl GlossaryRailKind {
+    fn for_level_filter(level_filter: Option<&str>) -> Self {
+        match level_filter {
+            None => GlossaryRailKind::Levels,
+            Some(_) => GlossaryRailKind::Units,
+        }
+    }
+
+    fn index_label(self) -> &'static str {
+        match self {
+            GlossaryRailKind::Levels => LEVEL_INDEX_LABEL,
+            GlossaryRailKind::Units => UNIT_INDEX_LABEL,
+        }
+    }
+}
 
 struct GlossaryEntry {
     clip_key: Option<String>,
@@ -25,6 +48,8 @@ struct GlossaryEntry {
     source: String,
     source_literal: String,
     level: String,
+    unit_id: String,
+    unit_order: u32,
     unit_href: String,
     unit_label: String,
     normalized_target: String,
@@ -39,6 +64,14 @@ impl GlossaryEntry {
 
         level_matches && text_matches
     }
+
+    /// Entries sharing a key share one rail entry.
+    fn rail_key(&self, rail_kind: GlossaryRailKind) -> &str {
+        match rail_kind {
+            GlossaryRailKind::Levels => &self.level,
+            GlossaryRailKind::Units => &self.unit_id,
+        }
+    }
 }
 
 fn glossary_entries(course: &CourseOutline) -> Vec<GlossaryEntry> {
@@ -52,6 +85,8 @@ fn glossary_entries(course: &CourseOutline) -> Vec<GlossaryEntry> {
                 source: item.source.clone(),
                 source_literal: item.source_literal.clone().unwrap_or_default(),
                 level: unit.level.clone(),
+                unit_id: unit.id.clone(),
+                unit_order: unit.order,
                 unit_href: course_data::unit_tab_path(&course.id, &unit.id, "vocabulary"),
                 unit_label: format!("{} {}", unit.level, unit.order),
                 normalized_target: normalize_answer_ignoring_accents(&item.target),
@@ -61,16 +96,22 @@ fn glossary_entries(course: &CourseOutline) -> Vec<GlossaryEntry> {
         .collect()
 }
 
-/// The index of each level's first matching entry, in `entries` order.
-fn first_matching_entry_index_per_level(entries: &[GlossaryEntry], normalized_query: &str, level_filter: Option<&str>) -> Vec<usize> {
-    let mut indexed_levels: Vec<&str> = Vec::new();
+/// The index of the first matching entry of each rail entry's key, in `entries` order.
+fn first_matching_entry_index_per_rail_entry(
+    entries: &[GlossaryEntry],
+    rail_kind: GlossaryRailKind,
+    normalized_query: &str,
+    level_filter: Option<&str>,
+) -> Vec<usize> {
+    let mut indexed_keys: Vec<&str> = Vec::new();
     let mut first_entry_indices: Vec<usize> = Vec::new();
 
     for (entry_index, entry) in entries.iter().enumerate() {
-        let first_of_its_level: bool = !indexed_levels.contains(&entry.level.as_str());
+        let rail_key: &str = entry.rail_key(rail_kind);
+        let first_of_its_key: bool = !indexed_keys.contains(&rail_key);
 
-        if first_of_its_level && entry.matches(normalized_query, level_filter) {
-            indexed_levels.push(&entry.level);
+        if first_of_its_key && entry.matches(normalized_query, level_filter) {
+            indexed_keys.push(rail_key);
             first_entry_indices.push(entry_index);
         }
     }
@@ -78,19 +119,24 @@ fn first_matching_entry_index_per_level(entries: &[GlossaryEntry], normalized_qu
     first_entry_indices
 }
 
-fn level_index_entries(entries: &[GlossaryEntry], normalized_query: &str, level_filter: Option<&str>) -> Vec<ItemIndexEntry> {
-    first_matching_entry_index_per_level(entries, normalized_query, level_filter)
+fn rail_entries(entries: &[GlossaryEntry], rail_kind: GlossaryRailKind, normalized_query: &str, level_filter: Option<&str>) -> Vec<ItemIndexEntry> {
+    first_matching_entry_index_per_rail_entry(entries, rail_kind, normalized_query, level_filter)
         .into_iter()
-        .map(|entry_index| {
-            let level: &str = &entries[entry_index].level;
-
-            ItemIndexEntry {
-                target_element_id: glossary_row_element_id(entry_index),
-                visible_text: level.to_string(),
-                accessible_label: format!("Go to level {level}"),
-            }
-        })
+        .map(|entry_index| rail_entry(entry_index, &entries[entry_index], rail_kind))
         .collect()
+}
+
+fn rail_entry(entry_index: usize, entry: &GlossaryEntry, rail_kind: GlossaryRailKind) -> ItemIndexEntry {
+    let (visible_text, accessible_label): (String, String) = match rail_kind {
+        GlossaryRailKind::Levels => (entry.level.clone(), format!("Go to level {}", entry.level)),
+        GlossaryRailKind::Units => (entry.unit_order.to_string(), format!("Go to unit {}", entry.unit_label)),
+    };
+
+    ItemIndexEntry {
+        target_element_id: glossary_row_element_id(entry_index),
+        visible_text,
+        accessible_label,
+    }
 }
 
 fn glossary_row_element_id(entry_index: usize) -> String {
@@ -163,10 +209,13 @@ fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
             entries.iter().filter(|entry| entry.matches(&normalized_query, level_filter.as_deref())).count()
         })
     };
-    let level_index: Memo<Vec<ItemIndexEntry>> = {
+    let rail_kind: Memo<GlossaryRailKind> = Memo::new(move |_| level_filter.with(|level| GlossaryRailKind::for_level_filter(level.as_deref())));
+    let rail_index: Memo<Vec<ItemIndexEntry>> = {
         let entries: Arc<Vec<GlossaryEntry>> = entries.clone();
 
-        Memo::new(move |_| normalized_query.with(|query| level_filter.with(|level| level_index_entries(&entries, query, level.as_deref()))))
+        Memo::new(move |_| {
+            normalized_query.with(|query| level_filter.with(|level| rail_entries(&entries, rail_kind.get(), query, level.as_deref())))
+        })
     };
 
     // Every row is built once, a frame's worth at a time so no frame blocks for long, and hidden when filtered out.
@@ -231,7 +280,7 @@ fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
             </table>
         </div>
         {move || building.get().then(|| view! { <DelayedStatus message="Building the glossary…" /> })}
-        {move || view! { <ItemIndex index_label=LEVEL_INDEX_LABEL entries=level_index.get() /> }}
+        {move || view! { <ItemIndex index_label=rail_kind.get().index_label() entries=rail_index.get() /> }}
     }
 }
 
@@ -266,15 +315,17 @@ fn glossary_row(
 mod tests {
     use super::*;
 
-    fn glossary_entry(level: &str, target: &str) -> GlossaryEntry {
+    fn glossary_entry(level: &str, unit_order: u32, target: &str) -> GlossaryEntry {
         GlossaryEntry {
             clip_key: None,
             target: target.to_string(),
             source: String::new(),
             source_literal: String::new(),
             level: level.to_string(),
+            unit_id: format!("{level}-{unit_order}"),
+            unit_order,
             unit_href: String::new(),
-            unit_label: String::new(),
+            unit_label: format!("{level} {unit_order}"),
             normalized_target: normalize_answer_ignoring_accents(target),
             normalized_source: String::new(),
         }
@@ -282,28 +333,63 @@ mod tests {
 
     fn sample_entries() -> Vec<GlossaryEntry> {
         vec![
-            glossary_entry("A1", "casa"),
-            glossary_entry("A1", "gato"),
-            glossary_entry("A2", "carro"),
-            glossary_entry("B1", "gatilho"),
-            glossary_entry("A1", "gelo"),
-            glossary_entry("B1", "cadeira"),
+            glossary_entry("A1", 1, "casa"),
+            glossary_entry("A1", 1, "gato"),
+            glossary_entry("A2", 26, "carro"),
+            glossary_entry("B1", 40, "gatilho"),
+            glossary_entry("A1", 2, "gelo"),
+            glossary_entry("B1", 40, "cadeira"),
+            glossary_entry("B1", 41, "gatinho"),
         ]
     }
 
     #[test]
-    fn first_matching_entry_index_per_level_takes_each_level_once_in_entry_order() {
-        assert_eq!(first_matching_entry_index_per_level(&sample_entries(), "", None), vec![0, 2, 3]);
+    fn first_matching_entry_index_per_rail_entry_takes_each_level_once_in_entry_order() {
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Levels, "", None), vec![0, 2, 3]);
     }
 
     #[test]
-    fn first_matching_entry_index_per_level_skips_entries_the_search_excludes() {
-        assert_eq!(first_matching_entry_index_per_level(&sample_entries(), "gat", None), vec![1, 3]);
-        assert_eq!(first_matching_entry_index_per_level(&sample_entries(), "zzz", None), Vec::<usize>::new());
+    fn first_matching_entry_index_per_rail_entry_skips_entries_the_search_excludes() {
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Levels, "gat", None), vec![1, 3]);
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Levels, "zzz", None), Vec::<usize>::new());
     }
 
     #[test]
-    fn first_matching_entry_index_per_level_keeps_only_the_filtered_level() {
-        assert_eq!(first_matching_entry_index_per_level(&sample_entries(), "", Some("B1")), vec![3]);
+    fn first_matching_entry_index_per_rail_entry_takes_each_unit_of_the_filtered_level_once() {
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Units, "", Some("B1")), vec![3, 6]);
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Units, "", Some("A1")), vec![0, 4]);
+    }
+
+    #[test]
+    fn first_matching_entry_index_per_rail_entry_drops_units_the_search_empties() {
+        assert_eq!(first_matching_entry_index_per_rail_entry(&sample_entries(), GlossaryRailKind::Units, "ca", Some("B1")), vec![5]);
+    }
+
+    #[test]
+    fn glossary_rail_kind_lists_units_only_for_a_single_level() {
+        assert_eq!(GlossaryRailKind::for_level_filter(None), GlossaryRailKind::Levels);
+        assert_eq!(GlossaryRailKind::for_level_filter(Some("A2")), GlossaryRailKind::Units);
+    }
+
+    #[test]
+    fn rail_entry_shows_the_unit_number_and_names_the_whole_unit() {
+        let entry: GlossaryEntry = glossary_entry("A2", 26, "carro");
+
+        assert_eq!(
+            rail_entry(2, &entry, GlossaryRailKind::Units),
+            ItemIndexEntry {
+                target_element_id: glossary_row_element_id(2),
+                visible_text: "26".to_string(),
+                accessible_label: "Go to unit A2 26".to_string(),
+            },
+        );
+        assert_eq!(
+            rail_entry(2, &entry, GlossaryRailKind::Levels),
+            ItemIndexEntry {
+                target_element_id: glossary_row_element_id(2),
+                visible_text: "A2".to_string(),
+                accessible_label: "Go to level A2".to_string(),
+            },
+        );
     }
 }
