@@ -38,14 +38,14 @@ table.grid td.numeric {
     white-space: nowrap;
 }
 
-// A narrow screen lays a table out as labelled rows instead.
+// A narrow screen lays out a table that has a grouped form as labelled rows instead.
 .grouped-table {
     display: none;
     font-size: var(--type-size-data);
 }
 
 @media (max-width: $breakpoint-narrow) {
-    .table-scroll {
+    .table-scroll:has(+ .grouped-table) {
         display: none;
     }
 
