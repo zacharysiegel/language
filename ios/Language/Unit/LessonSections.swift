@@ -217,6 +217,9 @@ struct ReadingPanel: View {
                 ExerciseSession(
                     title: "\(reading.title): questions",
                     exercises: reading.questions,
+                    answeredResults: [],
+                    exitKind: .quit,
+                    onAnswer: { _ in },
                     onComplete: { _ in },
                     onExit: { questionsOpen = false },
                 )

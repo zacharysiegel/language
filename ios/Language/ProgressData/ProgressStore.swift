@@ -104,6 +104,37 @@ final class ProgressStore {
         return outcome
     }
 
+    func pausedPracticeState(courseId: String, unitId: String, exercises: [ExerciseRecord]) -> PausedPracticeStateRecord {
+        _ = changeCount
+        return book.pausedPracticeState(courseId: courseId, unitId: unitId, exercises: exercises)
+    }
+
+    /// Replaces any paused practice of the unit.
+    func startFullPractice(courseId: String, unitId: String, exercises: [ExerciseRecord]) -> PausedPracticeRecord? {
+        var pausedPractice: PausedPracticeRecord?
+
+        perform { pausedPractice = try book.startFullPractice(courseId: courseId, unitId: unitId, exercises: exercises) }
+
+        return pausedPractice
+    }
+
+    func recordFullPracticeResult(courseId: String, unitId: String, result: SavedExerciseResultRecord) {
+        perform { try book.recordFullPracticeResult(courseId: courseId, unitId: unitId, result: result) }
+    }
+
+    func clearPausedPractice(courseId: String, unitId: String) {
+        perform { try book.clearPausedPractice(courseId: courseId, unitId: unitId) }
+    }
+
+    /// Records the unit's paused practice as a full practice session; `nil` while it has unanswered questions or when the unit has none.
+    func finishFullPractice(courseId: String, unitId: String, vocabularyCount: Int) -> PracticeOutcomeRecord? {
+        var outcome: PracticeOutcomeRecord?
+
+        perform { outcome = try book.finishFullPractice(courseId: courseId, unitId: unitId, vocabularyCount: UInt32(vocabularyCount)) }
+
+        return outcome
+    }
+
     /// Moves a not started unit to in progress and leaves any other status alone.
     func startUnit(courseId: String, unitId: String) {
         guard unitProgress(courseId: courseId, unitId: unitId).status == .notStarted else {
