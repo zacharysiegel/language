@@ -121,7 +121,7 @@ struct DialoguesSection: View {
                     }
                 }
                 .panel()
-                .unitIndexItem(itemNumber: itemNumber)
+                .indexRailTarget(entryNumber: itemNumber)
             }
         }
     }
@@ -156,7 +156,7 @@ struct GrammarSection: View {
                     }
                 }
                 .panel()
-                .unitIndexItem(itemNumber: itemNumber)
+                .indexRailTarget(entryNumber: itemNumber)
             }
         }
     }
@@ -173,6 +173,12 @@ struct UnitItemLabel: View {
     }
 }
 
+extension UnitOutlineRecord {
+    func itemLabel(itemNumber: Int) -> String {
+        unitItemLabel(levelCode: levelCode, unitOrder: order, itemNumber: UInt32(itemNumber))
+    }
+}
+
 struct ReadingsSection: View {
     let unit: UnitOutlineRecord
     let readings: [ReadingRecord]
@@ -185,7 +191,7 @@ struct ReadingsSection: View {
                 let itemNumber: Int = readingIndex + 1
 
                 ReadingPanel(reading: reading, itemLabel: unit.itemLabel(itemNumber: itemNumber))
-                    .unitIndexItem(itemNumber: itemNumber)
+                    .indexRailTarget(entryNumber: itemNumber)
             }
         }
     }

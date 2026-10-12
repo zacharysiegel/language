@@ -24,9 +24,9 @@ extension CGFloat {
     static let boxShadowOffset: CGFloat = 4
     static let smallBoxShadowOffset: CGFloat = 2
     static let floatingTipMaximumWidth: CGFloat = 320
-    static let unitItemIndexRailWidth: CGFloat = 20
-    static let unitItemIndexEdgeInset: CGFloat = 6
-    static let unitItemIndexEntryMaximumHeight: CGFloat = 21
+    static let indexRailWidth: CGFloat = 20
+    static let indexRailEdgeInset: CGFloat = 6
+    static let indexRailEntryMaximumHeight: CGFloat = 21
     static let tableFieldLabelWidth: CGFloat = 96
 }
 
