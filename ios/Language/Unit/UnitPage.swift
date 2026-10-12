@@ -91,9 +91,7 @@ struct UnitPage: View {
     @Environment(ProgressStore.self) private var progressStore
     @State private var activeTab: UnitTabKind?
     @State private var isStatusHelpShown: Bool = false
-    @State private var itemIndexTracker: UnitItemIndexTracker = UnitItemIndexTracker()
-    @State private var pageScrollPhase: ScrollPhase = .idle
-    @State private var pageScrollMomentumStopper: ScrollMomentumStopper = ScrollMomentumStopper()
+    @State private var indexRailTracker: IndexRailTracker = IndexRailTracker()
 
     var body: some View {
         content()
@@ -140,8 +138,7 @@ struct UnitPage: View {
             contentKey: courseStore.shownContentKey(courseId: courseId),
         )
 
-        let itemLabels: [String] = Self.indexedItemLabels(tab: tab, unit: unit, lesson: lesson)
-        let itemNoun: String? = itemLabels.count >= UnitItemIndex.minimumItemCount ? tab.indexedItemNoun() : nil
+        let itemNoun: String? = tab.indexedItemNoun()
 
         return ScrollViewReader { scrollProxy in
             ScrollView {
@@ -155,33 +152,21 @@ struct UnitPage: View {
                 .padding(.spaceMd)
                 .readableWidth()
                 .id(tab)
-                .coordinateSpace(.named(UnitItemIndex.contentCoordinateSpaceName))
-                .scrollMomentumStopper(pageScrollMomentumStopper)
+                .indexRailContent(indexRailTracker)
             }
-            .onPreferenceChange(UnitItemContentTopsPreferenceKey.self) { contentTops in
-                itemIndexTracker.recordItemContentTops(contentTops)
-            }
-            .onScrollGeometryChange(for: CGFloat.self) { geometry in
-                geometry.visibleRect.minY + geometry.contentInsets.top
-            } action: { _, visibleContentTop in
-                itemIndexTracker.recordVisibleContentTop(visibleContentTop)
-            }
-            .onScrollPhaseChange { _, newPhase in
-                recordPageScrollPhase(newPhase)
-            }
+            .indexRailScrollTracking(indexRailTracker)
             .onChange(of: tab) {
-                itemIndexTracker.recordTabChange()
+                indexRailTracker.recordContentChange()
             }
             .overlay(alignment: .trailing) {
                 if let itemNoun {
-                    UnitItemIndexRail(
-                        itemLabels: itemLabels,
-                        itemNoun: itemNoun,
-                        currentItemNumber: itemIndexTracker.currentItemNumber(),
-                        isPageScrolling: pageScrollPhase.isScrolling,
-                        onJump: { itemNumber in jumpToItem(itemNumber, scrollProxy: scrollProxy) },
+                    IndexRail(
+                        entries: Self.indexRailEntries(tab: tab, itemNoun: itemNoun, unit: unit, lesson: lesson),
+                        railAccessibilityLabel: "\(itemNoun.capitalized) index",
+                        railAccessibilityIdentifier: "unit-item-index",
+                        tracker: indexRailTracker,
+                        scrollProxy: scrollProxy,
                     )
-                    .padding(.trailing, .unitItemIndexEdgeInset)
                 }
             }
         }
@@ -194,24 +179,14 @@ struct UnitPage: View {
         }
     }
 
-    private static func indexedItemLabels(tab: UnitTabKind, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> [String] {
+    private static func indexRailEntries(tab: UnitTabKind, itemNoun: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> [IndexRailEntry] {
         let itemCount: Int = tab.indexedItemCount(in: lesson)
 
-        return (0..<itemCount).map { itemIndex in unit.itemLabel(itemNumber: itemIndex + 1) }
-    }
+        return (0..<itemCount).map { itemIndex in
+            let itemNumber: Int = itemIndex + 1
 
-    private func recordPageScrollPhase(_ phase: ScrollPhase) {
-        pageScrollPhase = phase
-
-        if phase == .interacting {
-            itemIndexTracker.recordLearnerScroll()
+            return IndexRailEntry(visibleText: "\(itemNumber)", accessibilityLabel: "Go to \(itemNoun) \(unit.itemLabel(itemNumber: itemNumber))")
         }
-    }
-
-    private func jumpToItem(_ itemNumber: Int, scrollProxy: ScrollViewProxy) {
-        pageScrollMomentumStopper.stopMomentum()
-        itemIndexTracker.recordJump(itemNumber: itemNumber)
-        scrollProxy.scrollTo(UnitItemAnchor(itemNumber: itemNumber), anchor: .top)
     }
 
     private func prefetchRecordings(_ request: RecordingPrefetchRequest, unitId: String) async {
