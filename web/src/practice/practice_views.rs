@@ -9,7 +9,7 @@ use shared::course::{
     OrderWordsExercise, TranslateToTargetExercise,
 };
 use shared::practice::{AnswerStatus, check_typed_answer, shuffled, shuffled_avoiding_identity};
-use shared::progress::VoiceChoiceKind;
+use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, PlaybackTarget, audio_clip, indicated_pending, use_playback_store};
 use crate::pending_indication::PendingIcon;
@@ -17,28 +17,16 @@ use crate::platform::{self, AudioClip};
 
 const WRONG_FLASH_MILLISECONDS: u64 = 500;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct ExerciseResult {
-    pub status: AnswerStatus,
-    pub answer_text: String,
-}
+fn choice_result(chosen_correctly: bool, answer_text: &str) -> SavedExerciseResult {
+    let status: AnswerStatus = if chosen_correctly { AnswerStatus::Correct } else { AnswerStatus::Wrong };
 
-impl ExerciseResult {
-    pub fn is_correct(&self) -> bool {
-        self.status.is_correct()
-    }
-
-    fn from_choice(chosen_correctly: bool, answer_text: &str) -> ExerciseResult {
-        let status: AnswerStatus = if chosen_correctly { AnswerStatus::Correct } else { AnswerStatus::Wrong };
-
-        ExerciseResult {
-            status,
-            answer_text: answer_text.to_string(),
-        }
+    SavedExerciseResult {
+        status,
+        answer_text: answer_text.to_string(),
     }
 }
 
-pub fn exercise_body(exercise: Exercise, on_submit: Callback<ExerciseResult>) -> AnyView {
+pub fn exercise_body(exercise: Exercise, on_submit: Callback<SavedExerciseResult>) -> AnyView {
     match exercise {
         Exercise::MultipleChoice(exercise) => view! { <MultipleChoiceView exercise on_submit /> }.into_any(),
         Exercise::FillBlank(exercise) => view! { <FillBlankView exercise on_submit /> }.into_any(),
@@ -54,7 +42,7 @@ fn choice_buttons(
     choices: &[String],
     answer_index: usize,
     answer_text: String,
-    on_submit: Callback<ExerciseResult>,
+    on_submit: Callback<SavedExerciseResult>,
 ) -> impl IntoView + use<> {
     let selected: RwSignal<Option<usize>> = RwSignal::new(None);
     let display_order: Vec<usize> = shuffled(&(0..choices.len()).collect::<Vec<usize>>(), platform::random_unit);
@@ -78,7 +66,7 @@ fn choice_buttons(
                         }
 
                         selected.set(Some(choice_index));
-                        on_submit.run(ExerciseResult::from_choice(choice_index == answer_index, &answer_text));
+                        on_submit.run(choice_result(choice_index == answer_index, &answer_text));
                     }
                 >
                     {choice_text}
@@ -91,7 +79,7 @@ fn choice_buttons(
 }
 
 #[component]
-fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let answer_text: String = exercise.choices[exercise.answer_index].clone();
 
     view! {
@@ -101,7 +89,7 @@ fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<Exer
 }
 
 #[component]
-fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.choices[exercise.answer_index]);
     let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
     let playback_store: PlaybackStore = use_playback_store();
@@ -122,7 +110,7 @@ fn submit_typed_answer(
     answered: RwSignal<bool>,
     accepted_answers: &[String],
     answer_text: &str,
-    on_submit: Callback<ExerciseResult>,
+    on_submit: Callback<SavedExerciseResult>,
 ) {
     let typed_text: String = typed.get_untracked();
 
@@ -134,7 +122,7 @@ fn submit_typed_answer(
 
     let status: AnswerStatus = check_typed_answer(&typed_text, accepted_answers);
 
-    on_submit.run(ExerciseResult {
+    on_submit.run(SavedExerciseResult {
         status,
         answer_text: answer_text.to_string(),
     });
@@ -177,7 +165,7 @@ fn CheckButton(answered: RwSignal<bool>) -> impl IntoView {
 }
 
 #[component]
-fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let (before, after): (&str, &str) = exercise
@@ -203,7 +191,7 @@ fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<ExerciseResult
 }
 
 #[component]
-fn TranslateView(exercise: TranslateToTargetExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn TranslateView(exercise: TranslateToTargetExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = exercise.answers.join("  |  ");
@@ -222,7 +210,7 @@ fn TranslateView(exercise: TranslateToTargetExercise, on_submit: Callback<Exerci
 }
 
 #[component]
-fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn DictationView(exercise: DictationExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.hint_source);
@@ -248,7 +236,7 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<ExerciseResult
 }
 
 #[component]
-fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let candidate_tokens: Vec<String> = exercise.words.iter().chain(exercise.distractors.iter()).cloned().collect();
     let tokens: Arc<Vec<String>> = Arc::new(shuffled_avoiding_identity(&candidate_tokens, platform::random_unit));
     let placed_token_ids: RwSignal<Vec<usize>> = RwSignal::new(Vec::new());
@@ -309,7 +297,7 @@ fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<ExerciseResu
             .collect::<Vec<&str>>()
             .join(" ");
 
-        on_submit.run(ExerciseResult::from_choice(attempt == sentence, &sentence));
+        on_submit.run(choice_result(attempt == sentence, &sentence));
     };
 
     view! {
@@ -328,7 +316,7 @@ fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<ExerciseResu
 }
 
 #[component]
-fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> impl IntoView {
+fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let pairs: Arc<MatchExercise> = Arc::new(exercise);
     let pair_indexes: Vec<usize> = (0..pairs.pairs.len()).collect();
     let left_order: Vec<usize> = shuffled(&pair_indexes, platform::random_unit);
@@ -363,7 +351,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<ExerciseResult>) -> im
                         .collect::<Vec<String>>()
                         .join("; ");
 
-                    on_submit.run(ExerciseResult::from_choice(mistake_count.get_untracked() == 0, &answer_text));
+                    on_submit.run(choice_result(mistake_count.get_untracked() == 0, &answer_text));
                 }
 
                 return;
