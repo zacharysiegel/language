@@ -5,14 +5,18 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use chrono::Utc;
 use shared::AppError;
+use shared::course::Exercise;
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
 use shared::progress::{
-    AudioEngineKind, CourseProgress, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, Settings, UnitProgress, UnitStatusKind, VoiceChoiceKind,
+    AudioEngineKind, CourseProgress, PausedPractice, PausedPracticeStateKind, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, SavedExerciseResult,
+    Settings, UnitProgress, UnitStatusKind, VoiceChoiceKind,
 };
 use shared::review::{self, ReviewCard};
 
+use crate::course_records::ExerciseRecord;
 use crate::ffi_error::CoreError;
+use crate::practice_functions::AnswerStatusRecord;
 
 const UNREADABLE_PROGRESS_SUFFIX: &str = "unreadable";
 
@@ -210,6 +214,76 @@ impl From<QueuedCards> for QueuedCardsRecord {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SavedExerciseResultRecord {
+    pub status: AnswerStatusRecord,
+    /// The answer shown back to the learner after grading.
+    pub answer_text: String,
+}
+
+impl From<SavedExerciseResultRecord> for SavedExerciseResult {
+    fn from(record: SavedExerciseResultRecord) -> SavedExerciseResult {
+        SavedExerciseResult {
+            status: record.status.into(),
+            answer_text: record.answer_text,
+        }
+    }
+}
+
+impl From<&SavedExerciseResult> for SavedExerciseResultRecord {
+    fn from(result: &SavedExerciseResult) -> SavedExerciseResultRecord {
+        SavedExerciseResultRecord {
+            status: result.status.into(),
+            answer_text: result.answer_text.clone(),
+        }
+    }
+}
+
+/// A full practice of one unit, saved after every graded answer so it can be left and continued exactly.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct PausedPracticeRecord {
+    /// Indices into the unit's exercises, in the order the practice asks them.
+    pub exercise_order: Vec<u32>,
+    /// One per answered question, in the order asked.
+    pub results: Vec<SavedExerciseResultRecord>,
+    /// Equal to `question_count` once every question is answered.
+    pub next_question_index: u32,
+    pub question_count: u32,
+}
+
+impl From<&PausedPractice> for PausedPracticeRecord {
+    fn from(paused_practice: &PausedPractice) -> PausedPracticeRecord {
+        PausedPracticeRecord {
+            exercise_order: paused_practice.exercise_order.iter().map(|exercise_index| *exercise_index as u32).collect(),
+            results: paused_practice.results.iter().map(SavedExerciseResultRecord::from).collect(),
+            next_question_index: paused_practice.next_question_index() as u32,
+            question_count: paused_practice.question_count() as u32,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Enum)]
+pub enum PausedPracticeStateRecord {
+    NotPaused,
+    Resumable {
+        paused_practice: PausedPracticeRecord,
+    },
+    /// The unit's exercises differ from the ones the paused practice was started with.
+    ExercisesChanged,
+}
+
+impl From<PausedPracticeStateKind> for PausedPracticeStateRecord {
+    fn from(kind: PausedPracticeStateKind) -> PausedPracticeStateRecord {
+        match kind {
+            PausedPracticeStateKind::NotPaused => PausedPracticeStateRecord::NotPaused,
+            PausedPracticeStateKind::Resumable(paused_practice) => PausedPracticeStateRecord::Resumable {
+                paused_practice: (&paused_practice).into(),
+            },
+            PausedPracticeStateKind::ExercisesChanged => PausedPracticeStateRecord::ExercisesChanged,
+        }
+    }
+}
+
 /// The learner's progress, saved to one file after every change.
 #[derive(uniffi::Object)]
 pub struct ProgressBook {
@@ -285,6 +359,44 @@ impl ProgressBook {
         outcome
             .map(PracticeOutcomeRecord::from)
             .ok_or_else(|| CoreError::arising("the practice session was not recorded".to_string()))
+    }
+
+    /// Replaces any paused practice of the unit.
+    pub fn start_full_practice(&self, course_id: String, unit_id: String, exercises: Vec<ExerciseRecord>) -> Result<PausedPracticeRecord, CoreError> {
+        let exercises: Vec<Exercise> = exercises_of(&exercises);
+        let mut paused_practice: Option<PausedPractice> = None;
+
+        self.change(|progress| paused_practice = Some(progress.course_progress_mut(&course_id).start_full_practice(&unit_id, &exercises)))?;
+
+        paused_practice
+            .as_ref()
+            .map(PausedPracticeRecord::from)
+            .ok_or_else(|| CoreError::arising("the full practice was not started".to_string()))
+    }
+
+    /// Does nothing when the unit has no paused practice.
+    pub fn record_full_practice_result(&self, course_id: String, unit_id: String, result: SavedExerciseResultRecord) -> Result<(), CoreError> {
+        self.change(|progress| progress.course_progress_mut(&course_id).record_full_practice_result(&unit_id, result.into()))
+    }
+
+    pub fn paused_practice_state(&self, course_id: String, unit_id: String, exercises: Vec<ExerciseRecord>) -> PausedPracticeStateRecord {
+        let exercises: Vec<Exercise> = exercises_of(&exercises);
+
+        self.lock().course_progress(&course_id).paused_practice_state(&unit_id, &exercises).into()
+    }
+
+    pub fn clear_paused_practice(&self, course_id: String, unit_id: String) -> Result<(), CoreError> {
+        self.change(|progress| progress.course_progress_mut(&course_id).clear_paused_practice(&unit_id))
+    }
+
+    /// Records the unit's paused practice as a full practice session; `None` while it has unanswered questions or when
+    /// the unit has no paused practice.
+    pub fn finish_full_practice(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<Option<PracticeOutcomeRecord>, CoreError> {
+        let mut outcome: Option<PracticeOutcome> = None;
+
+        self.change(|progress| outcome = progress.finish_full_practice(&course_id, &unit_id, vocabulary_count as usize, now_milliseconds()))?;
+
+        Ok(outcome.map(PracticeOutcomeRecord::from))
     }
 
     pub fn queue_unit_vocabulary(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<QueuedCardsRecord, CoreError> {
@@ -412,6 +524,10 @@ fn now_milliseconds() -> i64 {
     Utc::now().timestamp_millis()
 }
 
+fn exercises_of(exercise_records: &[ExerciseRecord]) -> Vec<Exercise> {
+    exercise_records.iter().map(Exercise::from).collect()
+}
+
 
 #[cfg(test)]
 mod tests {
@@ -503,6 +619,79 @@ mod tests {
         assert_eq!(book.due_card_count(COURSE_ID.to_string(), next_due_milliseconds), 2);
         assert!(book.due_card_ids(COURSE_ID.to_string(), 10, next_due_milliseconds).contains(&first_due));
         assert_eq!(book.next_due_milliseconds_after(next_due_milliseconds), None);
+    }
+
+    fn choice_records(prompts: &[&str]) -> Vec<ExerciseRecord> {
+        prompts
+            .iter()
+            .map(|prompt| ExerciseRecord::MultipleChoice {
+                prompt: prompt.to_string(),
+                choices: vec!["sim".to_string(), "não".to_string()],
+                answer_index: 0,
+                explanation: None,
+            })
+            .collect()
+    }
+
+    fn result_record(status: AnswerStatusRecord) -> SavedExerciseResultRecord {
+        SavedExerciseResultRecord {
+            status,
+            answer_text: "sim".to_string(),
+        }
+    }
+
+    #[test]
+    fn a_paused_full_practice_is_saved_after_every_result_and_finishes_after_reopening() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let exercises: Vec<ExerciseRecord> = choice_records(&["a", "b"]);
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.start_full_practice(COURSE_ID.to_string(), "u".to_string(), exercises.clone()).unwrap();
+        book.record_full_practice_result(COURSE_ID.to_string(), "u".to_string(), result_record(AnswerStatusRecord::AccentMistake)).unwrap();
+
+        let reopened: Arc<ProgressBook> = book_in(&directory);
+        let state: PausedPracticeStateRecord = reopened.paused_practice_state(COURSE_ID.to_string(), "u".to_string(), exercises.clone());
+
+        assert_eq!(
+            state,
+            PausedPracticeStateRecord::Resumable {
+                paused_practice: PausedPracticeRecord {
+                    exercise_order: vec![0, 1],
+                    results: vec![result_record(AnswerStatusRecord::AccentMistake)],
+                    next_question_index: 1,
+                    question_count: 2,
+                },
+            },
+        );
+
+        reopened.record_full_practice_result(COURSE_ID.to_string(), "u".to_string(), result_record(AnswerStatusRecord::Correct)).unwrap();
+
+        let outcome: Option<PracticeOutcomeRecord> = reopened.finish_full_practice(COURSE_ID.to_string(), "u".to_string(), 4).unwrap();
+
+        assert_eq!(outcome, Some(PracticeOutcomeRecord { passed: true, words_added_count: 4 }));
+        assert_eq!(book_in(&directory).unit_progress(COURSE_ID.to_string(), "u".to_string()).status, UnitStatusRecord::Completed);
+        assert_eq!(
+            book_in(&directory).paused_practice_state(COURSE_ID.to_string(), "u".to_string(), exercises),
+            PausedPracticeStateRecord::NotPaused,
+        );
+    }
+
+    #[test]
+    fn a_paused_full_practice_of_changed_exercises_is_reported_and_can_be_cleared() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.start_full_practice(COURSE_ID.to_string(), "u".to_string(), choice_records(&["a", "b"])).unwrap();
+
+        let changed_exercises: Vec<ExerciseRecord> = choice_records(&["a", "rewritten"]);
+        let state: PausedPracticeStateRecord = book.paused_practice_state(COURSE_ID.to_string(), "u".to_string(), changed_exercises.clone());
+
+        assert_eq!(state, PausedPracticeStateRecord::ExercisesChanged);
+
+        book.clear_paused_practice(COURSE_ID.to_string(), "u".to_string()).unwrap();
+
+        assert_eq!(
+            book_in(&directory).paused_practice_state(COURSE_ID.to_string(), "u".to_string(), changed_exercises),
+            PausedPracticeStateRecord::NotPaused,
+        );
     }
 
     #[test]

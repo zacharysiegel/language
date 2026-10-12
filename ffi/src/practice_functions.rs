@@ -12,6 +12,16 @@ pub enum AnswerStatusRecord {
     Wrong,
 }
 
+impl From<AnswerStatusRecord> for AnswerStatus {
+    fn from(record: AnswerStatusRecord) -> AnswerStatus {
+        match record {
+            AnswerStatusRecord::Correct => AnswerStatus::Correct,
+            AnswerStatusRecord::AccentMistake => AnswerStatus::AccentMistake,
+            AnswerStatusRecord::Wrong => AnswerStatus::Wrong,
+        }
+    }
+}
+
 impl From<AnswerStatus> for AnswerStatusRecord {
     fn from(status: AnswerStatus) -> AnswerStatusRecord {
         match status {
