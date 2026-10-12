@@ -2,8 +2,8 @@ use std::time::Duration;
 
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
-use shared::course::vocabulary_card_id;
-use shared::progress::{Progress, QueuedCards, UnitStatusKind};
+use shared::course::{Exercise, vocabulary_card_id};
+use shared::progress::{PausedPractice, PausedPracticeStateKind, Progress, QueuedCards, SavedExerciseResult, UnitStatusKind};
 
 use crate::platform;
 
@@ -56,6 +56,26 @@ impl ProgressStore {
 
     pub fn set_unit_status(&self, course_id: &str, unit_id: &str, status: UnitStatusKind) {
         self.progress.update(|progress| progress.course_progress_mut(course_id).set_unit_status(unit_id, status));
+    }
+
+    /// Replaces any paused full practice of the unit; `None` once the store is disposed.
+    pub fn start_full_practice(&self, course_id: &str, unit_id: &str, exercises: &[Exercise]) -> Option<PausedPractice> {
+        self.progress.try_update(|progress| progress.course_progress_mut(course_id).start_full_practice(unit_id, exercises))
+    }
+
+    pub fn record_full_practice_result(&self, course_id: &str, unit_id: &str, result: SavedExerciseResult) {
+        self.progress.update(|progress| progress.course_progress_mut(course_id).record_full_practice_result(unit_id, result));
+    }
+
+    pub fn paused_practice_state(&self, course_id: &str, unit_id: &str, exercises: &[Exercise]) -> PausedPracticeStateKind {
+        self.progress.with(|progress| match progress.courses.get(course_id) {
+            Some(course_progress) => course_progress.paused_practice_state(unit_id, exercises),
+            None => PausedPracticeStateKind::NotPaused,
+        })
+    }
+
+    pub fn clear_paused_practice(&self, course_id: &str, unit_id: &str) {
+        self.progress.update(|progress| progress.course_progress_mut(course_id).clear_paused_practice(unit_id));
     }
 
     pub fn due_card_count(&self, course_id: &str) -> usize {
