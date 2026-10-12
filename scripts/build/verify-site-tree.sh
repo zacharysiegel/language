@@ -90,6 +90,13 @@ if test ! -f "${EMBEDDED_COURSE_INDEX_PATH}"; then
     fail "${EMBEDDED_COURSE_INDEX_PATH} is missing, so a client that reaches no repository lists no courses"
 fi
 
+# The page head links these; without them the browser falls back to another site's icon.
+for icon_file in favicon-32.png apple-touch-icon.png favicon.ico; do
+    if test ! -f "${SITE_DIR}/${icon_file}"; then
+        fail "${SITE_DIR}/${icon_file} is missing"
+    fi
+done
+
 if test ! -f "${DISCOVERY_PATH}"; then
     fail "${DISCOVERY_PATH} is missing, so a client has nothing to resolve the repository from"
 fi
