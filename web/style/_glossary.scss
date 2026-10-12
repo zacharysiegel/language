@@ -1,0 +1,69 @@
+@use "tokens" as *;
+
+/* On a narrow screen each entry stacks: Portuguese with its unit, then the English, then the literal meaning. */
+@media (max-width: $breakpoint-narrow) {
+    .table-scroll:has(> table.glossary-table) {
+        overflow-x: visible;
+    }
+
+    table.glossary-table,
+    table.glossary-table tbody {
+        display: block;
+    }
+
+    table.glossary-table thead {
+        display: none;
+    }
+
+    table.glossary-table tr {
+        display: grid;
+        grid-template-columns: auto 1fr auto;
+        column-gap: var(--space-sm);
+        align-items: baseline;
+        padding: var(--space-xs) 0;
+        border-bottom: var(--border-rule);
+    }
+
+    table.glossary-table tr[hidden] {
+        display: none;
+    }
+
+    table.glossary-table td {
+        padding: 0;
+        border: none;
+    }
+
+    table.glossary-table .glossary-play {
+        grid-column: 1;
+        grid-row: 1 / span 3;
+        align-self: start;
+    }
+
+    table.glossary-table .glossary-target {
+        grid-column: 2;
+        grid-row: 1;
+    }
+
+    table.glossary-table .glossary-unit {
+        grid-column: 3;
+        grid-row: 1;
+    }
+
+    table.glossary-table .glossary-source {
+        grid-column: 2 / span 2;
+        grid-row: 2;
+    }
+
+    table.glossary-table .glossary-literal {
+        grid-column: 2 / span 2;
+        grid-row: 3;
+    }
+
+    table.glossary-table .glossary-literal:empty {
+        display: none;
+    }
+
+    table.glossary-table .glossary-literal::before {
+        content: "literally: ";
+    }
+}

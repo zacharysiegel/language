@@ -223,7 +223,7 @@ fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
         </div>
         <span class="page-caption">{move || format!("{} entries", matching_count.get())}</span>
         <div class="table-scroll">
-            <table class="grid" aria-busy=move || building.get().then_some("true")>
+            <table class="grid glossary-table" aria-busy=move || building.get().then_some("true")>
                 <thead><tr><th></th><th>{target_name.clone()}</th><th>{source_name.clone()}</th><th>"Literally"</th><th>"Unit"</th></tr></thead>
                 <tbody node_ref=tbody_ref>
                     <For each=move || 0..rendered_frame_count.get() key=|frame_index: &usize| *frame_index children=frame_rows />
@@ -253,11 +253,11 @@ fn glossary_row(
 
     view! {
         <tr id=element_id class=item_index::ITEM_INDEX_TARGET_CLASS tabindex="-1" hidden=!matches>
-            <td><PlayButton clip_key text=target.clone() /></td>
-            <td class="pt">{target}</td>
-            <td>{source}</td>
-            <td class="literal">{source_literal}</td>
-            <td class="numeric"><A href=unit_href>{unit_label}</A></td>
+            <td class="glossary-play"><PlayButton clip_key text=target.clone() /></td>
+            <td class="pt glossary-target">{target}</td>
+            <td class="glossary-source">{source}</td>
+            <td class="literal glossary-literal">{source_literal}</td>
+            <td class="numeric glossary-unit"><A href=unit_href>{unit_label}</A></td>
         </tr>
     }
 }
