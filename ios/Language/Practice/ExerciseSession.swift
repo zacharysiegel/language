@@ -12,6 +12,40 @@ struct ExerciseResult: Equatable {
     static func fromChoice(chosenCorrectly: Bool, answerText: String) -> ExerciseResult {
         ExerciseResult(status: chosenCorrectly ? .correct : .wrong, answerText: answerText)
     }
+
+    static func fromSaved(_ savedResult: SavedExerciseResultRecord) -> ExerciseResult {
+        ExerciseResult(status: savedResult.status, answerText: savedResult.answerText)
+    }
+
+    func savedResult() -> SavedExerciseResultRecord {
+        SavedExerciseResultRecord(status: status, answerText: answerText)
+    }
+}
+
+/// What leaving a session before its summary does to it.
+enum ExerciseSessionExitKind {
+    /// Discards the session.
+    case quit
+    /// Keeps the session to be resumed.
+    case pause
+
+    func label() -> String {
+        switch self {
+        case .quit:
+            return "Quit"
+        case .pause:
+            return "Pause"
+        }
+    }
+
+    func accessibilityIdentifier() -> String {
+        switch self {
+        case .quit:
+            return "quit"
+        case .pause:
+            return "pause"
+        }
+    }
 }
 
 extension ExerciseRecord {
@@ -56,6 +90,10 @@ extension ExerciseRecord {
 struct ExerciseSession: View {
     let title: String
     let exercises: [ExerciseRecord]
+    /// Applies until the summary; the retry of missed exercises can only be quit.
+    let exitKind: ExerciseSessionExitKind
+    /// Not called in the retry of missed exercises.
+    let onAnswer: (ExerciseResult) -> Void
     let onComplete: (SessionScoreRecord) -> Void
     let onExit: () -> Void
 
@@ -68,6 +106,26 @@ struct ExerciseSession: View {
     @State private var currentResult: ExerciseResult?
     @State private var isRetry: Bool = false
     @State private var completionReported: Bool = false
+
+    /// `answeredResults` are the results of the first exercises, in order; the session continues after them.
+    init(
+        title: String,
+        exercises: [ExerciseRecord],
+        answeredResults: [ExerciseResult],
+        exitKind: ExerciseSessionExitKind,
+        onAnswer: @escaping (ExerciseResult) -> Void,
+        onComplete: @escaping (SessionScoreRecord) -> Void,
+        onExit: @escaping () -> Void,
+    ) {
+        self.title = title
+        self.exercises = exercises
+        self.exitKind = exitKind
+        self.onAnswer = onAnswer
+        self.onComplete = onComplete
+        self.onExit = onExit
+        _currentIndex = State(initialValue: answeredResults.count)
+        _results = State(initialValue: answeredResults)
+    }
 
     var body: some View {
         let sessionExercises: [ExerciseRecord] = activeExercises ?? exercises
@@ -83,21 +141,24 @@ struct ExerciseSession: View {
     }
 
     private func questionView(exercise: ExerciseRecord, total: Int) -> some View {
-        VStack(alignment: .leading, spacing: .spaceMd) {
+        let shownExitKind: ExerciseSessionExitKind = isRetry ? .quit : exitKind
+
+        return VStack(alignment: .leading, spacing: .spaceMd) {
             HStack {
                 Text("\(isRetry ? "\(title), retry of missed" : title): question \(currentIndex + 1) of \(total)")
                     .font(.captionText)
                     .foregroundStyle(Color.inkMuted)
+                    .accessibilityIdentifier("question-position")
 
                 Spacer()
 
-                Button("Quit") {
+                Button(shownExitKind.label()) {
                     audioPlayer.stop()
                     onExit()
                 }
                 .font(.captionText)
                 .foregroundStyle(Color.accentLink)
-                .accessibilityIdentifier("quit")
+                .accessibilityIdentifier(shownExitKind.accessibilityIdentifier())
             }
 
             SquareProgressBar(value: currentIndex, total: total)
@@ -203,6 +264,10 @@ struct ExerciseSession: View {
 
         results.append(result)
         currentResult = result
+
+        if !isRetry {
+            onAnswer(result)
+        }
 
         if exercise.speaksAfterAnswer(), let spokenText = exerciseSpokenText(exercise: exercise) {
             audioPlayer.play(

@@ -35,6 +35,7 @@ final class CourseUITests: XCTestCase {
     static let pendingRecordingValue: String = "Loading the recording"
     static let jumpedGlossaryLevelCode: String = "B1"
     static let jumpedGlossaryUnitId: String = "b1-05-imperfect-subjunctive-conditionals"
+    static let pausedPracticeAnswerCount: Int = 3
 
     private var app: XCUIApplication!
 
@@ -88,6 +89,65 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(summary.waitForExistence(timeout: 5))
         XCTAssertTrue(summary.label.contains("\(exercises.count) of \(exercises.count) correct (100%)"), summary.label)
         saveScreenshot("05-practice-summary")
+    }
+
+    func testAPausedFullPracticeResumesAfterTheAppIsRelaunched() throws {
+        let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
+
+        openThePracticeTab(Self.practicedUnitId)
+        app.buttons["full-practice"].tap()
+        try answerCorrectly(exercises: exercises, indexes: 0..<Self.pausedPracticeAnswerCount)
+        pauseThePractice()
+        assertResumeOffered(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
+
+        relaunchKeepingProgress()
+        openThePracticeTab(Self.practicedUnitId)
+        assertResumeOffered(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
+        saveScreenshot("24-practice-paused")
+
+        app.buttons["resume-full-practice"].tap()
+        assertQuestionPosition(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
+        try answerCorrectly(exercises: exercises, indexes: Self.pausedPracticeAnswerCount..<exercises.count)
+
+        let summary: XCUIElement = app.staticTexts["session-summary"]
+
+        XCTAssertTrue(summary.waitForExistence(timeout: 5))
+        XCTAssertTrue(summary.label.contains("\(exercises.count) of \(exercises.count) correct (100%)"))
+
+        app.buttons["session-done"].tap()
+        XCTAssertTrue(app.buttons["full-practice"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["resume-full-practice"].exists)
+    }
+
+    func testStartOverReplacesThePausedFullPractice() throws {
+        let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
+
+        openThePracticeTab(Self.practicedUnitId)
+        app.buttons["full-practice"].tap()
+        try answerCorrectly(exercises: exercises, indexes: 0..<1)
+        pauseThePractice()
+        assertResumeOffered(questionNumber: 2, questionCount: exercises.count)
+
+        app.buttons["start-over"].tap()
+        assertQuestionPosition(questionNumber: 1, questionCount: exercises.count)
+        pauseThePractice()
+        assertResumeOffered(questionNumber: 1, questionCount: exercises.count)
+    }
+
+    func testQuickPracticeIsQuitAndLeavesThePausedFullPractice() throws {
+        let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
+
+        openThePracticeTab(Self.practicedUnitId)
+        app.buttons["full-practice"].tap()
+        try answerCorrectly(exercises: exercises, indexes: 0..<1)
+        pauseThePractice()
+
+        app.buttons["quick-practice"].tap()
+        XCTAssertTrue(app.buttons["quit"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["pause"].exists)
+        app.buttons["quit"].tap()
+
+        assertResumeOffered(questionNumber: 2, questionCount: exercises.count)
     }
 
     func testReadingQuestionsCanBeAnswered() throws {
@@ -426,6 +486,13 @@ final class CourseUITests: XCTestCase {
 
     // MARK: - Choosing the course
 
+    /// Starts the app again with the same progress file.
+    private func relaunchKeepingProgress() {
+        app.terminate()
+        app.launch()
+        chooseTheCourseIfTheCourseListOpens()
+    }
+
     /// Starts the app again with a cache of its own and neither the origin nor the static repository reachable.
     private func relaunchWithUnreachableRepository() {
         app.terminate()
@@ -463,6 +530,43 @@ final class CourseUITests: XCTestCase {
         scrollUntilHittable(unitButton)
         unitButton.tap()
         XCTAssertTrue(app.buttons["tab-overview"].waitForExistence(timeout: 15))
+    }
+
+    private func openThePracticeTab(_ unitId: String) {
+        openUnit(unitId)
+        app.buttons["tab-practice"].tap()
+    }
+
+    private func answerCorrectly(exercises: [[String: Any]], indexes: Range<Int>) throws {
+        for index in indexes {
+            try solve(exercises[index])
+            assertCorrect(exercise: exercises[index], index: index)
+            app.buttons["continue-exercise"].tap()
+        }
+    }
+
+    private func pauseThePractice() {
+        let pauseButton: XCUIElement = app.buttons["pause"]
+
+        XCTAssertTrue(pauseButton.waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["quit"].exists)
+        pauseButton.tap()
+    }
+
+    private func assertResumeOffered(questionNumber: Int, questionCount: Int) {
+        let resumeButton: XCUIElement = app.buttons["resume-full-practice"]
+
+        XCTAssertTrue(resumeButton.waitForExistence(timeout: 5))
+        XCTAssertTrue(resumeButton.label.contains("question \(questionNumber) of \(questionCount)"))
+        XCTAssertTrue(app.buttons["start-over"].exists)
+        XCTAssertFalse(app.buttons["full-practice"].exists)
+    }
+
+    private func assertQuestionPosition(questionNumber: Int, questionCount: Int) {
+        let position: XCUIElement = app.staticTexts["question-position"]
+
+        XCTAssertTrue(position.waitForExistence(timeout: 5))
+        XCTAssertTrue(position.label.hasSuffix("question \(questionNumber) of \(questionCount)"))
     }
 
     private func solve(_ exercise: [String: Any]) throws {
@@ -664,6 +768,10 @@ final class CourseUITests: XCTestCase {
         let data: Data = XCUIScreen.main.screenshot().pngRepresentation
 
         try? data.write(to: URL(fileURLWithPath: "\(Self.screenshotDirectory)/\(name).png"))
+    }
+
+    private static func readExercises(_ unitId: String) throws -> [[String: Any]] {
+        try readUnit(unitId)["exercises"] as? [[String: Any]] ?? []
     }
 
     private static func readUnit(_ unitId: String) throws -> [String: Any] {
