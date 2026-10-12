@@ -41,7 +41,7 @@ fn direction_from_code(code: &str) -> ReviewDirectionKind {
 }
 
 fn build_session_items(course_id: &str, progress_store: ProgressStore) -> Vec<ReviewItem> {
-    let now_milliseconds: i64 = platform::now_milliseconds();
+    let now_milliseconds: i64 = progress_store.review_clock_milliseconds();
 
     progress_store.read(|progress| {
         let direction: ReviewDirectionKind = progress.settings.review_direction;
@@ -71,7 +71,7 @@ fn ReviewSetup(course: Arc<CourseOutline>) -> impl IntoView {
     let source_name: String = course::language_name(&course.source_language);
     let target_to_source_label: StoredValue<String> = StoredValue::new(format!("{target_name} to {source_name}"));
     let source_to_target_label: StoredValue<String> = StoredValue::new(format!("{source_name} to {target_name}"));
-    let due_count = move || progress_store.read(|progress| progress.course_progress(&course_id.get_value()).due_card_count(platform::now_milliseconds()));
+    let due_count = move || progress_store.due_card_count(&course_id.get_value());
     let total_count = move || progress_store.read(|progress| progress.course_progress(&course_id.get_value()).cards.len());
     let current_direction = move || progress_store.read(|progress| progress.settings.review_direction);
 
