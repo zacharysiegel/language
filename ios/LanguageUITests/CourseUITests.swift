@@ -22,6 +22,8 @@ final class CourseUITests: XCTestCase {
     /* The app's idle hide delay and fade, with room for a slow simulator. */
     static let indexRailHideAllowance: TimeInterval = 3
     static let layoutTolerance: CGFloat = 1
+    /* The app's offset of the rail's shadow. */
+    static let indexRailShadowOffset: CGFloat = 2
     static let groupedTableUnitId: String = "a1-00-how-portuguese-works"
     static let groupedTableNoteTitle: String = "Gender, number and agreement"
     static let stackedTableUnitId: String = "a1-09-shopping-colors-prices"
@@ -302,6 +304,7 @@ final class CourseUITests: XCTestCase {
         performWithoutWaitingForTheAppToIdle {
             self.app.swipeUp(velocity: .slow)
             XCTAssertTrue(self.railEntry(1).isHittable)
+            self.assertTheIndexRailShadowClearsTheTrailingEdge()
             self.saveScreenshot("16-unit-item-index-while-scrolling")
         }
 
@@ -539,6 +542,13 @@ final class CourseUITests: XCTestCase {
 
         XCTAssertFalse(tabRowFrame.isEmpty)
         XCTAssertEqual(screenFrame.maxX - tabRowFrame.maxX, tabRowFrame.minX - screenFrame.minX, accuracy: Self.layoutTolerance)
+    }
+
+    /// Fails when the rail's shadow reaches the screen's trailing edge.
+    private func assertTheIndexRailShadowClearsTheTrailingEdge() {
+        let railTrailingClearance: CGFloat = app.frame.maxX - railEntry(1).frame.maxX
+
+        XCTAssertGreaterThan(railTrailingClearance, Self.indexRailShadowOffset + Self.layoutTolerance)
     }
 
     /// Fails when a tap where the rail's entry for `itemNumber` is drawn jumps to that box.
