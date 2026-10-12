@@ -34,6 +34,7 @@ final class CourseUITests: XCTestCase {
     static let unreachableOrigin: String = "http://192.0.2.1:3002"
     static let pendingRecordingValue: String = "Loading the recording"
     static let jumpedGlossaryLevelCode: String = "B1"
+    static let jumpedGlossaryUnitId: String = "b1-05-imperfect-subjunctive-conditionals"
 
     private var app: XCUIApplication!
 
@@ -337,21 +338,24 @@ final class CourseUITests: XCTestCase {
 
     @MainActor
     func testTheGlossaryLevelRailJumpsToTheFirstWordOfALevel() throws {
-        let firstLevelWord: String = try Self.readFirstVocabularyTarget(levelCode: Self.jumpedGlossaryLevelCode)
+        let firstLevelUnitId: String = try Self.readFirstUnitId(levelCode: Self.jumpedGlossaryLevelCode)
+        let firstLevelUnitNumber: Int = try Self.readUnitNumber(unitId: firstLevelUnitId)
+        let firstLevelWord: String = try Self.readFirstVocabularyTarget(unitId: firstLevelUnitId)
 
-        XCTAssertTrue(app.buttons["unit-\(Self.practicedUnitId)"].waitForExistence(timeout: 20))
-        app.tabBars.buttons["Glossary"].tap()
-        XCTAssertTrue(app.staticTexts["Glossary"].waitForExistence(timeout: 5))
+        openTheGlossary()
 
-        let levelEntry: XCUIElement = glossaryRailEntry(levelCode: Self.jumpedGlossaryLevelCode)
+        let levelEntry: XCUIElement = glossaryLevelRailEntry(levelCode: Self.jumpedGlossaryLevelCode)
+        let firstLevelUnitEntry: XCUIElement = glossaryUnitRailEntry(unitNumber: firstLevelUnitNumber)
 
         XCTAssertTrue(levelEntry.waitForExistence(timeout: 5))
         XCTAssertEqual(levelEntry.label, "Go to level \(Self.jumpedGlossaryLevelCode)")
 
         app.buttons[Self.jumpedGlossaryLevelCode].firstMatch.tap()
+        XCTAssertTrue(firstLevelUnitEntry.waitForExistence(timeout: 5))
         assertGone(levelEntry, timeout: 5)
         app.buttons["All levels"].firstMatch.tap()
         XCTAssertTrue(levelEntry.waitForExistence(timeout: 5))
+        assertGone(firstLevelUnitEntry, timeout: 5)
 
         withTheIndexRailShown {
             levelEntry.tap()
@@ -360,6 +364,29 @@ final class CourseUITests: XCTestCase {
 
         assertNearTopOfThePage(app.staticTexts[firstLevelWord].firstMatch)
         assertSelected(levelEntry)
+    }
+
+    @MainActor
+    func testTheGlossaryUnitRailOfOneLevelJumpsToTheFirstWordOfAUnit() throws {
+        let unitNumber: Int = try Self.readUnitNumber(unitId: Self.jumpedGlossaryUnitId)
+        let firstUnitWord: String = try Self.readFirstVocabularyTarget(unitId: Self.jumpedGlossaryUnitId)
+
+        openTheGlossary()
+        app.buttons[Self.jumpedGlossaryLevelCode].firstMatch.tap()
+
+        let unitEntry: XCUIElement = glossaryUnitRailEntry(unitNumber: unitNumber)
+
+        XCTAssertTrue(unitEntry.waitForExistence(timeout: 5))
+        XCTAssertEqual(unitEntry.label, "Go to unit \(Self.jumpedGlossaryLevelCode) \(unitNumber)")
+        XCTAssertFalse(app.staticTexts[firstUnitWord].firstMatch.isHittable)
+
+        withTheIndexRailShown {
+            unitEntry.tap()
+            self.saveScreenshot("23-glossary-unit-index-jump")
+        }
+
+        assertNearTopOfThePage(app.staticTexts[firstUnitWord].firstMatch)
+        assertSelected(unitEntry)
     }
 
     @MainActor
@@ -555,8 +582,18 @@ final class CourseUITests: XCTestCase {
         app.buttons["unit-item-index-\(itemNumber)"]
     }
 
-    private func glossaryRailEntry(levelCode: String) -> XCUIElement {
+    private func glossaryLevelRailEntry(levelCode: String) -> XCUIElement {
         app.buttons["glossary-level-index-\(levelCode)"]
+    }
+
+    private func glossaryUnitRailEntry(unitNumber: Int) -> XCUIElement {
+        app.buttons["glossary-unit-index-\(unitNumber)"]
+    }
+
+    private func openTheGlossary() {
+        XCTAssertTrue(app.buttons["unit-\(Self.practicedUnitId)"].waitForExistence(timeout: 20))
+        app.tabBars.buttons["Glossary"].tap()
+        XCTAssertTrue(app.staticTexts["Glossary"].waitForExistence(timeout: 5))
     }
 
     private func assertNearTopOfThePage(_ element: XCUIElement) {
@@ -636,14 +673,30 @@ final class CourseUITests: XCTestCase {
         return try JSONSerialization.jsonObject(with: data) as? [String: Any] ?? [:]
     }
 
-    /// The first word of the first unit of the level in curriculum order.
-    private static func readFirstVocabularyTarget(levelCode: String) throws -> String {
-        let curriculumUnits: [[String: Any]] = try readCurriculum()["units"] as? [[String: Any]] ?? []
+    /// The first unit of the level in curriculum order.
+    private static func readFirstUnitId(levelCode: String) throws -> String {
+        let curriculumUnits: [[String: Any]] = try readCurriculumUnits()
         let levelUnit: [String: Any] = try XCTUnwrap(curriculumUnits.first { curriculumUnit in curriculumUnit["level"] as? String == levelCode })
-        let levelUnitId: String = try XCTUnwrap(levelUnit["id"] as? String)
-        let vocabulary: [[String: Any]] = try readUnit(levelUnitId)["vocabulary"] as? [[String: Any]] ?? []
+
+        return try XCTUnwrap(levelUnit["id"] as? String)
+    }
+
+    /// The number the glossary shows in the unit's label.
+    private static func readUnitNumber(unitId: String) throws -> Int {
+        let curriculumUnits: [[String: Any]] = try readCurriculumUnits()
+        let curriculumUnit: [String: Any] = try XCTUnwrap(curriculumUnits.first { curriculumUnit in curriculumUnit["id"] as? String == unitId })
+
+        return try XCTUnwrap(curriculumUnit["order"] as? Int)
+    }
+
+    private static func readFirstVocabularyTarget(unitId: String) throws -> String {
+        let vocabulary: [[String: Any]] = try readUnit(unitId)["vocabulary"] as? [[String: Any]] ?? []
 
         return try XCTUnwrap(vocabulary.first?["target"] as? String)
+    }
+
+    private static func readCurriculumUnits() throws -> [[String: Any]] {
+        try readCurriculum()["units"] as? [[String: Any]] ?? []
     }
 
     private static func readCurriculum() throws -> [String: Any] {
