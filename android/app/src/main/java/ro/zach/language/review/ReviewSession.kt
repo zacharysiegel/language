@@ -130,7 +130,7 @@ private fun ReviewCardView(
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             LanguageText(text = "Card ${position + 1} of $total", style = LanguageType.captionText, color = LanguageColors.inkMuted, modifier = Modifier.weight(1f))
-            TextLink(text = "Quit", onClick = onExit)
+            TextLink(text = "Quit", onClick = onExit, modifier = Modifier.testTag("quit"))
         }
 
         SquareProgressBar(value = position, total = total)

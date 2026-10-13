@@ -26,6 +26,9 @@ import ro.zach.language.design.LanguageType
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 
+internal const val PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE: String = "Loading the recording"
+private const val SLOW_SPEED_GLYPH: String = "0.7×"
+
 /*
  * Stand-ins, with the names and parameters of the audio step's `ro.zach.language.audio`, for practice and review.
  * They draw the controls and play nothing; once the audio package lands, this file goes and its imports take their place.
@@ -51,9 +54,6 @@ internal class AudioPlayer {
 }
 
 internal val LocalAudioPlayer: ProvidableCompositionLocal<AudioPlayer> = staticCompositionLocalOf { AudioPlayer() }
-
-internal const val PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE: String = "Loading the recording"
-private const val SLOW_SPEED_GLYPH: String = "0.7×"
 
 @Composable
 internal fun PlayButton(clip: AudioClip, modifier: Modifier = Modifier, slow: Boolean = false, label: String? = null) {

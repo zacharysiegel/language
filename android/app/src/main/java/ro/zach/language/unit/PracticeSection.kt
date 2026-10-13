@@ -35,7 +35,7 @@ import ro.zach.language.progressdata.ProgressStore
 import kotlin.math.min
 import kotlin.math.roundToInt
 
-const val CHANGED_PRACTICE_NOTE: String = "The practice changed since you paused, so it starts over."
+private const val CHANGED_PRACTICE_NOTE: String = "The practice changed since you paused, so it starts over."
 
 /** A unit's best score and its full and quick practice sessions. */
 @Composable
