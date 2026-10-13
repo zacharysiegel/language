@@ -4,7 +4,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.runtime.Composable
@@ -24,12 +23,12 @@ import ro.zach.language.design.LanguageSpacing
 import ro.zach.language.design.LanguageText
 import ro.zach.language.design.LanguageType
 import ro.zach.language.design.SquareButton
-import ro.zach.language.design.SquareTextButton
+import ro.zach.language.practice.ExerciseSession
+import ro.zach.language.practice.ExerciseSessionExitKind
 
 /*
- * Stand-ins, with the iOS names and parameters, for the audio and practice packages. Once they land, `AudioClip`,
- * `PlayButton` and `PlayAllButton` come from `ro.zach.language.audio` and `ReadingQuestionsSession` draws practice's
- * `ExerciseSession` with the quit exit.
+ * Stand-ins, with the iOS names and parameters, for the audio package. Once it lands, `AudioClip`, `PlayButton` and
+ * `PlayAllButton` come from `ro.zach.language.audio`.
  */
 
 private val playGlyphSize: Dp = LanguageSpacing.spaceMd - LanguageSpacing.spaceXs
@@ -73,9 +72,14 @@ fun PlayAllButton(clips: List<AudioClip>, modifier: Modifier = Modifier) {
 /** A reading's comprehension questions as an exercise session that can only be quit. */
 @Composable
 fun ReadingQuestionsSession(title: String, questions: List<ExerciseRecord>, onExit: () -> Unit, modifier: Modifier = Modifier) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
-        LanguageText(text = title, style = LanguageType.titleText)
-        LanguageText(text = "${questions.size} questions", style = LanguageType.captionText, color = LanguageColors.inkMuted)
-        SquareTextButton(text = "Quit", onClick = onExit, isCompact = true, modifier = Modifier.testTag("quit"))
-    }
+    ExerciseSession(
+        title = title,
+        exercises = questions,
+        answeredResults = emptyList(),
+        exitKind = ExerciseSessionExitKind.Quit,
+        onAnswer = {},
+        onComplete = {},
+        onExit = onExit,
+        modifier = modifier,
+    )
 }
