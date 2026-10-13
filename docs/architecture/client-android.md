@@ -389,3 +389,15 @@ The glossary, progress and settings step:
 - A failed export or reset shows "Could not export" or "Could not reset" with the store's error, where iOS reports success.
 - `settings/SettingsEndToEndTest.kt` is new: with the repository unreachable, the update check shows "Checking" and the checking message.
 - The progress page stays in `progresspage/`, as the foundation named it.
+
+The practice and review step:
+
+- `audio/` has not landed, so `practice/AudioStandIns.kt` holds internal stand-ins with the audio step's names (`AudioClip`, `PlaybackControlKind`, `AudioPlayer`, `LocalAudioPlayer`, `PlayButton`) that draw the controls and play nothing. Listening choice and dictation have no sound until then. The audio step deletes the file and imports `ro.zach.language.audio` in `practice/ExerciseSession.kt`, `practice/ExerciseViews.kt` and `review/ReviewSession.kt`.
+- `practice/ExerciseSessionState.kt` is new: the session's place, saved with `rememberSaveable` so a session survives a tab change, as iOS keeps its tabs alive. `ExerciseResult` and `ReviewItem` are `Serializable` for the same reason. `practice/ExerciseSessionStateTest.kt` is new.
+- The `ExerciseRecord` extensions are in `practice/ExerciseRecords.kt`.
+- The review is split into `review/ReviewPage.kt`, `review/ReviewSession.kt` and `review/ReviewItems.kt` (`VocabularyIndex`, `buildReviewItems`); `ReviewCardSide` replaces `promptIsTarget` and `ReviewGradeKind` the remembered flag. `review/ReviewItemsTest.kt` is new.
+- `design/SquareDropDown.kt` (the direction menu, in a `Popup`) and `design/TextLink.kt` are new, with the tokens `LanguageSpacing.answerAreaMinimumHeight` and `LanguageSpacing.answerAreaDashLength`.
+- Test tags beyond the iOS identifiers: `retry-missed`, `review-direction`, `direction-<direction>`, and `quit` on the review card.
+- `practice/ExerciseSolver.kt` in `androidTest` answers exercises from their JSON, for the practice and reading question tests.
+- `ReadingQuestionsSession` in `unit/IntegrationStubs.kt` draws `ExerciseSession` with the quit exit; `readingQuestions_canBeAnswered` is in `unit/PracticeSectionEndToEndTest.kt`.
+- `review/ReviewEndToEndTest.kt` also checks that the due count and the Review tab's badge agree before and after grading, and that the source-to-target direction prompts with the translation.
