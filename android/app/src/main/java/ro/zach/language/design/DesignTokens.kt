@@ -2,6 +2,7 @@ package ro.zach.language.design
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -50,6 +51,7 @@ object LanguageSpacing {
     val topBarSideWidth: Dp = 128.dp
     /** Below this window width a page lays out for a phone held upright. */
     val compactWidthThreshold: Dp = 600.dp
+    val transferTextHeight: Dp = 140.dp
 }
 
 /* The web's type scale, one or two points larger for a phone's reading distance. */
@@ -68,6 +70,7 @@ object LanguageType {
     val figureText: TextStyle = TextStyle(fontSize = 38.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES)
     val targetText: TextStyle = TextStyle(fontSize = 16.sp, fontWeight = FontWeight.Medium)
     val glyphText: TextStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Bold)
+    val transferText: TextStyle = TextStyle(fontSize = 11.sp, fontFamily = FontFamily.Monospace)
     val labelTracking: TextUnit = 0.6.sp
     val tagTracking: TextUnit = 0.4.sp
     val paragraphLineHeight: TextUnit = 21.sp
