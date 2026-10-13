@@ -38,6 +38,10 @@ object LanguageSpacing {
     val indexRailEdgeInset: Dp = 6.dp
     val indexRailEntryMaximumHeight: Dp = 21.dp
     val tableFieldLabelWidth: Dp = 96.dp
+    val tableCellMinimumWidth: Dp = 80.dp
+    val tableCellVerticalPadding: Dp = 6.dp
+    /** Between the stacked lines of one phrase: its target, translation and gloss. */
+    val phraseLineGap: Dp = 2.dp
     val checkBoxSize: Dp = 18.dp
     val tagHorizontalPadding: Dp = 6.dp
     val tagVerticalPadding: Dp = 2.dp
@@ -55,6 +59,7 @@ object LanguageType {
     val bodyText: TextStyle = TextStyle(fontSize = 15.sp)
     val dataText: TextStyle = TextStyle(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES)
     val labelText: TextStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+    val labelFigureText: TextStyle = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES)
     val captionText: TextStyle = TextStyle(fontSize = 12.sp)
     val captionFigureText: TextStyle = TextStyle(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES)
     val indexEntryText: TextStyle = TextStyle(fontSize = 10.sp, fontFeatureSettings = TABULAR_FIGURES)
