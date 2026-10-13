@@ -1,5 +1,5 @@
 use reqwest::header::{self, HeaderValue};
-use reqwest::{Client, RequestBuilder};
+use reqwest::{Client, ClientBuilder, RequestBuilder};
 
 use crate::error;
 use crate::{AppError, AppErrorStatic};
@@ -11,12 +11,31 @@ pub struct ReqwestHttpFetch {
 
 impl ReqwestHttpFetch {
     pub fn create() -> Result<ReqwestHttpFetch, AppError> {
-        let client: Client = Client::builder()
+        let builder: ClientBuilder = with_trust_roots(Client::builder())?;
+        let client: Client = builder
             .build()
             .map_err(|error| AppError::from(format!("building an HTTP client failed; [error={error}]")))?;
 
         Ok(ReqwestHttpFetch { client })
     }
+}
+
+#[cfg(not(target_os = "android"))] // Android's system trust store is reachable only through JNI
+fn with_trust_roots(builder: ClientBuilder) -> Result<ClientBuilder, AppError> {
+    Ok(builder)
+}
+
+#[cfg(target_os = "android")] // every other target verifies against the system trust store through native-tls
+fn with_trust_roots(builder: ClientBuilder) -> Result<ClientBuilder, AppError> {
+    let mut root_certificates: Vec<reqwest::Certificate> = Vec::with_capacity(webpki_root_certs::TLS_SERVER_ROOT_CERTS.len());
+
+    for root_certificate_der in webpki_root_certs::TLS_SERVER_ROOT_CERTS {
+        let root_certificate: reqwest::Certificate = reqwest::Certificate::from_der(root_certificate_der.as_ref())
+            .map_err(|error| AppError::from(format!("reading a root certificate failed; [error={error}]")))?;
+        root_certificates.push(root_certificate);
+    }
+
+    Ok(builder.tls_certs_only(root_certificates))
 }
 
 impl HttpFetch for ReqwestHttpFetch {

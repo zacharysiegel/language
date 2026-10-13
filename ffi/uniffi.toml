@@ -2,3 +2,12 @@
 module_name = "LanguageCore"
 ffi_module_name = "LanguageCoreFFI"
 ffi_module_filename = "LanguageCoreFFI"
+
+[bindings.kotlin]
+package_name = "ro.zach.language.core"
+cdylib_name = "language_core"
+android = true
+
+# A field named `message` collides with `Throwable.message` in the generated exception class.
+[bindings.kotlin.rename]
+"CoreError.Failure.message" = "failureMessage"

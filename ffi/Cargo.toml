@@ -6,7 +6,8 @@ publish = false
 
 [lib]
 name = "language_core"
-crate-type = ["staticlib", "lib"]
+# iOS links the static library; Android loads the shared object
+crate-type = ["staticlib", "cdylib", "lib"]
 
 [dependencies]
 shared = { workspace = true }
@@ -18,6 +19,10 @@ log = { workspace = true }
 minimer = { workspace = true }
 serde_json = { workspace = true }
 tokio = { workspace = true, features = ["sync"] }
+
+# writes to logcat through Android's liblog, which other targets lack
+[target.'cfg(target_os = "android")'.dependencies]
+android_logger = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
