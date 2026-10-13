@@ -378,3 +378,14 @@ Steps 1 and 2 (the foundation):
 - Instrumented tests use `androidx.compose.ui.test.junit4.v2.createEmptyComposeRule`; the first one is deprecated.
 - `scripts/android/android-device.sh` holds the device check and `adb reverse`, shared by the run and test scripts; the test script passes `android.injected.androidTest.leaveApksInstalledAfterRun=true` so the screenshots survive the run.
 - Not yet written: `coursedata/CoreIntegrationTest.kt`, `progressdata/ProgressStoreReviewClockTest.kt`, and the status tests of `unit/UnitPageEndToEndTest.kt`; the unit page does not yet stop audio or prefetch recordings (step 3).
+
+The glossary, progress and settings step:
+
+- The glossary's search field sits in the list's first item with the header and the level control; Android has no navigation bar search field.
+- Glossary rows have no play button yet, since `audio/` has not landed; the row takes `PlayButton(AudioClip(clipKey, target))` as its first child once it does.
+- `GlossaryRun` carries `firstEntryIndex` rather than an id, which the page offsets by the header item to map rail entries to `LazyColumn` items. `GlossaryEntry` and `matchingGlossaryEntries` live in `glossary/GlossaryEntry.kt`.
+- The level control's segments are tagged `glossary-level-filter-all` and `glossary-level-filter-<level code>`; the iOS test finds them by label.
+- `design/SquareTextField.kt` is new (the glossary search and the progress text box), with the tokens `LanguageSpacing.transferTextHeight` and `LanguageType.transferText`.
+- A failed export or reset shows "Could not export" or "Could not reset" with the store's error, where iOS reports success.
+- `settings/SettingsEndToEndTest.kt` is new: with the repository unreachable, the update check shows "Checking" and the checking message.
+- The progress page stays in `progresspage/`, as the foundation named it.
