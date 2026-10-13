@@ -360,3 +360,21 @@ In dependency order. Steps 1 to 3 are sequential; the four tracks of step 4 run 
    - The full suite on `language_s25` with `./scripts/android/test-android.sh`; a debug run on the S25; a release build.
    - `README.md` gains an Android section (the commands above); `docs/architecture/overview.md` names the Android client beside iOS; `CLAUDE.md` lists `android/`.
    - This file's status changes to implemented, with its deviations recorded.
+
+## Deviations
+
+Steps 1 and 2 (the foundation):
+
+- Gradle 9.8.1, not 9.4.1: AGP 9.4.1 requires Gradle 9.6.0 or later.
+- `compileSdk` 37 (`platforms;android-37.0`, installed with `sdkmanager`); `targetSdk` stays 36. Compose UI 1.12.1, from BOM 2026.09.00, requires compiling against API 37. `buildToolsVersion` is pinned to the installed 36.1.0.
+- Versions pinned once the hosts resolved: Kotlin (the Compose compiler plugin) 2.4.21, kotlinx-coroutines 1.11.0, JNA 5.19.1.
+- No allowlist change was needed: this machine's `~/.gradle/init.gradle` points every Gradle build at the Artifactory mirror on artifacts.apple.com, which serves Maven Central, the plugin portal and Google Maven. The committed settings name only `google()`, `mavenCentral()` and `gradlePluginPortal()`.
+- The embedded bundle task is per variant, `syncEmbeddedBundle<Variant>`, since `addGeneratedSourceDirectory` gives each variant its own output.
+- `PendingIndication.waitForDelay()` returns nothing: coroutine cancellation ends the wait, so there is no `PendingDelayOutcome`.
+- `StatusMessage` lives in `design/Controls.kt`, since `PendingStatusMessage` draws it.
+- `UnitOutlineRecord.itemLabel` is in `unit/UnitItemLabel.kt`, since the unit page's rail needs it before the lesson sections exist.
+- `GrammarSection`, `DialoguesSection` and `ReadingsSection` take the page's `ColumnScrollTargets`, through which each box marks itself as its rail entry's target.
+- `SettingsSheet(courseId)` draws only its content; the root's overlay layer draws the title and Done (test tag `done`), for the course list as well.
+- Instrumented tests use `androidx.compose.ui.test.junit4.v2.createEmptyComposeRule`; the first one is deprecated.
+- `scripts/android/android-device.sh` holds the device check and `adb reverse`, shared by the run and test scripts; the test script passes `android.injected.androidTest.leaveApksInstalledAfterRun=true` so the screenshots survive the run.
+- Not yet written: `coursedata/CoreIntegrationTest.kt`, `progressdata/ProgressStoreReviewClockTest.kt`, and the status tests of `unit/UnitPageEndToEndTest.kt`; the unit page does not yet stop audio or prefetch recordings (step 3).
