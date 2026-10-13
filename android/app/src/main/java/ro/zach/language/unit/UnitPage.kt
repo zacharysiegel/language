@@ -56,6 +56,9 @@ import ro.zach.language.design.readableWidth
 import ro.zach.language.design.rememberColumnScrollTargets
 import ro.zach.language.design.rememberFloatingTipState
 
+/** The unit page's scrolling viewport. */
+const val UNIT_PAGE_TEST_TAG: String = "unit-page"
+
 enum class UnitTabKind {
     Overview,
     Grammar,
@@ -173,7 +176,7 @@ private fun UnitLoadedPage(courseId: String, unit: UnitOutlineRecord, lesson: Un
         tip = { UnitStatusHelpTip(onClose = closeStatusHelp) },
         modifier = modifier.fillMaxSize(),
     ) {
-        Column(modifier = Modifier.fillMaxSize().verticalScroll(scrollState)) {
+        Column(modifier = Modifier.fillMaxSize().testTag(UNIT_PAGE_TEST_TAG).verticalScroll(scrollState)) {
             Column(
                 modifier = Modifier
                     .indexRailContent(railTargets)
