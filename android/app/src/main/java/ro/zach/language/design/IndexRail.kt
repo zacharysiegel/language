@@ -29,6 +29,7 @@ import androidx.compose.ui.focus.FocusState
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.hapticfeedback.HapticFeedback
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.AwaitPointerEventScope
 import androidx.compose.ui.input.pointer.PointerInputChange
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
@@ -132,16 +133,22 @@ fun IndexRail(
                     val down: PointerInputChange = awaitFirstDown(requireUnconsumed = false)
 
                     down.consume()
-                    draggedEntryNumber = trackDrag(
-                        firstY = down.position.y,
-                        entryHeight = entryHeightPixels,
-                        entryCount = entries.size,
-                        onEntry = { entryNumber: Int ->
-                            hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
-                            draggedEntryNumber = entryNumber
-                            currentJump.value(entryNumber)
-                        },
-                    )
+
+                    /* A gesture cancelled mid-drag still ends the rail's use. */
+                    try {
+                        trackDrag(
+                            firstY = down.position.y,
+                            entryHeight = entryHeightPixels,
+                            entryCount = entries.size,
+                            onEntry = { entryNumber: Int ->
+                                hapticFeedback.performHapticFeedback(HapticFeedbackType.SegmentTick)
+                                draggedEntryNumber = entryNumber
+                                currentJump.value(entryNumber)
+                            },
+                        )
+                    } finally {
+                        draggedEntryNumber = null
+                    }
                 }
             }
         } else {
@@ -173,23 +180,23 @@ fun IndexRail(
     }
 }
 
-/* A drag of no distance is a press, so one gesture serves both. Returns `null` once the finger lifts. */
-private suspend fun androidx.compose.ui.input.pointer.AwaitPointerEventScope.trackDrag(
+/* A drag of no distance is a press, so one gesture serves both. Returns once the finger lifts. */
+private suspend fun AwaitPointerEventScope.trackDrag(
     firstY: Float,
     entryHeight: Float,
     entryCount: Int,
     onEntry: (Int) -> Unit,
-): Int? {
+) {
     var lastEntryNumber: Int = indexRailEntryNumberAt(firstY, entryHeight, entryCount)
 
     onEntry(lastEntryNumber)
 
     while (true) {
         val change: PointerInputChange = awaitPointerEvent().changes.firstOrNull()
-            ?: return null
+            ?: return
 
         if (!change.pressed) {
-            return null
+            return
         }
 
         change.consume()
