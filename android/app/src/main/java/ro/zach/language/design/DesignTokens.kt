@@ -47,6 +47,8 @@ object LanguageSpacing {
     val tagHorizontalPadding: Dp = 6.dp
     val tagVerticalPadding: Dp = 2.dp
     val progressBarHeight: Dp = 6.dp
+    val answerAreaMinimumHeight: Dp = 44.dp
+    val answerAreaDashLength: Dp = 3.dp
     val selectedBorderWidth: Dp = 2.dp
     val topBarSideWidth: Dp = 128.dp
     /** Below this window width a page lays out for a phone held upright. */
