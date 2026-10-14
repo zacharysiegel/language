@@ -416,3 +416,11 @@ The audio and integration step:
 - `CoreIntegrationTest` and `ProgressStoreReviewClockTest` use `http://127.0.0.1:9` as the unreachable origin; nothing listens on port 9, so the connection is refused at once.
 - `scripts/android/test-android.sh` builds the core, packages the embedded bundle, assembles the app and its tests and runs the JVM unit tests before the instrumented suite, and copies the screenshots whether or not the suite passed.
 - `CLAUDE.md` does not yet list `android/`.
+
+The review fixes step:
+
+- The root navigation state is saved with the activity's state through the view model's `SavedStateHandle` (`RootNavigationState.savedState()` and `RootNavigationState.restoring`), so after the process is ended the tabs, unit stacks, overlay and entry ids return together with the unit pages' saved state. The plan kept navigation in the view model only. `app/RootNavigationStateTest.kt` (instrumented, for the real `Bundle`) is new.
+- Dependencies: `lifecycle-viewmodel-savedstate` replaces `lifecycle-viewmodel-compose`; `lifecycle-runtime-compose`, `ui-tooling-preview` and `kotlinx-coroutines-test` are gone, as nothing used them.
+- `SquareTextField` takes `enabled` and `keyboardActions`, and the practice answer field draws it; the unit page's previous and next tab links are `TextLink`s; the glossary and the review card draw `LiteralGloss`, and the review card the vocabulary page's `VocabularyExample`.
+- The token `LanguageSpacing.unitOrderWidth` is new.
+- `androidTest` shares `testsupport/IndexRailGestures.kt` (the unit page's and the glossary's rail gestures, now one frame-stepped scheme) and `testsupport/UnreachableOrigins.kt`; the integration tests use `CourseData.COURSE_ID`.
