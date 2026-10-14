@@ -9,6 +9,7 @@ import androidx.activity.viewModels
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import ro.zach.language.core.initializeCoreLogging
@@ -18,7 +19,7 @@ import ro.zach.language.design.LanguageColors
 class MainActivity : ComponentActivity() {
     private val languageViewModel: LanguageViewModel by viewModels {
         viewModelFactory {
-            initializer { LanguageViewModel(CoreEnvironment.standard(applicationContext, intent), applicationContext) }
+            initializer { LanguageViewModel(CoreEnvironment.standard(applicationContext, intent), applicationContext, createSavedStateHandle()) }
         }
     }
 
