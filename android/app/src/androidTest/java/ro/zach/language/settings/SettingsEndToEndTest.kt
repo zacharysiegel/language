@@ -77,7 +77,7 @@ class SettingsEndToEndTest {
         assertFalse(driver.hasNode(UPDATE_CHECK_MESSAGE_TEST_TAG))
 
         checkForUpdatedContent()
-        driver.waitForTag(UPDATE_CHECK_MESSAGE_TEST_TAG, UPDATE_CHECK_TIMEOUT_MILLISECONDS)
+        composeRule.waitUntil(UPDATE_CHECK_TIMEOUT_MILLISECONDS) { isFirstCheckFinished() }
 
         checkForUpdatedContent()
         composeRule.waitUntil(UPDATE_CHECK_TIMEOUT_MILLISECONDS) { updateCheckMessage() == CONTENT_UP_TO_DATE_MESSAGE }
@@ -92,6 +92,13 @@ class SettingsEndToEndTest {
 
     private fun checkForUpdatedContent() {
         composeRule.onNodeWithTag("check-for-updated-content").performScrollTo().performClick()
+    }
+
+    /* A tap while a check runs is ignored, so the second check waits for the first one's outcome, not its pending text. */
+    private fun isFirstCheckFinished(): Boolean {
+        val message: String? = updateCheckMessage()
+
+        return message != null && message != UPDATE_CHECKING_MESSAGE
     }
 
     private fun updateCheckMessage(): String? {
