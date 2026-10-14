@@ -9,6 +9,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.toggleable
@@ -89,6 +91,16 @@ fun HairlineRule(modifier: Modifier = Modifier, color: Color = LanguageColors.ru
         modifier = modifier
             .fillMaxWidth()
             .height(LanguageSpacing.hairline)
+            .background(color),
+    )
+}
+
+@Composable
+fun VerticalHairlineRule(modifier: Modifier = Modifier, color: Color = LanguageColors.rule) {
+    Box(
+        modifier = modifier
+            .fillMaxHeight()
+            .width(LanguageSpacing.hairline)
             .background(color),
     )
 }
@@ -452,15 +464,24 @@ fun <Option> SquareSegmentedControl(
     onSelect: (Option) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(modifier = modifier.fillMaxWidth()) {
-        for (option in options) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .height(IntrinsicSize.Min)
+            .border(LanguageSpacing.hairline, LanguageColors.ink),
+    ) {
+        for ((index, option) in options.withIndex()) {
             val isSelected: Boolean = option == selection
+
+            if (index > 0) {
+                VerticalHairlineRule(color = LanguageColors.ink)
+            }
 
             Box(
                 modifier = Modifier
                     .weight(1f)
+                    .fillMaxHeight()
                     .background(if (isSelected) LanguageColors.ink else LanguageColors.paper)
-                    .border(LanguageSpacing.hairline, LanguageColors.ink)
                     .clickable(interactionSource = null, indication = null, role = Role.Tab) { onSelect(option) }
                     .semantics { selected = isSelected }
                     .testTag(testTag(option))
