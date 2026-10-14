@@ -15,7 +15,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.PlayAllButton
+import ro.zach.language.audio.PlayButton
 import ro.zach.language.core.DialogueRecord
+import ro.zach.language.core.ExerciseRecord
 import ro.zach.language.core.GrammarNoteRecord
 import ro.zach.language.core.GrammarTableRecord
 import ro.zach.language.core.QueuedCardsRecord
@@ -35,6 +39,8 @@ import ro.zach.language.design.SquareTextButton
 import ro.zach.language.design.Tag
 import ro.zach.language.design.indexRailTarget
 import ro.zach.language.design.panel
+import ro.zach.language.practice.ExerciseSession
+import ro.zach.language.practice.ExerciseSessionExitKind
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 
@@ -281,4 +287,19 @@ fun ReadingPanel(reading: ReadingRecord, itemLabel: String, modifier: Modifier =
             )
         }
     }
+}
+
+/** A reading's comprehension questions as an exercise session that can only be quit. */
+@Composable
+private fun ReadingQuestionsSession(title: String, questions: List<ExerciseRecord>, onExit: () -> Unit, modifier: Modifier = Modifier) {
+    ExerciseSession(
+        title = title,
+        exercises = questions,
+        answeredResults = emptyList(),
+        exitKind = ExerciseSessionExitKind.Quit,
+        onAnswer = {},
+        onComplete = {},
+        onExit = onExit,
+        modifier = modifier,
+    )
 }

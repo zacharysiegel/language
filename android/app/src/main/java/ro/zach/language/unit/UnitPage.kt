@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +34,11 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import ro.zach.language.audio.AudioPlayer
+import ro.zach.language.audio.LocalAudioPlayer
+import ro.zach.language.audio.RecordingPrefetch
+import ro.zach.language.core.AudioEngineRecord
+import ro.zach.language.core.CoursePublication
 import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.UnitTabRecord
@@ -55,9 +61,14 @@ import ro.zach.language.design.indexRailContent
 import ro.zach.language.design.readableWidth
 import ro.zach.language.design.rememberColumnScrollTargets
 import ro.zach.language.design.rememberFloatingTipState
+import ro.zach.language.progressdata.LocalProgressStore
+import ro.zach.language.progressdata.ProgressStore
 
 /** The unit page's scrolling viewport. */
 const val UNIT_PAGE_TEST_TAG: String = "unit-page"
+
+/** What a shown tab's recording prefetch depends on; a change of any restarts it. */
+private data class RecordingPrefetchRequest(val tab: UnitTabKind, val engine: AudioEngineRecord, val contentKey: String?)
 
 enum class UnitTabKind {
     Overview,
@@ -127,6 +138,7 @@ enum class UnitTabKind {
 @Composable
 fun UnitPage(courseId: String, unitId: String, initialTab: UnitTabKind, modifier: Modifier = Modifier) {
     val courseStore: CourseStore = LocalCourseStore.current
+    val audioPlayer: AudioPlayer = LocalAudioPlayer.current
     val shownContentKey: String? = courseStore.shownContentKey(courseId)
     val outlineId: String? = courseStore.outline(courseId)?.id
 
@@ -134,6 +146,10 @@ fun UnitPage(courseId: String, unitId: String, initialTab: UnitTabKind, modifier
         courseStore.ensurePublicationLoaded(courseId)
         courseStore.ensureOutlineLoaded(courseId)
         courseStore.ensureUnitLoaded(courseId, unitId)
+    }
+
+    DisposableEffect(audioPlayer) {
+        onDispose { audioPlayer.stop() }
     }
 
     when (val unitState: UnitLoadState? = courseStore.unitState(courseId, unitId)) {
@@ -158,8 +174,17 @@ private fun UnitLoadedPage(courseId: String, unit: UnitOutlineRecord, lesson: Un
     val floatingTipState: FloatingTipState = rememberFloatingTipState()
     val itemNoun: String? = tab.indexedItemNoun()
     val scope: CoroutineScope = rememberCoroutineScope()
+    val audioPlayer: AudioPlayer = LocalAudioPlayer.current
+    val courseStore: CourseStore = LocalCourseStore.current
+    val progressStore: ProgressStore = LocalProgressStore.current
+    val prefetchRequest: RecordingPrefetchRequest = RecordingPrefetchRequest(
+        tab = tab,
+        engine = progressStore.settings().audioEngine,
+        contentKey = courseStore.shownContentKey(courseId),
+    )
     /* A newly chosen tab opens at its top. */
     val chooseTab: (UnitTabKind) -> Unit = { chosenTab: UnitTabKind ->
+        audioPlayer.stop()
         activeTab = chosenTab
         railTargets.tracker.recordContentChange()
         scope.launch { scrollState.scrollTo(0) }
@@ -167,6 +192,13 @@ private fun UnitLoadedPage(courseId: String, unit: UnitOutlineRecord, lesson: Un
     val closeStatusHelp: () -> Unit = { isStatusHelpShown = false }
 
     ColumnIndexRailTracking(railTargets)
+
+    LaunchedEffect(prefetchRequest) {
+        val publication: CoursePublication = courseStore.shownPublication(courseId)
+            ?: return@LaunchedEffect
+
+        RecordingPrefetch.prefetchTab(prefetchRequest.tab, unit.id, publication, prefetchRequest.engine)
+    }
 
     FloatingTipHost(
         state = floatingTipState,

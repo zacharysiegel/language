@@ -37,6 +37,8 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import ro.zach.language.audio.AudioPlayer
+import ro.zach.language.audio.LocalAudioPlayer
 import ro.zach.language.core.CourseOutlineRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.coursedata.CourseIndexLoadState
@@ -74,10 +76,11 @@ private const val LOAD_FAILURE_PENDING_STATE_DESCRIPTION: String = "Loading"
 /** The tabs, each with its own stack of opened units, under a top bar, with the settings and course list over them. */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun RootScreen(courseStore: CourseStore, progressStore: ProgressStore, rootNavigation: RootNavigationState) {
+fun RootScreen(courseStore: CourseStore, progressStore: ProgressStore, audioPlayer: AudioPlayer, rootNavigation: RootNavigationState) {
     CompositionLocalProvider(
         LocalCourseStore provides courseStore,
         LocalProgressStore provides progressStore,
+        LocalAudioPlayer provides audioPlayer,
         LocalRootNavigation provides rootNavigation,
     ) {
         val saveableStateHolder: SaveableStateHolder = rememberSaveableStateHolder()

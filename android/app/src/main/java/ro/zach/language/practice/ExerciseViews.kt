@@ -37,6 +37,12 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.AudioPlayer
+import ro.zach.language.audio.LocalAudioPlayer
+import ro.zach.language.audio.PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE
+import ro.zach.language.audio.PlayButton
+import ro.zach.language.audio.PlaybackControlKind
 import ro.zach.language.core.AnswerStatusRecord
 import ro.zach.language.core.ExerciseRecord
 import ro.zach.language.core.PhrasePairRecord

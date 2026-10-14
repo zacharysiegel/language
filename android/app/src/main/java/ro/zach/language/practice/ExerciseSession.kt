@@ -14,6 +14,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.AudioPlayer
+import ro.zach.language.audio.LocalAudioPlayer
+import ro.zach.language.audio.PlayButton
+import ro.zach.language.audio.PlaybackControlKind
 import ro.zach.language.core.AnswerStatusRecord
 import ro.zach.language.core.ExerciseRecord
 import ro.zach.language.core.SessionScoreRecord
