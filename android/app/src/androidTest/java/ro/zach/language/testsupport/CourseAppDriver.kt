@@ -3,6 +3,10 @@ package ro.zach.language.testsupport
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.ComposeTestRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onNodeWithTag
@@ -12,6 +16,7 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.platform.app.InstrumentationRegistry
 import ro.zach.language.app.MainActivity
 import ro.zach.language.coursedata.CoreEnvironment
+import ro.zach.language.design.PAGE_HEADER_TITLE_TEST_TAG
 import java.io.File
 import java.io.FileOutputStream
 import java.util.UUID
@@ -77,6 +82,13 @@ class CourseAppDriver(private val composeRule: ComposeTestRule) {
 
     fun waitForTag(testTag: String, timeoutMilliseconds: Long = FIRST_SCREEN_TIMEOUT_MILLISECONDS) {
         composeRule.waitUntil(timeoutMilliseconds) { hasNode(testTag) }
+    }
+
+    /** Asserts that the page shown names itself `title` in a heading. */
+    fun assertPageHeading(title: String) {
+        composeRule.onNodeWithTag(PAGE_HEADER_TITLE_TEST_TAG)
+            .assertTextEquals(title)
+            .assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
     }
 
     fun hasNode(testTag: String): Boolean {

@@ -43,6 +43,7 @@ class RootScreenEndToEndTest {
     fun navigation_showsTheCourseTitleAndOpensTheCourseList() {
         driver.waitForTag("courses")
         composeRule.onNodeWithTag("courses").assertTextEquals(CourseData.readCourseTitle())
+        driver.assertPageHeading(CourseData.readCourseTitle())
         driver.saveScreenshot("01-home")
 
         composeRule.onNodeWithTag("courses").performClick()
