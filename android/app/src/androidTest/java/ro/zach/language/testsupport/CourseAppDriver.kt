@@ -20,8 +20,6 @@ private const val FIRST_SCREEN_TIMEOUT_MILLISECONDS: Long = 20_000
 private const val UNIT_OPEN_TIMEOUT_MILLISECONDS: Long = 15_000
 private const val SCREENSHOT_DIRECTORY_NAME: String = "language-android-screenshots"
 private const val SCREENSHOT_QUALITY: Int = 100
-/* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
-private const val UNREACHABLE_ORIGIN: String = "http://192.0.2.1:3002"
 
 /** Drives the app as a learner would, each test with a progress file of its own. */
 class CourseAppDriver(private val composeRule: ComposeTestRule) {
@@ -44,8 +42,8 @@ class CourseAppDriver(private val composeRule: ComposeTestRule) {
         launchExtras = mapOf(
             CoreEnvironment.PROGRESS_FILE_EXTRA to newProgressFileName(),
             CoreEnvironment.CACHE_DIRECTORY_EXTRA to "ui-test-cache-${UUID.randomUUID()}",
-            CoreEnvironment.ORIGIN_EXTRA to UNREACHABLE_ORIGIN,
-            CoreEnvironment.REPOSITORY_BASE_URL_EXTRA to UNREACHABLE_ORIGIN,
+            CoreEnvironment.ORIGIN_EXTRA to UnreachableOrigins.WAITING_ORIGIN,
+            CoreEnvironment.REPOSITORY_BASE_URL_EXTRA to UnreachableOrigins.WAITING_ORIGIN,
         )
         launch()
         chooseTheCourseIfTheCourseListOpens()

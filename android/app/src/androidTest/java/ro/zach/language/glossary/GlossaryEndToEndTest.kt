@@ -10,8 +10,6 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONArray
 import org.json.JSONObject
@@ -24,16 +22,12 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import ro.zach.language.testsupport.CourseAppDriver
 import ro.zach.language.testsupport.CourseData
+import ro.zach.language.testsupport.IndexRailGestures
 
 private const val JUMPED_LEVEL_CODE: String = "B1"
 private const val JUMPED_UNIT_ID: String = "b1-05-imperfect-subjunctive-conditionals"
 private const val GLOSSARY_LIST_TAG: String = "glossary-entries"
 private const val RAIL_CHANGE_TIMEOUT_MILLISECONDS: Long = 5_000
-/* Slow enough to scroll without a long fling. */
-private const val RAIL_SHOWING_SWIPE_DURATION_MILLISECONDS: Long = 600
-/* Longer than the rail's fade in, shorter than its idle hide delay. */
-private const val RAIL_SHOWN_ALLOWANCE_MILLISECONDS: Long = 400
-private const val JUMP_SETTLE_MILLISECONDS: Long = 200
 /* The top quarter of the list counts as its top. */
 private const val NEAR_TOP_PROPORTION: Float = 0.25f
 
@@ -43,6 +37,7 @@ class GlossaryEndToEndTest {
     val composeRule: ComposeTestRule = createEmptyComposeRule()
 
     private val driver: CourseAppDriver = CourseAppDriver(composeRule)
+    private val indexRailGestures: IndexRailGestures = IndexRailGestures(composeRule)
 
     @Before
     fun launch() {
@@ -113,20 +108,8 @@ class GlossaryEndToEndTest {
         driver.waitForTag(GLOSSARY_LIST_TAG)
     }
 
-    /* The rail shows only while the list scrolls, so the frames are advanced by hand until `railActions` has run. */
     private fun withTheIndexRailShown(railActions: () -> Unit) {
-        composeRule.mainClock.autoAdvance = false
-
-        try {
-            composeRule.onNodeWithTag(GLOSSARY_LIST_TAG).performTouchInput { swipeUp(durationMillis = RAIL_SHOWING_SWIPE_DURATION_MILLISECONDS) }
-            composeRule.mainClock.advanceTimeBy(RAIL_SHOWN_ALLOWANCE_MILLISECONDS)
-            railActions()
-            composeRule.mainClock.advanceTimeBy(JUMP_SETTLE_MILLISECONDS)
-        } finally {
-            composeRule.mainClock.autoAdvance = true
-        }
-
-        composeRule.waitForIdle()
+        indexRailGestures.withTheIndexRailShown(GLOSSARY_LIST_TAG, railActions)
     }
 
     private fun waitUntilGone(testTag: String) {

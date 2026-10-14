@@ -14,19 +14,15 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTouchInput
-import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import ro.zach.language.testsupport.IndexRailGestures
 
 private const val SELECTION_TIMEOUT_MILLISECONDS: Long = 5_000
-private const val SLOW_SWIPE_DURATION_MILLISECONDS: Long = 600
 private const val FAST_SWIPE_DURATION_MILLISECONDS: Long = 80
-/* Enough frames for a scroll's start to show the rail and give it its presses. */
-private const val RAIL_SHOWING_FRAME_COUNT: Int = 4
-private const val RAIL_SETTLING_FRAME_COUNT: Int = 4
 private const val LAYOUT_TOLERANCE_DP: Float = 1f
 /* The app's offset of the rail's shadow. */
 private const val INDEX_RAIL_SHADOW_OFFSET_DP: Float = 2f
@@ -35,6 +31,7 @@ private const val UNIT_ITEM_INDEX_TEST_TAG: String = "unit-item-index"
 /** Drives the unit page's tabs and index rail, and checks where its content lies. */
 class UnitPageDriver(private val composeRule: ComposeTestRule) {
     private val density: Density = Density(InstrumentationRegistry.getInstrumentation().targetContext)
+    private val indexRailGestures: IndexRailGestures = IndexRailGestures(composeRule)
 
     fun openTab(tab: UnitTabKind) {
         composeRule.onNodeWithTag(tabTag(tab)).performScrollTo().performClick()
@@ -104,39 +101,24 @@ class UnitPageDriver(private val composeRule: ComposeTestRule) {
 
     /** Scrolls the page a little, which shows the index rail, and runs `railActions` before it can hide again. */
     fun withTheIndexRailShown(railActions: () -> Unit) {
-        withoutWaitingForThePageToSettle {
-            swipeThePageUp(SLOW_SWIPE_DURATION_MILLISECONDS)
-            advanceFrames(RAIL_SHOWING_FRAME_COUNT)
-            railActions()
-            advanceFrames(RAIL_SETTLING_FRAME_COUNT)
-        }
+        indexRailGestures.withTheIndexRailShown(UNIT_PAGE_TEST_TAG, railActions)
     }
 
     /** Runs `actions` with the clock advanced only by their own events and frames, so a fling is still moving. */
     fun withoutWaitingForThePageToSettle(actions: () -> Unit) {
-        composeRule.mainClock.autoAdvance = false
-
-        try {
-            actions()
-        } finally {
-            composeRule.mainClock.autoAdvance = true
-        }
-
-        composeRule.waitForIdle()
+        indexRailGestures.withoutWaitingToSettle(actions)
     }
 
     fun swipeThePageUpSlowly() {
-        swipeThePageUp(SLOW_SWIPE_DURATION_MILLISECONDS)
+        indexRailGestures.swipeNodeUp(UNIT_PAGE_TEST_TAG, IndexRailGestures.SLOW_SWIPE_DURATION_MILLISECONDS)
     }
 
     fun flingThePageUp() {
-        swipeThePageUp(FAST_SWIPE_DURATION_MILLISECONDS)
+        indexRailGestures.swipeNodeUp(UNIT_PAGE_TEST_TAG, FAST_SWIPE_DURATION_MILLISECONDS)
     }
 
     fun advanceFrames(frameCount: Int) {
-        repeat(frameCount) {
-            composeRule.mainClock.advanceTimeByFrame()
-        }
+        indexRailGestures.advanceFrames(frameCount)
     }
 
     fun pressRailEntry(entryNumber: Int) {
@@ -157,12 +139,6 @@ class UnitPageDriver(private val composeRule: ComposeTestRule) {
             }
 
             up()
-        }
-    }
-
-    private fun swipeThePageUp(durationMilliseconds: Long) {
-        composeRule.onNodeWithTag(UNIT_PAGE_TEST_TAG).performTouchInput {
-            swipeUp(startY = centerY + height / 4f, endY = centerY - height / 4f, durationMillis = durationMilliseconds)
         }
     }
 
