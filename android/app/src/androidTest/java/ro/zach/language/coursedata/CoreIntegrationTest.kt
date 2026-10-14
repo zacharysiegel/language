@@ -33,13 +33,11 @@ import ro.zach.language.core.VoiceChoiceRecord
 import ro.zach.language.core.checkTypedAnswer
 import ro.zach.language.core.exerciseSpokenText
 import ro.zach.language.practice.speaksAfterAnswer
+import ro.zach.language.testsupport.CourseData
+import ro.zach.language.testsupport.UnreachableOrigins
 import java.io.File
 import java.util.UUID
 
-private const val RECORDED_COURSE_ID: String = "pt_br.en.foundations"
-/* Port 9 (discard) has no listener, so a connection to it is refused at once. */
-private const val UNREACHABLE_ORIGIN: String = "http://127.0.0.1:9"
-private const val UNREACHABLE_HOST: String = "127.0.0.1:9"
 /* The Mac's servers, reachable from the device through `adb reverse`. */
 private const val LOCAL_ORIGIN: String = "http://127.0.0.1:3000"
 private const val LOCAL_REPOSITORY_BASE_URL: String = "http://127.0.0.1:3002"
@@ -69,7 +67,7 @@ class CoreIntegrationTest {
 
             installer.install()
 
-            val library: CourseLibrary = CourseLibrary(configuration(UNREACHABLE_ORIGIN, UNREACHABLE_ORIGIN, embeddedBundleDirectory = installer.installedDirectory()))
+            val library: CourseLibrary = CourseLibrary(configuration(UnreachableOrigins.REFUSING_ORIGIN, UnreachableOrigins.REFUSING_ORIGIN, embeddedBundleDirectory = installer.installedDirectory()))
             val courseIndex: PublishedCourseIndex = library.loadEmbeddedCourseIndex()
             val courseId: String = courseIndex.courses().first().id
             val publication: CoursePublication = library.loadEmbeddedCoursePublication(courseId)
@@ -105,7 +103,7 @@ class CoreIntegrationTest {
                 assertEquals(latest.publicationLabel(), cached?.publicationLabel())
             }
 
-            val latest: CoursePublication = latestByCourseId.getValue(RECORDED_COURSE_ID)
+            val latest: CoursePublication = latestByCourseId.getValue(CourseData.COURSE_ID)
             val outline: CourseOutlineRecord = latest.loadCourse()
             val item: VocabularyItemRecord = outline.units.first().vocabulary.first()
             val clipKey: String = checkNotNull(item.clipKey)
@@ -122,13 +120,13 @@ class CoreIntegrationTest {
     @Test
     fun unreachableRepository_raisesAFailureNamingIt() {
         runBlocking {
-            val library: CourseLibrary = CourseLibrary(configuration(UNREACHABLE_ORIGIN, UNREACHABLE_ORIGIN, embeddedBundleDirectory = temporaryDirectory))
+            val library: CourseLibrary = CourseLibrary(configuration(UnreachableOrigins.REFUSING_ORIGIN, UnreachableOrigins.REFUSING_ORIGIN, embeddedBundleDirectory = temporaryDirectory))
 
             try {
                 library.loadLatestCourseIndex()
                 fail()
             } catch (failure: CoreException.Failure) {
-                assertTrue(failure.failureMessage.contains(UNREACHABLE_HOST))
+                assertTrue(failure.failureMessage.contains(UnreachableOrigins.REFUSING_HOST))
                 assertFalse(failure.backtrace.isBlank())
             }
         }
