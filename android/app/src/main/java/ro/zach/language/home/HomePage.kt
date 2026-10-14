@@ -31,8 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import ro.zach.language.app.LocalRootNavigation
@@ -58,8 +56,6 @@ import ro.zach.language.design.readableWidth
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 import ro.zach.language.unit.UnitTabKind
-
-private val unitOrderWidth: Dp = 28.dp
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -197,7 +193,7 @@ private fun UnitRow(outline: CourseOutlineRecord, unit: UnitOutlineRecord, onOpe
             style = LanguageType.dataText,
             color = LanguageColors.inkMuted,
             textAlign = TextAlign.End,
-            modifier = Modifier.width(unitOrderWidth),
+            modifier = Modifier.width(LanguageSpacing.unitOrderWidth),
         )
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {

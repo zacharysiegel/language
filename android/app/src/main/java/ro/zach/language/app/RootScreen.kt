@@ -72,6 +72,7 @@ import ro.zach.language.settings.SettingsSheet
 import ro.zach.language.unit.UnitPage
 
 private const val LOAD_FAILURE_PENDING_STATE_DESCRIPTION: String = "Loading"
+private const val COURSE_LOADING_MESSAGE: String = "Loading the course…"
 
 /** The tabs, each with its own stack of opened units, under a top bar, with the settings and course list over them. */
 @OptIn(ExperimentalComposeUiApi::class)
@@ -375,7 +376,7 @@ fun CourseGate(courseId: String, content: @Composable (CourseOutlineRecord) -> U
     when (val publicationState: CoursePublicationLoadState? = courseStore.publicationState(courseId)) {
         is CoursePublicationLoadState.Loaded -> OutlineContent(courseId = courseId, content = content)
         is CoursePublicationLoadState.Failed -> LoadFailure(message = publicationState.message, onRetry = { courseStore.retry(courseId) })
-        CoursePublicationLoadState.Loading, null -> PendingStatusMessage(text = "Loading the course…")
+        CoursePublicationLoadState.Loading, null -> PendingStatusMessage(text = COURSE_LOADING_MESSAGE)
     }
 }
 
@@ -383,7 +384,7 @@ fun CourseGate(courseId: String, content: @Composable (CourseOutlineRecord) -> U
 @Composable
 private fun MissingCourse() {
     when (LocalCourseStore.current.repositoryIndexLoadState()) {
-        RepositoryIndexLoadKind.Pending -> PendingStatusMessage(text = "Loading the course…")
+        RepositoryIndexLoadKind.Pending -> PendingStatusMessage(text = COURSE_LOADING_MESSAGE)
         RepositoryIndexLoadKind.Loaded, RepositoryIndexLoadKind.Failed -> StatusMessage(text = "That course does not exist.")
     }
 }
@@ -395,7 +396,7 @@ private fun OutlineContent(courseId: String, content: @Composable (CourseOutline
     when (val outlineState: OutlineLoadState? = courseStore.outlineState(courseId)) {
         is OutlineLoadState.Loaded -> content(outlineState.outline)
         is OutlineLoadState.Failed -> LoadFailure(message = outlineState.message, onRetry = { courseStore.retry(courseId) })
-        OutlineLoadState.Loading, null -> PendingStatusMessage(text = "Loading the course…")
+        OutlineLoadState.Loading, null -> PendingStatusMessage(text = COURSE_LOADING_MESSAGE)
     }
 }
 

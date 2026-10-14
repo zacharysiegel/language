@@ -15,7 +15,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.text.font.FontStyle
 import ro.zach.language.audio.AudioClip
 import ro.zach.language.audio.AudioPlayer
 import ro.zach.language.audio.LocalAudioPlayer
@@ -33,6 +32,8 @@ import ro.zach.language.design.TextLink
 import ro.zach.language.design.panel
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
+import ro.zach.language.unit.LiteralGloss
+import ro.zach.language.unit.VocabularyExample
 
 /** How the learner grades a card once its answer shows. */
 enum class ReviewGradeKind {
@@ -164,21 +165,10 @@ private fun ReviewAnswer(item: VocabularyItemRecord, promptSide: ReviewCardSide,
         }
 
         if (literal != null) {
-            LanguageText(
-                text = "literally: $literal",
-                style = LanguageType.captionText.copy(fontStyle = FontStyle.Italic),
-                color = LanguageColors.inkMuted,
-            )
+            LiteralGloss(literal = literal)
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.Top) {
-            PlayButton(clip = AudioClip(clipKey = item.example.clipKey, text = item.example.target))
-
-            Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
-                LanguageText(text = item.example.target, style = LanguageType.bodyText)
-                LanguageText(text = item.example.source, style = LanguageType.captionText, color = LanguageColors.inkMuted)
-            }
-        }
+        VocabularyExample(example = item.example)
 
         if (note != null) {
             LanguageText(text = note, style = LanguageType.captionText, color = LanguageColors.inkMuted)

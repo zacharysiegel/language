@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,12 +23,15 @@ fun SquareTextField(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = LanguageType.bodyText,
     singleLine: Boolean = true,
+    enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Default,
+    keyboardActions: KeyboardActions = KeyboardActions.Default,
 ) {
     BasicTextField(
         value = value,
         onValueChange = onValueChange,
         modifier = modifier.fillMaxWidth(),
+        enabled = enabled,
         textStyle = textStyle.copy(color = LanguageColors.ink),
         singleLine = singleLine,
         keyboardOptions = KeyboardOptions(
@@ -35,6 +39,7 @@ fun SquareTextField(
             autoCorrectEnabled = false,
             imeAction = imeAction,
         ),
+        keyboardActions = keyboardActions,
         cursorBrush = SolidColor(LanguageColors.ink),
         decorationBox = { innerTextField: @Composable () -> Unit ->
             Box(
