@@ -23,6 +23,7 @@ import ro.zach.language.design.LanguageSpacing
 import ro.zach.language.design.LanguageText
 import ro.zach.language.design.LanguageType
 import ro.zach.language.design.MicroLabel
+import ro.zach.language.design.PageHeader
 import ro.zach.language.design.PendingActivity
 import ro.zach.language.design.SquareButtonPendingKind
 import ro.zach.language.design.SquareTextButton
@@ -44,6 +45,7 @@ fun SettingsSheet(courseId: String?, modifier: Modifier = Modifier) {
             modifier = Modifier.readableWidth().padding(LanguageSpacing.spaceMd),
             verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceLg),
         ) {
+            PageHeader(caption = null, title = "Settings")
             VoiceSection()
             SpeedSection()
 

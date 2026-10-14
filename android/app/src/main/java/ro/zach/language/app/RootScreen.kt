@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -36,11 +35,9 @@ import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.testTagsAsResourceId
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import ro.zach.language.audio.AudioPlayer
 import ro.zach.language.audio.LocalAudioPlayer
 import ro.zach.language.core.CourseOutlineRecord
-import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.coursedata.CourseIndexLoadState
 import ro.zach.language.coursedata.CoursePublicationLoadState
 import ro.zach.language.coursedata.CourseStore
@@ -106,10 +103,10 @@ fun RootScreen(courseStore: CourseStore, progressStore: ProgressStore, audioPlay
             RootTabs(saveableStateHolder = saveableStateHolder, onBack = goBack)
 
             when (rootNavigation.overlay()) {
-                RootOverlayKind.Settings -> OverlayLayer(title = "Settings", onDone = rootNavigation::dismissOverlay) {
+                RootOverlayKind.Settings -> OverlayLayer(onDone = rootNavigation::dismissOverlay) {
                     SettingsSheet(courseId = activeCourseId())
                 }
-                RootOverlayKind.Courses -> OverlayLayer(title = "Courses", onDone = rootNavigation::dismissOverlay) {
+                RootOverlayKind.Courses -> OverlayLayer(onDone = rootNavigation::dismissOverlay) {
                     CoursesPage(onChoose = rootNavigation::dismissOverlay)
                 }
                 RootOverlayKind.None -> Unit
@@ -140,7 +137,7 @@ private fun RootTabs(saveableStateHolder: SaveableStateHolder, onBack: () -> Uni
     val courseId: String? = activeCourseId()
 
     Column(modifier = Modifier.fillMaxSize()) {
-        RootTopBar(tab = selectedTab, shownUnit = shownUnit, courseId = courseId, onBack = onBack)
+        RootTopBar(shownUnit = shownUnit, courseId = courseId, onBack = onBack)
         HairlineRule()
 
         Box(modifier = Modifier.weight(1f).fillMaxWidth()) {
@@ -180,60 +177,36 @@ private fun TabRoot(tab: RootTabKind, courseId: String?) {
 }
 
 @Composable
-private fun RootTopBar(tab: RootTabKind, shownUnit: UnitDestination?, courseId: String?, onBack: () -> Unit) {
+private fun RootTopBar(shownUnit: UnitDestination?, courseId: String?, onBack: () -> Unit) {
     val courseStore: CourseStore = LocalCourseStore.current
     val rootNavigation: RootNavigationState = LocalRootNavigation.current
     val courseTitle: String? = courseId?.let { id -> courseStore.courses().firstOrNull { course -> course.id == id }?.title }
-    val title: String = if (shownUnit == null) tab.label() else unitTitle(courseStore, shownUnit) ?: ""
 
-    Box(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(LanguageSpacing.spaceXl)
             .padding(horizontal = LanguageSpacing.spaceSm),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(modifier = Modifier.align(Alignment.CenterStart).fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
+        Box(modifier = Modifier.weight(1f).fillMaxHeight(), contentAlignment = Alignment.CenterStart) {
             if (shownUnit != null) {
                 TopBarButton(testTag = "back", contentDescription = "Back", onClick = onBack) {
                     Glyph(glyph = GlyphKind.Back, color = LanguageColors.accentLink)
                 }
             } else if (courseTitle != null) {
                 TopBarButton(testTag = "courses", contentDescription = null, onClick = { rootNavigation.present(RootOverlayKind.Courses) }) {
-                    LanguageText(
-                        text = courseTitle,
-                        style = LanguageType.bodyText,
-                        color = LanguageColors.accentLink,
-                        maxLines = 1,
-                        modifier = Modifier.widthIn(max = LanguageSpacing.topBarSideWidth),
-                    )
+                    LanguageText(text = courseTitle, style = LanguageType.bodyText, color = LanguageColors.accentLink, maxLines = 1)
                 }
             }
         }
 
-        LanguageText(
-            text = title,
-            style = LanguageType.titleText,
-            textAlign = TextAlign.Center,
-            maxLines = 1,
-            modifier = Modifier
-                .align(Alignment.Center)
-                .padding(horizontal = LanguageSpacing.topBarSideWidth),
-        )
-
         if (shownUnit == null) {
-            Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
-                TopBarButton(testTag = "settings", contentDescription = "Settings", onClick = { rootNavigation.present(RootOverlayKind.Settings) }) {
-                    Glyph(glyph = GlyphKind.Settings, color = LanguageColors.accentLink, size = LanguageSpacing.spaceMd + LanguageSpacing.spaceXs)
-                }
+            TopBarButton(testTag = "settings", contentDescription = "Settings", onClick = { rootNavigation.present(RootOverlayKind.Settings) }) {
+                Glyph(glyph = GlyphKind.Settings, color = LanguageColors.accentLink, size = LanguageSpacing.spaceMd + LanguageSpacing.spaceXs)
             }
         }
     }
-}
-
-private fun unitTitle(courseStore: CourseStore, destination: UnitDestination): String? {
-    val unit: UnitOutlineRecord? = courseStore.outline(destination.courseId)?.units?.firstOrNull { unit -> unit.id == destination.unitId }
-
-    return unit?.title
 }
 
 @Composable
@@ -303,9 +276,9 @@ private fun TabBadge(count: Int, modifier: Modifier = Modifier) {
     )
 }
 
-/** A full-screen layer over the tabs, with its title and a Done that closes it. */
+/** A full-screen layer over the tabs, with a Done that closes it. */
 @Composable
-private fun OverlayLayer(title: String, onDone: () -> Unit, content: @Composable () -> Unit) {
+private fun OverlayLayer(onDone: () -> Unit, content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -323,8 +296,6 @@ private fun OverlayLayer(title: String, onDone: () -> Unit, content: @Composable
                 .height(LanguageSpacing.spaceXl)
                 .padding(horizontal = LanguageSpacing.spaceSm),
         ) {
-            LanguageText(text = title, style = LanguageType.titleText, modifier = Modifier.align(Alignment.Center))
-
             Box(modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight(), contentAlignment = Alignment.CenterEnd) {
                 TopBarButton(testTag = "done", contentDescription = null, onClick = onDone) {
                     LanguageText(text = "Done", style = LanguageType.bodyText.copy(fontWeight = FontWeight.SemiBold), color = LanguageColors.accentLink)

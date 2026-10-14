@@ -34,6 +34,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -47,6 +48,8 @@ import kotlin.math.roundToInt
 
 private const val DISABLED_ALPHA: Float = 0.4f
 private const val PARAGRAPH_SEPARATOR: String = "\n\n"
+
+const val PAGE_HEADER_TITLE_TEST_TAG: String = "page-header-title"
 
 /** Text in one of the type scale's styles. */
 @Composable
@@ -362,7 +365,7 @@ fun PageHeader(caption: String?, title: String, modifier: Modifier = Modifier) {
             MicroLabel(text = caption)
         }
 
-        LanguageText(text = title, style = LanguageType.headingText)
+        LanguageText(text = title, style = LanguageType.headingText, modifier = Modifier.semantics { heading() }.testTag(PAGE_HEADER_TITLE_TEST_TAG))
     }
 }
 

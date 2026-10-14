@@ -48,6 +48,7 @@ class UnitPageEndToEndTest {
     @Test
     fun unitPage_opensEveryTab() {
         driver.openUnit(CourseData.PRACTICED_UNIT_ID)
+        driver.assertPageHeading(CourseData.readUnit(CourseData.PRACTICED_UNIT_ID).getString("title"))
         driver.saveScreenshot("02-unit-overview")
 
         for (tab in listOf(UnitTabKind.Grammar, UnitTabKind.Dialogues, UnitTabKind.Vocabulary, UnitTabKind.Practice)) {

@@ -51,7 +51,6 @@ object LanguageSpacing {
     val answerAreaMinimumHeight: Dp = 44.dp
     val answerAreaDashLength: Dp = 3.dp
     val selectedBorderWidth: Dp = 2.dp
-    val topBarSideWidth: Dp = 128.dp
     val unitOrderWidth: Dp = 28.dp
     /** Below this window width a page lays out for a phone held upright. */
     val compactWidthThreshold: Dp = 600.dp
