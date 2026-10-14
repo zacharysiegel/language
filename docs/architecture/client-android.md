@@ -1,6 +1,6 @@
 # Android client
 
-Status: a plan.
+Status: implemented.
 
 A Kotlin and Jetpack Compose app in `android/` over the same Rust core the iOS app uses, reached through UniFFI's Kotlin bindings. The first release does everything the iOS app does; `ios/Language` is the reference for every screen and behaviour. Android Studio is not needed: Gradle, the SDK command-line tools, the emulator and `adb` do everything.
 
@@ -401,3 +401,18 @@ The practice and review step:
 - `practice/ExerciseSolver.kt` in `androidTest` answers exercises from their JSON, for the practice and reading question tests.
 - `ReadingQuestionsSession` in `unit/IntegrationStubs.kt` draws `ExerciseSession` with the quit exit; `readingQuestions_canBeAnswered` is in `unit/PracticeSectionEndToEndTest.kt`.
 - `review/ReviewEndToEndTest.kt` also checks that the due count and the Review tab's badge agree before and after grading, and that the source-to-target direction prompts with the translation.
+
+The audio and integration step:
+
+- `audio/AudioInterruptionEvent.kt` holds the focus change mapping on its own, so the JVM test reaches it without the output.
+- `AudioPlayer` takes its `AudioOutput` and coroutine scope as constructor parameters; the instrumented test builds one with no library.
+- The output abandons the audio focus 1 s after it goes idle, so the clips of a Play all keep it between them.
+- A permanent focus loss ends playback `Interrupted` even without a transient loss before it, which Android allows and iOS does not.
+- `PlaybackTiming` has one more step, `player_creation`, since one ExoPlayer is created once and reused.
+- The manifest queries the `TTS_SERVICE` intent, since package visibility otherwise hides the system voice's engine.
+- The prefetch runs in the unit page's `LaunchedEffect`, keyed by `RecordingPrefetchRequest`; the core call runs on `Dispatchers.IO` under `NonCancellable`, and a cancelled caller calls `PrefetchCancellation.cancel()`.
+- The design token `LanguageSpacing.playGlyphSize` is new.
+- `ReadingQuestionsSession` moved into `unit/LessonSections.kt`; `unit/IntegrationStubs.kt` and `practice/AudioStandIns.kt` are gone.
+- `CoreIntegrationTest` and `ProgressStoreReviewClockTest` use `http://127.0.0.1:9` as the unreachable origin; nothing listens on port 9, so the connection is refused at once.
+- `scripts/android/test-android.sh` builds the core, packages the embedded bundle, assembles the app and its tests and runs the JVM unit tests before the instrumented suite, and copies the screenshots whether or not the suite passed.
+- `CLAUDE.md` does not yet list `android/`.
