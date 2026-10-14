@@ -41,14 +41,14 @@ class CourseAppDriver(private val composeRule: ComposeTestRule) {
         chooseTheCourseIfTheCourseListOpens()
     }
 
-    /** Starts the app again with a cache of its own and neither the origin nor the static repository reachable. */
-    fun relaunchWithUnreachableRepository() {
+    /** Starts the app again with a cache of its own and `unreachableOrigin` as both the origin and the static repository. */
+    fun relaunchWithUnreachableRepository(unreachableOrigin: String = UnreachableOrigins.WAITING_ORIGIN) {
         close()
         launchExtras = mapOf(
             CoreEnvironment.PROGRESS_FILE_EXTRA to newProgressFileName(),
             CoreEnvironment.CACHE_DIRECTORY_EXTRA to "ui-test-cache-${UUID.randomUUID()}",
-            CoreEnvironment.ORIGIN_EXTRA to UnreachableOrigins.WAITING_ORIGIN,
-            CoreEnvironment.REPOSITORY_BASE_URL_EXTRA to UnreachableOrigins.WAITING_ORIGIN,
+            CoreEnvironment.ORIGIN_EXTRA to unreachableOrigin,
+            CoreEnvironment.REPOSITORY_BASE_URL_EXTRA to unreachableOrigin,
         )
         launch()
         chooseTheCourseIfTheCourseListOpens()
