@@ -5,6 +5,7 @@ import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.SemanticsNodeInteractionCollection
+import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertContentDescriptionEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotDisplayed
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.junit4.v2.createEmptyComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.json.JSONArray
@@ -27,6 +29,7 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import ro.zach.language.audio.PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE
 import ro.zach.language.testsupport.CourseAppDriver
 import ro.zach.language.testsupport.CourseData
 
@@ -50,6 +53,8 @@ private const val STACKED_TABLE_NOTE_TITLE: String = "Demonstratives: este, esse
 private const val SECTION_TIMEOUT_MILLISECONDS: Long = 5_000
 private const val UNIT_ITEM_LABEL_TEST_TAG: String = "unit-item-label"
 private const val GROUPED_TABLE_HEADING_TEST_TAG: String = "grouped-table-heading"
+/* The pending indication delay, with room for a slow emulator. */
+private const val PENDING_SHOWN_TIMEOUT_MILLISECONDS: Long = 5_000
 
 @RunWith(AndroidJUnit4::class)
 class LessonSectionsEndToEndTest {
@@ -174,6 +179,42 @@ class LessonSectionsEndToEndTest {
         assertTrue(composeRule.onAllNodesWithTag(GROUPED_TABLE_HEADING_TEST_TAG).fetchSemanticsNodes().isEmpty())
         assertTrue(hasGroupedTableKeyLabel(headers[0]))
         driver.saveScreenshot("20-stacked-table")
+    }
+
+    @Test
+    fun play_waitingForItsRecordingShowsPendingUntilStopped() {
+        driver.relaunchWithUnreachableRepository()
+        driver.openUnit(CourseData.PRACTICED_UNIT_ID)
+        unitPage.openTab(UnitTabKind.Dialogues)
+        driver.waitForTag("play", SECTION_TIMEOUT_MILLISECONDS)
+
+        val playButton: SemanticsNodeInteraction = composeRule.onAllNodesWithTag("play").onFirst()
+        val playAllButton: SemanticsNodeInteraction = composeRule.onAllNodesWithTag("play-all").onFirst()
+        val stopButton: SemanticsNodeInteraction = composeRule.onAllNodesWithTag("stop").onFirst()
+
+        playButton.performScrollTo().assert(hasStateDescription(""))
+        playButton.performClick()
+        waitForStateDescription(playButton, PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE)
+        driver.saveScreenshot("14-play-pending")
+        stopButton.performScrollTo().performClick()
+        waitForStateDescription(playButton, "")
+
+        playAllButton.performScrollTo().performClick()
+        waitForStateDescription(playAllButton, PLAY_BUTTON_PENDING_ACCESSIBILITY_VALUE)
+        playButton.assert(hasStateDescription(""))
+        driver.saveScreenshot("15-play-all-pending")
+        stopButton.performClick()
+        waitForStateDescription(playAllButton, "")
+    }
+
+    private fun hasStateDescription(stateDescription: String): SemanticsMatcher {
+        return SemanticsMatcher.expectValue(SemanticsProperties.StateDescription, stateDescription)
+    }
+
+    private fun waitForStateDescription(node: SemanticsNodeInteraction, stateDescription: String) {
+        composeRule.waitUntil(PENDING_SHOWN_TIMEOUT_MILLISECONDS) {
+            node.fetchSemanticsNode().config.getOrNull(SemanticsProperties.StateDescription) == stateDescription
+        }
     }
 
     private fun openThePrinciples(unitId: String) {
