@@ -31,6 +31,7 @@ object LanguageSpacing {
     val spaceXl: Dp = 48.dp
     val hairline: Dp = 1.dp
     val buttonIconSize: Dp = 30.dp
+    val playGlyphSize: Dp = 12.dp
     val measure: Dp = 640.dp
     val boxShadowOffset: Dp = 4.dp
     val smallBoxShadowOffset: Dp = 2.dp

@@ -4,4 +4,5 @@ package ro.zach.language.diagnostics
 object LogTag {
     const val CORE: String = "LanguageCore"
     const val EMBEDDED_BUNDLE: String = "LanguageBundle"
+    const val AUDIO: String = "LanguageAudio"
 }

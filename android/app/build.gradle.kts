@@ -143,6 +143,7 @@ dependencies {
     implementation(libs.core.ktx)
     implementation(libs.annotation)
     implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.media3.exoplayer)
     implementation(variantOf(libs.jna) { artifactType("aar") })
 
     testImplementation(libs.junit)
