@@ -46,7 +46,7 @@ Every command that writes R2 holds a lease for its whole run. If one stops witho
 
 ## Releasing the apps
 
-Before building the web or iOS app for release, publish to Cloudflare R2 after any local publish, since every publish refreshes the embedded bundle, then run `./scripts/release/check-embedded-bundle.sh`. It fails unless the embedded bundle lists exactly the courses R2's index lists, each at the publication R2's latest pointer names.
+Before building the web, iOS or Android app for release, publish to Cloudflare R2 after any local publish, since every publish refreshes the embedded bundle, then run `./scripts/release/check-embedded-bundle.sh`. It fails unless the embedded bundle lists exactly the courses R2's index lists, each at the publication R2's latest pointer names.
 
 ## iOS app
 
@@ -61,6 +61,40 @@ cd ios && xcodegen generate && open Language.xcodeproj
 
 Building in Xcode reruns the last two scripts. The app reads `/discovery` from `LANGUAGE_ORIGIN` (a build setting in `ios/project.yml`, `http://127.0.0.1:3000` for the simulator and https://language.zach.ro for a device), looks for the course index at `LANGUAGE_REPOSITORY_BASE_URL` when discovery cannot be read, opens the bundle shipped inside it when no repository answers, and keeps shards and played recordings in its cache. `xcodebuild test -project ios/Language.xcodeproj -scheme Language -destination 'platform=iOS Simulator,name=iPhone 17 Pro'` runs its tests; the UI tests read the unit files in `data/` to answer a whole unit's practice. With `./scripts/dev/serve.sh` serving a local repository built by `./scripts/dev/build-local-repository.sh`, the app lists the test courses too, and the UI tests choose `pt_br.en.foundations` from the course list.
 
+## Android app
+
+`android/` is a Kotlin and Jetpack Compose app over the same Rust core, reached through UniFFI's Kotlin bindings. Android Studio is not needed: the committed Gradle wrapper, the SDK command-line tools, the emulator and `adb` do everything. It needs the Android SDK in `~/Library/Android/sdk` (`platform-tools`, `emulator`, the platform and NDK versions `android/app/build.gradle.kts` and `android/gradle.properties` name, and the system image `android-36;google_apis_playstore;arm64-v8a`), JDK 21, the Rust target `aarch64-linux-android` (`rustup target add aarch64-linux-android`) and `cargo-ndk` (`cargo install cargo-ndk`). `./scripts/android/android-environment.sh`, which every Android script sources, sets `JAVA_HOME`, `ANDROID_HOME` and `ANDROID_NDK_HOME`.
+
+Every Gradle build of the app builds the Rust core and its bindings (`./scripts/android/build-android-core.sh`) and packages the embedded bundle from `web/static/embedded/`, so build the local repository first:
+
+```sh
+./scripts/dev/build-local-repository.sh --skip-audio
+cd android && bash -c 'source ../scripts/android/android-environment.sh && ./gradlew assembleDebug testDebugUnitTest'
+```
+
+The debug build reads `/discovery` from `http://127.0.0.1:3000` and the static repository at `http://127.0.0.1:3002`; the run and test scripts map those ports of the device to the Mac's with `adb reverse`, so `./scripts/dev/serve.sh` serves the app on the emulator and on a phone alike. The release build reads https://language.zach.ro and https://repository.language.zach.ro.
+
+### On the emulator
+
+Create the virtual device once (then set `hw.lcd.height=2340` in `~/.android/avd/language_s25.avd/config.ini`, for the S25's 1080x2340 screen at 420 dpi), then start the adb server and the emulator from a terminal:
+
+```sh
+~/Library/Android/sdk/cmdline-tools/latest/bin/avdmanager create avd --name language_s25 --package 'system-images;android-36;google_apis_playstore;arm64-v8a' --device pixel_8
+~/Library/Android/sdk/platform-tools/adb start-server
+~/Library/Android/sdk/emulator/emulator -avd language_s25
+```
+
+Then `./scripts/android/run-android.sh` installs the debug build and starts it. `./scripts/android/test-android.sh` builds the core, packages the embedded bundle, assembles the app and its tests, runs the JVM unit tests and the instrumented suite on the attached device, and copies the suite's screenshots to `/tmp/language-android-screenshots`; its arguments go to the instrumented run, for example `-Pandroid.testInstrumentationRunnerArguments.class=ro.zach.language.app.RootScreenEndToEndTest`. Like the iOS suite, it passes with or without `./scripts/dev/serve.sh`; with it, the test courses appear and the tests choose `pt_br.en.foundations` from the course list.
+
+### On a Samsung Galaxy S25 over USB
+
+1. On the phone, open Settings, About phone, Software information, and tap Build number seven times.
+2. In Settings, Developer options, turn on USB debugging.
+3. Connect the phone with a USB-C cable and accept the computer's key on the phone. `~/Library/Android/sdk/platform-tools/adb devices` then lists it as `device`.
+4. Run `./scripts/android/run-android.sh` for the debug build against the Mac's servers. The `adb reverse` mapping lasts until the phone disconnects, so run the script again after reconnecting. `./scripts/android/test-android.sh` runs the suite on the phone.
+
+With the emulator and the phone both attached, `ANDROID_SERIAL=<serial from adb devices>` picks one. Wireless debugging (Developer options, Wireless debugging, `adb pair <address>`) works the same once paired. A release build installed with `cd android && ./gradlew installRelease` reads the deployed site; it needs the signing properties `languageReleaseStoreFile`, `languageReleaseStorePassword`, `languageReleaseKeyAlias` and `languageReleaseKeyPassword` in `~/.gradle/gradle.properties`, and without them `assembleRelease` writes an unsigned APK.
+
 ## Layout
 
 - `data/courses/<course id>/curriculum.json` describes a course (its languages, levels and units); `units/<id>.json` beside it holds one unit each. The format is described in `docs/authoring.md`.
@@ -68,8 +102,9 @@ Building in Xcode reruns the last two scripts. The app reads `/discovery` from `
 - `tools/course_builder/` validates the data, synthesizes the audio, writes each course's bundles, and publishes and removes courses.
 - `web/` is the Leptos app and the server that hosts it and `/discovery`.
 - `tools/repository_server/` serves the local repository.
-- `ffi/` exposes the core to the native apps through UniFFI; `tools/uniffi_bindgen_swift/` generates the Swift bindings.
+- `ffi/` exposes the core to the native apps through UniFFI; `tools/uniffi_bindgen_swift/` and `tools/uniffi_bindgen_kotlin/` generate the Swift and Kotlin bindings.
 - `ios/` is the iOS app.
+- `android/` is the Android app.
 
 ## Commands
 
