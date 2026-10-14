@@ -7,8 +7,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import ro.zach.language.core.AudioEngineRecord
 import ro.zach.language.core.CoursePublication
 import ro.zach.language.core.SettingsRecord
@@ -35,6 +42,7 @@ import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 
 const val UPDATE_CHECKING_MESSAGE: String = "Checking for updated course content…"
+const val UPDATE_CHECK_MESSAGE_TEST_TAG: String = "update-check-message"
 private const val UPDATE_CHECKING_STATE_DESCRIPTION: String = "Checking"
 
 /** The settings page's content; `courseId` is the course open behind it. */
@@ -116,6 +124,16 @@ private fun CourseContentSection(courseId: String) {
     val publication: CoursePublication? = courseStore.shownPublication(courseId)
     val updateCheck: PendingActivity = rememberPendingActivity()
 
+    /* Only a check started here reports; the message left by the read at launch is not shown. */
+    var checkOutcomeMessage: String? by remember(courseId) { mutableStateOf(null) }
+    val checkForUpdatedContent: () -> Unit = {
+        updateCheck.run {
+            checkOutcomeMessage = null
+            courseStore.refresh(courseId)
+            checkOutcomeMessage = courseStore.updateMessage(courseId)
+        }
+    }
+
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         MicroLabel(text = "Course content")
 
@@ -124,12 +142,19 @@ private fun CourseContentSection(courseId: String) {
             LanguageText(text = publicationSourceText(publication), style = LanguageType.captionText, color = LanguageColors.inkMuted)
         }
 
-        UpdateCheckButton(courseId = courseId, updateCheck = updateCheck)
+        UpdateCheckButton(isPending = updateCheck.isIndicated(), onClick = checkForUpdatedContent)
 
-        val message: String? = updateCheckMessage(updateCheck, courseStore.updateMessage(courseId))
+        val message: String? = if (updateCheck.isIndicated()) UPDATE_CHECKING_MESSAGE else checkOutcomeMessage
 
         if (message != null) {
-            LanguageText(text = message, style = LanguageType.captionText, color = LanguageColors.inkMuted)
+            LanguageText(
+                text = message,
+                style = LanguageType.captionText,
+                color = LanguageColors.inkMuted,
+                modifier = Modifier
+                    .semantics { liveRegion = LiveRegionMode.Polite }
+                    .testTag(UPDATE_CHECK_MESSAGE_TEST_TAG),
+            )
         }
     }
 }
@@ -139,21 +164,14 @@ private fun publicationSourceText(publication: CoursePublication): String {
 }
 
 @Composable
-private fun UpdateCheckButton(courseId: String, updateCheck: PendingActivity) {
-    val courseStore: CourseStore = LocalCourseStore.current
-    val isPending: Boolean = updateCheck.isIndicated()
-
+private fun UpdateCheckButton(isPending: Boolean, onClick: () -> Unit) {
     SquareTextButton(
         text = "Check for updated course content",
         isCompact = true,
         pending = if (isPending) SquareButtonPendingKind.PendingInPlaceOfLabel else SquareButtonPendingKind.NotPending,
-        onClick = { updateCheck.run { courseStore.refresh(courseId) } },
+        onClick = onClick,
         modifier = Modifier
             .pendingAccessibility(isIndicated = isPending, value = UPDATE_CHECKING_STATE_DESCRIPTION)
             .testTag("check-for-updated-content"),
     )
-}
-
-private fun updateCheckMessage(updateCheck: PendingActivity, storeMessage: String?): String? {
-    return if (updateCheck.isIndicated()) UPDATE_CHECKING_MESSAGE else storeMessage
 }

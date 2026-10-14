@@ -23,7 +23,8 @@ import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.diagnostics.CoreErrorReport
 
-private const val SERVER_UNREACHABLE_MESSAGE: String = "The course server could not be reached."
+const val SERVER_UNREACHABLE_MESSAGE: String = "The course server could not be reached."
+const val CONTENT_UP_TO_DATE_MESSAGE: String = "The course content is up to date."
 
 val LocalCourseStore: ProvidableCompositionLocal<CourseStore> = staticCompositionLocalOf { error("no CourseStore provided") }
 
@@ -491,7 +492,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
             updateMessages[courseId] = if (isDifferentContent) {
                 "Downloaded the course content published as ${latest.publicationLabel()}."
             } else {
-                "The course content is up to date."
+                CONTENT_UP_TO_DATE_MESSAGE
             }
         } catch (cancellation: CancellationException) {
             throw cancellation
