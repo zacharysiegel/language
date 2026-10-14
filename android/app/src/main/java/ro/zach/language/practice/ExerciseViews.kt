@@ -1,6 +1,5 @@
 package ro.zach.language.practice
 
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,9 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -28,12 +25,10 @@ import androidx.compose.ui.focus.FocusManager
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,6 +53,7 @@ import ro.zach.language.design.LanguageType
 import ro.zach.language.design.PendingGlyph
 import ro.zach.language.design.SquareButton
 import ro.zach.language.design.SquareTextButton
+import ro.zach.language.design.SquareTextField
 import ro.zach.language.design.pendingAccessibility
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
@@ -215,28 +211,17 @@ private fun TypedAnswerView(
 
 @Composable
 private fun AnswerField(text: String, onTextChange: (String) -> Unit, isAnswered: Boolean, focusRequester: FocusRequester, onDone: () -> Unit) {
-    BasicTextField(
+    SquareTextField(
         value = text,
         onValueChange = onTextChange,
+        placeholder = "Type your answer",
+        textStyle = LanguageType.targetText,
         enabled = !isAnswered,
-        singleLine = true,
-        textStyle = LanguageType.targetText.copy(color = LanguageColors.ink),
-        cursorBrush = SolidColor(LanguageColors.ink),
-        keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.None, autoCorrectEnabled = false, imeAction = ImeAction.Done),
+        imeAction = ImeAction.Done,
         keyboardActions = KeyboardActions(onDone = { onDone() }),
         modifier = Modifier
-            .fillMaxWidth()
             .focusRequester(focusRequester)
             .testTag("answer-field"),
-        decorationBox = { innerTextField: @Composable () -> Unit ->
-            Box(modifier = Modifier.border(LanguageSpacing.hairline, LanguageColors.ink).padding(LanguageSpacing.spaceSm)) {
-                if (text.isEmpty()) {
-                    LanguageText(text = "Type your answer", style = LanguageType.targetText, color = LanguageColors.inkMuted, maxLines = 1)
-                }
-
-                innerTextField()
-            }
-        },
     )
 }
 

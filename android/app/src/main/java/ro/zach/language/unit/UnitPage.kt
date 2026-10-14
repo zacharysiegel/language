@@ -57,6 +57,7 @@ import ro.zach.language.design.LanguageText
 import ro.zach.language.design.LanguageType
 import ro.zach.language.design.PageHeader
 import ro.zach.language.design.PendingStatusMessage
+import ro.zach.language.design.TextLink
 import ro.zach.language.design.indexRailContent
 import ro.zach.language.design.readableWidth
 import ro.zach.language.design.rememberColumnScrollTargets
@@ -311,7 +312,7 @@ private fun UnitTabNavigation(lesson: UnitLessonRecord, activeTab: UnitTabKind, 
         if (position > 0) {
             val previousTab: UnitTabKind = availableTabs[position - 1]
 
-            UnitTabStepLink(label = "← ${previousTab.label()}", onClick = { onChoose(previousTab) })
+            TextLink(text = "← ${previousTab.label()}", onClick = { onChoose(previousTab) })
         }
 
         Spacer(modifier = Modifier.weight(1f))
@@ -319,17 +320,8 @@ private fun UnitTabNavigation(lesson: UnitLessonRecord, activeTab: UnitTabKind, 
         if (position + 1 < availableTabs.size) {
             val nextTab: UnitTabKind = availableTabs[position + 1]
 
-            UnitTabStepLink(label = "${nextTab.label()} →", onClick = { onChoose(nextTab) }, modifier = Modifier.testTag("next-tab"))
+            TextLink(text = "${nextTab.label()} →", onClick = { onChoose(nextTab) }, modifier = Modifier.testTag("next-tab"))
         }
     }
 }
 
-@Composable
-private fun UnitTabStepLink(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    LanguageText(
-        text = label,
-        style = LanguageType.captionText,
-        color = LanguageColors.accentLink,
-        modifier = modifier.clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick),
-    )
-}

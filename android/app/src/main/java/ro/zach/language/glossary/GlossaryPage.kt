@@ -24,7 +24,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.input.ImeAction
 import ro.zach.language.app.LocalRootNavigation
 import ro.zach.language.app.RootNavigationState
@@ -47,6 +46,7 @@ import ro.zach.language.design.SquareSegmentedControl
 import ro.zach.language.design.SquareTextField
 import ro.zach.language.design.readableWidth
 import ro.zach.language.design.rememberLazyListScrollTargets
+import ro.zach.language.unit.LiteralGloss
 import ro.zach.language.unit.UnitTabKind
 
 private const val ALL_LEVELS_LABEL: String = "All levels"
@@ -168,7 +168,7 @@ private fun GlossaryRow(courseId: String, entry: GlossaryEntry) {
             LanguageText(text = entry.item.source, style = LanguageType.bodyText, color = LanguageColors.inkMuted)
 
             if (sourceLiteral != null) {
-                LanguageText(text = "literally: $sourceLiteral", style = LanguageType.captionText.copy(fontStyle = FontStyle.Italic), color = LanguageColors.inkMuted)
+                LiteralGloss(literal = sourceLiteral)
             }
         }
 

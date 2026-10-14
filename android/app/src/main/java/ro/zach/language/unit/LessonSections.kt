@@ -22,6 +22,7 @@ import ro.zach.language.core.DialogueRecord
 import ro.zach.language.core.ExerciseRecord
 import ro.zach.language.core.GrammarNoteRecord
 import ro.zach.language.core.GrammarTableRecord
+import ro.zach.language.core.PhrasePairRecord
 import ro.zach.language.core.QueuedCardsRecord
 import ro.zach.language.core.ReadingRecord
 import ro.zach.language.core.UnitLessonRecord
@@ -135,7 +136,7 @@ fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
             LiteralGloss(literal = literal)
         }
 
-        VocabularyExample(item = item)
+        VocabularyExample(example = item.example, modifier = Modifier.padding(top = LanguageSpacing.spaceXs))
 
         if (note != null) {
             LanguageText(text = note, style = LanguageType.captionText, color = LanguageColors.inkMuted)
@@ -143,18 +144,19 @@ fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
     }
 }
 
+/** A vocabulary item's example sentence, playable, over its translation. */
 @Composable
-private fun VocabularyExample(item: VocabularyItemRecord) {
+fun VocabularyExample(example: PhrasePairRecord, modifier: Modifier = Modifier) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(top = LanguageSpacing.spaceXs),
+        modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.Top,
     ) {
-        PlayButton(clip = AudioClip(clipKey = item.example.clipKey, text = item.example.target))
+        PlayButton(clip = AudioClip(clipKey = example.clipKey, text = example.target))
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
-            LanguageText(text = item.example.target, style = LanguageType.bodyText)
-            LanguageText(text = item.example.source, style = LanguageType.captionText, color = LanguageColors.inkMuted)
+            LanguageText(text = example.target, style = LanguageType.bodyText)
+            LanguageText(text = example.source, style = LanguageType.captionText, color = LanguageColors.inkMuted)
         }
     }
 }
