@@ -29,6 +29,8 @@ import androidx.compose.ui.text.input.ImeAction
 import ro.zach.language.app.LocalRootNavigation
 import ro.zach.language.app.RootNavigationState
 import ro.zach.language.app.UnitDestination
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.PlayButton
 import ro.zach.language.core.CourseLevelRecord
 import ro.zach.language.core.CourseOutlineRecord
 import ro.zach.language.core.searchKey
@@ -159,6 +161,8 @@ private fun GlossaryRow(courseId: String, entry: GlossaryEntry) {
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.Top,
     ) {
+        PlayButton(clip = AudioClip(clipKey = entry.item.clipKey, text = entry.item.target))
+
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
             LanguageText(text = entry.item.target, style = LanguageType.targetText)
             LanguageText(text = entry.item.source, style = LanguageType.bodyText, color = LanguageColors.inkMuted)

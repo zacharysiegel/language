@@ -16,6 +16,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.AudioPlayer
+import ro.zach.language.audio.LocalAudioPlayer
+import ro.zach.language.audio.PlayButton
+import ro.zach.language.audio.PlaybackControlKind
 import ro.zach.language.core.VocabularyItemRecord
 import ro.zach.language.design.LanguageColors
 import ro.zach.language.design.LanguageSpacing
@@ -26,11 +31,6 @@ import ro.zach.language.design.SquareProgressBar
 import ro.zach.language.design.SquareTextButton
 import ro.zach.language.design.TextLink
 import ro.zach.language.design.panel
-import ro.zach.language.practice.AudioClip
-import ro.zach.language.practice.AudioPlayer
-import ro.zach.language.practice.LocalAudioPlayer
-import ro.zach.language.practice.PlayButton
-import ro.zach.language.practice.PlaybackControlKind
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 

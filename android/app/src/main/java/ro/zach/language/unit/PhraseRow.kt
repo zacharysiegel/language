@@ -10,6 +10,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontStyle
+import ro.zach.language.audio.AudioClip
+import ro.zach.language.audio.PlayButton
 import ro.zach.language.core.PhrasePairRecord
 import ro.zach.language.core.VoiceChoiceRecord
 import ro.zach.language.design.LanguageColors

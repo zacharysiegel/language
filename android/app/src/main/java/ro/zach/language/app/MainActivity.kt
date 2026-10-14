@@ -18,7 +18,7 @@ import ro.zach.language.design.LanguageColors
 class MainActivity : ComponentActivity() {
     private val languageViewModel: LanguageViewModel by viewModels {
         viewModelFactory {
-            initializer { LanguageViewModel(CoreEnvironment.standard(applicationContext, intent)) }
+            initializer { LanguageViewModel(CoreEnvironment.standard(applicationContext, intent), applicationContext) }
         }
     }
 
@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
             RootScreen(
                 courseStore = viewModel.courseStore,
                 progressStore = viewModel.progressStore,
+                audioPlayer = viewModel.audioPlayer,
                 rootNavigation = viewModel.rootNavigation,
             )
         }
