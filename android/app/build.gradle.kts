@@ -136,10 +136,8 @@ dependencies {
     implementation(libs.compose.foundation)
     implementation(libs.compose.runtime)
     implementation(libs.compose.material3)
-    implementation(libs.compose.ui.tooling.preview)
     implementation(libs.activity.compose)
-    implementation(libs.lifecycle.viewmodel.compose)
-    implementation(libs.lifecycle.runtime.compose)
+    implementation(libs.lifecycle.viewmodel.savedstate)
     implementation(libs.core.ktx)
     implementation(libs.annotation)
     implementation(libs.kotlinx.coroutines.android)
@@ -147,13 +145,11 @@ dependencies {
     implementation(variantOf(libs.jna) { artifactType("aar") })
 
     testImplementation(libs.junit)
-    testImplementation(libs.kotlinx.coroutines.test)
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
-    androidTestImplementation(libs.kotlinx.coroutines.test)
     debugImplementation(libs.compose.ui.test.manifest)
 }
