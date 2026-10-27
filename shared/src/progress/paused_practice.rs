@@ -17,7 +17,7 @@ impl SavedExerciseResult {
     }
 }
 
-/// A full practice of one unit, saved after every graded answer so it can be left and continued exactly.
+/// A quiz of one unit, saved after every graded answer so it can be left and continued exactly.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PausedPractice {
     /// The `exercise_list_fingerprint` of the unit's exercises when the practice started.

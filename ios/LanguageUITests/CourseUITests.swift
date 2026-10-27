@@ -65,13 +65,13 @@ final class CourseUITests: XCTestCase {
         }
     }
 
-    func testFullPracticeOfAUnitScoresEveryAnswerCorrect() throws {
+    func testQuizOfAUnitScoresEveryAnswerCorrect() throws {
         let unit: [String: Any] = try Self.readUnit(Self.practicedUnitId)
         let exercises: [[String: Any]] = unit["exercises"] as? [[String: Any]] ?? []
 
         openUnit(Self.practicedUnitId)
         app.buttons["tab-practice"].tap()
-        app.buttons["full-practice"].tap()
+        app.buttons["quiz"].tap()
 
         for (index, exercise) in exercises.enumerated() {
             try solve(exercise)
@@ -91,11 +91,11 @@ final class CourseUITests: XCTestCase {
         saveScreenshot("05-practice-summary")
     }
 
-    func testAPausedFullPracticeResumesAfterTheAppIsRelaunched() throws {
+    func testAPausedQuizResumesAfterTheAppIsRelaunched() throws {
         let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
 
         openThePracticeTab(Self.practicedUnitId)
-        app.buttons["full-practice"].tap()
+        app.buttons["quiz"].tap()
         try answerCorrectly(exercises: exercises, indexes: 0..<Self.pausedPracticeAnswerCount)
         pauseThePractice()
         assertResumeOffered(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
@@ -105,7 +105,7 @@ final class CourseUITests: XCTestCase {
         assertResumeOffered(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
         saveScreenshot("24-practice-paused")
 
-        app.buttons["resume-full-practice"].tap()
+        app.buttons["resume-quiz"].tap()
         assertQuestionPosition(questionNumber: Self.pausedPracticeAnswerCount + 1, questionCount: exercises.count)
         try answerCorrectly(exercises: exercises, indexes: Self.pausedPracticeAnswerCount..<exercises.count)
 
@@ -115,15 +115,15 @@ final class CourseUITests: XCTestCase {
         XCTAssertTrue(summary.label.contains("\(exercises.count) of \(exercises.count) correct (100%)"))
 
         app.buttons["session-done"].tap()
-        XCTAssertTrue(app.buttons["full-practice"].waitForExistence(timeout: 5))
-        XCTAssertFalse(app.buttons["resume-full-practice"].exists)
+        XCTAssertTrue(app.buttons["quiz"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["resume-quiz"].exists)
     }
 
-    func testStartOverReplacesThePausedFullPractice() throws {
+    func testStartOverReplacesThePausedQuiz() throws {
         let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
 
         openThePracticeTab(Self.practicedUnitId)
-        app.buttons["full-practice"].tap()
+        app.buttons["quiz"].tap()
         try answerCorrectly(exercises: exercises, indexes: 0..<1)
         pauseThePractice()
         assertResumeOffered(questionNumber: 2, questionCount: exercises.count)
@@ -134,11 +134,11 @@ final class CourseUITests: XCTestCase {
         assertResumeOffered(questionNumber: 1, questionCount: exercises.count)
     }
 
-    func testQuickPracticeIsQuitAndLeavesThePausedFullPractice() throws {
+    func testQuickPracticeIsQuitAndLeavesThePausedQuiz() throws {
         let exercises: [[String: Any]] = try Self.readExercises(Self.practicedUnitId)
 
         openThePracticeTab(Self.practicedUnitId)
-        app.buttons["full-practice"].tap()
+        app.buttons["quiz"].tap()
         try answerCorrectly(exercises: exercises, indexes: 0..<1)
         pauseThePractice()
 
@@ -554,12 +554,12 @@ final class CourseUITests: XCTestCase {
     }
 
     private func assertResumeOffered(questionNumber: Int, questionCount: Int) {
-        let resumeButton: XCUIElement = app.buttons["resume-full-practice"]
+        let resumeButton: XCUIElement = app.buttons["resume-quiz"]
 
         XCTAssertTrue(resumeButton.waitForExistence(timeout: 5))
         XCTAssertTrue(resumeButton.label.contains("question \(questionNumber) of \(questionCount)"))
         XCTAssertTrue(app.buttons["start-over"].exists)
-        XCTAssertFalse(app.buttons["full-practice"].exists)
+        XCTAssertFalse(app.buttons["quiz"].exists)
     }
 
     private func assertQuestionPosition(questionNumber: Int, questionCount: Int) {

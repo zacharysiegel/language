@@ -5,7 +5,7 @@ pub fn pass_percent() -> u32 {
     (PASS_PROPORTION * 100.0).round() as u32
 }
 
-/// Full practice runs every exercise of a unit and counts toward completing it; quick practice samples a few.
+/// The quiz runs every exercise of a unit and counts toward completing it; quick practice samples a few.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PracticeModeKind {
     Full,

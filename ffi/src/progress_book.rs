@@ -239,7 +239,7 @@ impl From<&SavedExerciseResult> for SavedExerciseResultRecord {
     }
 }
 
-/// A full practice of one unit, saved after every graded answer so it can be left and continued exactly.
+/// A quiz of one unit, saved after every graded answer so it can be left and continued exactly.
 #[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
 pub struct PausedPracticeRecord {
     /// Indices into the unit's exercises, in the order the practice asks them.
@@ -371,7 +371,7 @@ impl ProgressBook {
         paused_practice
             .as_ref()
             .map(PausedPracticeRecord::from)
-            .ok_or_else(|| CoreError::arising("the full practice was not started".to_string()))
+            .ok_or_else(|| CoreError::arising("the quiz was not started".to_string()))
     }
 
     /// Does nothing when the unit has no paused practice.
@@ -389,7 +389,7 @@ impl ProgressBook {
         self.change(|progress| progress.course_progress_mut(&course_id).clear_paused_practice(&unit_id))
     }
 
-    /// Records the unit's paused practice as a full practice session; `None` while it has unanswered questions or when
+    /// Records the unit's paused practice as a quiz session; `None` while it has unanswered questions or when
     /// the unit has no paused practice.
     pub fn finish_full_practice(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<Option<PracticeOutcomeRecord>, CoreError> {
         let mut outcome: Option<PracticeOutcome> = None;

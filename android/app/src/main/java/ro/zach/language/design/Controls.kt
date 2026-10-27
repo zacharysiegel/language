@@ -46,7 +46,6 @@ import androidx.compose.ui.unit.Dp
 import ro.zach.language.R
 import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
-import kotlin.math.roundToInt
 
 private const val DISABLED_ALPHA: Float = 0.4f
 private const val PARAGRAPH_SEPARATOR: String = "\n\n"
@@ -408,21 +407,13 @@ fun UnitStatusRecord.accessibilityName(): String {
     }
 }
 
-/** A unit's status, with its best score once it has been practised. */
+/** A unit's status. */
 @Composable
-fun UnitStatusTag(unitProgress: UnitProgressRecord, modifier: Modifier = Modifier) {
-    val hasAttempts: Boolean = unitProgress.attemptCount > 0u
-
-    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs), verticalAlignment = Alignment.CenterVertically) {
-        when (unitProgress.status) {
-            UnitStatusRecord.COMPLETED -> Tag(text = UnitStatusRecord.COMPLETED.label(), isInk = true)
-            UnitStatusRecord.IN_PROGRESS -> Tag(text = UnitStatusRecord.IN_PROGRESS.label(), isActive = true)
-            UnitStatusRecord.NOT_STARTED -> Tag(text = UnitStatusRecord.NOT_STARTED.label())
-        }
-
-        if (hasAttempts && unitProgress.status != UnitStatusRecord.NOT_STARTED) {
-            LanguageText(text = "${(unitProgress.bestProportion * 100).roundToInt()}%", style = LanguageType.dataText, color = LanguageColors.inkMuted)
-        }
+fun UnitStatusTag(status: UnitStatusRecord, modifier: Modifier = Modifier) {
+    when (status) {
+        UnitStatusRecord.COMPLETED -> Tag(text = UnitStatusRecord.COMPLETED.label(), isInk = true, modifier = modifier)
+        UnitStatusRecord.IN_PROGRESS -> Tag(text = UnitStatusRecord.IN_PROGRESS.label(), isActive = true, modifier = modifier)
+        UnitStatusRecord.NOT_STARTED -> Tag(text = UnitStatusRecord.NOT_STARTED.label(), modifier = modifier)
     }
 }
 

@@ -37,7 +37,7 @@ import kotlin.math.roundToInt
 
 private const val CHANGED_PRACTICE_NOTE: String = "The practice changed since you paused, so it starts over."
 
-/** A unit's best score and its full and quick practice sessions. */
+/** A unit's quiz score, its quiz and its quick practice. */
 @Composable
 fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, modifier: Modifier = Modifier) {
     val progressStore: ProgressStore = LocalProgressStore.current
@@ -57,7 +57,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
 
     if (mode != null) {
         ExerciseSession(
-            title = "Practice",
+            title = sessionTitle(mode),
             exercises = sessionExerciseIndexes.mapNotNull { exerciseIndex -> lesson.exercises.getOrNull(exerciseIndex) },
             answeredResults = answeredResults,
             exitKind = exitKind(mode),
@@ -125,18 +125,18 @@ private fun PracticeStartButtons(
             val pausedPractice: PausedPracticeRecord = pausedPracticeState.pausedPractice
 
             SquareTextButton(
-                text = "Resume full practice (question ${resumedQuestionNumber(pausedPractice)} of ${pausedPractice.questionCount})",
+                text = "Resume quiz (question ${resumedQuestionNumber(pausedPractice)} of ${pausedPractice.questionCount})",
                 onClick = { onResume(pausedPractice) },
                 isPrimary = true,
-                modifier = Modifier.testTag("resume-full-practice"),
+                modifier = Modifier.testTag("resume-quiz"),
             )
             SquareTextButton(text = "Start over", onClick = onStartFull, modifier = Modifier.testTag("start-over"))
         }
         PausedPracticeStateRecord.NotPaused, PausedPracticeStateRecord.ExercisesChanged -> SquareTextButton(
-            text = "Full practice ($exerciseCount exercises)",
+            text = "Quiz ($exerciseCount exercises)",
             onClick = onStartFull,
             isPrimary = true,
-            modifier = Modifier.testTag("full-practice"),
+            modifier = Modifier.testTag("quiz"),
         )
     }
 
@@ -210,13 +210,18 @@ private fun recordOutcome(progressStore: ProgressStore, courseId: String, unit: 
     }
 }
 
+private fun sessionTitle(mode: PracticeModeRecord): String = when (mode) {
+    PracticeModeRecord.FULL -> "Quiz"
+    PracticeModeRecord.QUICK -> "Practice"
+}
+
 private fun bestSummary(unitProgress: UnitProgressRecord): String {
     if (unitProgress.attemptCount == 0u) {
-        return "You have not attempted this unit yet."
+        return "You have not taken the quiz yet."
     }
 
     val percent: Int = (unitProgress.bestProportion * 100).roundToInt()
     val completion: String = if (unitProgress.status == UnitStatusRecord.COMPLETED) " Unit completed." else ""
 
-    return "Best score $percent% over ${unitProgress.attemptCount} attempt(s).$completion"
+    return "Quiz: $percent% over ${unitProgress.attemptCount} attempt(s).$completion"
 }

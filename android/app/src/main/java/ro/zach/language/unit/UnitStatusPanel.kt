@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
@@ -16,6 +17,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
 import ro.zach.language.core.passPercent
 import ro.zach.language.design.FloatingTipState
@@ -32,6 +34,7 @@ import ro.zach.language.design.shadowedBox
 import ro.zach.language.design.unitStatusRecords
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
+import kotlin.math.roundToInt
 
 const val UNIT_STATUS_HELP_AUTO_CLOSE_MILLISECONDS: Long = 8_000
 
@@ -46,7 +49,8 @@ fun UnitStatusPanel(
     modifier: Modifier = Modifier,
 ) {
     val progressStore: ProgressStore = LocalProgressStore.current
-    val status: UnitStatusRecord = progressStore.unitProgress(courseId, unitId).status
+    val unitProgress: UnitProgressRecord = progressStore.unitProgress(courseId, unitId)
+    val status: UnitStatusRecord = unitProgress.status
     val helpColor: Color = if (isHelpShown) LanguageColors.accentHover else LanguageColors.ink
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
@@ -65,6 +69,16 @@ fun UnitStatusPanel(
             ) {
                 LanguageText(text = "?", style = LanguageType.bodyText, color = helpColor)
             }
+
+            if (unitProgress.attemptCount > 0u) {
+                Spacer(modifier = Modifier.weight(1f))
+                LanguageText(
+                    text = "Quiz: ${(unitProgress.bestProportion * 100).roundToInt()}%",
+                    style = LanguageType.dataText,
+                    color = LanguageColors.inkMuted,
+                    modifier = Modifier.testTag("unit-best-score"),
+                )
+            }
         }
 
         SquareSegmentedControl(
@@ -81,8 +95,8 @@ fun UnitStatusPanel(
 @Composable
 fun UnitStatusHelpTip(onClose: () -> Unit, modifier: Modifier = Modifier) {
     val rules: List<String> = listOf(
-        "Starting a practice also starts the unit.",
-        "Passing the full practice with at least ${passPercent()}% completes it.",
+        "Starting the quiz or a practice also starts the unit.",
+        "Passing the quiz with at least ${passPercent()}% completes it.",
     )
 
     Box(modifier = modifier.shadowedBox().testTag("unit-status-help-tip")) {

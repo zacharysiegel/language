@@ -67,7 +67,7 @@ impl ProgressStore {
         self.progress.update(|progress| progress.course_progress_mut(course_id).set_unit_status(unit_id, status));
     }
 
-    /// Replaces any paused full practice of the unit; `None` once the store is disposed.
+    /// Replaces any paused quiz of the unit; `None` once the store is disposed.
     pub fn start_full_practice(&self, course_id: &str, unit_id: &str, exercises: &[Exercise]) -> Option<PausedPractice> {
         self.progress.try_update(|progress| progress.course_progress_mut(course_id).start_full_practice(unit_id, exercises))
     }
