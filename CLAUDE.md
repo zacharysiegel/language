@@ -23,6 +23,10 @@ Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`,
 
 `./scripts/dev/serve.sh` needs only this machine. `course_builder build` synthesizes every clip with each engine (Kokoro through ONNX Runtime and eSpeak NG, with model files downloaded once into `models/`, and the macOS `say` voices), encodes with `ffmpeg` into `build/clips/<engine>/`, and writes one bundle per course to `build/artifacts/<course id>/<publication label>/`. A clip's key depends only on its persona and text; a change to an engine's pipeline bumps `pipeline_revision`, which discards that engine's clips. `publish local` copies each course's bundle into `build/repository/`, which `repository_server` serves at http://127.0.0.1:3002, the address the committed `web/static/discovery` names.
 
+## iOS tests
+
+The full iOS suite takes about 16 minutes. Run `./scripts/ios/test-changed.sh` to run only the tests the changed files can affect, and the full suite once before pushing a broad change. Add each new iOS test to `ios/test-selection.txt`; `./scripts/ios/test-changed.sh --check` fails when the map and the tests disagree.
+
 ## Architecture
 
 `docs/architecture/overview.md` describes the artifact contract (course index, course manifests, shards, publish order, discovery, client loading). The shard schema is `shared/src/course_shard/*.sql`; for a change a reader must detect, bump `SCHEMA_VERSION` in `course_shard_schema.rs`, `COURSE_MANIFEST_SCHEMA_VERSION` in `shared/src/artifact/course_manifest.rs` or `COURSE_INDEX_SCHEMA_VERSION` in `shared/src/artifact/course_index.rs`.
