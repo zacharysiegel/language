@@ -16,7 +16,7 @@ struct PracticeSection: View {
     var body: some View {
         if let mode = activeMode {
             ExerciseSession(
-                title: "Practice",
+                title: sessionTitle(mode: mode),
                 exercises: sessionExercises,
                 answeredResults: answeredResults,
                 exitKind: exitKind(mode: mode),
@@ -48,19 +48,19 @@ struct PracticeSection: View {
 
         switch pausedPracticeState {
         case .resumable(let pausedPractice):
-            Button("Resume full practice (question \(resumedQuestionNumber(pausedPractice: pausedPractice)) of \(pausedPractice.questionCount))") {
+            Button("Resume quiz (question \(resumedQuestionNumber(pausedPractice: pausedPractice)) of \(pausedPractice.questionCount))") {
                 resume(pausedPractice: pausedPractice)
             }
             .buttonStyle(SquareButtonStyle(isPrimary: true))
-            .accessibilityIdentifier("resume-full-practice")
+            .accessibilityIdentifier("resume-quiz")
 
             Button("Start over") { start(.full) }
                 .buttonStyle(SquareButtonStyle())
                 .accessibilityIdentifier("start-over")
         case .notPaused, .exercisesChanged:
-            Button("Full practice (\(lesson.exercises.count) exercises)") { start(.full) }
+            Button("Quiz (\(lesson.exercises.count) exercises)") { start(.full) }
                 .buttonStyle(SquareButtonStyle(isPrimary: true))
-                .accessibilityIdentifier("full-practice")
+                .accessibilityIdentifier("quiz")
         }
 
         Button("Quick practice (\(quickPracticeExerciseCount()) random exercises)") { start(.quick) }
@@ -159,16 +159,25 @@ struct PracticeSection: View {
         }
     }
 
+    private func sessionTitle(mode: PracticeModeRecord) -> String {
+        switch mode {
+        case .full:
+            return "Quiz"
+        case .quick:
+            return "Practice"
+        }
+    }
+
     private func bestSummary() -> String {
         let unitProgress: UnitProgressRecord = progressStore.unitProgress(courseId: courseId, unitId: unit.id)
 
         if unitProgress.attemptCount == 0 {
-            return "You have not attempted this unit yet."
+            return "You have not taken the quiz yet."
         }
 
         let percent: Int = Int((unitProgress.bestProportion * 100).rounded())
         let completion: String = unitProgress.status == .completed ? " Unit completed." : ""
 
-        return "Best score \(percent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
+        return "Quiz: \(percent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
     }
 }

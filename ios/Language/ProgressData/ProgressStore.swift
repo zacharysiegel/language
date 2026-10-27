@@ -126,7 +126,7 @@ final class ProgressStore {
         perform { try book.clearPausedPractice(courseId: courseId, unitId: unitId) }
     }
 
-    /// Records the unit's paused practice as a full practice session; `nil` while it has unanswered questions or when the unit has none.
+    /// Records the unit's paused practice as a quiz session; `nil` while it has unanswered questions or when the unit has none.
     func finishFullPractice(courseId: String, unitId: String, vocabularyCount: Int) -> PracticeOutcomeRecord? {
         var outcome: PracticeOutcomeRecord?
 

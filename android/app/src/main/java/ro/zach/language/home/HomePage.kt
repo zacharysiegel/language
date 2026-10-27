@@ -198,7 +198,7 @@ private fun UnitRow(outline: CourseOutlineRecord, unit: UnitOutlineRecord, onOpe
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
             LanguageText(text = unit.title, style = LanguageType.bodyText, color = LanguageColors.accentLink)
-            UnitStatusTag(unitProgress = progressStore.unitProgress(outline.id, unit.id))
+            UnitStatusTag(status = progressStore.unitProgress(outline.id, unit.id).status)
         }
 
         Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)

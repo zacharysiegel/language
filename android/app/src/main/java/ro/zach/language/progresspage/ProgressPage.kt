@@ -97,7 +97,7 @@ private fun UnitsSection(outline: CourseOutlineRecord) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 LanguageText(text = unitRowText(unit), style = LanguageType.bodyText, color = LanguageColors.accentLink, modifier = Modifier.weight(1f))
-                UnitStatusTag(unitProgress = progressStore.unitProgress(outline.id, unit.id))
+                UnitStatusTag(status = progressStore.unitProgress(outline.id, unit.id).status)
             }
 
             HairlineRule()

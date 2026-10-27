@@ -36,7 +36,7 @@ struct UnitStatusPanel: View {
                 if unitProgress.attemptCount > 0 {
                     Spacer()
 
-                    Text("Best score \(Int((unitProgress.bestProportion * 100).rounded()))%")
+                    Text("Quiz: \(Int((unitProgress.bestProportion * 100).rounded()))%")
                         .font(.dataText)
                         .foregroundStyle(Color.inkMuted)
                         .accessibilityIdentifier("unit-best-score")
@@ -78,8 +78,8 @@ struct UnitStatusHelpTip: View {
 
     private func rules() -> [String] {
         [
-            "Starting a practice also starts the unit.",
-            "Passing the full practice with at least \(passPercent())% completes it.",
+            "Starting the quiz or a practice also starts the unit.",
+            "Passing the quiz with at least \(passPercent())% completes it.",
         ]
     }
 

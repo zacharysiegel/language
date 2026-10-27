@@ -201,7 +201,7 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
                 <select on:change:target=move |event| set_status(event.target().value())>{status_options}</select>
             </label>
             <StatusHelp />
-            {move || best_score_percent.get().map(|percent| view! { <span class="unit-best-score numeric muted">"Best score "{percent}"%"</span> })}
+            {move || best_score_percent.get().map(|percent| view! { <span class="unit-best-score numeric muted">"Quiz: "{percent}"%"</span> })}
         </div>
     }
 }
@@ -267,7 +267,7 @@ fn StatusHelp() -> impl IntoView {
     };
 
     let pass_rule: String = format!(
-        "Passing the full practice with at least {}% completes it.",
+        "Passing the quiz with at least {}% completes it.",
         practice::pass_percent(),
     );
 
@@ -300,7 +300,7 @@ fn StatusHelp() -> impl IntoView {
                 on:focusout=record_focus_leaving
             >
                 <ol>
-                    <li>"Starting a practice also starts the unit."</li>
+                    <li>"Starting the quiz or a practice also starts the unit."</li>
                     <li>{pass_rule}</li>
                 </ol>
                 <button type="button" class="tooltip-close" aria-label="Close" on:click=move |_| close_returning_focus()>

@@ -227,7 +227,7 @@ Every screen, from its iOS file to its Kotlin file. Test tags equal the iOS acce
   - `UnitOutlineRecord.itemLabel(itemNumber)` from `unitItemLabel(...)`.
 - `Unit/PhraseRow.swift` to `unit/PhraseRow.kt`: `TranslationToggle`, `PhraseRow` (target, translation and "literally: ..." when translations are shown).
 - `Unit/GrammarTable.swift` to `unit/GrammarTable.kt`: below the compact width, `GroupedTableView` from `groupedTable(table)`: the key (`grouped-table-key`, uppercase headers over an ink rule), group headings (`grouped-table-heading`, heading semantics), rows (`grouped-table-row`, merged semantics with the spoken text "<header>: <value>." per field); at regular width the hairline paradigm grid, scrolling sideways.
-- `Unit/PracticeSection.swift` to `unit/PracticeSection.kt`: best score summary, pass mark, the notice (`practice-notice`, including "The practice changed since you paused, so it starts over."), Resume full practice "(question n of m)" (`resume-full-practice`) and Start over (`start-over`) when paused, else Full practice (`full-practice`), Quick practice (`quick-practice`); full practice saves each answer and pauses, quick practice quits; finishing records the outcome and reports words added.
+- `Unit/PracticeSection.swift` to `unit/PracticeSection.kt`: quiz score summary, pass mark, the notice (`practice-notice`, including "The practice changed since you paused, so it starts over."), Resume full practice "(question n of m)" (`resume-full-practice`) and Start over (`start-over`) when paused, else Full practice (`full-practice`), Quick practice (`quick-practice`); full practice saves each answer and pauses, quick practice quits; finishing records the outcome and reports words added.
 
 ### Practice
 
@@ -299,10 +299,10 @@ From `CourseUITests.swift`, one Android test per iOS test, in the feature packag
   - `playingClips_leavesThePageUsable`
   - `play_waitingForItsRecordingShowsPendingUntilStopped` (single play and Play all)
 - `unit/PracticeSectionEndToEndTest.kt`
-  - `fullPractice_scoresEveryAnswerCorrect`
-  - `pausedFullPractice_resumesAfterTheAppIsRelaunched`
-  - `startOver_replacesThePausedFullPractice`
-  - `quickPractice_isQuitAndLeavesThePausedFullPractice`
+  - `quiz_scoresEveryAnswerCorrect`
+  - `pausedQuiz_resumesAfterTheAppIsRelaunched`
+  - `startOver_replacesThePausedQuiz`
+  - `quickPractice_isQuitAndLeavesThePausedQuiz`
   - `readingQuestions_canBeAnswered`
 - `review/ReviewEndToEndTest.kt`: `review_addsWordsAndGradesACard`.
 - `glossary/GlossaryEndToEndTest.kt`

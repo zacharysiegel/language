@@ -47,9 +47,9 @@ class PracticeSectionEndToEndTest {
     }
 
     @Test
-    fun fullPractice_scoresEveryAnswerCorrect() {
+    fun quiz_scoresEveryAnswerCorrect() {
         openThePracticeTab()
-        tap("full-practice")
+        tap("quiz")
 
         for (index in 0 until exercises.length()) {
             solver.solve(exercises.getJSONObject(index))
@@ -67,11 +67,11 @@ class PracticeSectionEndToEndTest {
     }
 
     @Test
-    fun pausedFullPractice_resumesAfterTheAppIsRelaunched() {
+    fun pausedQuiz_resumesAfterTheAppIsRelaunched() {
         val questionCount: Int = exercises.length()
 
         openThePracticeTab()
-        tap("full-practice")
+        tap("quiz")
         solver.answerCorrectly(exercises, 0 until PAUSED_PRACTICE_ANSWER_COUNT)
         pauseThePractice()
         assertResumeOffered(questionNumber = PAUSED_PRACTICE_ANSWER_COUNT + 1, questionCount = questionCount)
@@ -81,22 +81,22 @@ class PracticeSectionEndToEndTest {
         assertResumeOffered(questionNumber = PAUSED_PRACTICE_ANSWER_COUNT + 1, questionCount = questionCount)
         driver.saveScreenshot("24-practice-paused")
 
-        tap("resume-full-practice")
+        tap("resume-quiz")
         assertQuestionPosition(questionNumber = PAUSED_PRACTICE_ANSWER_COUNT + 1, questionCount = questionCount)
         solver.answerCorrectly(exercises, PAUSED_PRACTICE_ANSWER_COUNT until questionCount)
         assertTheSummaryScoresEveryAnswerCorrect()
 
         tap("session-done")
-        driver.waitForTag("full-practice", PRACTICE_TIMEOUT_MILLISECONDS)
-        assertFalse(driver.hasNode("resume-full-practice"))
+        driver.waitForTag("quiz", PRACTICE_TIMEOUT_MILLISECONDS)
+        assertFalse(driver.hasNode("resume-quiz"))
     }
 
     @Test
-    fun startOver_replacesThePausedFullPractice() {
+    fun startOver_replacesThePausedQuiz() {
         val questionCount: Int = exercises.length()
 
         openThePracticeTab()
-        tap("full-practice")
+        tap("quiz")
         solver.answerCorrectly(exercises, 0 until 1)
         pauseThePractice()
         assertResumeOffered(questionNumber = 2, questionCount = questionCount)
@@ -108,9 +108,9 @@ class PracticeSectionEndToEndTest {
     }
 
     @Test
-    fun quickPractice_isQuitAndLeavesThePausedFullPractice() {
+    fun quickPractice_isQuitAndLeavesThePausedQuiz() {
         openThePracticeTab()
-        tap("full-practice")
+        tap("quiz")
         solver.answerCorrectly(exercises, 0 until 1)
         pauseThePractice()
 
@@ -154,10 +154,10 @@ class PracticeSectionEndToEndTest {
     }
 
     private fun assertResumeOffered(questionNumber: Int, questionCount: Int) {
-        driver.waitForTag("resume-full-practice", PRACTICE_TIMEOUT_MILLISECONDS)
-        composeRule.onNodeWithTag("resume-full-practice").assert(hasText("question $questionNumber of $questionCount", substring = true))
+        driver.waitForTag("resume-quiz", PRACTICE_TIMEOUT_MILLISECONDS)
+        composeRule.onNodeWithTag("resume-quiz").assert(hasText("question $questionNumber of $questionCount", substring = true))
         driver.waitForTag("start-over", PRACTICE_TIMEOUT_MILLISECONDS)
-        assertFalse(driver.hasNode("full-practice"))
+        assertFalse(driver.hasNode("quiz"))
     }
 
     private fun assertQuestionPosition(questionNumber: Int, questionCount: Int) {

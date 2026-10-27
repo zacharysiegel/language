@@ -157,7 +157,7 @@ class ProgressStore(environment: CoreEnvironment, private val scope: CoroutineSc
         return perform { book.clearPausedPractice(courseId, unitId) }
     }
 
-    /** Records the unit's paused practice as a full practice session; `null` while it has unanswered questions or when the unit has none. */
+    /** Records the unit's paused practice as a quiz session; `null` while it has unanswered questions or when the unit has none. */
     fun finishFullPractice(courseId: String, unitId: String, vocabularyCount: Int): PracticeOutcomeRecord? {
         var outcome: PracticeOutcomeRecord? = null
 

@@ -17,9 +17,16 @@ struct ActiveSession {
     answered_results: Vec<SavedExerciseResult>,
 }
 
+fn session_title(mode: PracticeModeKind) -> &'static str {
+    match mode {
+        PracticeModeKind::Full => "Quiz",
+        PracticeModeKind::Quick => "Practice",
+    }
+}
+
 #[derive(Debug, Clone)]
 enum PracticeStartKind {
-    /// Replaces any paused full practice.
+    /// Replaces any paused quiz.
     FullFromTheStart,
     ResumeFull(PausedPractice),
     Quick,
@@ -68,7 +75,7 @@ fn resume_label(paused_practice: &PausedPractice) -> String {
     // A practice paused on the last answer's feedback has no unanswered question left.
     let question_number: usize = (paused_practice.next_question_index() + 1).min(question_count);
 
-    format!("Resume full practice (question {question_number} of {question_count})")
+    format!("Resume quiz (question {question_number} of {question_count})")
 }
 
 #[component]
@@ -122,7 +129,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
                     let outcome: Option<PracticeOutcome> = progress.finish_full_practice(&course_id, &unit_id, vocabulary_count, now_milliseconds);
 
                     if outcome.is_none() {
-                        log::warn!("a full practice ended without a saved session to record; [unit_id={unit_id}]");
+                        log::warn!("a quiz ended without a saved session to record; [unit_id={unit_id}]");
                     }
                 },
                 PracticeModeKind::Quick => {
@@ -140,10 +147,10 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
             let unit_progress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
 
             if unit_progress.attempt_count == 0 {
-                "You have not attempted this unit yet.".to_string()
+                "You have not taken the quiz yet.".to_string()
             } else {
                 format!(
-                    "Best score {}% over {} attempt(s). {}",
+                    "Quiz: {}% over {} attempt(s). {}",
                     (unit_progress.best_proportion * 100.0).round(),
                     unit_progress.attempt_count,
                     if unit_progress.is_completed() { "Unit completed." } else { "" },
@@ -170,7 +177,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
 
                 view! {
                     <ExerciseSession
-                        title="Practice"
+                        title=session_title(mode)
                         exercises=session.exercises
                         answered_results=session.answered_results
                         on_answer
@@ -199,7 +206,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
     }
 }
 
-/// Clears the unit's paused full practice, and shows the note, whenever its exercises differ from the unit's.
+/// Clears the unit's paused quiz, and shows the note, whenever its exercises differ from the unit's.
 fn drop_paused_practice_of_changed_exercises(
     progress_store: ProgressStore,
     course_id: &str,
@@ -243,7 +250,7 @@ fn practice_start_buttons(
         },
         PausedPracticeStateKind::NotPaused | PausedPracticeStateKind::ExercisesChanged => view! {
             <button type="button" class="primary" on:click=move |_| start_session.run(PracticeStartKind::FullFromTheStart)>
-                {format!("Full practice ({exercise_count} exercises)")}
+                {format!("Quiz ({exercise_count} exercises)")}
             </button>
         }
         .into_any(),

@@ -350,7 +350,7 @@ impl Progress {
             .min()
     }
 
-    /// A full practice records an attempt at the unit, ends its paused practice and, when passed, adds the unit's
+    /// A quiz records an attempt at the unit, ends its paused practice and, when passed, adds the unit's
     /// words to the course's review deck; a quick practice only starts the unit.
     pub fn record_practice_session(
         &mut self,
@@ -389,7 +389,7 @@ impl Progress {
         }
     }
 
-    /// Records the unit's paused practice as a full practice session; `None` while it has unanswered questions or when
+    /// Records the unit's paused practice as a quiz session; `None` while it has unanswered questions or when
     /// the unit has no paused practice.
     pub fn finish_full_practice(&mut self, course_id: &str, unit_id: &str, vocabulary_count: usize, now_milliseconds: i64) -> Option<PracticeOutcome> {
         let paused_practice: &PausedPractice = self.courses.get(course_id)?.paused_practices.get(unit_id)?;
