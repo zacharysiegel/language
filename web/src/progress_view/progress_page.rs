@@ -4,7 +4,7 @@ use leptos::prelude::*;
 use leptos_router::components::A;
 use shared::AppError;
 use shared::course::CourseOutline;
-use shared::progress::Progress;
+use shared::progress::{Progress, UnitStatusKind};
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
 
 use crate::course_data::{self, course_gate, use_route_course_id};
@@ -38,9 +38,9 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
             let unit_href: String = course_data::unit_path(&course_id, &unit_id);
             let unit_label: String = format!("{} {}: {}", unit.level, unit.order, unit.title);
             let status = move || {
-                let unit_progress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
+                let unit_status: UnitStatusKind = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id).status);
 
-                progress_state::unit_status_view(unit_progress)
+                progress_state::unit_status_view(unit_status)
             };
 
             view! {

@@ -167,6 +167,13 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
         Memo::new(move |_| progress_store.unit_status(&course_id, &unit_id))
     };
 
+    let best_score_percent: Memo<Option<u32>> = {
+        let course_id: String = course_id.clone();
+        let unit_id: String = unit_id.clone();
+
+        Memo::new(move |_| progress_store.unit_best_score_percent(&course_id, &unit_id))
+    };
+
     let set_status = move |code: String| {
         let Some(chosen) = progress_state::unit_status_from_code(&code)
         else {
@@ -194,6 +201,7 @@ pub fn UnitStatusControl(course_id: String, unit_id: String) -> impl IntoView {
                 <select on:change:target=move |event| set_status(event.target().value())>{status_options}</select>
             </label>
             <StatusHelp />
+            {move || best_score_percent.get().map(|percent| view! { <span class="unit-best-score numeric muted">"Best score "{percent}"%"</span> })}
         </div>
     }
 }

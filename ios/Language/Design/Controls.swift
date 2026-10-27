@@ -341,35 +341,19 @@ extension UnitStatusRecord: CaseIterable {
     }
 }
 
-/// A unit's status, with its best score once it has been practised.
+/// A unit's status.
 struct UnitStatusTag: View {
-    let unitProgress: UnitProgressRecord
+    let status: UnitStatusRecord
 
     var body: some View {
-        HStack(spacing: .spaceXs) {
-            switch unitProgress.status {
-            case .completed:
-                TagView(text: UnitStatusRecord.completed.label(), isInk: true)
-
-                if unitProgress.attemptCount > 0 {
-                    percentText()
-                }
-            case .inProgress:
-                TagView(text: UnitStatusRecord.inProgress.label(), isActive: true)
-
-                if unitProgress.attemptCount > 0 {
-                    percentText()
-                }
-            case .notStarted:
-                TagView(text: UnitStatusRecord.notStarted.label())
-            }
+        switch status {
+        case .completed:
+            TagView(text: UnitStatusRecord.completed.label(), isInk: true)
+        case .inProgress:
+            TagView(text: UnitStatusRecord.inProgress.label(), isActive: true)
+        case .notStarted:
+            TagView(text: UnitStatusRecord.notStarted.label())
         }
-    }
-
-    private func percentText() -> some View {
-        Text("\(Int((unitProgress.bestProportion * 100).rounded()))%")
-            .font(.dataText)
-            .foregroundStyle(Color.inkMuted)
     }
 }
 

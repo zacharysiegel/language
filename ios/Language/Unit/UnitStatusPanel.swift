@@ -11,7 +11,8 @@ struct UnitStatusPanel: View {
     @Environment(ProgressStore.self) private var progressStore
 
     var body: some View {
-        let status: UnitStatusRecord = progressStore.unitProgress(courseId: courseId, unitId: unitId).status
+        let unitProgress: UnitProgressRecord = progressStore.unitProgress(courseId: courseId, unitId: unitId)
+        let status: UnitStatusRecord = unitProgress.status
 
         VStack(alignment: .leading, spacing: .spaceSm) {
             HStack(spacing: .spaceSm) {
@@ -31,6 +32,15 @@ struct UnitStatusPanel: View {
                 .accessibilityLabel("How a unit's status changes")
                 .accessibilityIdentifier("unit-status-help")
                 .floatingTipAnchor()
+
+                if unitProgress.attemptCount > 0 {
+                    Spacer()
+
+                    Text("Best score \(Int((unitProgress.bestProportion * 100).rounded()))%")
+                        .font(.dataText)
+                        .foregroundStyle(Color.inkMuted)
+                        .accessibilityIdentifier("unit-best-score")
+                }
             }
 
             SquareSegmentedControl(

@@ -82,7 +82,7 @@ struct HomePage: View {
                     .foregroundStyle(Color.accentLink)
                     .multilineTextAlignment(.leading)
 
-                UnitStatusTag(unitProgress: progressStore.unitProgress(courseId: outline.id, unitId: unit.id))
+                UnitStatusTag(status: progressStore.unitProgress(courseId: outline.id, unitId: unit.id).status)
             }
 
             Spacer()
