@@ -25,7 +25,7 @@ Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`,
 
 ## iOS tests
 
-The full iOS suite takes about 16 minutes. Run `./scripts/ios/test-changed.sh` to run only the tests the changed files can affect, and the full suite once before pushing a broad change. Add each new iOS test to `ios/test-selection.txt`; `./scripts/ios/test-changed.sh --check` fails when the map and the tests disagree.
+Run `./scripts/ios/run-tests.sh --matching <word>` for the tests whose names carry the feature a change touches, and the whole suite (no arguments) once before pushing a broad change. Name each new test after the feature it covers, so a word finds it.
 
 ## Architecture
 
