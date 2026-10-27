@@ -3,7 +3,7 @@ use std::time::Duration;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
 use shared::course::{Exercise, vocabulary_card_id};
-use shared::progress::{PausedPractice, PausedPracticeStateKind, Progress, QueuedCards, SavedExerciseResult, UnitStatusKind};
+use shared::progress::{PausedPractice, PausedPracticeStateKind, Progress, QueuedCards, SavedExerciseResult, UnitProgress, UnitStatusKind};
 
 use crate::platform;
 
@@ -52,6 +52,15 @@ impl ProgressStore {
 
     pub fn unit_status(&self, course_id: &str, unit_id: &str) -> UnitStatusKind {
         self.progress.with(|progress| progress.course_progress(course_id).unit_progress(unit_id).status)
+    }
+
+    /// The best practice score as a percent; `None` until the unit has been practised.
+    pub fn unit_best_score_percent(&self, course_id: &str, unit_id: &str) -> Option<u32> {
+        self.progress.with(|progress| {
+            let unit_progress: UnitProgress = progress.course_progress(course_id).unit_progress(unit_id);
+
+            (unit_progress.attempt_count > 0).then(|| (unit_progress.best_proportion * 100.0).round() as u32)
+        })
     }
 
     pub fn set_unit_status(&self, course_id: &str, unit_id: &str, status: UnitStatusKind) {

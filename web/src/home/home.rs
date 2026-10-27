@@ -3,7 +3,7 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use shared::course::{CourseLevel, CourseOutline, UnitOutline};
-use shared::progress::UnitProgress;
+use shared::progress::UnitStatusKind;
 
 use crate::course_data::{self, course_gate, use_route_course_id};
 use crate::progress_state::{self, ProgressStore, remember_route_course, use_progress_store};
@@ -75,9 +75,9 @@ fn unit_item(course_id: &str, unit: &UnitOutline, progress_store: ProgressStore)
     let unit_order: u32 = unit.order;
     let unit_title: String = unit.title.clone();
     let status = move || {
-        let unit_progress: UnitProgress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
+        let unit_status: UnitStatusKind = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id).status);
 
-        progress_state::unit_status_view(unit_progress)
+        progress_state::unit_status_view(unit_status)
     };
 
     view! {

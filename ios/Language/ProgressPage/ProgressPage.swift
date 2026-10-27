@@ -42,7 +42,7 @@ struct ProgressPage: View {
 
                         Spacer()
 
-                        UnitStatusTag(unitProgress: progressStore.unitProgress(courseId: outline.id, unitId: unit.id))
+                        UnitStatusTag(status: progressStore.unitProgress(courseId: outline.id, unitId: unit.id).status)
                     }
                     .padding(.vertical, .spaceSm)
                 }
