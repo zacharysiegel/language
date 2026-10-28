@@ -299,7 +299,6 @@ From `CourseUITests.swift`, one Android test per iOS test, in the feature packag
   - `playingClips_leavesThePageUsable`
   - `play_waitingForItsRecordingShowsPendingUntilStopped` (single play and Play all)
 - `unit/PracticeSectionEndToEndTest.kt`
-  - `quiz_scoresEveryAnswerCorrect`
   - `pausedQuiz_resumesAfterTheAppIsRelaunched`
   - `startOver_replacesThePausedQuiz`
   - `quickPractice_isQuitAndLeavesThePausedQuiz`
