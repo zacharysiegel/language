@@ -6,6 +6,7 @@ struct CoreEnvironment {
     static let repositoryBaseUrlInfoKey: String = "LanguageRepositoryBaseUrl"
     static let progressFileArgumentKey: String = "LanguageProgressFile"
     static let cacheDirectoryArgumentKey: String = "LanguageCacheDirectory"
+    static let embeddedBundleDirectoryArgumentKey: String = "LanguageEmbeddedBundleDirectory"
     static let embeddedBundleDirectoryName: String = "embedded_bundle"
     static let cacheDirectoryName: String = "artifacts"
     static let progressFileName: String = "language-progress.json"
@@ -14,8 +15,9 @@ struct CoreEnvironment {
     let progressPath: String
 
     /// The app's own sandbox and bundle. Launch arguments `-LanguageOrigin <url>`, `-LanguageRepositoryBaseUrl <url>`,
-    /// `-LanguageProgressFile <name>` and `-LanguageCacheDirectory <name>` override the origin, the static repository,
-    /// the progress file's name and the cache directory's name.
+    /// `-LanguageProgressFile <name>`, `-LanguageCacheDirectory <name>` and `-LanguageEmbeddedBundleDirectory <path>`
+    /// override the origin, the static repository, the progress file's name, the cache directory's name and the
+    /// directory the embedded bundle is read from.
     static func standard() -> CoreEnvironment {
         let fileManager: FileManager = .default
         let cachesDirectory: URL = fileManager.urls(for: .cachesDirectory, in: .userDomainMask)[0]
@@ -25,7 +27,9 @@ struct CoreEnvironment {
         prepareCacheDirectory(cacheDirectory)
         try? fileManager.createDirectory(at: supportDirectory, withIntermediateDirectories: true)
 
-        let embeddedDirectory: URL = Bundle.main.url(forResource: embeddedBundleDirectoryName, withExtension: nil)
+        let overriddenEmbeddedPath: String? = UserDefaults.standard.string(forKey: embeddedBundleDirectoryArgumentKey)
+        let embeddedDirectory: URL = overriddenEmbeddedPath.map { path in URL(fileURLWithPath: path, isDirectory: true) }
+            ?? Bundle.main.url(forResource: embeddedBundleDirectoryName, withExtension: nil)
             ?? Bundle.main.bundleURL.appendingPathComponent(embeddedBundleDirectoryName)
 
         return CoreEnvironment(

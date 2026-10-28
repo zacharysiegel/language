@@ -70,7 +70,7 @@ function list_defined_tests {
 
     for target in LanguageTests LanguageUITests; do
         for source_path in "${REPO_ROOT}/ios/${target}"/*.swift; do
-            class_name="$(grep -oE 'class [A-Za-z0-9_]+: XCTestCase' "${source_path}" | head -1 | sed -E 's/class ([A-Za-z0-9_]+):.*/\1/')"
+            class_name="$(grep -oE 'class [A-Za-z0-9_]+: [A-Za-z0-9_]+' "${source_path}" | head -1 | sed -E 's/class ([A-Za-z0-9_]+):.*/\1/')"
 
             if test -z "${class_name}"; then
                 continue
@@ -125,6 +125,19 @@ parallel_arguments=(-parallel-testing-enabled NO)
 
 if test "${WORKER_COUNT}" -gt 1; then
     parallel_arguments=(-parallel-testing-enabled YES -parallel-testing-worker-count "${WORKER_COUNT}" -maximum-parallel-testing-workers "${WORKER_COUNT}")
+fi
+
+# The quiz tests read the test course from the local repository.
+local_repository_index_path="${REPO_ROOT}/build/repository/course-index.json"
+test_course_listed=""
+
+if test -f "${local_repository_index_path}"; then
+    test_course_listed="$(grep -F 'pt_br.en.test_course' "${local_repository_index_path}" || true)"
+fi
+
+if test -z "${test_course_listed}"; then
+    printf 'building the local repository, which holds the test course\n'
+    "${REPO_ROOT}/scripts/dev/build-local-repository.sh" --skip-audio > /dev/null 2>&1 || fail "could not build the local repository; run ./scripts/dev/build-local-repository.sh"
 fi
 
 installed_xcodegen="$(command -v xcodegen || true)"
