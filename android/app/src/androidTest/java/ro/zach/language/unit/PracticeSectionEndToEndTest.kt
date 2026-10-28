@@ -47,26 +47,6 @@ class PracticeSectionEndToEndTest {
     }
 
     @Test
-    fun quiz_scoresEveryAnswerCorrect() {
-        openThePracticeTab()
-        tap("quiz")
-
-        for (index in 0 until exercises.length()) {
-            solver.solve(exercises.getJSONObject(index))
-            solver.assertCorrect()
-
-            if (index == 0) {
-                driver.saveScreenshot("04-practice-feedback")
-            }
-
-            solver.continueToTheNextQuestion()
-        }
-
-        assertTheSummaryScoresEveryAnswerCorrect()
-        driver.saveScreenshot("05-practice-summary")
-    }
-
-    @Test
     fun pausedQuiz_resumesAfterTheAppIsRelaunched() {
         val questionCount: Int = exercises.length()
 
@@ -85,6 +65,7 @@ class PracticeSectionEndToEndTest {
         assertQuestionPosition(questionNumber = PAUSED_PRACTICE_ANSWER_COUNT + 1, questionCount = questionCount)
         solver.answerCorrectly(exercises, PAUSED_PRACTICE_ANSWER_COUNT until questionCount)
         assertTheSummaryScoresEveryAnswerCorrect()
+        driver.saveScreenshot("05-practice-summary")
 
         tap("session-done")
         driver.waitForTag("quiz", PRACTICE_TIMEOUT_MILLISECONDS)
