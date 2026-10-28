@@ -64,7 +64,7 @@ class LanguageUITestCase: XCTestCase {
     }
 
     func launchArguments() throws -> [String] {
-        var arguments: [String] = ["-LanguageProgressFile", "ui-test-progress-\(UUID().uuidString).json"]
+        var arguments: [String] = ["-LanguageProgressFile", "ui-test-progress-\(UUID().uuidString).json", "-LanguageSilentPlayback", "YES"]
 
         if let embeddedBundleDirectory = embeddedBundleDirectoryOverride() {
             let courseIndexPath: String = "\(embeddedBundleDirectory)/course-index.json"
@@ -97,6 +97,7 @@ class LanguageUITestCase: XCTestCase {
             "-LanguageCacheDirectory", "ui-test-cache-\(UUID().uuidString)",
             "-LanguageOrigin", Self.unreachableOrigin,
             "-LanguageRepositoryBaseUrl", Self.unreachableOrigin,
+            "-LanguageSilentPlayback", "YES",
         ]
         app.launch()
         chooseTheCourseIfTheCourseListOpens()

@@ -63,6 +63,7 @@ private enum CurrentPlayback {
 /// Owns the audio session and the system players, so their blocking calls run off the main thread.
 actor AudioOutput {
     static let systemVoiceLanguage: String = "pt-BR"
+    static let silentPlaybackArgumentKey: String = "LanguageSilentPlayback"
 
     private var preparation: AudioOutputPreparationKind = .unprepared
     private var sessionActivation: AudioSessionActivationKind = .inactive
@@ -140,6 +141,7 @@ actor AudioOutput {
 
         utterance.voice = voice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * rate
+        utterance.volume = Self.playbackVolume()
 
         let delegate: SpeechUtteranceDelegate = SpeechUtteranceDelegate(utterance: utterance, completion: PlaybackCompletion(), onStart: onSoundStarted)
         let completion: PlaybackCompletion = delegate.completion
@@ -356,8 +358,14 @@ actor AudioOutput {
         PlaybackTiming.end(creation)
         createdPlayer?.enableRate = true
         createdPlayer?.rate = rate
+        createdPlayer?.volume = playbackVolume()
 
         return createdPlayer
+    }
+
+    /// Full volume, or none when the launch argument `-LanguageSilentPlayback YES` asks for silent automated runs.
+    static func playbackVolume() -> Float {
+        UserDefaults.standard.bool(forKey: silentPlaybackArgumentKey) ? 0 : 1
     }
 
     private static func prepareToPlay(_ player: AVAudioPlayer) {

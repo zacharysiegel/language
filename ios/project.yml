@@ -92,6 +92,8 @@ schemes:
       targets:
         Language: all
     test:
+      commandLineArguments:
+        "-LanguageSilentPlayback YES": true
       targets:
         - LanguageTests
         - LanguageUITests
