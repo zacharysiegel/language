@@ -7,6 +7,7 @@ use crate::ollama_client::ChatMessage;
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ValueEnum)]
 pub enum PromptVariantKind {
     Plain,
+    #[value(name = "few_shot")]
     FewShot,
 }
 
