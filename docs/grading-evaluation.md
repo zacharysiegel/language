@@ -7,9 +7,10 @@ The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wrap
 ## What is graded
 
 - Input: the task prompt, optional facts about the scene, the learner's level, the learner's answer
-- Output: `written_in_portuguese`, `answers_the_question`, and a list of findings
-- Finding: `quote` (copied from the answer), `category`, `correction`, `explanation` (English, one sentence)
-- Categories: `spelling`, `verb_form`, `ser_estar`, `agreement`, `article_preposition`, `word_choice`, `word_order`, `pronoun`, `not_brazilian`, `content_mismatch`
+- Output: `answers_the_question`, `language_is_portuguese`, and a list of `mistakes`
+- Mistake: `error_text` (copied from the answer), `explanation` (English, one sentence), `kind`, `replacement`
+- Ollama writes a schema's properties in alphabetical order, whatever order the schema lists them; the names are chosen so that the model writes the text first, then the reason, then the kind and the replacement
+- Kinds: `spelling`, `verb_form`, `ser_estar`, `agreement`, `article_preposition`, `word_choice`, `word_order`, `pronoun`, `not_brazilian`, `content_mismatch`
 - Scope: writing only, answers of a sentence to a short paragraph
 
 ## Cases

@@ -113,7 +113,13 @@ impl OllamaConnection {
 
     pub fn describe_model(&self, model: &str) -> Result<ModelDescription, AppError> {
         let tags: OllamaTagsSerialOut = self.get_tags()?;
-        let size_bytes: u64 = tags.models.iter().find(|tag| tag.name == model).map(|tag| tag.size).unwrap_or(0);
+        let latest_name: String = format!("{model}:latest");
+        let size_bytes: u64 = tags
+            .models
+            .iter()
+            .find(|tag| tag.name == model || tag.name == latest_name)
+            .map(|tag| tag.size)
+            .unwrap_or(0);
 
         let response: Response = self
             .client

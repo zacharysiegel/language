@@ -35,21 +35,21 @@ pub const FEW_SHOT_EXAMPLES: [FewShotExample; 3] = [
         prompt_source: "Describe what Paulo is eating.",
         context_source: Some("Paulo is at a café. He eats a cheese sandwich and drinks orange juice."),
         submission: "O Paulo come um sanduiche de queijo e bebe suco de laranja no café.",
-        response_json: r#"{"written_in_portuguese":true,"answers_the_question":true,"findings":[{"quote":"sanduiche","category":"spelling","correction":"sanduíche","explanation":"The word needs an accent on the i: sanduíche."}]}"#,
+        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"sanduiche","explanation":"The word needs an accent on the i: sanduíche.","kind":"spelling","replacement":"sanduíche"}]}"#,
     },
     FewShotExample {
         level: "a1",
         prompt_source: "What do you do on Sundays?",
         context_source: None,
         submission: "Aos domingos eu almoço com a minha família e descanso.",
-        response_json: r#"{"written_in_portuguese":true,"answers_the_question":true,"findings":[]}"#,
+        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
     },
     FewShotExample {
         level: "a1",
         prompt_source: "Describe the weather today.",
         context_source: Some("It is cold and rainy."),
         submission: "Eu gosto de pizza. Minhas irmãs são muito alta.",
-        response_json: r#"{"written_in_portuguese":true,"answers_the_question":false,"findings":[{"quote":"alta","category":"agreement","correction":"altas","explanation":"The adjective must be plural to agree with 'irmãs'."}]}"#,
+        response_json: r#"{"answers_the_question":false,"language_is_portuguese":true,"mistakes":[{"error_text":"alta","explanation":"The adjective must be plural to agree with 'irmãs'.","kind":"agreement","replacement":"altas"}]}"#,
     },
 ];
 
@@ -96,23 +96,23 @@ pub fn response_schema() -> Value {
     json!({
         "type": "object",
         "properties": {
-            "written_in_portuguese": { "type": "boolean" },
             "answers_the_question": { "type": "boolean" },
-            "findings": {
+            "language_is_portuguese": { "type": "boolean" },
+            "mistakes": {
                 "type": "array",
                 "items": {
                     "type": "object",
                     "properties": {
-                        "quote": { "type": "string" },
-                        "category": { "type": "string", "enum": category_names },
-                        "correction": { "type": "string" },
+                        "error_text": { "type": "string" },
                         "explanation": { "type": "string" },
+                        "kind": { "type": "string", "enum": category_names },
+                        "replacement": { "type": "string" },
                     },
-                    "required": ["quote", "category", "correction", "explanation"],
+                    "required": ["error_text", "explanation", "kind", "replacement"],
                 },
             },
         },
-        "required": ["written_in_portuguese", "answers_the_question", "findings"],
+        "required": ["answers_the_question", "language_is_portuguese", "mistakes"],
     })
 }
 
@@ -140,19 +140,19 @@ You are given a task, sometimes facts about the scene, the learner's level and t
 Report only real mistakes in the answer.\n\
 \n\
 For every mistake give:\n\
-- quote: the wrong word or the smallest wrong phrase, copied exactly from the answer. Never quote a whole sentence for one mistake.\n\
-- category: one of the categories below.\n\
-- correction: the text that replaces the quote.\n\
+- error_text: the wrong word or the smallest wrong phrase, copied exactly from the answer. Never copy a whole sentence for one mistake.\n\
 - explanation: one short sentence in English saying why it is wrong.\n\
+- kind: one of the kinds below.\n\
+- replacement: the text that replaces error_text.\n\
 \n\
-Categories:\n\
+Kinds:\n\
 {categories}\n\
 \n\
 Rules:\n\
 - Spoken Brazilian forms are correct; do not report them: tô, a gente, pra, né, você for 'you'.\n\
 - Do not report style, correct but unusual wording, or punctuation.\n\
-- Do not report a mistake you are not sure about. If the answer has no mistakes, return an empty findings list.\n\
-- written_in_portuguese is false when the answer is written in another language.\n\
+- Do not report a mistake you are not sure about. If the answer has no mistakes, return an empty mistakes list.\n\
+- language_is_portuguese is false when the answer is written in another language.\n\
 - answers_the_question is true when the answer is about what the task asked, even if it contains mistakes.",
         categories = category_lines.join("\n"),
     )
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn response_schema_lists_every_error_category() {
         let schema: Value = response_schema();
-        let category_names: &Value = &schema["properties"]["findings"]["items"]["properties"]["category"]["enum"];
+        let category_names: &Value = &schema["properties"]["mistakes"]["items"]["properties"]["kind"]["enum"];
 
         assert_eq!(
             category_names.as_array().expect("the categories are an array").len(),
