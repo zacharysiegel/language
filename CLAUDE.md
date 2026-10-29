@@ -23,6 +23,10 @@ Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`,
 
 `./scripts/dev/serve.sh` needs only this machine. `course_builder build` synthesizes every clip with each engine (Kokoro through ONNX Runtime and eSpeak NG, with model files downloaded once into `models/`, and the macOS `say` voices), encodes with `ffmpeg` into `build/clips/<engine>/`, and writes one bundle per course to `build/artifacts/<course id>/<publication label>/`. A clip's key depends only on its persona and text; a change to an engine's pipeline bumps `pipeline_revision`, which discards that engine's clips. `publish local` copies each course's bundle into `build/repository/`, which `repository_server` serves at http://127.0.0.1:3002, the address the committed `web/static/discovery` names.
 
+## Grading evaluation
+
+`docs/grading-evaluation.md` describes how local language models are measured on grading a learner's written answer. Run it with `./scripts/dev/evaluate-grading.sh`; the cases are in `tools/grading_evaluation/cases/`, and Ollama must be running.
+
 ## iOS tests
 
 Run `./scripts/ios/run-tests.sh --matching <word>` for the tests whose names carry the feature a change touches, and the whole suite (no arguments) once before pushing a broad change. Name each new test after the feature it covers, so a word finds it, and put each new UI test in its feature's class (a new `LanguageUITestCase` subclass for a new feature), because Xcode runs classes, not single tests, side by side. A quiz test uses the test course so that its quiz stays short.
