@@ -1,0 +1,1141 @@
+[
+  {
+    "id": "a1-control-beach-clothes",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe the clothes Marina is wearing.",
+      "context_source": "Marina is at the beach. She wears a red swimsuit, a straw hat and white sandals."
+    },
+    "submission": "A Marina está de maiô vermelho, chapéu de palha e sandálias brancas.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-coffee",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Do you like coffee?"
+    },
+    "submission": "Sim, eu gosto de café.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-colloquial-feeling",
+    "level": "a1",
+    "task": {
+      "prompt_source": "How are you today?"
+    },
+    "submission": "Tô bem, e você? Só um pouco cansado.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-daily-routine",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you do every day?"
+    },
+    "submission": "Todo dia eu acordo cedo, tomo café e vou para o trabalho.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-order-meal",
+    "level": "a1",
+    "task": {
+      "prompt_source": "You are at a restaurant. Order your meal."
+    },
+    "submission": "Eu queria uma salada e um suco de laranja, por favor.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-family",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe your family."
+    },
+    "submission": "Eu tenho dois irmãos e uma irmã. Meu pai é médico e minha mãe é professora.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-reflexive-name",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is your name?"
+    },
+    "submission": "Eu me chamo Ana e moro em Curitiba.",
+    "reference": {}
+  },
+  {
+    "id": "a1-spelling-feijao",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is your favorite food?"
+    },
+    "submission": "Minha comida favorita é fejão com arroz.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "fejão",
+          "category": "spelling",
+          "accepted_corrections": [
+            "feijão"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-spelling-accents",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you drink in the morning?"
+    },
+    "submission": "De manha eu bebo cafe com leite.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "manha",
+          "category": "spelling",
+          "accepted_corrections": [
+            "manhã"
+          ]
+        },
+        {
+          "wrong_text": "cafe",
+          "category": "spelling",
+          "accepted_corrections": [
+            "café"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-agreement-trousers",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe the clothes Marina is wearing.",
+      "context_source": "Marina wears a blue T-shirt and black trousers."
+    },
+    "submission": "Marina veste uma camiseta azul e uma calça pretos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "pretos",
+          "category": "agreement",
+          "accepted_corrections": [
+            "preta"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-agreement-article-gender",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where do you work?"
+    },
+    "submission": "Eu trabalho em uma escritório no centro.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "uma escritório",
+          "category": "agreement",
+          "accepted_corrections": [
+            "um escritório"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-agreement-plural-adjective",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe your family."
+    },
+    "submission": "Eu tenho dois irmãos. Eles são muito simpático.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "simpático",
+          "category": "agreement",
+          "accepted_corrections": [
+            "simpáticos"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-serestar-location-now",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where are you now?"
+    },
+    "submission": "Agora eu sou em casa com a minha família.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "sou em casa",
+          "category": "ser_estar",
+          "accepted_corrections": [
+            "estou em casa"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-serestar-nationality",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where are you from?",
+      "context_source": "You are a Brazilian man."
+    },
+    "submission": "Eu estou brasileiro e moro em Recife.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "estou brasileiro",
+          "category": "ser_estar",
+          "accepted_corrections": [
+            "sou brasileiro"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-serestar-tired",
+    "level": "a1",
+    "task": {
+      "prompt_source": "How do you feel after work?",
+      "context_source": "You are a man who has just finished a long day at work."
+    },
+    "submission": "Depois do trabalho eu sou cansado e com fome.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "sou cansado",
+          "category": "ser_estar",
+          "accepted_corrections": [
+            "estou cansado"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-article-contraction-em-o",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where do you live?"
+    },
+    "submission": "Eu moro em o Brasil, em São Paulo.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "em o",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "no"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-preposition-missing-em",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where are you from?"
+    },
+    "submission": "Eu sou do Canadá e moro Toronto.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "moro Toronto",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "moro em Toronto"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-verb-form-jantar",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you do at night?"
+    },
+    "submission": "Eu jantar às oito e depois assisto televisão.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "jantar",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "janto"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-pronoun-reflexive-name",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is your name?"
+    },
+    "submission": "Eu chamo Pedro e tenho vinte anos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "chamo",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "me chamo"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-pronoun-reflexive-friend",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is your friend's name?"
+    },
+    "submission": "A minha amiga chama Maria e ela tem trinta anos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "chama",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "se chama"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-word-choice-beans",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you eat for lunch?"
+    },
+    "submission": "No almoço eu como arroz, beans e frango.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "beans",
+          "category": "word_choice",
+          "accepted_corrections": [
+            "feijão"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-word-order-adjective",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe the clothes Rafael is wearing.",
+      "context_source": "Rafael wears a red shirt and black trousers."
+    },
+    "submission": "Ele está com uma vermelha camisa e uma calça preta.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "vermelha camisa",
+          "category": "word_order",
+          "accepted_corrections": [
+            "camisa vermelha"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-word-order-adverb",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Do you like coffee?"
+    },
+    "submission": "Sim, eu gosto de café muito.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "gosto de café muito",
+          "category": "word_order",
+          "accepted_corrections": [
+            "gosto muito de café"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-content-jacket-colour",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe the clothes Rafael is wearing.",
+      "context_source": "Rafael wears a green jacket, jeans and white sneakers."
+    },
+    "submission": "Rafael usa uma jaqueta azul, calça jeans e tênis brancos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "azul",
+          "category": "content_mismatch",
+          "accepted_corrections": [
+            "verde"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-off-topic-football",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What did you eat for breakfast?"
+    },
+    "submission": "Eu gosto de futebol e meu time favorito é o Flamengo.",
+    "reference": {
+      "answers_the_question": false
+    }
+  },
+  {
+    "id": "a1-english-lunch",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What did you eat for lunch?"
+    },
+    "submission": "I ate rice and chicken for lunch.",
+    "reference": {
+      "written_in_portuguese": false
+    }
+  },
+  {
+    "id": "a2-spelling-portugues",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do yesterday?"
+    },
+    "submission": "Ontem eu trabalhei de manhã e à tarde eu estudei portugues.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "portugues",
+          "category": "spelling",
+          "accepted_corrections": [
+            "português"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-spelling-agua",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you buy at the market?",
+      "context_source": "You bought apples, two kilos of rice and a bottle of water."
+    },
+    "submission": "No mercado eu comprei maçãs, dois quilos de arroz e uma garrafa de agua.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "agua",
+          "category": "spelling",
+          "accepted_corrections": [
+            "água"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-spelling-three-errors",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do today?"
+    },
+    "submission": "Hoje eu acordei tarde, tomei cafe e fui trabalhar de onibus. Eu cheguei ao escritório as nove.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "cafe",
+          "category": "spelling",
+          "accepted_corrections": [
+            "café"
+          ]
+        },
+        {
+          "wrong_text": "onibus",
+          "category": "spelling",
+          "accepted_corrections": [
+            "ônibus"
+          ]
+        },
+        {
+          "wrong_text": "as nove",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "às nove"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-verb-form-irregular-fazer",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do yesterday evening?"
+    },
+    "submission": "Ontem à noite eu fazi o jantar e depois fui dormir cedo.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "fazi",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "fiz"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-verb-form-regular-past",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do on the weekend?"
+    },
+    "submission": "No fim de semana eu visitei meus avós e nós almoçamos juntos. Depois eu volti para casa.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "volti",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "voltei"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-verb-form-imperfect",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your childhood."
+    },
+    "submission": "Quando eu era criança, eu moro numa cidade pequena e brincava na rua.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "moro",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "morava"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-verb-form-subject-agreement",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did your family do on Sunday?"
+    },
+    "submission": "No domingo minha família almoçaram na casa da minha avó.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "almoçaram",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "almoçou"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-serestar-tired-day",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe yesterday.",
+      "context_source": "Yesterday it was very cold. You are a man; you were tired and slept all day."
+    },
+    "submission": "Ontem estava muito frio e eu fiquei em casa. Eu era cansado e dormi o dia todo.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "era cansado",
+          "category": "ser_estar",
+          "accepted_corrections": [
+            "estava cansado"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-agreement-two-errors",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your best friend.",
+      "context_source": "Your best friend is a woman, clever and funny, with short black hair."
+    },
+    "submission": "Minha melhor amiga é muito inteligente e engraçado. Ela tem cabelos curtas e pretos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "engraçado",
+          "category": "agreement",
+          "accepted_corrections": [
+            "engraçada"
+          ]
+        },
+        {
+          "wrong_text": "curtas",
+          "category": "agreement",
+          "accepted_corrections": [
+            "curtos"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-preposition-por-para",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Why are you studying Portuguese so much?"
+    },
+    "submission": "Eu estudo muito por passar no exame de proficiência.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "por passar",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "para passar"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-word-choice-atender",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do last night?"
+    },
+    "submission": "Ontem à noite eu atendi um filme novo no cinema.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "atendi",
+          "category": "word_choice",
+          "accepted_corrections": [
+            "assisti"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-word-choice-lavar-dentes",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your morning routine."
+    },
+    "submission": "De manhã eu faço a cama, tomo banho e lavo os dentes.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "lavo os dentes",
+          "category": "word_choice",
+          "accepted_corrections": [
+            "escovo os dentes"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-pronoun-reciprocal",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your relationship with your neighbors."
+    },
+    "submission": "Eu me dou bem com meus vizinhos e sempre nós ajudamos quando precisamos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "nós ajudamos",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "nos ajudamos"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-not-brazilian-gerund",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What are you doing now?"
+    },
+    "submission": "Estou a comer pão com queijo na cozinha.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "a comer",
+          "category": "not_brazilian",
+          "accepted_corrections": [
+            "comendo"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-not-brazilian-bus",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How do you go to work?"
+    },
+    "submission": "Eu vou para o trabalho de autocarro todos os dias.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "autocarro",
+          "category": "not_brazilian",
+          "accepted_corrections": [
+            "ônibus"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-not-brazilian-breakfast",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What time do you have breakfast?"
+    },
+    "submission": "Eu tomo o pequeno-almoço às sete e meia.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "pequeno-almoço",
+          "category": "not_brazilian",
+          "accepted_corrections": [
+            "café da manhã"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-content-weather",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe the weather today.",
+      "context_source": "It is raining and it is cold."
+    },
+    "submission": "Hoje está fazendo sol e muito calor.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "fazendo sol e muito calor",
+          "category": "content_mismatch",
+          "accepted_corrections": [
+            "chovendo e fazendo frio"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-control-trip",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Tell me about your last trip."
+    },
+    "submission": "No ano passado eu viajei para o Rio de Janeiro com minha irmã. Nós ficamos num hotel perto da praia e visitamos o Cristo Redentor.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-weekend-plans",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What are you going to do this weekend?"
+    },
+    "submission": "No sábado vou visitar meus avós e no domingo vou ao mercado.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-comparison",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Compare your phone with your friend's phone.",
+      "context_source": "Your phone is newer. Your friend's phone is cheaper."
+    },
+    "submission": "O meu celular é mais novo do que o seu, mas o seu é mais barato.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-directions",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Give your friend directions to the station.",
+      "context_source": "Go straight ahead, turn left at the bank; the station is on the right."
+    },
+    "submission": "Siga em frente, vire à esquerda no banco e a estação fica à direita.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-a-gente",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you and your friends do on Saturday?"
+    },
+    "submission": "A gente foi ao cinema e depois comeu pizza num restaurante perto de casa.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-object-pronoun",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you think of the film?"
+    },
+    "submission": "Eu vi o filme ontem e gostei muito dele.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-free-time",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What do you like to do in your free time?"
+    },
+    "submission": "No meu tempo livre eu gosto de ler, cozinhar e passear com o meu cachorro.",
+    "reference": {}
+  },
+  {
+    "id": "a2-off-topic-meal",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe the meal these people are eating.",
+      "context_source": "Two people at a restaurant eat spaghetti and drink red wine."
+    },
+    "submission": "Eu moro em São Paulo há cinco anos e gosto muito da cidade.",
+    "reference": {
+      "answers_the_question": false
+    }
+  },
+  {
+    "id": "a2-english-day",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your day."
+    },
+    "submission": "Today I woke up early and went to work.",
+    "reference": {
+      "written_in_portuguese": false
+    }
+  },
+  {
+    "id": "b1-verb-form-subjunctive-present",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What do you hope for the future?"
+    },
+    "submission": "Espero que meus filhos são felizes e que eles tenham uma boa educação.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "são",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "sejam"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-verb-form-future-subjunctive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What will you do if you have free time next month?"
+    },
+    "submission": "Se eu ter tempo no mês que vem, vou viajar para o Nordeste.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "Se eu ter",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "Se eu tiver"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-verb-form-imperfect-subjunctive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What would you do if you won the lottery?"
+    },
+    "submission": "Se eu ganhava na loteria, eu compraria uma casa e viajaria pelo mundo.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "ganhava",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "ganhasse"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-verb-form-present-perfect",
+    "level": "b1",
+    "task": {
+      "prompt_source": "How long have you lived here?"
+    },
+    "submission": "Eu moro aqui desde 2019 e nunca tenho visitado o Nordeste.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "tenho visitado",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "visitei"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-agreement-passive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Describe the cathedral.",
+      "context_source": "The cathedral was built in 1750 and restored in 2005."
+    },
+    "submission": "A catedral foi construída em 1750 e foi restaurado em 2005.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "restaurado",
+          "category": "agreement",
+          "accepted_corrections": [
+            "restaurada"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-content-date",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Describe the cathedral.",
+      "context_source": "The cathedral was built in 1750 and restored in 2005."
+    },
+    "submission": "A catedral foi construída em 1850 e restaurada em 2005.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "1850",
+          "category": "content_mismatch",
+          "accepted_corrections": [
+            "1750"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-control-subjunctive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Invite a friend to your party."
+    },
+    "submission": "Espero que você possa vir à festa e que traga seus amigos.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-future-subjunctive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What will you do when you finish the course?"
+    },
+    "submission": "Quando eu terminar o curso, vou procurar um emprego novo.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-conditional",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What would you do if you won the lottery?"
+    },
+    "submission": "Se eu ganhasse na loteria, eu compraria uma casa e viajaria pelo mundo.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-personal-infinitive",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Why did you arrive early?"
+    },
+    "submission": "Eu cheguei cedo para nós podermos escolher uma boa mesa.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-opinion",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What do you think about working from home?"
+    },
+    "submission": "Acho que trabalhar em casa é bom porque a gente economiza tempo, mas às vezes sinto falta dos colegas.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-formal-email",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Write to your boss to ask for a day off."
+    },
+    "submission": "Prezado Sr. Souza, gostaria de pedir um dia de folga na próxima sexta-feira. Agradeço desde já.",
+    "reference": {}
+  },
+  {
+    "id": "b2-verb-form-pluperfect-participle",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Say what had already happened when you arrived at the cinema.",
+      "context_source": "The film started before you arrived."
+    },
+    "submission": "Quando eu cheguei ao cinema, o filme já tinha começou.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "tinha começou",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "tinha começado"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b2-verb-form-subjunctive-three-errors",
+    "level": "b2",
+    "task": {
+      "prompt_source": "What do you recommend to a friend who wants to learn Portuguese?"
+    },
+    "submission": "Recomendo que você estuda todos os dias e que assiste a filmes brasileiros, embora isso exige paciência.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "estuda",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "estude"
+          ]
+        },
+        {
+          "wrong_text": "assiste",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "assista"
+          ]
+        },
+        {
+          "wrong_text": "exige",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "exija"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b2-preposition-sobre-do",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Write a short formal complaint about a late delivery.",
+      "context_source": "The order should have arrived on the tenth."
+    },
+    "submission": "Venho por meio desta reclamar sobre do atraso na entrega do meu pedido, que deveria ter chegado no dia dez.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "sobre do",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "do",
+            "sobre o"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b2-control-reported-speech",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Report what Ana said.",
+      "context_source": "Ana said: 'I will travel next week and I have already bought the tickets.'"
+    },
+    "submission": "A Ana disse que viajaria na semana seguinte e que já tinha comprado as passagens.",
+    "reference": {}
+  },
+  {
+    "id": "b2-control-idiom",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Describe a stressful day using an expression."
+    },
+    "submission": "Hoje foi um dia complicado: tive que apagar vários incêndios no trabalho e cheguei em casa morto de cansaço.",
+    "reference": {}
+  },
+  {
+    "id": "b2-control-formal-complaint",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Write a short formal complaint about a late delivery.",
+      "context_source": "The order should have arrived on the tenth."
+    },
+    "submission": "Venho por meio desta reclamar do atraso na entrega do meu pedido, que deveria ter chegado no dia dez. Solicito que o problema seja resolvido com urgência.",
+    "reference": {}
+  },
+  {
+    "id": "b2-control-pronoun-placement",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Tell what you said to your brother."
+    },
+    "submission": "Eu lhe disse que não me esperasse, mas ele não me ouviu.",
+    "reference": {}
+  }
+]
