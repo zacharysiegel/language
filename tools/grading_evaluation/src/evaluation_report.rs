@@ -31,11 +31,22 @@ pub struct ScoredRun {
     pub response_duration_seconds: f64,
 }
 
+pub struct SummaryCounts {
+    pub reference_mistakes: usize,
+    pub found_correctly: usize,
+    pub false_alarms: usize,
+    pub quotes_not_in_answer: usize,
+    pub correct_answers: usize,
+    pub correct_answers_flagged: usize,
+    pub answers_graded: usize,
+}
+
 pub struct ModelSummary {
     pub model: String,
     pub prompt_variant: String,
     pub parameter_size: String,
     pub size_bytes: u64,
+    pub counts: SummaryCounts,
     pub response_valid_rate: f64,
     pub precision: f64,
     pub recall: f64,
@@ -138,6 +149,15 @@ pub fn summarize(run: &ScoredRun, cases: &[GradingCase]) -> ModelSummary {
         prompt_variant: run.prompt_variant.clone(),
         parameter_size: run.parameter_size.clone(),
         size_bytes: run.size_bytes,
+        counts: SummaryCounts {
+            reference_mistakes: reference_errors,
+            found_correctly: true_positives,
+            false_alarms: false_positives,
+            quotes_not_in_answer: hallucinated_quotes,
+            correct_answers: control_count,
+            correct_answers_flagged: flagged_controls,
+            answers_graded: scores.len(),
+        },
         response_valid_rate: ratio(scores.iter().filter(|score| score.response_valid).count(), scores.len()),
         precision,
         recall,
@@ -256,6 +276,11 @@ pub fn render_report(summaries: &[ModelSummary]) -> String {
     report.push_str(&render_table(
         &accuracy_headers(),
         &summaries.iter().map(accuracy_row).collect::<Vec<Vec<String>>>(),
+    ));
+    report.push_str("\n## Counts behind the rates\n\n");
+    report.push_str(&render_table(
+        &count_headers(),
+        &summaries.iter().map(count_row).collect::<Vec<Vec<String>>>(),
     ));
     report.push_str("\n## Behavior and cost\n\n");
     report.push_str(&render_table(
@@ -401,6 +426,34 @@ fn accuracy_row(summary: &ModelSummary) -> Vec<String> {
         percent(summary.correction_agreement),
         percent(summary.imprecise_quote_rate),
         percent(summary.duplicate_finding_rate),
+    ]
+}
+
+fn count_headers() -> Vec<&'static str> {
+    vec![
+        "Model",
+        "Prompt",
+        "Answers graded",
+        "Reference mistakes",
+        "Found correctly",
+        "False alarms",
+        "Quotes not in answer",
+        "Correct answers",
+        "Correct answers flagged",
+    ]
+}
+
+fn count_row(summary: &ModelSummary) -> Vec<String> {
+    vec![
+        summary.model.clone(),
+        summary.prompt_variant.clone(),
+        summary.counts.answers_graded.to_string(),
+        summary.counts.reference_mistakes.to_string(),
+        summary.counts.found_correctly.to_string(),
+        summary.counts.false_alarms.to_string(),
+        summary.counts.quotes_not_in_answer.to_string(),
+        summary.counts.correct_answers.to_string(),
+        summary.counts.correct_answers_flagged.to_string(),
     ]
 }
 
