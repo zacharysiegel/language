@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
@@ -51,6 +52,7 @@ private const val DISABLED_ALPHA: Float = 0.4f
 private const val PARAGRAPH_SEPARATOR: String = "\n\n"
 private const val LIST_ITEM_MARKER: String = "- "
 private const val LIST_BULLET: String = "\u25AA"
+private const val LIST_BULLET_SCALE: Float = 0.7f
 
 const val PAGE_HEADER_TITLE_TEST_TAG: String = "page-header-title"
 
@@ -371,7 +373,7 @@ fun Paragraphs(text: String, modifier: Modifier = Modifier) {
                 is ProseBlock.ListItems -> Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
                     for (item in block.items) {
                         Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
-                            LanguageText(text = LIST_BULLET, style = LanguageType.bodyText)
+                            LanguageText(text = LIST_BULLET, style = LanguageType.bodyText, modifier = Modifier.scale(LIST_BULLET_SCALE))
                             LanguageText(
                                 text = item,
                                 style = LanguageType.bodyText.copy(lineHeight = LanguageType.paragraphLineHeight),

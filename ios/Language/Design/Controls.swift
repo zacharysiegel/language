@@ -224,6 +224,8 @@ struct SquareProgressBar: View {
 
 /// Splits prose on blank lines into paragraphs and lists, as the web does. A block whose every line starts with "- " is a list.
 struct Paragraphs: View {
+    private static let bulletScale: CGFloat = 0.7
+
     let text: String
 
     var body: some View {
@@ -239,7 +241,7 @@ struct Paragraphs: View {
                     VStack(alignment: .leading, spacing: .spaceXs) {
                         ForEach(Array(items.enumerated()), id: \.offset) { _, item in
                             HStack(alignment: .firstTextBaseline, spacing: .spaceSm) {
-                                Text("\u{25AA}").font(.bodyText)
+                                Text("\u{25AA}").font(.bodyText).scaleEffect(Self.bulletScale)
                                 Text(item)
                                     .font(.bodyText)
                                     .lineSpacing(4)

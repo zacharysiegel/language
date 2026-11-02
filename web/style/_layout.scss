@@ -19,6 +19,10 @@ main ul:not([class]) {
     flex-direction: column;
     gap: var(--space-xs);
     max-width: var(--width-measure);
+
+    li::marker {
+        font-size: calc(var(--list-marker-scale) * 1em);
+    }
 }
 
 .row {
