@@ -4,6 +4,26 @@ A course lives in `data/courses/<course id>/`. Its `curriculum.json` names the c
 
 Fields named `target` hold text in the language taught; fields named `source` hold text in the language the course is taught in; `source_literal` is the target text rendered word for word in the source language. The rules below that name Portuguese and English are this course's instances of those roles.
 
+## Content rules
+
+These rules come from the course owner's feedback on the content. They apply to every text a learner reads: grammar notes, tables, culture text, vocabulary notes, exercise prompts and explanations, objectives and dialogue contexts.
+
+1. Content feedback is handled in three steps, and this rule comes before all others.
+   - Address the feedback given.
+   - Ask whether it generalizes. If it does, write the generalization here as a numbered rule.
+   - Sweep the whole course for other instances of the same fault and fix them.
+2. Describe a word, form or construction as what it is. Never place it in a category it does not belong to for convenience, in a list, table, table header, vocabulary `part_of_speech` or sentence.
+   - `a gente` is a noun phrase (literally 'the people') that takes a third person singular verb; in speech it stands in for `nós`. It is never listed among the pronouns or beside `ele`, `ela` and `você` in a table or header.
+   - Explain `a gente` in prose, where the forms of address are taught and wherever a note needs it, saying that it works like a pseudo-pronoun.
+3. The reader is assumed to know only the language the course is written in. Never ask the reader to compare with, recall or apply another language (Spanish, French, Latin, European Portuguese), and never use its terms without explaining them. A fact about another language is stated in full so that it stands on its own, and only when it helps the learner.
+4. A concept is explained before it is named, and explained fully.
+   - Say what it is in plain terms, how it is formed, when it is used, and give an example with its natural translation and, where the structures differ, its literal rendering.
+   - Never close a paragraph about something else with a sentence that only names a concept or says what English lacks. A concept that needs explaining gets its own paragraph or list; one that is not yet taught is left out or given a one-line meaning with a translated example.
+5. Prose is overused; a list is often the more efficient way to teach. Write a list as a list.
+   - Use a list for sets of parallel items (tenses, moods, forms, categories, endings), steps, rules and their exceptions, contrasts, and a sequence of examples with a short gloss each.
+   - Use prose to explain why something is so and to connect ideas, not to carry an enumeration.
+   - A list is a block of lines that each start with `- `, with a blank line before and after the block. One item per line, no nesting, and no other markup. A sentence that introduces the list ends the paragraph before it.
+
 ## Language rules (Brazilian Portuguese only)
 
 - Brazilian vocabulary, spelling and grammar throughout: `você`, `a gente`, `ônibus`, `trem`, `celular`, `café da manhã`, `banheiro`, `geladeira`, `suco`, `moça`, `fato`, `contato`.
@@ -11,8 +31,8 @@ Fields named `target` hold text in the language taught; fields named `source` ho
 - Use natural, current speech in dialogues: `tá`, `pra`, `né` are fine in informal dialogue at A2 and above (sparingly at A1). Keep grammar notes honest about formal vs colloquial usage.
 - Every `target` string must be correct, natural and fully spelled with accents. Re-read everything once for accent, agreement and conjugation errors before you finish.
 - Every `target` string is spoken by a text-to-speech engine. It must be plain speakable text: no slashes (write two separate items instead of `obrigado/obrigada`), no parentheses, no markdown, no symbols, no em or en dashes, no `___`. Write numbers as words when they are short. Keep each string under about 200 characters.
-- English (`source`, `explanation`, `prompt`, `hint_source`, `context`, `note`) is plain natural English. Explanations and notes may contain `\n\n` to separate paragraphs. Plain text only, no markdown syntax.
-- Mentions of European Portuguese as a contrast belong only in `note` or `explanation` text (English), never inside a `target` field.
+- English (`source`, `explanation`, `prompt`, `hint_source`, `context`, `note`) is plain natural English. Explanations and culture text may contain `\n\n` to separate paragraphs and lists (content rule 5). Plain text only, no other markdown syntax.
+- Mentions of European Portuguese as a contrast belong only in `note` or `explanation` text (English), never inside a `target` field, and follow content rule 3.
 - Difficulty must match the level. A1 uses very short sentences and only the grammar covered so far (the current unit's focus plus all earlier units in the curriculum). A2 can use the past tenses once introduced; B1 and B2 use longer, richer text.
 - Recycle vocabulary and grammar from earlier units in the sequence, but each unit must introduce its own new vocabulary and must not require grammar from later units.
 
@@ -92,7 +112,7 @@ Rules for each section:
 - `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `part_of_speech` is optional (noun, verb, adjective, phrase, and so on). For nouns, include the article in `target` when gender matters (`a cidade`, `o aluguel`). For verbs use the infinitive. Do not repeat a `target` value within the unit.
 - `dialogues`: 2 to 3 dialogues, each with 6 to 14 lines, 2 to 4 distinct speakers, speaker names consistent within a dialogue and `gender` of `f` or `m` on every line matching the speaker. Dialogues must use the unit's vocabulary and grammar focus in realistic situations. A dialogue id must be unique within the unit (`d1`, `d2`, ...).
 - `grammar`: 2 to 4 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, Brazilian usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
-- Table headers on a phone: a narrow screen shows a table as labelled rows. The first column leads each row (or, where consecutive rows repeat their first cell, that cell becomes a group heading and the second column leads), and every later header becomes an uppercase label in a column about 11 letters wide beside its value. Keep each of those headers to one line: a word or two that names the column (`Sound`, `English sound`, `Literal`, `Natural`, `Syllables`, `Default`, `Why`, `Example`). Two lines are acceptable only where one cannot carry the meaning (`Masculine plural`, `você, ele, ela, a gente`); the validator warns at two lines and rejects more. Put explanations of a convention in the note's explanation, not in a header. Give the same column concept the same header in every unit.
+- Table headers on a phone: a narrow screen shows a table as labelled rows. The first column leads each row (or, where consecutive rows repeat their first cell, that cell becomes a group heading and the second column leads), and every later header becomes an uppercase label in a column about 11 letters wide beside its value. Keep each of those headers to one line: a word or two that names the column (`Sound`, `English sound`, `Literal`, `Natural`, `Syllables`, `Default`, `Why`, `Example`). Two lines are acceptable only where one cannot carry the meaning (`Masculine plural`, `você, ele, ela`); the validator warns at two lines and rejects more. Put explanations of a convention in the note's explanation, not in a header. Give the same column concept the same header in every unit.
 - `culture`: one note of at least 200 characters.
 - `readings`: optional at A1 and A2 (omit the key or use `[]`), required at B1 and B2 (at least 1; 2 for B2 units). A reading has at least 2 paragraphs of real connected text at the level, and at least 2 (ideally 3 to 4) `multiple_choice` comprehension questions.
 - `exercises`: at least 22 in total, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30 exercises. Cover the whole unit: vocabulary, the grammar notes, and the dialogues.
