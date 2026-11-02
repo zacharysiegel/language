@@ -19,6 +19,7 @@ struct LanguageApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
+                .textSelection(.enabled)
                 .environment(courseStore)
                 .environment(progressStore)
                 .environment(audioPlayer)

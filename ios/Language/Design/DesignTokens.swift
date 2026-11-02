@@ -28,11 +28,13 @@ extension CGFloat {
     static let indexRailEdgeInset: CGFloat = 6
     static let indexRailEntryMaximumHeight: CGFloat = 21
     static let tableFieldLabelWidth: CGFloat = 96
+    static let bodyTextSize: CGFloat = 15
+    static let bodyLineSpacing: CGFloat = 4
 }
 
 /* The web's type scale, one or two points larger for a phone's reading distance. */
 extension Font {
-    static let bodyText = Font.system(size: 15)
+    static let bodyText = Font.system(size: .bodyTextSize)
     static let dataText = Font.system(size: 14).monospacedDigit()
     static let labelText = Font.system(size: 11, weight: .semibold)
     static let captionText = Font.system(size: 12)
