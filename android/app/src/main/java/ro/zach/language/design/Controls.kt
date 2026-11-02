@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -52,7 +53,7 @@ private const val DISABLED_ALPHA: Float = 0.4f
 private const val PARAGRAPH_SEPARATOR: String = "\n\n"
 private const val LIST_ITEM_MARKER: String = "- "
 private const val LIST_BULLET: String = "\u25AA"
-private const val LIST_BULLET_SCALE: Float = 0.7f
+private const val LIST_BULLET_SCALE: Float = 0.56f
 
 const val PAGE_HEADER_TITLE_TEST_TAG: String = "page-header-title"
 
@@ -186,11 +187,13 @@ fun SquareButton(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         PendingGlyphSwap(isIndicated = pending == SquareButtonPendingKind.PendingInPlaceOfLabel, glyphColor = contentColor) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                content(contentColor)
+            DisableSelection {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    content(contentColor)
+                }
             }
         }
     }
@@ -287,7 +290,9 @@ fun ChoiceButton(
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        content(mark.foreground())
+        DisableSelection {
+            content(mark.foreground())
+        }
     }
 }
 
@@ -481,7 +486,9 @@ fun SquareToggle(
             }
         }
 
-        label()
+        DisableSelection {
+            label()
+        }
     }
 }
 
@@ -519,12 +526,14 @@ fun <Option> SquareSegmentedControl(
                     .padding(horizontal = LanguageSpacing.spaceXs, vertical = LanguageSpacing.spaceSm),
                 contentAlignment = Alignment.Center,
             ) {
-                LanguageText(
-                    text = label(option),
-                    style = LanguageType.captionText,
-                    color = if (isSelected) LanguageColors.paper else LanguageColors.ink,
-                    maxLines = 1,
-                )
+                DisableSelection {
+                    LanguageText(
+                        text = label(option),
+                        style = LanguageType.captionText,
+                        color = if (isSelected) LanguageColors.paper else LanguageColors.ink,
+                        maxLines = 1,
+                    )
+                }
             }
         }
     }

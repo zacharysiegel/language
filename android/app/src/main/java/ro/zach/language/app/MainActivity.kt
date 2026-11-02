@@ -6,6 +6,7 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
+import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
@@ -43,12 +44,14 @@ class MainActivity : ComponentActivity() {
         )
 
         setContent {
-            RootScreen(
-                courseStore = viewModel.courseStore,
-                progressStore = viewModel.progressStore,
-                audioPlayer = viewModel.audioPlayer,
-                rootNavigation = viewModel.rootNavigation,
-            )
+            SelectionContainer {
+                RootScreen(
+                    courseStore = viewModel.courseStore,
+                    progressStore = viewModel.progressStore,
+                    audioPlayer = viewModel.audioPlayer,
+                    rootNavigation = viewModel.rootNavigation,
+                )
+            }
         }
     }
 }
