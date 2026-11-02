@@ -28,6 +28,8 @@ The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wrap
 
 A finding matches a reference mistake when its quote overlaps the mistake's text; each reference mistake matches at most one finding.
 
+- Precision: the proportion of findings that match a reference mistake (how often a flag is right)
+- Recall: the proportion of reference mistakes that a finding matches (how many mistakes are caught)
 - Matched: counts toward precision and recall
 - Duplicate: a further finding on an already matched mistake; reported, not penalized
 - Quote not in the answer: counts against precision and is reported separately
@@ -59,6 +61,18 @@ A model is a candidate only if every line holds; the thresholds are in `evaluati
 5. Change the prompt only for a failure pattern seen across models, and rerun everything
 
 Latency excludes the model load time. Results come from one machine; the download size and parameter count indicate whether a model could run on a phone, which this evaluation does not test.
+
+## Prompt variants
+
+The variants differ only in the worked examples given to the model: none, one mistake, one correct answer, three mixed examples in two orders, six, mostly correct, and the three mixed examples placed in the system message instead of as chat turns. `--prompt-variant` selects them; all run by default.
+
+## Requirements this implies for the app
+
+- Grading may ship on web and desktop only if no model small enough for a phone meets the bar
+- The model loads in the background when the app starts, so the first grading does not pay the load time
+- The expected grading duration differs per client: background test gradings at first launch set the starting expectation for the progress indicator, and observed durations adjust it afterwards
+- Production runs at temperature 0 so the same answer always receives the same grading
+- The learner is told the grading is done by a model
 
 ## Candidate models
 

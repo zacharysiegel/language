@@ -401,10 +401,10 @@ fn accuracy_headers() -> Vec<&'static str> {
     vec![
         "Model",
         "Prompt",
-        "Precision",
-        "Recall",
+        "Precision (flags that were real)",
+        "Recall (mistakes found)",
         "F1",
-        "Control false alarms",
+        "Correct answers flagged",
         "Quotes not in answer",
         "Category",
         "Correction",
