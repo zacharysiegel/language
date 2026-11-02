@@ -401,10 +401,10 @@ fn accuracy_headers() -> Vec<&'static str> {
     vec![
         "Model",
         "Prompt",
-        "Precision (flags that were real)",
-        "Recall (mistakes found)",
+        "Precision",
+        "Recall",
         "F1",
-        "Correct answers flagged",
+        "False positive rate",
         "Quotes not in answer",
         "Category",
         "Correction",
@@ -513,7 +513,7 @@ fn category_row(summary: &ModelSummary) -> Vec<String> {
 
 fn render_bar_description() -> String {
     format!(
-        "- Control false alarms at most {}\n- Quotes not in the answer at most {}\n- Precision at least {}\n- Recall at least {}\n- Correction agreement at least {}\n- p95 latency at most {MAXIMUM_P95_LATENCY_SECONDS:.0} s\n",
+        "- False positive rate at most {}\n- Quotes not in the answer at most {}\n- Precision at least {}\n- Recall at least {}\n- Correction agreement at least {}\n- p95 latency at most {MAXIMUM_P95_LATENCY_SECONDS:.0} s\n",
         percent(MAXIMUM_CONTROL_FALSE_ALARM_RATE),
         percent(MAXIMUM_HALLUCINATED_QUOTE_RATE),
         percent(MINIMUM_PRECISION),

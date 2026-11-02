@@ -28,15 +28,15 @@ The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wrap
 
 A finding matches a reference mistake when its quote overlaps the mistake's text; each reference mistake matches at most one finding.
 
-- Precision: the proportion of findings that match a reference mistake (how often a flag is right)
-- Recall: the proportion of reference mistakes that a finding matches (how many mistakes are caught)
+- Precision: findings that match a reference mistake ÷ all findings
+- Recall: reference mistakes matched by a finding ÷ all reference mistakes
+- False positive rate: control answers with at least one finding ÷ all control answers
 - Matched: counts toward precision and recall
 - Duplicate: a further finding on an already matched mistake; reported, not penalized
 - Quote not in the answer: counts against precision and is reported separately
 - No-op: a correction identical to the quoted text counts as a false positive
 - Imprecise quote: a match whose quote is more than three words longer than the mistake
 - Category accuracy and correction agreement: measured among matches; the correction must equal an accepted correction after normalizing case and punctuation, so it understates valid alternatives
-- Control false alarm rate: the proportion of control answers with at least one finding
 - Not in Portuguese cases are excluded from precision and recall
 - Scores are computed from the recorded replies, so scoring changes need no new model run
 - A case edited after a run is rejected by `report`; grade again
@@ -45,7 +45,7 @@ A finding matches a reference mistake when its quote overlaps the mistake's text
 
 A model is a candidate only if every line holds; the thresholds are in `evaluation_report.rs`.
 
-- Control false alarms at most 10%
+- False positive rate at most 10%
 - Quotes not in the answer at most 2%
 - Precision at least 70%
 - Recall at least 60%
@@ -61,6 +61,10 @@ A model is a candidate only if every line holds; the thresholds are in `evaluati
 5. Change the prompt only for a failure pattern seen across models, and rerun everything
 
 Latency excludes the model load time. Results come from one machine; the download size and parameter count indicate whether a model could run on a phone, which this evaluation does not test.
+
+## Verification with a decision model
+
+`verify` asks a decision model, through decisor, whether each finding of recorded runs is a real mistake, and `verify-report` compares the answers. Von and Kev are the System One decision models trained for calibrated probabilities. The report gives how well the probability separates real findings from false ones (AUROC: the probability that a real finding is given a higher probability than a false one; 0.5 is chance), whether stated probabilities match how often findings are real, and the grading that results from dropping findings below a threshold.
 
 ## Prompt variants
 
