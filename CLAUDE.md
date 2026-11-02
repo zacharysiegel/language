@@ -12,7 +12,7 @@ Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`,
 
 ## Course data
 
-- Author units to the format in `docs/authoring.md`, then run `cargo run --package course_builder -- validate --course <course id> <unit-id>`. The validator is the authority on structure; `shared/tests/course_data.rs` fails `cargo test` if any unit is invalid.
+- Author units to the format and the numbered content rules in `docs/authoring.md`; content rule 1 governs every piece of content feedback. Then run `cargo run --package course_builder -- validate --course <course id> <unit-id>`. The validator is the authority on structure; `shared/tests/course_data.rs` fails `cargo test` if any unit is invalid.
 - Courses live in `data/courses/<course id>/` (`curriculum.json` plus `units/`); a course id is `<target language>.<source language>.<curriculum name>`. `target` fields are in the language taught, `source` fields in the language it is taught in, `source_literal` is the word-for-word gloss.
 - Every `target` string is spoken by text-to-speech, so it must be plain speakable text.
 - A target language can add its own checks (`shared/src/course/target_language_rules.rs`); for `pt-BR`, European forms in `target` fields are rejected by the validator.
