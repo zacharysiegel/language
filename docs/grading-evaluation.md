@@ -28,7 +28,7 @@ The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wrap
 
 A finding matches a reference mistake when its quote overlaps the mistake's text; each reference mistake matches at most one finding.
 
-- Precision: findings that match a reference mistake ÷ all findings
+- Precision: findings that match a reference mistake ÷ (those findings + findings that match none); a repeat finding of an already matched mistake counts in neither
 - Recall: reference mistakes matched by a finding ÷ all reference mistakes
 - False positive rate: control answers with at least one finding ÷ all control answers
 - Matched: counts toward precision and recall
