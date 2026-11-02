@@ -277,6 +277,9 @@ pub fn render_report(summaries: &[ModelSummary]) -> String {
         &accuracy_headers(),
         &summaries.iter().map(accuracy_row).collect::<Vec<Vec<String>>>(),
     ));
+    report.push_str(
+        "\n- Precision: findings that match a real mistake ÷ (those findings + findings that match none); a repeat finding of an already matched mistake counts in neither\n- Recall: real mistakes matched by a finding ÷ all real mistakes\n- False positive rate: correct answers with at least one finding ÷ all correct answers\n",
+    );
     report.push_str("\n## Counts behind the rates\n\n");
     report.push_str(&render_table(
         &count_headers(),
