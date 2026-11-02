@@ -222,25 +222,57 @@ struct SquareProgressBar: View {
     }
 }
 
-/// Splits prose on blank lines into paragraphs, as the web does.
+/// Splits prose on blank lines into paragraphs and lists, as the web does. A block whose every line starts with "- " is a list.
 struct Paragraphs: View {
     let text: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
-            ForEach(Array(paragraphs().enumerated()), id: \.offset) { _, paragraph in
-                Text(paragraph)
-                    .font(.bodyText)
-                    .lineSpacing(4)
-                    .fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(blocks().enumerated()), id: \.offset) { _, block in
+                switch block {
+                case .paragraph(let paragraph):
+                    Text(paragraph)
+                        .font(.bodyText)
+                        .lineSpacing(4)
+                        .fixedSize(horizontal: false, vertical: true)
+                case .list(let items):
+                    VStack(alignment: .leading, spacing: .spaceXs) {
+                        ForEach(Array(items.enumerated()), id: \.offset) { _, item in
+                            HStack(alignment: .firstTextBaseline, spacing: .spaceSm) {
+                                Text("\u{25AA}").font(.bodyText)
+                                Text(item)
+                                    .font(.bodyText)
+                                    .lineSpacing(4)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 
-    private func paragraphs() -> [String] {
-        text.components(separatedBy: "\n\n")
-            .map { paragraph in paragraph.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { paragraph in !paragraph.isEmpty }
+    private enum ProseBlock {
+        case paragraph(String)
+        case list([String])
+    }
+
+    private func blocks() -> [ProseBlock] {
+        let listMarker: String = "- "
+
+        return text.components(separatedBy: "\n\n")
+            .map { block in block.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { block in !block.isEmpty }
+            .map { block in
+                let lines: [String] = block.components(separatedBy: "\n").map { line in line.trimmingCharacters(in: .whitespaces) }
+                let isList: Bool = lines.allSatisfy { line in line.hasPrefix(listMarker) }
+
+                if !isList {
+                    return .paragraph(block)
+                }
+
+                return .list(lines.map { line in String(line.dropFirst(listMarker.count)).trimmingCharacters(in: .whitespaces) })
+            }
     }
 }
 

@@ -6,6 +6,7 @@ pub mod course_validation;
 pub mod curriculum_model;
 pub mod grouped_table;
 pub mod language_names;
+pub mod prose;
 pub mod target_language_rules;
 pub mod unit_item_label;
 
@@ -17,4 +18,5 @@ pub use course_validation::*;
 pub use curriculum_model::*;
 pub use grouped_table::*;
 pub use language_names::*;
+pub use prose::*;
 pub use unit_item_label::*;
