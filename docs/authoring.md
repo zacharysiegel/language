@@ -33,6 +33,11 @@ These rules come from the course owner's feedback on the content. They apply to 
    - Use prose to explain why something is so and to connect ideas, not to carry an enumeration.
    - A list is a block of lines that each start with `- `, with a blank line before and after the block. One item per line, no nesting, and no other markup. A sentence that introduces the list ends the paragraph before it.
    - Lists work in grammar `explanation` and culture `text`. Other text fields stay single-line plain text.
+6. Never put a source-language article or determiner on a target-language word or phrase. Each language keeps its own slots, so a sentence never has to be parsed across a mix of the two.
+   - A target word is quoted by itself (`'frase'`), or named by a source-language noun that says what it is: `the word 'frase'`, `the form 'fala'`, `the phrase 'posto de saúde'`, `the tense called 'pretérito perfeito'`.
+   - A gloss pair keeps one language per side: `sentence: 'frase'`, not `sentence: a 'frase' in Portuguese`.
+   - A sentence that defines a target word puts it where no article is needed: `'Feira' is an open-air street market` or `The word for an open-air street market is 'feira'`, not `An open-air street market is a 'feira'`.
+   - This covers words, phrases and forms. Letters, sound spellings and endings are named by their spelling (`the 'ch' is [ʃ]`, `the '-o' of 'isso'`).
 
 ## Text rules
 
