@@ -1,0 +1,68 @@
+# Grading evaluation results
+
+Results of measuring small local language models on grading a learner's short written answer in Portuguese, by pointing at specific mistakes. The method, cases, scoring and bar are in `grading-evaluation.md`. Runs took place from 2026-10-29 to 2026-11-02 on one Apple M4 Max with 48 GB, through Ollama.
+
+## Decision
+
+- Model: `gemma3:12b` (8.2 GB download)
+- Prompt: the six-example form (`few_shot_six`)
+- Temperature: 0
+- Where: web and desktop only; no model small enough for a phone met the bar
+
+## What was run
+
+- First comparison: 11 models, a plain and a three-example prompt, 71 cases
+- Prompt experiment: 5 models, 8 prompt forms, 114 cases (the 71 plus 43 more; 45 are correct answers)
+- Held-out check: 52 unseen cases (22 correct answers, 26 with one mistake, 4 off topic or not in Portuguese), for the top two prompt forms
+- Stability: 3 gradings per answer at temperature 0.3
+- Verification: two decision models asked whether each finding is a real mistake
+
+## Results
+
+- First comparison: only `gemma3:12b` with three examples met the bar (precision 93%, recall 78%, 4% of correct answers flagged). No model of 4B parameters or fewer met the bar.
+- Output order: Ollama writes a schema's properties alphabetically, so models first wrote the kind and the replacement and the quoted text last. Renaming the properties so they sort as text, reason, kind, replacement fixed the order. Results taken before the change were discarded.
+- Prompt form: examples matter much more than their number or order, and the effect depends on the model.
+  - `gemma3:12b` flags 29% of correct answers with no examples and 2% to 7% with examples that include a mistake.
+  - `qwen3.5` flags 7% with no examples and 27% to 33% with several.
+  - `qwen3:8b` flags 11% with no examples and 20% to 71% with examples.
+
+Best prompt form per model on the 114 cases, temperature 0:
+
+| Model          | Prompt form  | Precision | Recall | False positive rate | Meets bar |
+| -------------- | ------------ | --------- | ------ | ------------------- | --------- |
+| gemma3:12b     | few_shot_six | 95%       | 78%    | 2%                  | yes       |
+| qwen3:8b       | few_shot_six | 78%       | 85%    | 11%                 | no        |
+| qwen3.5:latest | few_shot_six | 72%       | 88%    | 33%                 | no        |
+| qwen3:4b       | few_shot_six | 69%       | 65%    | 16%                 | no        |
+| gemma3:4b      | few_shot_six | 64%       | 56%    | 20%                 | no        |
+
+`qwen3:4b` with three examples comes closest among models a phone could hold (precision 70%, recall 63%, false positive rate 9%, 2.5 GB); it fails only correction agreement, at 56% against 60%.
+
+Held-out check, `gemma3:12b`:
+
+| Run                         | Prompt form  | Precision | Recall | False positive rate | Correction agreement | Meets bar |
+| --------------------------- | ------------ | --------- | ------ | ------------------- | -------------------- | --------- |
+| 52 unseen cases             | few_shot_six | 91%       | 81%    | 0%                  | 67%                  | yes       |
+| 52 unseen cases             | few_shot     | 91%       | 81%    | 0%                  | 52%                  | no        |
+| 52 unseen cases, 3 repeats  | few_shot_six | 91%       | 81%    | 0%                  | 62%                  | yes       |
+| 114 cases, 3 repeats        | few_shot_six | 91%       | 77%    | 2%                  | 71%                  | yes       |
+| 114 cases, 3 repeats        | few_shot     | 90%       | 77%    | 4%                  | 68%                  | yes       |
+
+- Unseen cases: 21 of 26 mistakes found, 2 false alarms, 0 of 22 correct answers flagged.
+- Stability: no unseen answer changed outcome across repeats; 3% to 6% of the 114 did.
+- Latency: p95 of 2.7 s per answer on an idle machine, plus 4 s to 7 s to load the model after it has been idle.
+- Verification: Kev separated real from false findings only weakly (AUROC 0.69, or 0.70 with the grader's explanation) and Von more weakly (0.60 and 0.63). Dropping low-probability findings raised `qwen3:8b` precision from 65% to 79% without losing recall, but 17% of correct answers stayed flagged; a stricter threshold cost `gemma3:12b` about half its recall. No verifier is used.
+
+## Limits
+
+- One author wrote every reference annotation. A native speaker should review `tools/grading_evaluation/cases/`.
+- The unseen set has 26 mistakes, so one miss moves recall by about 4 points.
+- Correction agreement counts only exact matches with an accepted correction, so it understates valid alternatives.
+- Explanations were not scored; `review-sample.md` from `report` supports rating them by hand.
+- Phone feasibility was reasoned from memory limits, not tested.
+
+## Next steps
+
+- Native-speaker review of the cases, then rerun.
+- Rate the explanations of `gemma3:12b` by hand.
+- Try Kev fine-tuned on the labelled findings, and newer small models, against the same cases.
