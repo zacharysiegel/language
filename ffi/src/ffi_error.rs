@@ -36,6 +36,24 @@ impl From<AppError> for CoreError {
     }
 }
 
+/// A failure the core reports alongside a result rather than in place of one.
+#[derive(Debug, Clone, uniffi::Record)]
+pub struct CoreFailureRecord {
+    pub message: String,
+    pub backtrace: String,
+}
+
+impl From<AppErrorStatic> for CoreFailureRecord {
+    fn from(error: AppErrorStatic) -> CoreFailureRecord {
+        let underlying: &minimer::AppErrorStatic = &error.0;
+
+        CoreFailureRecord {
+            message: underlying.message.clone(),
+            backtrace: underlying.backtrace.to_string(),
+        }
+    }
+}
+
 impl From<AppErrorStatic> for CoreError {
     fn from(error: AppErrorStatic) -> CoreError {
         let underlying: &minimer::AppErrorStatic = &error.0;

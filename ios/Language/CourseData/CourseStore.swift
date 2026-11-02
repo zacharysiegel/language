@@ -183,8 +183,8 @@ final class CourseStore {
         ensureOutlineLoaded(courseId: courseId)
     }
 
-    /// Once per launch: shows the cached publication at once, else the one included in the app, then the publication
-    /// the course's latest pointer names once the repository's course index has been read.
+    /// Once per launch: shows at once the cached publication or the one included in the app, as the core picks, then the
+    /// publication the course's latest pointer names once the repository's course index has been read.
     func ensurePublicationLoaded(courseId: String) {
         guard let library, !requestedPublicationCourseIds.contains(courseId) else {
             return
@@ -198,7 +198,7 @@ final class CourseStore {
 
         Task {
             if shownPublication(courseId: courseId) == nil {
-                await showCachedOrEmbeddedPublication(library: library, courseId: courseId)
+                await showLocalPublication(library: library, courseId: courseId)
             }
 
             await repositoryIndexLoadFinished()
@@ -345,23 +345,15 @@ final class CourseStore {
 
     // MARK: - A course's publication
 
-    private func showCachedOrEmbeddedPublication(library: CourseLibrary, courseId: String) async {
-        if let cached = await library.loadCachedCoursePublication(courseId: courseId) {
-            showIfNoneShown(cached)
-            return
+    private func showLocalPublication(library: CourseLibrary, courseId: String) async {
+        let local: LocalCoursePublication = await library.loadLocalCoursePublication(courseId: courseId)
+
+        if let failure = local.embeddedFailure {
+            _ = CoreErrorReport.record(CoreError.Failure(message: failure.message, backtrace: failure.backtrace), while: "opening the copy of \(courseId) included in the app")
         }
 
-        let embeddedIndex: PublishedCourseIndex? = try? await library.loadEmbeddedCourseIndex()
-        let embeddedIndexListsTheCourse: Bool = embeddedIndex?.courses().contains { course in course.id == courseId } ?? false
-
-        guard embeddedIndexListsTheCourse else {
-            return
-        }
-
-        do {
-            showIfNoneShown(try await library.loadEmbeddedCoursePublication(courseId: courseId))
-        } catch {
-            _ = CoreErrorReport.record(error, while: "opening the copy of \(courseId) included in the app")
+        if let publication = local.publication {
+            showIfNoneShown(publication)
         }
     }
 

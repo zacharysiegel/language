@@ -1,5 +1,6 @@
 use std::collections::BTreeSet;
 
+use chrono::{DateTime, Utc};
 use futures_util::future;
 
 use crate::{AppError, AppErrorStatic};
@@ -210,6 +211,48 @@ pub fn parse_cached_course_manifest(
         manifest,
         manifest_bytes,
     })
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum LocalPublicationKind {
+    Cached,
+    Embedded,
+}
+
+/// What the device recorded about the latest pointer read that its cached manifest of a course came from.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PointerReadRecordKind {
+    /// The app held its current embedded publication of the course when it read the pointer.
+    WithThisEmbeddedPublication,
+    /// The app held another embedded publication, or none, when it read the pointer at this time.
+    At(DateTime<Utc>),
+    /// Written by a client that kept no record.
+    Unrecorded,
+}
+
+/// Which local copy of one course to show before a repository answers. A pointer read after the embedded copy was
+/// built is the repository's later choice, even when it names an older publication, as after a rollback; otherwise the
+/// copy built later wins, the cached one on a tie.
+pub fn choose_local_publication(
+    cached: &CourseManifest,
+    embedded: &CourseManifest,
+    pointer_read: PointerReadRecordKind,
+) -> LocalPublicationKind {
+    let pointer_read_after_the_embedded_copy_was_built: bool = match pointer_read {
+        PointerReadRecordKind::WithThisEmbeddedPublication => true,
+        PointerReadRecordKind::At(read_at) => read_at >= embedded.artifact_created,
+        PointerReadRecordKind::Unrecorded => false,
+    };
+
+    if pointer_read_after_the_embedded_copy_was_built {
+        return LocalPublicationKind::Cached;
+    }
+
+    if embedded.artifact_created > cached.artifact_created {
+        return LocalPublicationKind::Embedded;
+    }
+
+    LocalPublicationKind::Cached
 }
 
 /// The base `source`'s recordings are fetched from; the bundle included in the app holds none, so its recordings come
@@ -544,6 +587,61 @@ mod tests {
         assert_eq!(source.manifest.course_id, COURSE_ID);
         assert_eq!(recordings_base_url(&source, "/repository"), "/repository");
         assert!(missing.is_err_and(|error| error.to_string().contains(OTHER_COURSE_ID)));
+    }
+
+    fn manifest_created_at(artifact_created: &str) -> CourseManifest {
+        let mut course_manifest: CourseManifest =
+            course_manifest::parse_course_manifest(&course_manifest_json(COURSE_ID, b"abc"), Some(COURSE_ID)).unwrap();
+
+        course_manifest.artifact_created = artifact_created.parse().unwrap();
+
+        course_manifest
+    }
+
+    #[test]
+    fn choose_local_publication_takes_an_embedded_copy_built_later_that_the_app_gained_after_caching() {
+        let cached: CourseManifest = manifest_created_at("2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at("2026-11-02T18:19:00Z");
+
+        let chosen: LocalPublicationKind =
+            choose_local_publication(&cached, &embedded, PointerReadRecordKind::Unrecorded);
+
+        assert_eq!(chosen, LocalPublicationKind::Embedded);
+    }
+
+    #[test]
+    fn choose_local_publication_keeps_a_cached_copy_built_later_or_at_the_same_moment() {
+        let embedded: CourseManifest = manifest_created_at("2026-11-02T18:19:00Z");
+
+        for cached_created in ["2026-11-03T09:00:00Z", "2026-11-02T18:19:00Z"] {
+            let cached: CourseManifest = manifest_created_at(cached_created);
+
+            let chosen: LocalPublicationKind =
+                choose_local_publication(&cached, &embedded, PointerReadRecordKind::Unrecorded);
+
+            assert_eq!(chosen, LocalPublicationKind::Cached);
+        }
+    }
+
+    #[test]
+    fn choose_local_publication_keeps_an_older_cached_copy_read_while_the_app_already_held_its_embedded_one() {
+        let cached: CourseManifest = manifest_created_at("2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at("2026-11-02T18:19:00Z");
+
+        let chosen: LocalPublicationKind = choose_local_publication(&cached, &embedded, PointerReadRecordKind::WithThisEmbeddedPublication);
+
+        assert_eq!(chosen, LocalPublicationKind::Cached);
+    }
+
+    #[test]
+    fn choose_local_publication_keeps_an_older_cached_copy_read_after_the_embedded_one_was_built() {
+        let cached: CourseManifest = manifest_created_at("2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at("2026-11-02T18:19:00Z");
+        let read_after: PointerReadRecordKind = PointerReadRecordKind::At("2026-11-05T08:00:00Z".parse().unwrap());
+        let read_before: PointerReadRecordKind = PointerReadRecordKind::At("2026-10-20T08:00:00Z".parse().unwrap());
+
+        assert_eq!(choose_local_publication(&cached, &embedded, read_after), LocalPublicationKind::Cached);
+        assert_eq!(choose_local_publication(&cached, &embedded, read_before), LocalPublicationKind::Embedded);
     }
 
     #[test]

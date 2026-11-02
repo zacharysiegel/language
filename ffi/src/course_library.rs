@@ -4,11 +4,12 @@ use std::io::ErrorKind;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+use chrono::{DateTime, Utc};
 use dashmap::DashMap;
 use dashmap::mapref::one::Ref;
 use shared::artifact::{
-    self, ArtifactOriginKind, CourseIndexSource, CourseManifest, CourseManifestSource, FilesystemArtifactCache, ManifestEntry,
-    content_address, course_manifest, discovery, fetch,
+    self, ArtifactOriginKind, CourseIndexSource, CourseManifest, CourseManifestSource, FilesystemArtifactCache, LocalPublicationKind,
+    ManifestEntry, PointerReadRecordKind, content_address, course_manifest, discovery, fetch,
 };
 use shared::course::{CourseOutline, Dialogue, Exercise, GrammarNote, Reading, SpokenClip, UnitLesson, UnitOutline, VocabularyItem};
 use shared::course_shard::{self, ClipAudioEntry, CourseShardContents, UnitShardContents, VoiceEngineKind};
@@ -18,7 +19,7 @@ use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 use shared::{AppError, AppErrorStatic};
 
 use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord, UnitTabRecord};
-use crate::ffi_error::CoreError;
+use crate::ffi_error::{CoreError, CoreFailureRecord};
 use crate::progress_book::{AudioEngineRecord, VoiceChoiceRecord};
 use crate::recording_cache::{ClipRecording, PrefetchCancellation, RecordingCache, RecordingPrefetchSummary};
 
@@ -29,6 +30,10 @@ const CACHED_COURSE_INDEX_FILE: &str = "course-index.json";
 const CACHED_COURSE_INDEX_BASE_URL_FILE: &str = "course-index-base-url";
 const CACHED_COURSE_MANIFEST_FILE: &str = "manifest.json";
 const CACHED_COURSE_MANIFEST_BASE_URL_FILE: &str = "repository-base-url";
+/// The digest of the embedded manifest the app held when the course's manifest was cached.
+const CACHED_EMBEDDED_MANIFEST_SHA256_FILE: &str = "embedded-manifest-sha256";
+/// When the course's manifest was read from its latest pointer, by this device's clock.
+const CACHED_POINTER_READ_AT_FILE: &str = "pointer-read-at";
 /// Written by the single-manifest cache layout.
 const LEGACY_CACHE_FILES: [&str; 2] = ["current-manifest.json", "current-repository-base-url"];
 
@@ -40,6 +45,21 @@ pub struct CoreConfiguration {
     pub static_repository_base_url: String,
     pub cache_directory: String,
     pub embedded_bundle_directory: String,
+}
+
+/// The local publication of a course to show before a repository answers.
+#[derive(uniffi::Record)]
+pub struct LocalCoursePublication {
+    /// `None` when neither the cached nor the embedded publication could be opened.
+    pub publication: Option<Arc<CoursePublication>>,
+    /// Set when the bundle included in the app could not be read for the course.
+    pub embedded_failure: Option<CoreFailureRecord>,
+}
+
+enum EmbeddedPublicationOpenKind {
+    Opened(Arc<CoursePublication>),
+    NotListed,
+    Failed(CoreFailureRecord),
 }
 
 /// Opens the course index and each course's publications for a native app.
@@ -97,6 +117,36 @@ impl CourseLibrary {
 
             None
         })
+    }
+
+    /// The publication of `course_id` to show before a repository answers, of the cached one and the one in the bundle
+    /// included in the app as `artifact::choose_local_publication` picks.
+    pub async fn load_local_course_publication(self: Arc<Self>, course_id: String) -> LocalCoursePublication {
+        let cached: Option<Arc<CoursePublication>> = self.clone().load_cached_course_publication(course_id.clone()).await;
+        let embedded: EmbeddedPublicationOpenKind = self.open_listed_embedded_course_publication(&course_id).await;
+
+        let (embedded, embedded_failure): (Option<Arc<CoursePublication>>, Option<CoreFailureRecord>) = match embedded {
+            EmbeddedPublicationOpenKind::Opened(publication) => (Some(publication), None),
+            EmbeddedPublicationOpenKind::NotListed => (None, None),
+            EmbeddedPublicationOpenKind::Failed(failure) => (None, Some(failure)),
+        };
+
+        let publication: Option<Arc<CoursePublication>> = match (cached, embedded) {
+            (Some(cached), Some(embedded)) => {
+                let pointer_read: PointerReadRecordKind = self.read_pointer_read_record(&course_id, &embedded);
+
+                match artifact::choose_local_publication(&cached.source.manifest, &embedded.source.manifest, pointer_read) {
+                    LocalPublicationKind::Cached => Some(cached),
+                    LocalPublicationKind::Embedded => Some(embedded),
+                }
+            },
+            (cached, embedded) => cached.or(embedded),
+        };
+
+        LocalCoursePublication {
+            publication,
+            embedded_failure,
+        }
     }
 
     /// The publication `course_id`'s latest pointer names, read under the repository `course_index` came from; remembered,
@@ -239,6 +289,65 @@ impl CourseLibrary {
         Ok(CoursePublication::open(self.clone(), source))
     }
 
+    async fn remember_pointer_read(&self, course_id: &str, course_directory: &Path) -> Result<(), AppErrorStatic> {
+        let digest_path: PathBuf = course_directory.join(CACHED_EMBEDDED_MANIFEST_SHA256_FILE);
+        let read_at: String = Utc::now().to_rfc3339();
+        let embedded: Result<CourseManifestSource, AppErrorStatic> =
+            artifact::load_embedded_course_manifest(&DirectoryFetch, &self.configuration.embedded_bundle_directory, course_id).await;
+
+        match embedded {
+            Ok(embedded) => {
+                let digest: String = content_address::sha256_hex(&embedded.manifest_bytes);
+
+                filesystem::write_atomically(&digest_path, digest.as_bytes())?;
+            },
+            Err(_) => remove_file_if_present(&digest_path)?,
+        }
+
+        filesystem::write_atomically(&course_directory.join(CACHED_POINTER_READ_AT_FILE), read_at.as_bytes())?;
+
+        Ok(())
+    }
+
+    fn read_pointer_read_record(&self, course_id: &str, embedded: &CoursePublication) -> PointerReadRecordKind {
+        let course_directory: PathBuf = self.cached_course_directory(course_id);
+        let remembered_digest: Option<String> = read_cached_text(&course_directory.join(CACHED_EMBEDDED_MANIFEST_SHA256_FILE), course_id);
+        let remembered_read_at: Option<String> = read_cached_text(&course_directory.join(CACHED_POINTER_READ_AT_FILE), course_id);
+
+        if remembered_digest.as_deref() == Some(embedded.manifest_sha256.as_str()) {
+            return PointerReadRecordKind::WithThisEmbeddedPublication;
+        }
+
+        let read_at: Option<DateTime<Utc>> = remembered_read_at
+            .and_then(|read_at| DateTime::parse_from_rfc3339(&read_at).ok())
+            .map(|read_at| read_at.with_timezone(&Utc));
+
+        match read_at {
+            Some(read_at) => PointerReadRecordKind::At(read_at),
+            None => PointerReadRecordKind::Unrecorded,
+        }
+    }
+
+    async fn open_listed_embedded_course_publication(self: &Arc<Self>, course_id: &str) -> EmbeddedPublicationOpenKind {
+        let embedded_index: Result<Arc<PublishedCourseIndex>, AppErrorStatic> = self.open_embedded_course_index().await;
+
+        let lists_the_course: bool = match embedded_index {
+            Ok(embedded_index) => embedded_index.source.course_index.courses.contains_key(course_id),
+            Err(error) => return EmbeddedPublicationOpenKind::Failed(CoreFailureRecord::from(error)),
+        };
+
+        if !lists_the_course {
+            return EmbeddedPublicationOpenKind::NotListed;
+        }
+
+        let opened: Result<Arc<CoursePublication>, AppErrorStatic> = self.open_embedded_course_publication(course_id).await;
+
+        match opened {
+            Ok(publication) => EmbeddedPublicationOpenKind::Opened(publication),
+            Err(error) => EmbeddedPublicationOpenKind::Failed(CoreFailureRecord::from(error)),
+        }
+    }
+
     async fn remember_course_index(&self, source: &CourseIndexSource) -> Result<(), AppErrorStatic> {
         let _cache_update_guard: tokio::sync::MutexGuard<'_, ()> = self.cache_update_lock.lock().await;
         let cache_directory: PathBuf = self.cache_directory();
@@ -290,6 +399,7 @@ impl CourseLibrary {
         create_directory(&course_directory)?;
         filesystem::write_atomically(&course_directory.join(CACHED_COURSE_MANIFEST_FILE), &source.manifest_bytes)?;
         filesystem::write_atomically(&course_directory.join(CACHED_COURSE_MANIFEST_BASE_URL_FILE), source.repository_base_url.as_bytes())?;
+        self.remember_pointer_read(course_id, &course_directory).await?;
 
         self.retain_shards_of_remembered_publications().await
     }
@@ -427,6 +537,28 @@ fn read_cached_file(path: &Path) -> Result<Option<Vec<u8>>, AppErrorStatic> {
         Ok(bytes) => Ok(Some(bytes)),
         Err(error) if error.kind() == ErrorKind::NotFound => Ok(None),
         Err(error) => Err(AppErrorStatic::from(format!("reading a cached file failed; [path={} error={error}]", path.display()))),
+    }
+}
+
+/* An unreadable record counts as none, so the choice falls back to the publications' build times. */
+fn read_cached_text(path: &Path, course_id: &str) -> Option<String> {
+    let bytes: Result<Option<Vec<u8>>, AppErrorStatic> = read_cached_file(path);
+
+    match bytes {
+        Ok(bytes) => bytes.and_then(|bytes| String::from_utf8(bytes).ok()).map(|text| text.trim().to_string()),
+        Err(error) => {
+            log::warn!("could not read a cached record; [course_id={course_id} error={error}]");
+
+            None
+        },
+    }
+}
+
+fn remove_file_if_present(path: &Path) -> Result<(), AppErrorStatic> {
+    match fs::remove_file(path) {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(AppErrorStatic::from(format!("removing a cached file failed; [path={} error={error}]", path.display()))),
     }
 }
 
@@ -760,6 +892,107 @@ mod tests {
         let directory: PathBuf = Path::new(env!("CARGO_MANIFEST_DIR")).join("../web/static/embedded");
 
         directory.join(repository_key::COURSE_INDEX_KEY).exists().then_some(directory)
+    }
+
+    fn manifest_created_at(course_id: &str, publication_label: &str, outline_sha256: &str, artifact_created: &str) -> CourseManifest {
+        let mut course_manifest: CourseManifest = fixture_manifest(course_id, publication_label, outline_sha256);
+
+        course_manifest.artifact_created = artifact_created.parse().unwrap();
+
+        course_manifest
+    }
+
+    fn cache_course_manifest(cache_directory: &Path, course_manifest: &CourseManifest, repository_base_url: &str) {
+        let course_directory: PathBuf = cache_directory.join(COURSE_CACHE_DIRECTORY).join(&course_manifest.course_id);
+
+        write_file(&course_directory.join(CACHED_COURSE_MANIFEST_FILE), &serde_json::to_vec_pretty(course_manifest).unwrap());
+        write_file(&course_directory.join(CACHED_COURSE_MANIFEST_BASE_URL_FILE), repository_base_url.as_bytes());
+    }
+
+    fn embed_course_manifest(embedded_directory: &Path, course_manifest: &CourseManifest) {
+        write_course_index(embedded_directory, &[course_manifest.course_id.as_str()]);
+        publish(embedded_directory, course_manifest);
+    }
+
+    #[tokio::test]
+    async fn load_local_course_publication_shows_the_embedded_one_when_it_was_built_after_the_cached_one() {
+        let app_origin: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let embedded_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cached: CourseManifest = manifest_created_at(COURSE_A, "2026-10-12+green_bay", &"c1".repeat(32), "2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at(COURSE_A, "2026-11-02+chicago", &"e1".repeat(32), "2026-11-02T18:19:00Z");
+
+        cache_course_manifest(cache_directory.path(), &cached, "http://127.0.0.1:9/repository");
+        embed_course_manifest(embedded_directory.path(), &embedded);
+
+        let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), embedded_directory.path());
+        let shown: Arc<CoursePublication> = library.load_local_course_publication(COURSE_A.to_string()).await.publication.unwrap();
+
+        assert!(shown.is_embedded());
+        assert_eq!(shown.publication_label(), "2026-11-02+chicago");
+    }
+
+    #[tokio::test]
+    async fn load_local_course_publication_keeps_the_cached_one_when_it_was_built_after_the_embedded_one() {
+        let app_origin: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let embedded_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cached: CourseManifest = manifest_created_at(COURSE_A, "2026-11-03+boise", &"c2".repeat(32), "2026-11-03T09:00:00Z");
+        let embedded: CourseManifest = manifest_created_at(COURSE_A, "2026-11-02+chicago", &"e1".repeat(32), "2026-11-02T18:19:00Z");
+
+        cache_course_manifest(cache_directory.path(), &cached, "http://127.0.0.1:9/repository");
+        embed_course_manifest(embedded_directory.path(), &embedded);
+
+        let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), embedded_directory.path());
+        let shown: Arc<CoursePublication> = library.load_local_course_publication(COURSE_A.to_string()).await.publication.unwrap();
+
+        assert!(!shown.is_embedded());
+        assert_eq!(shown.publication_label(), "2026-11-03+boise");
+    }
+
+    #[tokio::test]
+    async fn load_local_course_publication_keeps_an_older_publication_the_pointer_named_after_the_app_held_its_embedded_one() {
+        let app_origin: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let embedded_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let repository: PathBuf = repository_directory(app_origin.path());
+        let rolled_back_to: CourseManifest = manifest_created_at(COURSE_A, "2026-10-12+green_bay", &"c1".repeat(32), "2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at(COURSE_A, "2026-11-02+chicago", &"e1".repeat(32), "2026-11-02T18:19:00Z");
+
+        write_course_index(&repository, &[COURSE_A]);
+        publish(&repository, &rolled_back_to);
+        embed_course_manifest(embedded_directory.path(), &embedded);
+
+        let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), embedded_directory.path());
+        let course_index: Arc<PublishedCourseIndex> = library.open_latest_course_index(&DirectoryFetch).await.unwrap();
+        library.open_latest_course_publication(&DirectoryFetch, &course_index, COURSE_A).await.unwrap();
+
+        let shown: Arc<CoursePublication> = library.load_local_course_publication(COURSE_A.to_string()).await.publication.unwrap();
+
+        assert!(!shown.is_embedded());
+        assert_eq!(shown.publication_label(), "2026-10-12+green_bay");
+    }
+
+    #[tokio::test]
+    async fn load_local_course_publication_keeps_a_cached_one_read_under_another_embedded_publication_after_this_one_was_built() {
+        let app_origin: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let cache_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let embedded_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let rolled_back_to: CourseManifest = manifest_created_at(COURSE_A, "2026-10-12+green_bay", &"c1".repeat(32), "2026-10-12T16:01:09Z");
+        let embedded: CourseManifest = manifest_created_at(COURSE_A, "2026-11-02+chicago", &"e1".repeat(32), "2026-11-02T18:19:00Z");
+        let course_directory: PathBuf = cache_directory.path().join(COURSE_CACHE_DIRECTORY).join(COURSE_A);
+
+        cache_course_manifest(cache_directory.path(), &rolled_back_to, "http://127.0.0.1:9/repository");
+        write_file(&course_directory.join(CACHED_EMBEDDED_MANIFEST_SHA256_FILE), "f0".repeat(32).as_bytes());
+        write_file(&course_directory.join(CACHED_POINTER_READ_AT_FILE), b"2026-11-05T08:00:00+00:00");
+        embed_course_manifest(embedded_directory.path(), &embedded);
+
+        let library: Arc<CourseLibrary> = create_library(app_origin.path(), cache_directory.path(), embedded_directory.path());
+        let local: LocalCoursePublication = library.load_local_course_publication(COURSE_A.to_string()).await;
+        let shown: Arc<CoursePublication> = local.publication.unwrap();
+
+        assert!(!shown.is_embedded());
+        assert!(local.embedded_failure.is_none());
     }
 
     /* The embedded bundle is build output; without it there is nothing to open. */
