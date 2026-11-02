@@ -17,7 +17,7 @@ pub fn prose(text: &str) -> Vec<AnyView> {
                 let list_items: Vec<_> = items.into_iter().map(|item| view! { <li>{item}</li> }).collect();
 
                 view! { <ul>{list_items}</ul> }.into_any()
-            }
+            },
         })
         .collect()
 }
@@ -68,7 +68,11 @@ pub fn OverviewSection(course_id: String, unit: Unit) -> impl IntoView {
     let vocabulary_count: usize = unit.vocabulary.len();
     let added_message: RwSignal<Option<String>> = RwSignal::new(None);
 
-    let objectives: Vec<_> = unit.objectives.iter().map(|objective| view! { <li>{objective.clone()}</li> }).collect();
+    let objectives: Vec<_> = unit
+        .objectives
+        .iter()
+        .map(|objective| view! { <li>{objective.clone()}</li> })
+        .collect();
 
     view! {
         <section class="lesson-section">
@@ -99,15 +103,9 @@ pub fn OverviewSection(course_id: String, unit: Unit) -> impl IntoView {
 
 #[component]
 fn VocabularyRow(item: VocabularyItem) -> impl IntoView {
-    let part_of_speech = item
-        .part_of_speech
-        .clone()
-        .map(|part_of_speech| view! { <span class="tag">{part_of_speech}</span> });
+    let part_of_speech = item.part_of_speech.clone().map(|part_of_speech| view! { <span class="tag">{part_of_speech}</span> });
     let note = item.note.clone().map(|note| view! { <div class="note">{note}</div> });
-    let literal = item
-        .source_literal
-        .clone()
-        .map(|literal| view! { <div class="literal">"literally: "{literal}</div> });
+    let literal = item.source_literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> });
 
     view! {
         <li class="vocabulary-item">
@@ -226,8 +224,11 @@ fn ReadingView(reading: Reading, label: String) -> impl IntoView {
         .iter()
         .map(|paragraph| audio_clip(&paragraph.clip_key, &paragraph.target, VoiceChoiceKind::OwnText))
         .collect();
-    let paragraph_rows: Vec<_> =
-        reading.paragraphs.iter().map(|paragraph| view! { <PhraseRow pair=paragraph.clone() /> }).collect();
+    let paragraph_rows: Vec<_> = reading
+        .paragraphs
+        .iter()
+        .map(|paragraph| view! { <PhraseRow pair=paragraph.clone() /> })
+        .collect();
     let questions = reading.questions.clone();
     let title: String = reading.title.clone();
 
