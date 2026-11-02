@@ -5,19 +5,76 @@ use crate::grading_case::{ErrorCategoryKind, GradingCase};
 use crate::ollama_client::ChatMessage;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ValueEnum)]
+#[value(rename_all = "snake_case")]
 pub enum PromptVariantKind {
     Plain,
-    #[value(name = "few_shot")]
+    OneShotMistake,
+    OneShotCorrect,
     FewShot,
+    FewShotReversed,
+    FewShotSix,
+    FewShotMostlyCorrect,
+    FewShotInSystem,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum ExamplePlacementKind {
+    ChatTurns,
+    SystemPrompt,
 }
 
 impl PromptVariantKind {
-    pub const ALL: [PromptVariantKind; 2] = [PromptVariantKind::Plain, PromptVariantKind::FewShot];
+    pub const ALL: [PromptVariantKind; 8] = [
+        PromptVariantKind::Plain,
+        PromptVariantKind::OneShotMistake,
+        PromptVariantKind::OneShotCorrect,
+        PromptVariantKind::FewShot,
+        PromptVariantKind::FewShotReversed,
+        PromptVariantKind::FewShotSix,
+        PromptVariantKind::FewShotMostlyCorrect,
+        PromptVariantKind::FewShotInSystem,
+    ];
 
     pub fn as_str(self) -> &'static str {
         match self {
             PromptVariantKind::Plain => "plain",
+            PromptVariantKind::OneShotMistake => "one_shot_mistake",
+            PromptVariantKind::OneShotCorrect => "one_shot_correct",
             PromptVariantKind::FewShot => "few_shot",
+            PromptVariantKind::FewShotReversed => "few_shot_reversed",
+            PromptVariantKind::FewShotSix => "few_shot_six",
+            PromptVariantKind::FewShotMostlyCorrect => "few_shot_mostly_correct",
+            PromptVariantKind::FewShotInSystem => "few_shot_in_system",
+        }
+    }
+
+    pub fn examples(self) -> Vec<&'static FewShotExample> {
+        let indexes: &[usize] = match self {
+            PromptVariantKind::Plain => &[],
+            PromptVariantKind::OneShotMistake => &[SPELLING_MISTAKE],
+            PromptVariantKind::OneShotCorrect => &[CORRECT_SUNDAYS],
+            PromptVariantKind::FewShot | PromptVariantKind::FewShotInSystem => {
+                &[SPELLING_MISTAKE, CORRECT_SUNDAYS, OFF_TOPIC_WITH_MISTAKE]
+            }
+            PromptVariantKind::FewShotReversed => &[OFF_TOPIC_WITH_MISTAKE, CORRECT_SUNDAYS, SPELLING_MISTAKE],
+            PromptVariantKind::FewShotSix => &[
+                SPELLING_MISTAKE,
+                CORRECT_COLLOQUIAL,
+                VERB_MISTAKE,
+                CORRECT_SUNDAYS,
+                PREPOSITION_MISTAKE,
+                OFF_TOPIC_WITH_MISTAKE,
+            ],
+            PromptVariantKind::FewShotMostlyCorrect => &[CORRECT_SUNDAYS, CORRECT_COLLOQUIAL, SPELLING_MISTAKE],
+        };
+
+        indexes.iter().map(|index| &EXAMPLE_POOL[*index]).collect()
+    }
+
+    pub fn example_placement(self) -> ExamplePlacementKind {
+        match self {
+            PromptVariantKind::FewShotInSystem => ExamplePlacementKind::SystemPrompt,
+            _ => ExamplePlacementKind::ChatTurns,
         }
     }
 }
@@ -30,7 +87,14 @@ pub struct FewShotExample {
     pub response_json: &'static str,
 }
 
-pub const FEW_SHOT_EXAMPLES: [FewShotExample; 3] = [
+const SPELLING_MISTAKE: usize = 0;
+const CORRECT_SUNDAYS: usize = 1;
+const OFF_TOPIC_WITH_MISTAKE: usize = 2;
+const VERB_MISTAKE: usize = 3;
+const CORRECT_COLLOQUIAL: usize = 4;
+const PREPOSITION_MISTAKE: usize = 5;
+
+pub const EXAMPLE_POOL: [FewShotExample; 6] = [
     FewShotExample {
         level: "a2",
         prompt_source: "Describe what Paulo is eating.",
@@ -52,24 +116,47 @@ pub const FEW_SHOT_EXAMPLES: [FewShotExample; 3] = [
         submission: "Eu gosto de pizza. Minhas irmãs são muito alta.",
         response_json: r#"{"answers_the_question":false,"language_is_portuguese":true,"mistakes":[{"error_text":"alta","explanation":"The adjective must be plural to agree with 'irmãs'.","kind":"agreement","replacement":"altas"}]}"#,
     },
+    FewShotExample {
+        level: "a2",
+        prompt_source: "What did you do yesterday?",
+        context_source: None,
+        submission: "Ontem eu comeu uma pizza e depois saí com os meus amigos.",
+        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"comeu","explanation":"The verb must agree with 'eu': comi.","kind":"verb_form","replacement":"comi"}]}"#,
+    },
+    FewShotExample {
+        level: "a1",
+        prompt_source: "How was your weekend?",
+        context_source: None,
+        submission: "A gente foi à praia no sábado e eu tô com um pouco de sono hoje.",
+        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
+    },
+    FewShotExample {
+        level: "a1",
+        prompt_source: "Where do you study?",
+        context_source: None,
+        submission: "Eu estudo em a universidade perto de casa.",
+        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"em a","explanation":"'em' and 'a' contract to 'na'.","kind":"article_preposition","replacement":"na"}]}"#,
+    },
 ];
 
 pub fn build_messages(variant: PromptVariantKind, case: &GradingCase) -> Vec<ChatMessage> {
+    let examples: Vec<&FewShotExample> = variant.examples();
+    let placement: ExamplePlacementKind = variant.example_placement();
+
+    let system_examples: &[&FewShotExample] = match placement {
+        ExamplePlacementKind::SystemPrompt => &examples,
+        ExamplePlacementKind::ChatTurns => &[],
+    };
     let mut messages: Vec<ChatMessage> = vec![ChatMessage {
         role: "system",
-        content: render_system_prompt(),
+        content: render_system_prompt(system_examples),
     }];
 
-    if variant == PromptVariantKind::FewShot {
-        for example in &FEW_SHOT_EXAMPLES {
+    if placement == ExamplePlacementKind::ChatTurns {
+        for example in &examples {
             messages.push(ChatMessage {
                 role: "user",
-                content: render_user_message(
-                    example.level,
-                    example.prompt_source,
-                    example.context_source,
-                    example.submission,
-                ),
+                content: render_example_input(example),
             });
             messages.push(ChatMessage {
                 role: "assistant",
@@ -89,6 +176,15 @@ pub fn build_messages(variant: PromptVariantKind, case: &GradingCase) -> Vec<Cha
     });
 
     messages
+}
+
+fn render_example_input(example: &FewShotExample) -> String {
+    render_user_message(
+        example.level,
+        example.prompt_source,
+        example.context_source,
+        example.submission,
+    )
 }
 
 pub fn response_schema() -> Value {
@@ -129,13 +225,13 @@ fn render_user_message(level: &str, prompt_source: &str, context_source: Option<
     message
 }
 
-fn render_system_prompt() -> String {
+fn render_system_prompt(examples: &[&FewShotExample]) -> String {
     let category_lines: Vec<String> = ErrorCategoryKind::ALL
         .iter()
         .map(|category| format!("- {}: {}", category.as_str(), category.description()))
         .collect();
 
-    format!(
+    let mut prompt: String = format!(
         "You check short written answers from an English-speaking learner of Brazilian Portuguese (pt-BR). \
 You are given a task, sometimes facts about the scene, the learner's level and the learner's answer. \
 Report only real mistakes in the answer.\n\
@@ -156,7 +252,18 @@ Rules:\n\
 - language_is_portuguese is false when the answer is written in another language.\n\
 - answers_the_question is true when the answer is about what the task asked, even if it contains mistakes.",
         categories = category_lines.join("\n"),
-    )
+    );
+
+    for (index, example) in examples.iter().enumerate() {
+        prompt.push_str(&format!(
+            "\n\nExample {}:\n{}\nOutput: {}",
+            index + 1,
+            render_example_input(example),
+            example.response_json
+        ));
+    }
+
+    prompt
 }
 
 #[cfg(test)]
@@ -174,23 +281,23 @@ mod tests {
     }
 
     #[test]
-    fn few_shot_responses_parse_as_grader_responses() {
-        for example in &FEW_SHOT_EXAMPLES {
+    fn example_responses_parse_as_grader_responses() {
+        for example in &EXAMPLE_POOL {
             assert!(grader_response::parse_grader_response(example.response_json).is_ok());
         }
     }
 
     #[test]
-    fn few_shot_examples_are_not_graded_cases() {
+    fn examples_are_not_graded_cases() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
-        for example in &FEW_SHOT_EXAMPLES {
+        for example in &EXAMPLE_POOL {
             assert!(cases.iter().all(|case| case.submission != example.submission));
         }
     }
 
     #[test]
-    fn build_messages_ends_with_the_case_for_both_variants() {
+    fn build_messages_ends_with_the_case_for_every_variant() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
         for variant in PromptVariantKind::ALL {
@@ -203,13 +310,37 @@ mod tests {
     }
 
     #[test]
-    fn build_messages_adds_one_exchange_per_example_for_few_shot() {
+    fn build_messages_adds_one_exchange_per_example_as_chat_turns() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
-        let plain_count: usize = build_messages(PromptVariantKind::Plain, &cases[0]).len();
-        let few_shot_count: usize = build_messages(PromptVariantKind::FewShot, &cases[0]).len();
+        for variant in PromptVariantKind::ALL {
+            let message_count: usize = build_messages(variant, &cases[0]).len();
 
-        assert_eq!(few_shot_count - plain_count, FEW_SHOT_EXAMPLES.len() * 2);
+            let expected_count: usize = match variant.example_placement() {
+                ExamplePlacementKind::ChatTurns => 2 + variant.examples().len() * 2,
+                ExamplePlacementKind::SystemPrompt => 2,
+            };
+
+            assert_eq!(message_count, expected_count);
+        }
+    }
+
+    #[test]
+    fn build_messages_puts_system_prompt_examples_in_the_system_message() {
+        let cases: Vec<GradingCase> = load_shipped_cases();
+
+        let messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotInSystem, &cases[0]);
+
+        assert!(messages[0].content.contains("Example 3:"));
+        assert!(messages[0].content.contains(EXAMPLE_POOL[SPELLING_MISTAKE].submission));
+    }
+
+    #[test]
+    fn variant_names_are_unique() {
+        let names: std::collections::HashSet<&str> =
+            PromptVariantKind::ALL.iter().map(|variant| variant.as_str()).collect();
+
+        assert_eq!(names.len(), PromptVariantKind::ALL.len());
     }
 
     #[test]
