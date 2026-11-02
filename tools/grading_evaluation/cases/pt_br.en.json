@@ -1137,5 +1137,592 @@
     },
     "submission": "Eu lhe disse que não me esperasse, mas ele não me ouviu.",
     "reference": {}
+  },
+  {
+    "id": "a1-pronoun-reflexive-worry",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Do you worry about work?"
+    },
+    "submission": "Sim, eu preocupo muito com o meu trabalho.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "eu preocupo",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "eu me preocupo"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-pronoun-reflexive-party",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How was the party?"
+    },
+    "submission": "A festa foi ótima e eu diverti muito.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "eu diverti",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "eu me diverti"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-pronoun-possessive-pet",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe your pet."
+    },
+    "submission": "Eu tenho um cachorro. Mim cachorro se chama Bolt.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "Mim cachorro",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "Meu cachorro"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b2-pronoun-clitic-gender",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Did you invite Ana to the party?"
+    },
+    "submission": "Sim, eu falei com a Ana e convidei-o para a festa.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "convidei-o",
+          "category": "pronoun",
+          "accepted_corrections": [
+            "convidei-a"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-short-spelling-chocolate",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you like?"
+    },
+    "submission": "Eu gosto de chocolat.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "chocolat",
+          "category": "spelling",
+          "accepted_corrections": [
+            "chocolate"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-short-verb-morar",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where do you live?"
+    },
+    "submission": "Eu mora em Lisboa.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "mora",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "moro"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-short-agreement-house",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe your house."
+    },
+    "submission": "Minha casa é grande e bonito.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "bonito",
+          "category": "agreement",
+          "accepted_corrections": [
+            "bonita"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-short-agreement-books",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is in your bag?"
+    },
+    "submission": "Na minha bolsa tem um livros.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "um livros",
+          "category": "agreement",
+          "accepted_corrections": [
+            "um livro",
+            "uns livros"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-word-choice-age",
+    "level": "a1",
+    "task": {
+      "prompt_source": "How old are you?"
+    },
+    "submission": "Eu sou vinte anos velho.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "sou vinte anos velho",
+          "category": "word_choice",
+          "accepted_corrections": [
+            "tenho vinte anos"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-word-choice-fazer-erro",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What happened on your test?"
+    },
+    "submission": "Ontem eu fiz um erro na prova de matemática.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "fiz um erro",
+          "category": "word_choice",
+          "accepted_corrections": [
+            "cometi um erro"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-article-contraction-a-o",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where did you go on Saturday?"
+    },
+    "submission": "No sábado eu fui a o cinema com meus amigos.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "a o",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "ao"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-article-contraction-de-o",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Whose is the car?"
+    },
+    "submission": "O carro é de o meu pai.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "de o",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "do"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-preposition-gostar-de",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What do you like about the city?"
+    },
+    "submission": "Eu gosto a cidade porque é tranquila.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "gosto a cidade",
+          "category": "article_preposition",
+          "accepted_corrections": [
+            "gosto da cidade"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-serestar-sick",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How is your brother?"
+    },
+    "submission": "Meu irmão é doente e não vai trabalhar hoje.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "é doente",
+          "category": "ser_estar",
+          "accepted_corrections": [
+            "está doente"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-verb-form-para-que",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Why do you study every day?"
+    },
+    "submission": "Eu estudo todos os dias para que eu passo no exame.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "eu passo",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "eu passe"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b1-verb-form-habitual-past",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Describe your childhood summers."
+    },
+    "submission": "Quando eu era pequeno, eu sempre fui à praia com meus avós.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "sempre fui",
+          "category": "verb_form",
+          "accepted_corrections": [
+            "sempre ia"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "b2-agreement-news",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Comment on the news."
+    },
+    "submission": "As notícias de hoje são preocupante.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "preocupante",
+          "category": "agreement",
+          "accepted_corrections": [
+            "preocupantes"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a2-not-brazilian-phone",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Where is your phone?"
+    },
+    "submission": "O meu telemóvel está em cima do sofá.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "telemóvel",
+          "category": "not_brazilian",
+          "accepted_corrections": [
+            "celular"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-word-order-article-noun",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where do you live?"
+    },
+    "submission": "Eu moro com meus pais em casa uma pequena.",
+    "reference": {
+      "errors": [
+        {
+          "wrong_text": "casa uma pequena",
+          "category": "word_order",
+          "accepted_corrections": [
+            "uma casa pequena"
+          ]
+        }
+      ]
+    }
+  },
+  {
+    "id": "a1-control-short-siblings",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Do you have siblings?"
+    },
+    "submission": "Sim, tenho uma irmã.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-accents-present",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you eat for breakfast?"
+    },
+    "submission": "De manhã eu como pão com queijo e bebo café com leite.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-where-live",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where do you live?"
+    },
+    "submission": "Moro no Brasil, numa cidade perto do mar.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-colloquial-pra",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Where are you going?"
+    },
+    "submission": "Vou pra casa agora. Tô cansado.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-plural-bag",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What do you have in your bag?"
+    },
+    "submission": "Na minha bolsa tem dois livros, um caderno e uma garrafa de água.",
+    "reference": {}
+  },
+  {
+    "id": "a1-control-dress-boots",
+    "level": "a1",
+    "task": {
+      "prompt_source": "Describe the clothes Camila is wearing.",
+      "context_source": "Camila wears a yellow dress and brown boots."
+    },
+    "submission": "A Camila está de vestido amarelo e botas marrons.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-preterite-sunday",
+    "level": "a2",
+    "task": {
+      "prompt_source": "What did you do on Sunday?"
+    },
+    "submission": "No domingo eu acordei tarde, fiz o almoço e depois assisti a um filme.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-imperfect-grandmother",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your grandmother's house."
+    },
+    "submission": "A casa da minha avó era pequena, mas tinha um jardim grande com muitas flores.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-reflexive-party",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How was the party?"
+    },
+    "submission": "A festa foi ótima e eu me diverti muito.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-pet",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe your pet."
+    },
+    "submission": "Eu tenho um cachorro. O meu cachorro se chama Bolt e ele adora correr.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-sick",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How is your brother?"
+    },
+    "submission": "Meu irmão está doente e não vai trabalhar hoje.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-family-meal",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Describe the meal these people are eating.",
+      "context_source": "A family eats rice, beans and grilled chicken, and drinks orange juice."
+    },
+    "submission": "A família está comendo arroz, feijão e frango grelhado. Eles bebem suco de laranja.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-phone",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Where is your phone?"
+    },
+    "submission": "O meu celular está em cima do sofá.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-cinema-contraction",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Where did you go on Saturday?"
+    },
+    "submission": "No sábado eu fui ao cinema com meus amigos.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-para-que",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Why do you study every day?"
+    },
+    "submission": "Estudo todos os dias para que eu passe no exame.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-habitual-past",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Describe your childhood summers."
+    },
+    "submission": "Quando eu era pequeno, eu sempre ia à praia com meus avós.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-gostar-de",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What do you like about the city?"
+    },
+    "submission": "Eu gosto da cidade porque é tranquila e as pessoas são simpáticas.",
+    "reference": {}
+  },
+  {
+    "id": "b1-control-weather-hot",
+    "level": "b1",
+    "task": {
+      "prompt_source": "Describe the weather today.",
+      "context_source": "It is hot and sunny."
+    },
+    "submission": "Hoje faz muito calor e o céu está sem nuvens.",
+    "reference": {}
+  },
+  {
+    "id": "a2-control-arrived-home",
+    "level": "a2",
+    "task": {
+      "prompt_source": "How was your day?"
+    },
+    "submission": "Trabalhei até tarde e cheguei em casa às nove.",
+    "reference": {}
+  },
+  {
+    "id": "b2-control-news",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Comment on the news."
+    },
+    "submission": "As notícias de hoje são preocupantes, mas acredito que a situação possa melhorar.",
+    "reference": {}
+  },
+  {
+    "id": "b2-control-clitic-gender",
+    "level": "b2",
+    "task": {
+      "prompt_source": "Did you invite Ana to the party?"
+    },
+    "submission": "Sim, falei com a Ana e convidei-a para a festa.",
+    "reference": {}
+  },
+  {
+    "id": "a1-off-topic-rain",
+    "level": "a1",
+    "task": {
+      "prompt_source": "What is your name?"
+    },
+    "submission": "Hoje está chovendo muito e eu estou em casa.",
+    "reference": {
+      "answers_the_question": false
+    }
+  },
+  {
+    "id": "b1-off-topic-bicycle",
+    "level": "b1",
+    "task": {
+      "prompt_source": "What do you think about working from home?"
+    },
+    "submission": "Eu comprei uma bicicleta nova no sábado.",
+    "reference": {
+      "answers_the_question": false
+    }
+  },
+  {
+    "id": "a2-english-coffee",
+    "level": "a2",
+    "task": {
+      "prompt_source": "Do you like coffee?"
+    },
+    "submission": "Yes, I like coffee a lot.",
+    "reference": {
+      "written_in_portuguese": false
+    }
   }
 ]
