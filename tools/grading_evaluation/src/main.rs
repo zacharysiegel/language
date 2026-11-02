@@ -1,11 +1,14 @@
+mod decisor_client;
 mod evaluation_report;
 mod evaluation_run;
 mod finding_scoring;
+mod finding_verification;
 mod grader_prompt;
 mod grader_response;
 mod grading_case;
 mod ollama_client;
 mod text_span;
+mod verification_report;
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -15,14 +18,18 @@ use clap::{Args, Parser, Subcommand};
 use shared::AppError;
 use shared::filesystem;
 
+use crate::decisor_client::DecisorClient;
 use crate::evaluation_report::{ModelSummary, ScoredRun};
 use crate::evaluation_run::{RunOptions, RunRecord};
+use crate::finding_verification::{VerificationInputKind, VerificationRecord};
 use crate::grader_prompt::PromptVariantKind;
 use crate::grading_case::{ErrorCategoryKind, GradingCase, GradingCaseKind};
 use crate::ollama_client::OllamaConnection;
 
 const DEFAULT_CASES_PATH: &str = "tools/grading_evaluation/cases/pt_br.en.json";
 const DEFAULT_RUNS_DIRECTORY: &str = "build/grading_evaluation";
+const DEFAULT_VERIFICATION_DIRECTORY: &str = "build/grading_evaluation_verification";
+const DEFAULT_DECISOR_URL: &str = "http://127.0.0.1:8500";
 const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
 const REPORT_FILE_NAME: &str = "report.md";
 const FAILURES_FILE_NAME: &str = "failures.md";
@@ -45,6 +52,10 @@ enum CommandKind {
     Run(RunArguments),
     /// Score the recorded runs and write the comparison, the failures and a sample for reading the explanations.
     Report(ReportArguments),
+    /// Ask a decision model, through decisor, whether each finding of recorded runs is a real mistake.
+    Verify(VerifyArguments),
+    /// Print the comparison of the recorded verifications.
+    VerifyReport(VerifyReportArguments),
 }
 
 #[derive(Args)]
@@ -101,6 +112,41 @@ struct ReportArguments {
     sample_size: usize,
 }
 
+#[derive(Args)]
+struct VerifyArguments {
+    /// A recorded run to verify, as `<model>:<prompt variant>` such as `gemma3:12b:few_shot`; repeat for several.
+    #[arg(long = "run", required = true)]
+    runs: Vec<String>,
+
+    /// A name for the decision model decisor is configured with; it names the recorded file.
+    #[arg(long)]
+    label: String,
+
+    #[arg(long, value_enum, default_value = "bare")]
+    input: VerificationInputKind,
+
+    /// The directory of recorded runs; `build/grading_evaluation/` when omitted.
+    #[arg(long)]
+    runs_directory: Option<PathBuf>,
+
+    #[arg(long)]
+    cases: Option<PathBuf>,
+
+    /// Where the verification is recorded; `build/grading_evaluation_verification/` when omitted.
+    #[arg(long)]
+    output: Option<PathBuf>,
+
+    #[arg(long, default_value = DEFAULT_DECISOR_URL)]
+    decisor_url: String,
+}
+
+#[derive(Args)]
+struct VerifyReportArguments {
+    /// The directory of recorded verifications; `build/grading_evaluation_verification/` when omitted.
+    #[arg(long)]
+    verifications: Option<PathBuf>,
+}
+
 fn main() -> ExitCode {
     env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 
@@ -123,6 +169,8 @@ fn run(command: CommandKind) -> Result<(), AppError> {
         CommandKind::CheckCases(arguments) => run_check_cases(&resolve(&root, arguments.cases, DEFAULT_CASES_PATH)),
         CommandKind::Run(arguments) => run_run(&root, arguments),
         CommandKind::Report(arguments) => run_report(&root, arguments),
+        CommandKind::Verify(arguments) => run_verify(&root, arguments),
+        CommandKind::VerifyReport(arguments) => run_verify_report(&root, arguments),
     }
 }
 
@@ -280,6 +328,61 @@ fn write_output(directory: &Path, file_name: &str, content: &str) -> Result<(), 
 
     std::fs::write(&path, content)?;
     log::info!("wrote a report file; [path={}]", path.display());
+
+    Ok(())
+}
+
+fn run_verify(root: &Path, arguments: VerifyArguments) -> Result<(), AppError> {
+    let cases_path: PathBuf = resolve(root, arguments.cases, DEFAULT_CASES_PATH);
+    let runs_directory: PathBuf = resolve(root, arguments.runs_directory, DEFAULT_RUNS_DIRECTORY);
+    let output_directory: PathBuf = resolve(root, arguments.output, DEFAULT_VERIFICATION_DIRECTORY);
+    let cases: Vec<GradingCase> = grading_case::load_cases(&cases_path)?;
+
+    let mut scored_runs: Vec<ScoredRun> = Vec::new();
+
+    for path in list_run_files(&runs_directory)? {
+        let record: RunRecord = evaluation_run::read_run_record(&path)?;
+        let run_name: String = format!("{}:{}", record.model, record.prompt_variant);
+
+        if arguments.runs.contains(&run_name) {
+            scored_runs.push(evaluation_report::score_run(&record, &cases)?);
+        }
+    }
+
+    if scored_runs.len() != arguments.runs.len() {
+        return Err(AppError::from(format!(
+            "not every requested run is recorded; [requested={} found={}]",
+            arguments.runs.len(),
+            scored_runs.len()
+        )));
+    }
+
+    let client: DecisorClient = DecisorClient::connect(&arguments.decisor_url)?;
+    let record: VerificationRecord =
+        finding_verification::verify_runs(&client, &scored_runs, &cases, arguments.input, &arguments.label)?;
+    let path: PathBuf = finding_verification::write_record(&output_directory, &record)?;
+
+    log::info!("wrote the verification; [path={}]", path.display());
+    println!("{}", verification_report::render_verification_report(&[record]));
+
+    Ok(())
+}
+
+fn run_verify_report(root: &Path, arguments: VerifyReportArguments) -> Result<(), AppError> {
+    let verifications_directory: PathBuf = resolve(root, arguments.verifications, DEFAULT_VERIFICATION_DIRECTORY);
+    let records: Vec<VerificationRecord> = finding_verification::read_records(&verifications_directory)?;
+
+    if records.is_empty() {
+        return Err(AppError::from(format!(
+            "no recorded verifications; [directory={}]",
+            verifications_directory.display()
+        )));
+    }
+
+    let report: String = verification_report::render_verification_report(&records);
+
+    write_output(&verifications_directory, "report.md", &report)?;
+    println!("{report}");
 
     Ok(())
 }

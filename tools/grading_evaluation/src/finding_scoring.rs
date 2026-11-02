@@ -1,13 +1,17 @@
+use serde::{Deserialize, Serialize};
+
 use crate::grader_response::{GraderFinding, GraderResponse};
 use crate::grading_case::{GradingCase, GradingCaseKind, ReferenceError};
 use crate::text_span::{self, CharacterSpan};
 
 const EXTRA_QUOTE_WORDS_BEFORE_IMPRECISE: usize = 3;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
 pub enum FindingOutcomeKind {
     Matched,
     FalsePositive,
+    ChangesNothing,
     HallucinatedQuote,
     Duplicate,
 }
@@ -17,6 +21,7 @@ impl FindingOutcomeKind {
         match self {
             FindingOutcomeKind::Matched => "matched",
             FindingOutcomeKind::FalsePositive => "false positive",
+            FindingOutcomeKind::ChangesNothing => "changes nothing",
             FindingOutcomeKind::HallucinatedQuote => "quote not in the answer",
             FindingOutcomeKind::Duplicate => "duplicate",
         }
@@ -151,6 +156,11 @@ impl FindingTally {
         self.finding_outcomes.push(FindingOutcomeKind::FalsePositive);
     }
 
+    fn record_change_nothing(&mut self) {
+        self.false_positives += 1;
+        self.finding_outcomes.push(FindingOutcomeKind::ChangesNothing);
+    }
+
     fn record_hallucinated_quote(&mut self) {
         self.hallucinated_quotes += 1;
         self.finding_outcomes.push(FindingOutcomeKind::HallucinatedQuote);
@@ -182,7 +192,7 @@ fn match_findings(case: &GradingCase, findings: &[GraderFinding]) -> FindingTall
         };
 
         if changes_nothing(&case.submission, &quote_span, finding) {
-            tally.record_false_positive();
+            tally.record_change_nothing();
             continue;
         }
 
