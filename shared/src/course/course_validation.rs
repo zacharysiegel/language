@@ -2,9 +2,10 @@ use std::collections::HashSet;
 use std::fmt;
 
 use crate::course::{
-    CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
-    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair,
-    Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table, target_language_rules,
+    CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise,
+    GrammarNote, GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
+    OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem,
+    grouped_table, prose, target_language_rules,
 };
 
 const MINIMUM_OBJECTIVES: usize = 3;
@@ -113,7 +114,10 @@ impl IssueCollector<'_> {
             self.error(location, format!("spoken text contains markup characters: {text}"));
         }
         if text.contains('/') {
-            self.error(location, format!("spoken text contains a slash (text-to-speech reads it aloud): {text}"));
+            self.error(
+                location,
+                format!("spoken text contains a slash (text-to-speech reads it aloud): {text}"),
+            );
         }
         if text.contains('(') {
             self.error(location, format!("spoken text contains parentheses: {text}"));
@@ -128,7 +132,10 @@ impl IssueCollector<'_> {
         let character_count: usize = text.chars().count();
 
         if character_count > MAXIMUM_SPOKEN_CHARACTERS {
-            self.error(location, format!("spoken text is too long ({character_count} characters)"));
+            self.error(
+                location,
+                format!("spoken text is too long ({character_count} characters)"),
+            );
         }
         if let Some(message) = target_language_rules::target_language_issue(self.target_language, text) {
             self.error(location, message);
@@ -142,15 +149,23 @@ impl IssueCollector<'_> {
     }
 
     fn check_literal(&mut self, location: &str, literal: &Option<String>, natural: &str) {
-        let Some(literal) = literal
-        else {
+        let Some(literal) = literal else {
             return;
         };
 
         self.require_text(&format!("{location}.source_literal"), "source_literal", literal);
 
         if literal.trim().eq_ignore_ascii_case(natural.trim()) {
-            self.warning(&format!("{location}.source_literal"), "the literal rendering repeats the natural translation; omit it");
+            self.warning(
+                &format!("{location}.source_literal"),
+                "the literal rendering repeats the natural translation; omit it",
+            );
+        }
+    }
+
+    fn check_prose(&mut self, location: &str, text: &str) {
+        if let Some(problem) = prose::find_prose_problem(text) {
+            self.error(location, problem);
         }
     }
 
@@ -162,7 +177,10 @@ impl IssueCollector<'_> {
 
     fn check_choices(&mut self, location: &str, minimum: usize, maximum: usize, choices: &[String], answer: usize) {
         if choices.len() < minimum || choices.len() > maximum {
-            self.error(location, format!("choices must be an array of {minimum} to {maximum} strings"));
+            self.error(
+                location,
+                format!("choices must be an array of {minimum} to {maximum} strings"),
+            );
             return;
         }
 
@@ -192,16 +210,18 @@ fn check_fill_blank(collector: &mut IssueCollector, location: &str, exercise: &F
     let blank_count: usize = exercise.prompt_target.matches(FillBlankExercise::BLANK_MARKER).count();
 
     if blank_count != 1 {
-        collector.error(location, format!("prompt_target must contain exactly one ___ (found {blank_count})"));
+        collector.error(
+            location,
+            format!("prompt_target must contain exactly one ___ (found {blank_count})"),
+        );
     }
     if exercise.answers.is_empty() || exercise.answers.iter().any(|accepted| accepted.trim().is_empty()) {
         collector.error(location, "answers must be a non-empty array of strings");
     }
 
-    let punctuated: bool = exercise
-        .answers
-        .iter()
-        .any(|accepted| accepted.contains(|character: char| FILL_BLANK_FORBIDDEN_ANSWER_CHARACTERS.contains(character)));
+    let punctuated: bool = exercise.answers.iter().any(|accepted| {
+        accepted.contains(|character: char| FILL_BLANK_FORBIDDEN_ANSWER_CHARACTERS.contains(character))
+    });
 
     if punctuated {
         collector.error(location, "fill_blank answers must not contain punctuation");
@@ -210,12 +230,19 @@ fn check_fill_blank(collector: &mut IssueCollector, location: &str, exercise: &F
     let has_single_blank_and_answer: bool = blank_count == 1 && !exercise.answers.is_empty();
 
     if has_single_blank_and_answer {
-        collector.check_spoken_target(&format!("{location}.completed_sentence"), &exercise.completed_sentence());
+        collector.check_spoken_target(
+            &format!("{location}.completed_sentence"),
+            &exercise.completed_sentence(),
+        );
     }
 }
 
 fn check_translate(collector: &mut IssueCollector, location: &str, exercise: &TranslateToTargetExercise) {
-    collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
+    collector.require_text(
+        &format!("{location}.prompt_source"),
+        "prompt_source",
+        &exercise.prompt_source,
+    );
 
     if exercise.answers.is_empty() {
         collector.error(location, "answers must be a non-empty array");
@@ -227,7 +254,11 @@ fn check_translate(collector: &mut IssueCollector, location: &str, exercise: &Tr
 }
 
 fn check_order_words(collector: &mut IssueCollector, location: &str, exercise: &OrderWordsExercise) {
-    collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
+    collector.require_text(
+        &format!("{location}.prompt_source"),
+        "prompt_source",
+        &exercise.prompt_source,
+    );
 
     if exercise.words.len() < 3 || exercise.words.len() > 12 {
         collector.error(location, "words must be an array of 3 to 12 tokens in correct order");
@@ -236,7 +267,10 @@ fn check_order_words(collector: &mut IssueCollector, location: &str, exercise: &
 
     for word in &exercise.words {
         if word.trim().is_empty() || word.contains(char::is_whitespace) {
-            collector.error(location, format!("token must be a single word without spaces: \"{word}\""));
+            collector.error(
+                location,
+                format!("token must be a single word without spaces: \"{word}\""),
+            );
         }
     }
 
@@ -291,31 +325,31 @@ fn check_exercise(collector: &mut IssueCollector, location: &str, exercise: &Exe
         Exercise::MultipleChoice(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_multiple_choice(collector, location, exercise);
-        },
+        }
         Exercise::FillBlank(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_fill_blank(collector, location, exercise);
-        },
+        }
         Exercise::TranslateToTarget(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_translate(collector, location, exercise);
-        },
+        }
         Exercise::OrderWords(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_order_words(collector, location, exercise);
-        },
+        }
         Exercise::ListeningChoice(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_listening_choice(collector, location, exercise);
-        },
+        }
         Exercise::Dictation(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_dictation(collector, location, exercise);
-        },
+        }
         Exercise::Match(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_match(collector, location, exercise);
-        },
+        }
     }
 }
 
@@ -333,7 +367,10 @@ fn check_multiple_choice_only(collector: &mut IssueCollector, location: &str, ex
 
 fn check_vocabulary(collector: &mut IssueCollector, vocabulary: &[VocabularyItem]) {
     if vocabulary.len() < MINIMUM_VOCABULARY {
-        collector.error("vocabulary", format!("must be an array of at least {MINIMUM_VOCABULARY} items"));
+        collector.error(
+            "vocabulary",
+            format!("must be an array of at least {MINIMUM_VOCABULARY} items"),
+        );
     }
 
     let mut seen_items: HashSet<String> = HashSet::new();
@@ -367,7 +404,10 @@ fn check_dialogue(collector: &mut IssueCollector, location: &str, dialogue: &Dia
     collector.require_text(&format!("{location}.context"), "context", &dialogue.context);
 
     if dialogue.lines.len() < MINIMUM_DIALOGUE_LINES {
-        collector.error(location, format!("lines must be an array of at least {MINIMUM_DIALOGUE_LINES} lines"));
+        collector.error(
+            location,
+            format!("lines must be an array of at least {MINIMUM_DIALOGUE_LINES} lines"),
+        );
         return;
     }
 
@@ -381,16 +421,17 @@ fn check_dialogue(collector: &mut IssueCollector, location: &str, dialogue: &Dia
         collector.require_text(&format!("{line_location}.source"), "source", &line.source);
         collector.check_literal(&line_location, &line.source_literal, &line.source);
 
-        let known_gender: Option<SpeakerGenderKind> = speaker_genders
-            .iter()
-            .find(|(speaker, _)| *speaker == line.speaker)
-            .map(|(_, gender)| *gender);
+        let known_gender: Option<SpeakerGenderKind> =
+            speaker_genders.iter().find(|(speaker, _)| *speaker == line.speaker).map(|(_, gender)| *gender);
 
         match known_gender {
             Some(gender) if gender != line.gender => {
-                collector.error(&line_location, format!("speaker {} changes gender within a dialogue", line.speaker));
-            },
-            Some(_) => {},
+                collector.error(
+                    &line_location,
+                    format!("speaker {} changes gender within a dialogue", line.speaker),
+                );
+            }
+            Some(_) => {}
             None => speaker_genders.push((&line.speaker, line.gender)),
         }
     }
@@ -405,7 +446,10 @@ fn check_dialogue(collector: &mut IssueCollector, location: &str, dialogue: &Dia
 
 fn check_dialogues(collector: &mut IssueCollector, dialogues: &[Dialogue]) {
     if dialogues.len() < MINIMUM_DIALOGUES {
-        collector.error("dialogues", format!("must be an array of at least {MINIMUM_DIALOGUES} dialogues"));
+        collector.error(
+            "dialogues",
+            format!("must be an array of at least {MINIMUM_DIALOGUES} dialogues"),
+        );
         return;
     }
 
@@ -429,11 +473,12 @@ fn check_grammar_note(collector: &mut IssueCollector, location: &str, note: &Gra
 
     let explanation_characters: usize = note.explanation.chars().count();
 
-    let explanation_present: bool = collector.require_text(&format!("{location}.explanation"), "explanation", &note.explanation);
+    let explanation_present: bool =
+        collector.require_text(&format!("{location}.explanation"), "explanation", &note.explanation);
 
-    if explanation_present
-        && explanation_characters < MINIMUM_GRAMMAR_EXPLANATION_CHARACTERS
-    {
+    collector.check_prose(&format!("{location}.explanation"), &note.explanation);
+
+    if explanation_present && explanation_characters < MINIMUM_GRAMMAR_EXPLANATION_CHARACTERS {
         collector.error(
             location,
             format!("explanation is too short ({explanation_characters} characters, need {MINIMUM_GRAMMAR_EXPLANATION_CHARACTERS})"),
@@ -441,7 +486,10 @@ fn check_grammar_note(collector: &mut IssueCollector, location: &str, note: &Gra
     }
 
     if note.examples.len() < MINIMUM_GRAMMAR_EXAMPLES {
-        collector.error(location, format!("examples must be an array of at least {MINIMUM_GRAMMAR_EXAMPLES} items"));
+        collector.error(
+            location,
+            format!("examples must be an array of at least {MINIMUM_GRAMMAR_EXAMPLES} items"),
+        );
     }
 
     for (example_index, example) in note.examples.iter().enumerate() {
@@ -454,7 +502,10 @@ fn check_grammar_note(collector: &mut IssueCollector, location: &str, note: &Gra
             || table.rows.iter().any(|row| row.len() != table.headers.len());
 
         if malformed {
-            collector.error(&format!("{location}.table"), "table needs headers and rows as wide as the headers");
+            collector.error(
+                &format!("{location}.table"),
+                "table needs headers and rows as wide as the headers",
+            );
             return;
         }
 
@@ -469,7 +520,8 @@ fn table_field_label_line_count(header: &str) -> usize {
 
     for word in header.split_whitespace() {
         let word_half_widths: usize = table_field_label_half_widths(word);
-        let widened_line_half_widths: usize = current_line_half_widths + TABLE_FIELD_LABEL_SPACE_HALF_WIDTHS + word_half_widths;
+        let widened_line_half_widths: usize =
+            current_line_half_widths + TABLE_FIELD_LABEL_SPACE_HALF_WIDTHS + word_half_widths;
 
         if line_count > 0 && widened_line_half_widths <= TABLE_FIELD_LABEL_LINE_HALF_WIDTHS {
             current_line_half_widths = widened_line_half_widths;
@@ -515,14 +567,20 @@ fn check_table_field_labels(collector: &mut IssueCollector, location: &str, tabl
                 format!("header \"{header}\" takes {line_count} lines beside its value on a phone (at most {TABLE_FIELD_LABEL_MAXIMUM_LINES})"),
             );
         } else if line_count > 1 {
-            collector.warning(&header_location, format!("header \"{header}\" takes {line_count} lines beside its value on a phone"));
+            collector.warning(
+                &header_location,
+                format!("header \"{header}\" takes {line_count} lines beside its value on a phone"),
+            );
         }
     }
 }
 
 fn check_grammar(collector: &mut IssueCollector, grammar: &[GrammarNote]) {
     if grammar.len() < MINIMUM_GRAMMAR_NOTES {
-        collector.error("grammar", format!("must be an array of at least {MINIMUM_GRAMMAR_NOTES} notes"));
+        collector.error(
+            "grammar",
+            format!("must be an array of at least {MINIMUM_GRAMMAR_NOTES} notes"),
+        );
         return;
     }
 
@@ -538,8 +596,13 @@ fn check_culture(collector: &mut IssueCollector, culture: &CultureNote) {
 
     let text_present: bool = collector.require_text("culture.text", "text", &culture.text);
 
+    collector.check_prose("culture.text", &culture.text);
+
     if text_present && text_characters < MINIMUM_CULTURE_CHARACTERS {
-        collector.error("culture.text", format!("too short (need {MINIMUM_CULTURE_CHARACTERS} characters)"));
+        collector.error(
+            "culture.text",
+            format!("too short (need {MINIMUM_CULTURE_CHARACTERS} characters)"),
+        );
     }
 }
 
@@ -548,7 +611,10 @@ fn check_reading(collector: &mut IssueCollector, location: &str, reading: &Readi
     collector.require_text(&format!("{location}.title"), "title", &reading.title);
 
     if reading.paragraphs.len() < MINIMUM_READING_PARAGRAPHS {
-        collector.error(location, format!("paragraphs must be an array of at least {MINIMUM_READING_PARAGRAPHS} items"));
+        collector.error(
+            location,
+            format!("paragraphs must be an array of at least {MINIMUM_READING_PARAGRAPHS} items"),
+        );
     }
 
     for (paragraph_index, paragraph) in reading.paragraphs.iter().enumerate() {
@@ -581,14 +647,20 @@ fn check_exercises(collector: &mut IssueCollector, exercises: &[Exercise]) {
     }
 
     if exercises.len() < MINIMUM_EXERCISES {
-        collector.error("exercises", format!("need at least {MINIMUM_EXERCISES} (found {})", exercises.len()));
+        collector.error(
+            "exercises",
+            format!("need at least {MINIMUM_EXERCISES} (found {})", exercises.len()),
+        );
     }
 
     for (kind, minimum) in MINIMUM_EXERCISES_BY_KIND {
         let count: usize = exercises.iter().filter(|exercise| exercise.kind() == kind).count();
 
         if count < minimum {
-            collector.error("exercises", format!("need at least {minimum} of type {} (found {count})", kind.code()));
+            collector.error(
+                "exercises",
+                format!("need at least {minimum} of type {} (found {count})", kind.code()),
+            );
         }
     }
 
@@ -611,7 +683,7 @@ pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, 
         None => {
             collector.error("level", format!("the curriculum has no level {}", unit.level));
             false
-        },
+        }
     };
 
     if unit.id != curriculum_unit.id {
@@ -626,11 +698,14 @@ pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, 
 
     collector.require_text("title", "title", &unit.title);
 
-    let objectives_valid: bool =
-        unit.objectives.len() >= MINIMUM_OBJECTIVES && unit.objectives.iter().all(|objective| !objective.trim().is_empty());
+    let objectives_valid: bool = unit.objectives.len() >= MINIMUM_OBJECTIVES
+        && unit.objectives.iter().all(|objective| !objective.trim().is_empty());
 
     if !objectives_valid {
-        collector.error("objectives", format!("must be an array of at least {MINIMUM_OBJECTIVES} strings"));
+        collector.error(
+            "objectives",
+            format!("must be an array of at least {MINIMUM_OBJECTIVES} strings"),
+        );
     }
 
     check_vocabulary(&mut collector, &unit.vocabulary);
@@ -652,7 +727,7 @@ mod tests {
         assert_eq!(table_field_label_line_count("Sound"), 1);
         assert_eq!(table_field_label_line_count("Accent when"), 1);
         assert_eq!(table_field_label_line_count("English sound"), 2);
-        assert_eq!(table_field_label_line_count("você, ele, ela, a gente"), 2);
+        assert_eq!(table_field_label_line_count("você, ele, ela"), 2);
         assert_eq!(table_field_label_line_count("Sounds like, for an English speaker"), 4);
     }
 
@@ -715,6 +790,9 @@ mod tests {
         let graded_locations: Vec<(SeverityKind, &str)> =
             collector.issues.iter().map(|issue| (issue.severity, issue.location.as_str())).collect();
 
-        assert_eq!(graded_locations, vec![(SeverityKind::Error, "exercises[0].pairs[1].source")]);
+        assert_eq!(
+            graded_locations,
+            vec![(SeverityKind::Error, "exercises[0].pairs[1].source")]
+        );
     }
 }

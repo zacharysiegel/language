@@ -49,6 +49,8 @@ import ro.zach.language.core.UnitStatusRecord
 
 private const val DISABLED_ALPHA: Float = 0.4f
 private const val PARAGRAPH_SEPARATOR: String = "\n\n"
+private const val LIST_ITEM_MARKER: String = "- "
+private const val LIST_BULLET: String = "\u25AA"
 
 const val PAGE_HEADER_TITLE_TEST_TAG: String = "page-header-title"
 
@@ -354,19 +356,55 @@ fun SquareProgressBar(value: Int, total: Int, modifier: Modifier = Modifier) {
     }
 }
 
-/** Splits prose on blank lines into paragraphs, as the web does. */
+/** Splits prose on blank lines into paragraphs and lists, as the web does. A block whose every line starts with "- " is a list. */
 @Composable
 fun Paragraphs(text: String, modifier: Modifier = Modifier) {
-    val paragraphs: List<String> = text.split(PARAGRAPH_SEPARATOR)
-        .map { paragraph -> paragraph.trim() }
-        .filter { paragraph -> paragraph.isNotEmpty() }
+    val blocks: List<ProseBlock> = proseBlocks(text)
 
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
-        for (paragraph in paragraphs) {
-            LanguageText(text = paragraph, style = LanguageType.bodyText.copy(lineHeight = LanguageType.paragraphLineHeight))
+        for (block in blocks) {
+            when (block) {
+                is ProseBlock.Paragraph -> LanguageText(
+                    text = block.text,
+                    style = LanguageType.bodyText.copy(lineHeight = LanguageType.paragraphLineHeight),
+                )
+                is ProseBlock.ListItems -> Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+                    for (item in block.items) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
+                            LanguageText(text = LIST_BULLET, style = LanguageType.bodyText)
+                            LanguageText(
+                                text = item,
+                                style = LanguageType.bodyText.copy(lineHeight = LanguageType.paragraphLineHeight),
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
+
+private sealed interface ProseBlock {
+    data class Paragraph(val text: String) : ProseBlock
+
+    data class ListItems(val items: List<String>) : ProseBlock
+}
+
+private fun proseBlocks(text: String): List<ProseBlock> =
+    text.split(PARAGRAPH_SEPARATOR)
+        .map { block -> block.trim() }
+        .filter { block -> block.isNotEmpty() }
+        .map { block ->
+            val lines: List<String> = block.lines().map { line -> line.trim() }
+            val isList: Boolean = lines.all { line -> line.startsWith(LIST_ITEM_MARKER) }
+
+            if (isList) {
+                ProseBlock.ListItems(lines.map { line -> line.removePrefix(LIST_ITEM_MARKER).trim() })
+            } else {
+                ProseBlock.Paragraph(block)
+            }
+        }
 
 /** A page title with an uppercase caption above it. */
 @Composable
