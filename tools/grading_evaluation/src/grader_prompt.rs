@@ -297,6 +297,18 @@ mod tests {
     }
 
     #[test]
+    fn holdout_cases_repeat_neither_tuned_cases_nor_examples() {
+        let holdout_path: PathBuf = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("cases/pt_br.en.holdout.json");
+        let holdout_cases: Vec<GradingCase> = grading_case::load_cases(&holdout_path).expect("the holdout cases file is valid");
+        let tuned_cases: Vec<GradingCase> = load_shipped_cases();
+
+        for holdout_case in &holdout_cases {
+            assert!(tuned_cases.iter().all(|case| case.id != holdout_case.id && case.submission != holdout_case.submission));
+            assert!(EXAMPLE_POOL.iter().all(|example| example.submission != holdout_case.submission));
+        }
+    }
+
+    #[test]
     fn build_messages_ends_with_the_case_for_every_variant() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
