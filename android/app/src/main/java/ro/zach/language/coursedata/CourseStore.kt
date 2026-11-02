@@ -14,10 +14,13 @@ import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import ro.zach.language.core.CoreException
+import ro.zach.language.core.CoreFailureRecord
 import ro.zach.language.core.CourseLibrary
 import ro.zach.language.core.CourseOutlineRecord
 import ro.zach.language.core.CoursePublication
 import ro.zach.language.core.CourseSummaryRecord
+import ro.zach.language.core.LocalCoursePublication
 import ro.zach.language.core.PublishedCourseIndex
 import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
@@ -253,8 +256,8 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
     }
 
     /**
-     * Once per launch: shows the cached publication at once, else the one included in the app, then the publication the
-     * course's latest pointer names once the repository's course index has been read.
+     * Once per launch: shows at once the cached publication or the one included in the app, as the core picks, then the
+     * publication the course's latest pointer names once the repository's course index has been read.
      */
     fun ensurePublicationLoaded(courseId: String) {
         val library: CourseLibrary = library
@@ -272,7 +275,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
 
         scope.launch {
             if (shownPublication(courseId) == null) {
-                showCachedOrEmbeddedPublication(library, courseId)
+                showLocalPublication(library, courseId)
             }
 
             awaitFirstRepositoryIndexRead()
@@ -431,36 +434,18 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         }
     }
 
-    private suspend fun showCachedOrEmbeddedPublication(library: CourseLibrary, courseId: String) {
-        val cached: CoursePublication? = library.loadCachedCoursePublication(courseId)
+    private suspend fun showLocalPublication(library: CourseLibrary, courseId: String) {
+        val local: LocalCoursePublication = library.loadLocalCoursePublication(courseId)
+        val embeddedFailure: CoreFailureRecord? = local.embeddedFailure
 
-        if (cached != null) {
-            showIfNoneShown(cached)
-            return
+        if (embeddedFailure != null) {
+            CoreErrorReport.record(CoreException.Failure(embeddedFailure.message, embeddedFailure.backtrace), "opening the copy of $courseId included in the app")
         }
 
-        val embeddedIndexListsTheCourse: Boolean = embeddedIndexListsCourse(library, courseId)
+        val publication: CoursePublication? = local.publication
 
-        if (!embeddedIndexListsTheCourse) {
-            return
-        }
-
-        try {
-            showIfNoneShown(library.loadEmbeddedCoursePublication(courseId))
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            CoreErrorReport.record(error, "opening the copy of $courseId included in the app")
-        }
-    }
-
-    private suspend fun embeddedIndexListsCourse(library: CourseLibrary, courseId: String): Boolean {
-        try {
-            return library.loadEmbeddedCourseIndex().courses().any { course -> course.id == courseId }
-        } catch (cancellation: CancellationException) {
-            throw cancellation
-        } catch (error: Exception) {
-            return false
+        if (publication != null) {
+            showIfNoneShown(publication)
         }
     }
 
