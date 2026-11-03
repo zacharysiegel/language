@@ -53,6 +53,44 @@ Held-out check, `gemma3:12b`:
 - Latency: p95 of 2.7 s per answer on an idle machine, plus 4 s to 7 s to load the model after it has been idle.
 - Verification: Kev separated real from false findings only weakly (AUROC 0.69, or 0.70 with the grader's explanation) and Von more weakly (0.60 and 0.63). Dropping low-probability findings raised `qwen3:8b` precision from 65% to 79% without losing recall, but 17% of correct answers stayed flagged; a stricter threshold cost `gemma3:12b` about half its recall. No verifier is used.
 
+## Follow-up investigations (2026-11-03)
+
+### Newer models
+
+Eleven newer models were run on Ollama 0.40.14 against both case sets. Two Gemma 4 12B builds meet the bar on both; no phone-sized model does.
+
+Each cell lists precision / recall / false positive rate / correction agreement / p95 latency.
+
+| Model                  | Prompt       | Download | Tuned (114 cases)     | Unseen (52 cases)    |
+| ---------------------- | ------------ | -------- | --------------------- | -------------------- |
+| gemma3:12b (reference) | few_shot_six | 8.2 GB   | 95%/78%/2%/74%/4.0 s  | 91%/81%/0%/67%/2.7 s |
+| gemma4:12b-it-qat      | few_shot_six | 7.2 GB   | 100%/90%/0%/70%/3.7 s | 96%/85%/5%/64%/3.5 s |
+| gemma4:12b             | few_shot_six | 7.7 GB   | 97%/87%/2%/76%/1.8 s  | 96%/85%/5%/64%/2.0 s |
+| gemma4:e4b-it-qat      | few_shot_six | 6.1 GB   | 90%/54%/4%/76%/1.1 s  | 95%/69%/0%/61%/1.5 s |
+
+- gemma4:12b-it-qat passes with all three prompts and is the passing build that runs unchanged in llama.cpp-based runtimes.
+- Both Gemma 4 12B builds flag 1 of 22 correct unseen answers; gemma3:12b flagged none.
+- gemma4:e4b-it-qat comes closest among smaller models but fails recall on the tuned cases.
+- gemma3n:e2b and e4b, gemma4:e2b, granite4.2:3b and qwen3.5:4b fail on both sets.
+
+### Runtime for web learners
+
+- In-browser with wllama (llama.cpp compiled to wasm, WebGPU): gemma3 12B Q4_K_M ran fully on the GPU in Chrome 156 on this Mac.
+  - p95 3.0 s per answer with `swa_full`, which keeps the cached prompt usable; 8.1 s without it.
+  - Every reply matched the JSON schema; on 10 unseen cases it agreed with the Ollama replies 9 times out of 10.
+  - First load is a 7.3 GB download; later visits load from the browser's cache with no download in about 15 to 18 s to the first token.
+  - Peak memory about 13.6 GiB (GPU process 9.9 GiB, page 3.7 GiB, near the 4 GiB wasm limit).
+  - The default build needs Chrome or Edge; Safari and Firefox need a slower compatibility build.
+- Ruled out: Chrome's built-in model (no Portuguese), MediaPipe (superseded), WebNN (not shipped), WebLLM and Transformers.js (no ready 12B model), Rust wasm engines (no maintained WebGPU language-model path).
+- Alternatives: a native helper beside the browser (Ollama, llama-server or a small Rust program), which needs an install and a local network permission in Chrome; Google's LiteRT-LM web SDK, which has a Gemma 4 12B build but no confirmed constrained JSON.
+
+### Kev fine-tuned on the labelled findings
+
+- Fine-tuned locally (Kev-4B, 171 training findings, 6.4 minutes on the Apple GPU), evaluated on 75 findings from 17 held-out cases.
+- AUROC 0.863 against 0.858 for stock Kev (95% interval of the gain −0.066 to +0.096): no real improvement in separating real from false findings.
+- Calibration improved, mostly by learning how often findings are real.
+- Too few false findings (16 held out) to show a gain; Kev also runs only through Python, so it cannot ship in the browser.
+
 ## Limits
 
 - One author wrote every reference annotation. A native speaker should review `tools/grading_evaluation/cases/`.
