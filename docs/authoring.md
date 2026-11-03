@@ -25,18 +25,15 @@ These rules come from the course owner's feedback on the content. They apply to 
    - A word that behaves like a member of a category without being one is explained in prose, with its real category and how it behaves like the other, and is kept out of that category's lists, tables and headers.
    - The course notes give the cases that came up.
 3. The reader is assumed to know only the source language. Never ask the reader to compare with, recall or apply any other language, including languages related to the target language, and never use another language's terms without explaining them. A fact about another language is stated in full so that it stands on its own, and only when it helps the learner.
-4. A concept is explained before it is named, and explained fully.
-   - Say what it is in plain terms, how it is formed, when it is used, and give an example with its natural translation and, where the structures differ, its literal rendering.
-   - Never close a paragraph about something else with a sentence that only names a concept or says what the source language lacks. A concept that needs explaining gets its own paragraph or list. One that is not yet taught is left out, or given a one-line meaning with a translated example and the level that teaches it.
-5. Prose is overused; a list is often the more efficient way to teach. Write a list as a list.
-   - Use a list for sets of parallel items (tenses, moods, forms, categories, endings), steps, rules and their exceptions, contrasts, and a sequence of examples with a short gloss each.
-   - Use prose to explain why something is so and to connect ideas, not to carry an enumeration.
+4. When the text mentions a concept, it explains it usefully: what it is in plain terms and an example with its natural translation, and its literal rendering where the structures differ, in its own paragraph or list. A sentence that only names a concept, such as one closing a paragraph about something else, is either expanded this way or removed.
+5. When the text lists things, especially things to memorize, it writes a list, not prose.
    - A list is a block of lines that each start with `- `, with a blank line before and after the block. One item per line, no nesting, and no other markup. A sentence that introduces the list ends the paragraph before it.
    - Lists work in grammar `explanation` and culture `text`. Other text fields stay single-line plain text.
 6. Never put a source-language article or determiner on a target-language word or phrase. Each language keeps its own slots, so a sentence never has to be parsed across a mix of the two.
-   - A target word is quoted by itself (`'frase'`), or named by a source-language noun that says what it is: `the word 'frase'`, `the form 'fala'`, `the phrase 'posto de saúde'`, `the tense called 'pretérito perfeito'`.
-   - A gloss pair keeps one language per side: `sentence: 'frase'`, not `sentence: a 'frase' in Portuguese`.
-   - A sentence that defines a target word puts it where no article is needed: `'Feira' is an open-air street market` or `The word for an open-air street market is 'feira'`, not `An open-air street market is a 'feira'`.
+   - Otherwise the reader cannot tell whether `a 'frase'` is a target-language word or a source-language word they do not know.
+   - A target word is quoted by itself, with its own article where the target language marks nouns that way (`'a frase'`), or named by a source-language noun that says what it is: `the word 'a frase'`, `the form 'fala'`, `the phrase 'o posto de saúde'`, `the tense called 'pretérito perfeito'`.
+   - A gloss pair keeps one language per side: `sentence: 'a frase'`, not `sentence: a 'frase' in Portuguese`.
+   - A sentence that defines a target word puts it where no source-language article is needed: `'A feira' is an open-air street market` or `The word for an open-air street market is 'a feira'`, not `An open-air street market is a 'feira'`.
    - This covers words, phrases and forms. Letters, sound spellings and endings are named by their spelling (`the 'ch' is [ʃ]`, `the '-o' of 'isso'`).
 
 ## Text rules
