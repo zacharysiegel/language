@@ -6,6 +6,10 @@ Language courses, each a curriculum in a target language taught in a source lang
 
 Follow `docs/conventions/` (type naming, log format, conditional compilation) and the owner's global `~/.claude/CLAUDE.md`. Scripts in `scripts/` wrap the tools; use them.
 
+## Workflow
+
+No pull requests: merge work into `main` locally and push `main`. Before merging, run the checks the change touches: `cargo test`, `cargo check --package web --target wasm32-unknown-unknown --features hydrate`, `cargo check --package ffi --target aarch64-apple-ios`, the iOS and Android test scripts, and `course_builder validate` for course data. `cargo fmt` is not used; do not reformat with it.
+
 ## Visual design
 
 Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`, no raw colors or sizes elsewhere, no shadows, no rounded corners, no animation.
