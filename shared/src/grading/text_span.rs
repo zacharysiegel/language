@@ -64,7 +64,7 @@ pub fn normalize_for_comparison(text: &str) -> String {
         .chars()
         .map(|character| {
             if character.is_alphanumeric() {
-                character.to_lowercase().next().unwrap_or(character)
+                fold_character(character)
             } else {
                 ' '
             }
