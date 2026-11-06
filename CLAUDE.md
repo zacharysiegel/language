@@ -8,7 +8,7 @@ Follow `docs/conventions/` (type naming, log format, conditional compilation) an
 
 ## Workflow
 
-No pull requests: merge work into `main` locally and push `main`. Before merging, run the checks the change touches: `cargo test`, `cargo check --package web --target wasm32-unknown-unknown --features hydrate`, `cargo check --package ffi --target aarch64-apple-ios`, the iOS and Android test scripts, and `course_builder validate` for course data. `cargo fmt` is not used; do not reformat with it.
+No pull requests: merge work into `main` locally and push `main`. Before merging, run the checks the change touches: `cargo test`, `cargo check --package web --target wasm32-unknown-unknown --features hydrate`, `cargo check --package ffi --target aarch64-apple-ios`, the iOS and Android test scripts, and `course_builder validate` for course data. `cargo fmt` is not used; do not reformat with it. Some `ffi` tests read the generated `web/static/embedded/` and pass without running when it is missing, so a fresh worktree does not exercise them; after a schema version bump, run `./scripts/dev/build-local-repository.sh` before `cargo test`.
 
 ## Visual design
 
