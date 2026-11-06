@@ -10,7 +10,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - Scoring: feedback only. An open answer never counts toward a quiz's pass mark or score.
 - Grading runs only in the web app. The iOS and Android apps never see open-answer exercises.
 - Fallback, on a computer or browser that cannot run the model: self-check against the example answers, with a notice that automatic grading by an AI model is available on supported computers.
-- Model download: automatic in the background. The model is loaded into memory only when an open-answer question appears, and unloaded when the practice session ends.
+- Model download: automatic in the background unless the learner turns it off in settings. The model is loaded into memory only when an open-answer question appears, and unloaded when the practice session ends.
 - Every graded result is labelled as graded by an AI model.
 - Grader: the evaluated prompt (`few_shot_six`, temperature 0), unchanged.
 
@@ -66,12 +66,13 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - `web/src/grading/`, gated on `hydrate`:
   - `GraderStateKind`: unsupported, not downloaded, downloading, downloaded, loading, ready, failed.
   - Capable: WebGPU adapter, enough storage quota for the model, and no earlier failed load recorded in this browser.
-  - Background download when a unit page with open-answer exercises opens; `navigator.storage.persist()` first.
+  - Background download when a unit page with open-answer exercises opens, unless the setting is off; `navigator.storage.persist()` first.
   - Load when an open-answer question appears; unload when the session ends.
+- Setting: `Settings::download_grading_model`, default on (a serde default), in the settings controls with the model's download size. Turning it off stops a running download; a downloaded model stays and keeps grading.
 - Open-answer view: a multi-line field with spell checking off and a Check button, which shows the pending state.
   - States: loading the model, grading, then feedback; cancelled when the session unmounts.
   - Feedback: an "AI model" tag; whether the answer addresses the task and is in the target language; each mistake's quote, replacement and explanation; the example answers.
-  - Self-check: the example answers, plus the notice; while the model is still downloading, the download's progress.
+  - Self-check: the example answers, plus the notice; while the model is still downloading, the download's progress; with the setting off, that automatic grading needs the download turned on.
 
 ## Phases
 
