@@ -9,7 +9,6 @@ pub enum AnswerStatus {
     Correct,
     AccentMistake,
     Wrong,
-    /// The answer to an exercise that does not count toward the score.
     Unscored,
 }
 
