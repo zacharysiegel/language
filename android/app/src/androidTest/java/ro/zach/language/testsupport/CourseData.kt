@@ -1,6 +1,7 @@
 package ro.zach.language.testsupport
 
 import androidx.test.platform.app.InstrumentationRegistry
+import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
 
@@ -15,6 +16,22 @@ object CourseData {
 
     fun readUnit(unitId: String): JSONObject {
         return readJson("courses/$COURSE_ID/units/$unitId.json")
+    }
+
+    /** The unit's exercises the app offers, which leaves out open answers. */
+    fun readExercises(unitId: String): JSONArray {
+        val allExercises: JSONArray = readUnit(unitId).getJSONArray("exercises")
+        val offeredExercises: JSONArray = JSONArray()
+
+        for (index in 0 until allExercises.length()) {
+            val exercise: JSONObject = allExercises.getJSONObject(index)
+
+            if (exercise.getString("type") != "open_answer") {
+                offeredExercises.put(exercise)
+            }
+        }
+
+        return offeredExercises
     }
 
     fun readCourseTitle(): String {
