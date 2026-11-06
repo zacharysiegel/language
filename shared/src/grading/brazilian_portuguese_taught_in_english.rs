@@ -3,61 +3,73 @@ use serde_json::{Value, json};
 
 use crate::grading::{GradedAnswer, GraderExample};
 
+pub const SPELLING_MISTAKE_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a2",
+        prompt_source: "Describe what Paulo is eating.",
+        context_source: Some("Paulo is at a café. He eats a cheese sandwich and drinks orange juice."),
+        submission: "O Paulo come um sanduiche de queijo e bebe suco de laranja no café.",
+    },
+    response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"sanduiche","explanation":"The word needs an accent on the i: sanduíche.","kind":"spelling","replacement":"sanduíche"}]}"#,
+};
+
+pub const CORRECT_COLLOQUIAL_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a1",
+        prompt_source: "How was your weekend?",
+        context_source: None,
+        submission: "A gente foi à praia no sábado e eu tô com um pouco de sono hoje.",
+    },
+    response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
+};
+
+pub const VERB_MISTAKE_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a2",
+        prompt_source: "What did you do yesterday?",
+        context_source: None,
+        submission: "Ontem eu comeu uma pizza e depois saí com os meus amigos.",
+    },
+    response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"comeu","explanation":"The verb must agree with 'eu': comi.","kind":"verb_form","replacement":"comi"}]}"#,
+};
+
+pub const CORRECT_SUNDAYS_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a1",
+        prompt_source: "What do you do on Sundays?",
+        context_source: None,
+        submission: "Aos domingos eu almoço com a minha família e descanso.",
+    },
+    response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
+};
+
+pub const PREPOSITION_MISTAKE_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a1",
+        prompt_source: "Where do you study?",
+        context_source: None,
+        submission: "Eu estudo em a universidade perto de casa.",
+    },
+    response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"em a","explanation":"'em' and 'a' contract to 'na'.","kind":"article_preposition","replacement":"na"}]}"#,
+};
+
+pub const OFF_TOPIC_WITH_MISTAKE_EXAMPLE: GraderExample = GraderExample {
+    graded_answer: GradedAnswer {
+        level: "a1",
+        prompt_source: "Describe the weather today.",
+        context_source: Some("It is cold and rainy."),
+        submission: "Eu gosto de pizza. Minhas irmãs são muito alta.",
+    },
+    response_json: r#"{"answers_the_question":false,"language_is_portuguese":true,"mistakes":[{"error_text":"alta","explanation":"The adjective must be plural to agree with 'irmãs'.","kind":"agreement","replacement":"altas"}]}"#,
+};
+
 pub(crate) const GRADER_EXAMPLES: [GraderExample; 6] = [
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a2",
-            prompt_source: "Describe what Paulo is eating.",
-            context_source: Some("Paulo is at a café. He eats a cheese sandwich and drinks orange juice."),
-            submission: "O Paulo come um sanduiche de queijo e bebe suco de laranja no café.",
-        },
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"sanduiche","explanation":"The word needs an accent on the i: sanduíche.","kind":"spelling","replacement":"sanduíche"}]}"#,
-    },
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a1",
-            prompt_source: "How was your weekend?",
-            context_source: None,
-            submission: "A gente foi à praia no sábado e eu tô com um pouco de sono hoje.",
-        },
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
-    },
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a2",
-            prompt_source: "What did you do yesterday?",
-            context_source: None,
-            submission: "Ontem eu comeu uma pizza e depois saí com os meus amigos.",
-        },
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"comeu","explanation":"The verb must agree with 'eu': comi.","kind":"verb_form","replacement":"comi"}]}"#,
-    },
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a1",
-            prompt_source: "What do you do on Sundays?",
-            context_source: None,
-            submission: "Aos domingos eu almoço com a minha família e descanso.",
-        },
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
-    },
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a1",
-            prompt_source: "Where do you study?",
-            context_source: None,
-            submission: "Eu estudo em a universidade perto de casa.",
-        },
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"em a","explanation":"'em' and 'a' contract to 'na'.","kind":"article_preposition","replacement":"na"}]}"#,
-    },
-    GraderExample {
-        graded_answer: GradedAnswer {
-            level: "a1",
-            prompt_source: "Describe the weather today.",
-            context_source: Some("It is cold and rainy."),
-            submission: "Eu gosto de pizza. Minhas irmãs são muito alta.",
-        },
-        response_json: r#"{"answers_the_question":false,"language_is_portuguese":true,"mistakes":[{"error_text":"alta","explanation":"The adjective must be plural to agree with 'irmãs'.","kind":"agreement","replacement":"altas"}]}"#,
-    },
+    SPELLING_MISTAKE_EXAMPLE,
+    CORRECT_COLLOQUIAL_EXAMPLE,
+    VERB_MISTAKE_EXAMPLE,
+    CORRECT_SUNDAYS_EXAMPLE,
+    PREPOSITION_MISTAKE_EXAMPLE,
+    OFF_TOPIC_WITH_MISTAKE_EXAMPLE,
 ];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]

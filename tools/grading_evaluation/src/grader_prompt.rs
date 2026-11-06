@@ -1,16 +1,10 @@
 use clap::ValueEnum;
+use shared::grading;
 use shared::grading::{ChatMessage, GraderExample, GraderPromptKind};
 
 use crate::grading_case::GradingCase;
 
 pub const GRADER_PROMPT: GraderPromptKind = GraderPromptKind::BrazilianPortugueseTaughtInEnglish;
-
-const SPELLING_MISTAKE: usize = 0;
-const CORRECT_COLLOQUIAL: usize = 1;
-const VERB_MISTAKE: usize = 2;
-const CORRECT_SUNDAYS: usize = 3;
-const PREPOSITION_MISTAKE: usize = 4;
-const OFF_TOPIC_WITH_MISTAKE: usize = 5;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ValueEnum)]
 #[value(rename_all = "snake_case")]
@@ -57,26 +51,36 @@ impl PromptVariantKind {
     }
 
     pub fn examples(self) -> Vec<&'static GraderExample> {
-        let indexes: &[usize] = match self {
+        let examples: &[&'static GraderExample] = match self {
             PromptVariantKind::Plain => &[],
-            PromptVariantKind::OneShotMistake => &[SPELLING_MISTAKE],
-            PromptVariantKind::OneShotCorrect => &[CORRECT_SUNDAYS],
-            PromptVariantKind::FewShot | PromptVariantKind::FewShotInSystem => {
-                &[SPELLING_MISTAKE, CORRECT_SUNDAYS, OFF_TOPIC_WITH_MISTAKE]
-            }
-            PromptVariantKind::FewShotReversed => &[OFF_TOPIC_WITH_MISTAKE, CORRECT_SUNDAYS, SPELLING_MISTAKE],
-            PromptVariantKind::FewShotSix => &[
-                SPELLING_MISTAKE,
-                CORRECT_COLLOQUIAL,
-                VERB_MISTAKE,
-                CORRECT_SUNDAYS,
-                PREPOSITION_MISTAKE,
-                OFF_TOPIC_WITH_MISTAKE,
+            PromptVariantKind::OneShotMistake => &[&grading::SPELLING_MISTAKE_EXAMPLE],
+            PromptVariantKind::OneShotCorrect => &[&grading::CORRECT_SUNDAYS_EXAMPLE],
+            PromptVariantKind::FewShot | PromptVariantKind::FewShotInSystem => &[
+                &grading::SPELLING_MISTAKE_EXAMPLE,
+                &grading::CORRECT_SUNDAYS_EXAMPLE,
+                &grading::OFF_TOPIC_WITH_MISTAKE_EXAMPLE,
             ],
-            PromptVariantKind::FewShotMostlyCorrect => &[CORRECT_SUNDAYS, CORRECT_COLLOQUIAL, SPELLING_MISTAKE],
+            PromptVariantKind::FewShotReversed => &[
+                &grading::OFF_TOPIC_WITH_MISTAKE_EXAMPLE,
+                &grading::CORRECT_SUNDAYS_EXAMPLE,
+                &grading::SPELLING_MISTAKE_EXAMPLE,
+            ],
+            PromptVariantKind::FewShotSix => &[
+                &grading::SPELLING_MISTAKE_EXAMPLE,
+                &grading::CORRECT_COLLOQUIAL_EXAMPLE,
+                &grading::VERB_MISTAKE_EXAMPLE,
+                &grading::CORRECT_SUNDAYS_EXAMPLE,
+                &grading::PREPOSITION_MISTAKE_EXAMPLE,
+                &grading::OFF_TOPIC_WITH_MISTAKE_EXAMPLE,
+            ],
+            PromptVariantKind::FewShotMostlyCorrect => &[
+                &grading::CORRECT_SUNDAYS_EXAMPLE,
+                &grading::CORRECT_COLLOQUIAL_EXAMPLE,
+                &grading::SPELLING_MISTAKE_EXAMPLE,
+            ],
         };
 
-        indexes.iter().map(|index| &GRADER_PROMPT.examples()[*index]).collect()
+        examples.to_vec()
     }
 
     pub fn example_placement(self) -> ExamplePlacementKind {
@@ -176,7 +180,7 @@ mod tests {
         let messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotInSystem, &cases[0]);
 
         assert!(messages[0].text.contains("Example 3:"));
-        assert!(messages[0].text.contains(GRADER_PROMPT.examples()[SPELLING_MISTAKE].graded_answer.submission));
+        assert!(messages[0].text.contains(grading::SPELLING_MISTAKE_EXAMPLE.graded_answer.submission));
     }
 
     #[test]
