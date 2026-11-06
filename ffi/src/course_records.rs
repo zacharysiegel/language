@@ -1,7 +1,6 @@
 //! The course model as records the native apps receive; each converts from its `shared::course` counterpart.
 
 use shared::artifact::CourseIndexEntry;
-use shared::AppError;
 use shared::course::{
     self, CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind,
     FillBlankExercise, GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
@@ -313,10 +312,9 @@ pub enum ExerciseRecord {
     },
 }
 
-impl TryFrom<&Exercise> for ExerciseRecord {
-    type Error = AppError;
-
-    fn try_from(exercise: &Exercise) -> Result<ExerciseRecord, AppError> {
+impl ExerciseRecord {
+    /// `None` for an exercise the native apps do not offer.
+    fn of_native_exercise(exercise: &Exercise) -> Option<ExerciseRecord> {
         let record: ExerciseRecord = match exercise {
             Exercise::MultipleChoice(exercise) => ExerciseRecord::MultipleChoice {
                 prompt: exercise.prompt.clone(),
@@ -362,10 +360,10 @@ impl TryFrom<&Exercise> for ExerciseRecord {
                 pairs: exercise.pairs.iter().map(PhrasePairRecord::from).collect(),
                 explanation: exercise.explanation.clone(),
             },
-            Exercise::OpenAnswer(_) => return Err(AppError::from("the native apps offer no open-answer exercises".to_string())),
+            Exercise::OpenAnswer(_) => return None,
         };
 
-        Ok(record)
+        Some(record)
     }
 }
 
@@ -375,7 +373,7 @@ fn is_native_exercise(exercise: &Exercise) -> bool {
 }
 
 fn native_exercise_records(exercises: &[Exercise]) -> Vec<ExerciseRecord> {
-    exercises.iter().filter_map(|exercise| ExerciseRecord::try_from(exercise).ok()).collect()
+    exercises.iter().filter_map(ExerciseRecord::of_native_exercise).collect()
 }
 
 /// The lesson without the exercises the native apps do not offer.
