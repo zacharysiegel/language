@@ -2,7 +2,7 @@
 pub const APPLICATION_ID: i32 = 0x4C41_4E47;
 
 /* Written to SQLite's `user_version` pragma; bumped when a shard's tables change in a way a reader must detect. */
-pub const SCHEMA_VERSION: i32 = 2;
+pub const SCHEMA_VERSION: i32 = 3;
 
 const CLIP_TABLES_DDL: &str = include_str!("clip_tables.sql");
 const COURSE_TABLES_DDL: &str = include_str!("course_tables.sql");

@@ -3,13 +3,14 @@ use std::sync::Arc;
 use leptos::ev;
 use leptos::prelude::*;
 use shared::course::{Exercise, ExerciseKind};
-use shared::practice::SessionScore;
+use shared::practice::{AnswerStatus, SessionScore};
 use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
 use crate::practice;
 
 const ENTER_KEY: &str = "Enter";
+const UNSCORED_NOTE: &str = "Open answers do not count toward the score.";
 
 /* Kinds whose answer is a target-language sentence the learner did not just hear, so the sentence is played
    once the answer is checked. */
@@ -50,11 +51,10 @@ struct SessionProgress {
     exit_kind: SessionExitKind,
 }
 
-fn score_of(results: &[SavedExerciseResult], total_count: usize) -> SessionScore {
-    SessionScore {
-        correct_count: results.iter().filter(|result| result.is_correct()).count(),
-        total_count,
-    }
+fn score_of(exercises: &[Exercise], results: &[SavedExerciseResult]) -> SessionScore {
+    let statuses: Vec<AnswerStatus> = results.iter().map(|result| result.status).collect();
+
+    SessionScore::of_answers(exercises, &statuses)
 }
 
 #[component]
@@ -103,7 +103,7 @@ pub fn ExerciseSession(
 
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
-            on_complete.run(score_of(&results.get_untracked(), active_exercises.get_untracked().len()));
+            on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
         }
     });
 
@@ -125,7 +125,7 @@ pub fn ExerciseSession(
             .get_untracked()
             .iter()
             .zip(exercises_in_session.iter())
-            .filter(|(result, _)| !result.is_correct())
+            .filter(|(result, _)| result.is_missed())
             .map(|(_, exercise)| exercise.clone())
             .collect();
 
@@ -225,36 +225,71 @@ fn question_view(
     }
 }
 
+fn feedback_heading(status: AnswerStatus) -> &'static str {
+    match status {
+        AnswerStatus::Correct => "Correct",
+        AnswerStatus::AccentMistake => "Correct, but check the accents",
+        AnswerStatus::Wrong => "Not quite",
+        AnswerStatus::Unscored => "Compare with the examples",
+    }
+}
+
+fn feedback_class(status: AnswerStatus) -> &'static str {
+    match status {
+        AnswerStatus::Correct | AnswerStatus::AccentMistake => "feedback good",
+        AnswerStatus::Wrong => "feedback bad",
+        AnswerStatus::Unscored => "feedback",
+    }
+}
+
+fn speak_after_answer(exercise: &Exercise) {
+    if !SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
+        return;
+    }
+
+    if let Some(text) = exercise.spoken_text() {
+        let playback_store: PlaybackStore = use_playback_store();
+        let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
+
+        playback_store.play_at_normal_speed(audio_clip(&audio_path, &text, VoiceChoiceKind::OwnText));
+    }
+}
+
+fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoView + use<> {
+    let shows_answer: bool = result.status != AnswerStatus::Correct;
+    let answer_text: String = result.answer_text.clone();
+    let explanation: Option<String> = exercise.explanation().map(str::to_string);
+
+    view! {
+        {shows_answer.then(|| view! { <p>"Answer: "{answer_text}</p> })}
+        {explanation.map(|explanation| view! { <p class="explanation">{explanation}</p> })}
+    }
+}
+
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
-    let heading: &str = match result.status {
-        shared::practice::AnswerStatus::Correct => "Correct",
-        shared::practice::AnswerStatus::AccentMistake => "Correct, but check the accents",
-        shared::practice::AnswerStatus::Wrong => "Not quite",
-    };
-    let feedback_class: &str = if result.is_correct() { "feedback good" } else { "feedback bad" };
-    let shows_answer: bool = result.status != shared::practice::AnswerStatus::Correct;
-    let spoken_text: Option<String> = exercise.spoken_text();
+    speak_after_answer(&exercise);
+
     let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
-
-    if SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
-        if let Some(text) = &spoken_text {
-            let playback_store: PlaybackStore = use_playback_store();
-
-            playback_store.play_at_normal_speed(audio_clip(&audio_path, text, VoiceChoiceKind::OwnText));
-        }
-    }
+    let (details, row_spoken_text): (AnyView, Option<String>) = match &exercise {
+        // The self-check plays its clip beside the example answer the clip speaks.
+        Exercise::OpenAnswer(open_answer) => (
+            view! { <practice::OpenAnswerSelfCheck exercise=open_answer.clone() answer_text=result.answer_text.clone() /> }
+                .into_any(),
+            None,
+        ),
+        _ => (scored_answer_details(&exercise, &result).into_any(), exercise.spoken_text()),
+    };
 
     view! {
-        <div class=feedback_class aria-live="polite">
-            <strong>{heading}</strong>
-            {shows_answer.then(|| view! { <p>"Answer: "{result.answer_text.clone()}</p> })}
-            {exercise.explanation().map(|explanation| view! { <p class="explanation">{explanation.to_string()}</p> })}
+        <div class=feedback_class(result.status) aria-live="polite">
+            <strong>{feedback_heading(result.status)}</strong>
+            {details}
             <div class="row">
-                {spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text label="Hear it" /> })}
+                {row_spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text label="Hear it" /> })}
                 <button type="button" class="primary" on:click=move |_| advance()>"Continue"</button>
             </div>
         </div>
@@ -268,11 +303,12 @@ fn summary_view(
     retry_missed: impl Fn() + Copy + Send + Sync + 'static,
     on_exit: Callback<()>,
 ) -> impl IntoView {
-    let score: SessionScore = score_of(&results, exercises.len());
+    let score: SessionScore = score_of(&exercises, &results);
+    let has_unscored: bool = exercises.iter().any(|exercise| !exercise.kind().is_scored());
     let missed_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
-        .filter(|(result, _)| !result.is_correct())
+        .filter(|(result, _)| result.is_missed())
         .map(|(result, exercise)| {
             view! {
                 <li>
@@ -293,6 +329,7 @@ fn summary_view(
     view! {
         <h3>{format!("{title}: {} of {} correct ({}%)", score.correct_count, score.total_count, score.percent())}</h3>
         <p class=verdict_class>{verdict}</p>
+        {has_unscored.then(|| view! { <p class="muted">{UNSCORED_NOTE}</p> })}
         {has_missed.then(|| view! { <h4>"To review"</h4> })}
         <ul class="missed">{missed_items}</ul>
         <div class="row">

@@ -44,7 +44,7 @@ These rules come from the course owner's feedback on the content. They apply to 
   - No parentheses, markdown, symbols, em or en dashes, or `___`.
   - Write numbers as words when they are short.
   - Keep each string under about 200 characters.
-- Source-language text (`source`, `explanation`, `prompt`, `hint_source`, `context`, `note`) is plain natural language. Explanations and culture text may contain `\n\n` to separate paragraphs and lists (content rule 5). Plain text only, no other markdown syntax.
+- Source-language text (`source`, `explanation`, `prompt`, `prompt_source`, `hint_source`, `context`, `context_source`, `note`) is plain natural language. Explanations and culture text may contain `\n\n` to separate paragraphs and lists (content rule 5). Plain text only, no other markdown syntax.
 - Use natural, current speech in dialogues, inside the level. Dialogues sound like real speakers, not textbook robots. Keep grammar notes honest about formal versus colloquial usage.
 - Difficulty matches the level.
   - The lowest level uses very short sentences and only the grammar covered so far: the current unit's focus plus all earlier units in the curriculum.
@@ -142,7 +142,7 @@ Rules for each section:
   - Put explanations of a convention in the note's explanation, not in a header, and give the same column concept the same header in every unit.
 - `culture`: one note of at least 200 characters.
 - `readings`: optional at the lowest levels (omit the key or use `[]`), required at the higher levels as the curriculum's `requires_readings` says. A reading has at least 2 paragraphs of real connected text at the level, and at least 2 (ideally 3 to 4) `multiple_choice` comprehension questions.
-- `exercises`: at least 22 in total, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30. Cover the whole unit: vocabulary, the grammar notes and the dialogues.
+- `exercises`: at least 22 besides open answers, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30. Cover the whole unit: vocabulary, the grammar notes and the dialogues. Open answers are optional and follow the rules under their type.
 
 ## Exercise types
 
@@ -181,10 +181,25 @@ The learner types what they hear. Keep it short (3 to 10 words) and unambiguous 
 ```
 4 to 6 pairs, all unambiguous. A phone shows the two sides in two narrow columns, so keep each side to a short phrase of at most 35 characters, which the validator enforces. A full sentence of explanation belongs in `explanation`.
 
+```json
+{"type": "open_answer", "prompt_source": "Tell a friend about Paulo: what he is like and how he is today.", "context_source": "Paulo is tall and he is a doctor. Today he is tired and hungry.", "example_answers": ["O Paulo é alto e é médico. Hoje ele está cansado e com fome."], "explanation": "optional"}
+```
+The learner writes their own answer to the task. A language model grades it where the web app can run one; elsewhere the learner compares it with `example_answers`. It never counts toward the score, and the iOS and Android apps leave it out. `context_source` holds the facts of a scene the answer must convey. Only a course whose language pair has a grader prompt (`shared/src/grading/`) can have open answers, and a reading question is never one.
+
+- Answerable with grammar and vocabulary taught in the unit or earlier.
+- The task's wording makes the unit's grammar the natural answer; never rely on naming a grammar term.
+- One communicative act per task.
+- Length: A1 one or two sentences, A2 up to three, B1 and B2 up to about four or 30 words.
+- `context_source` whenever the content can be checked; every fact in it sayable with taught vocabulary.
+- Personal tasks, about the learner's own life, take no `context_source` and never fix the writer's gender; example answers give both forms where agreement depends on it.
+- Example answers use only taught structures and follow every `target` rule; more than one where several are natural.
+- At most two per unit, three in consolidation and writing units; never in place of a required exercise type.
+- None in a unit whose objectives are only reading or recognition.
+
 ## Quality bar
 
 - Content is teachable from the page alone by a complete beginner who speaks only the source language. Explain with source-language comparisons where they help.
-- Exercises have exactly one defensible correct answer, or every defensible answer listed. No trick questions. Explanations on multiple_choice and fill_blank are strongly encouraged.
+- Exercises other than open answers have exactly one defensible correct answer, or every defensible answer listed. No trick questions. Explanations on multiple_choice and fill_blank are strongly encouraged.
 - No two exercises in a unit test the same sentence.
 - Write valid JSON (double quotes, no trailing commas, escaped quotes inside strings as `\"`, newlines in strings as `\n`). Use real UTF-8 characters, not escapes.
 - Write the file, run the validator, fix all errors, then do a last careful pass over the target-language text for mistakes.

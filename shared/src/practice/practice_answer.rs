@@ -9,11 +9,19 @@ pub enum AnswerStatus {
     Correct,
     AccentMistake,
     Wrong,
+    Unscored,
 }
 
 impl AnswerStatus {
     pub fn is_correct(self) -> bool {
-        self != AnswerStatus::Wrong
+        match self {
+            AnswerStatus::Correct | AnswerStatus::AccentMistake => true,
+            AnswerStatus::Wrong | AnswerStatus::Unscored => false,
+        }
+    }
+
+    pub fn is_missed(self) -> bool {
+        self == AnswerStatus::Wrong
     }
 }
 

@@ -84,6 +84,7 @@ create table exercise (
     position integer not null,
     exercise_kind text not null,
     prompt text,
+    context_source text,
     correct_choice_index integer,
     hint_source text,
     explanation text,

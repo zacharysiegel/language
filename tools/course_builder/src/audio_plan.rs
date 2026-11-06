@@ -149,6 +149,9 @@ fn key_exercise(exercise: &mut Exercise, clips: &mut CourseClips) {
         Exercise::TranslateToTarget(translate) => {
             translate.clip_key = translate.answers.first().and_then(|answer| clips.narrate(answer));
         },
+        Exercise::OpenAnswer(open_answer) => {
+            open_answer.clip_key = open_answer.example_answers.first().and_then(|example_answer| clips.narrate(example_answer));
+        },
         Exercise::Match(matching) => matching.pairs.iter_mut().for_each(|pair| key_pair(pair, clips)),
         Exercise::MultipleChoice(_) => {},
     }

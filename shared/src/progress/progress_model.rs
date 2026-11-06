@@ -408,7 +408,7 @@ impl Progress {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::course::MultipleChoiceExercise;
+    use crate::course::course_test_fixtures;
     use crate::practice::AnswerStatus;
 
     const COURSE_ID: &str = "pt_br.en.foundations";
@@ -657,17 +657,8 @@ mod tests {
         assert_eq!(course_progress.unit_progress("passed").status, UnitStatusKind::Completed);
     }
 
-    fn choice(prompt: &str) -> Exercise {
-        Exercise::MultipleChoice(MultipleChoiceExercise {
-            prompt: prompt.to_string(),
-            choices: vec!["sim".to_string(), "não".to_string()],
-            answer_index: 0,
-            explanation: None,
-        })
-    }
-
     fn unit_exercises() -> Vec<Exercise> {
-        ["a", "b", "c", "d", "e"].into_iter().map(choice).collect()
+        course_test_fixtures::multiple_choice_exercises(&["a", "b", "c", "d", "e"])
     }
 
     fn result(status: AnswerStatus) -> SavedExerciseResult {
@@ -736,7 +727,7 @@ mod tests {
         course_progress.record_full_practice_result("u", result(AnswerStatus::Correct));
 
         let mut changed_exercises: Vec<Exercise> = unit_exercises();
-        changed_exercises[3] = choice("rewritten");
+        changed_exercises[3] = course_test_fixtures::multiple_choice("rewritten");
 
         assert_eq!(course_progress.paused_practice_state("u", &changed_exercises), PausedPracticeStateKind::ExercisesChanged);
         assert_eq!(course_progress.paused_practice_state("u", &unit_exercises()[..4]), PausedPracticeStateKind::ExercisesChanged);
