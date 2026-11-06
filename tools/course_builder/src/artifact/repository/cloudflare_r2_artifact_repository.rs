@@ -3,8 +3,8 @@ use std::path::Path;
 use aws_sdk_s3::Client;
 use aws_sdk_s3::config::http::HttpResponse;
 use aws_sdk_s3::config::{BehaviorVersion, Credentials, Region};
-use aws_sdk_s3::error::SdkError;
-use aws_sdk_s3::operation::get_bucket_cors::GetBucketCorsOutput;
+use aws_sdk_s3::error::{ProvideErrorMetadata, SdkError};
+use aws_sdk_s3::operation::get_bucket_cors::{GetBucketCorsError, GetBucketCorsOutput};
 use aws_sdk_s3::operation::get_object::{GetObjectError, GetObjectOutput};
 use aws_sdk_s3::operation::list_objects_v2::ListObjectsV2Output;
 use aws_sdk_s3::operation::put_object::builders::PutObjectFluentBuilder;
@@ -27,6 +27,8 @@ const R2_CREDENTIALS_PROVIDER_NAME: &str = "language-r2";
 const HTTP_STATUS_NOT_FOUND: u16 = 404;
 const HTTP_STATUS_PRECONDITION_FAILED: u16 = 412;
 const ENTITY_TAG_MATCHES_ANY: &str = "*";
+// The S3 API's error code for a bucket with no CORS rules.
+const ERROR_CODE_NO_CORS_CONFIGURATION: &str = "NoSuchCORSConfiguration";
 
 pub const ENV_R2_ACCOUNT_ID: &str = "R2_ACCOUNT_ID";
 pub const ENV_R2_ARTIFACT_BUCKET: &str = "R2_ARTIFACT_BUCKET";
@@ -101,13 +103,20 @@ impl CloudflareR2ArtifactRepository {
     }
 
     pub async fn read_cors_policies(&self) -> Result<Vec<CorsPolicy>, AppError> {
-        let output: GetBucketCorsOutput = self
-            .client
-            .get_bucket_cors()
-            .bucket(&self.bucket)
-            .send()
-            .await
-            .map_err(|error| AppError::from(format!("get_bucket_cors failed; [bucket={} error={}]", self.bucket, render_error_chain(&error))))?;
+        let response: Result<GetBucketCorsOutput, SdkError<GetBucketCorsError, HttpResponse>> =
+            self.client.get_bucket_cors().bucket(&self.bucket).send().await;
+
+        let output: GetBucketCorsOutput = match response {
+            Ok(output) => output,
+            Err(error) if error.code() == Some(ERROR_CODE_NO_CORS_CONFIGURATION) => return Ok(Vec::new()),
+            Err(error) => {
+                return Err(AppError::from(format!(
+                    "get_bucket_cors failed; [bucket={} error={}]",
+                    self.bucket,
+                    render_error_chain(&error),
+                )));
+            },
+        };
 
         let policies: Vec<CorsPolicy> = output
             .cors_rules()
