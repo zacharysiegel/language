@@ -1,10 +1,8 @@
 use serde_json::Value;
 
+use crate::course;
 use crate::grading::brazilian_portuguese_taught_in_english;
 use crate::grading::{ChatMessage, ChatRoleKind};
-
-const BRAZILIAN_PORTUGUESE: &str = "pt-BR";
-const ENGLISH: &str = "en";
 
 #[derive(Clone, Copy, Debug)]
 pub struct GradedAnswer<'answer_lifetime> {
@@ -97,7 +95,7 @@ impl GraderPromptKind {
 
 pub fn find_grader_prompt(target_language: &str, source_language: &str) -> Option<GraderPromptKind> {
     match (target_language, source_language) {
-        (BRAZILIAN_PORTUGUESE, ENGLISH) => Some(GraderPromptKind::BrazilianPortugueseTaughtInEnglish),
+        (course::BRAZILIAN_PORTUGUESE_LANGUAGE_TAG, course::ENGLISH_LANGUAGE_TAG) => Some(GraderPromptKind::BrazilianPortugueseTaughtInEnglish),
         _ => None,
     }
 }
