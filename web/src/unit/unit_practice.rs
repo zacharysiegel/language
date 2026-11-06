@@ -77,7 +77,7 @@ fn counted(count: usize, singular_noun: &str, plural_noun: &str) -> String {
 }
 
 fn quiz_label(exercises: &[Exercise]) -> String {
-    let scored_count: usize = exercises.iter().filter(|exercise| exercise.kind().is_scored()).count();
+    let scored_count: usize = practice::scored_exercise_count(exercises);
     let unscored_count: usize = exercises.len() - scored_count;
 
     if unscored_count == 0 {
