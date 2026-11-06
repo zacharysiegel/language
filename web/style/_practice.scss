@@ -50,6 +50,32 @@ input.typed.inline {
     margin: 0 var(--space-xs);
 }
 
+textarea.open-answer {
+    max-width: 30rem;
+    font-family: var(--font-sans);
+    font-size: var(--type-size-title);
+    line-height: var(--type-line-height-body);
+    resize: vertical;
+}
+
+// The learner's line breaks are part of what they wrote.
+.written-answer {
+    white-space: pre-wrap;
+}
+
+ul.example-answers {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+ul.example-answers li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-sm);
+}
+
 .choices {
     display: flex;
     flex-direction: column;

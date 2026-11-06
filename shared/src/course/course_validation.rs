@@ -3,9 +3,11 @@ use std::fmt;
 
 use crate::course::{
     CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
-    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OrderWordsExercise, PhrasePair,
-    Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table, prose, target_language_rules,
+    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OpenAnswerExercise,
+    OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table,
+    prose, target_language_rules,
 };
+use crate::grading;
 
 const MINIMUM_OBJECTIVES: usize = 3;
 const MINIMUM_VOCABULARY: usize = 12;
@@ -70,6 +72,7 @@ impl fmt::Display for ValidationIssue {
 struct IssueCollector<'a> {
     unit_id: &'a str,
     target_language: &'a str,
+    source_language: &'a str,
     issues: Vec<ValidationIssue>,
 }
 
@@ -292,6 +295,34 @@ fn check_match_side_length(collector: &mut IssueCollector, location: &str, side:
     }
 }
 
+fn check_open_answer(collector: &mut IssueCollector, location: &str, exercise: &OpenAnswerExercise) {
+    collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
+
+    if let Some(context_source) = &exercise.context_source {
+        collector.require_text(&format!("{location}.context_source"), "context_source", context_source);
+    }
+
+    if exercise.example_answers.is_empty() {
+        collector.error(location, "example_answers must be a non-empty array");
+    }
+
+    for example_answer in &exercise.example_answers {
+        collector.check_spoken_target(&format!("{location}.example_answers"), example_answer);
+    }
+
+    let grader_prompt: Option<grading::GraderPromptKind> =
+        grading::find_grader_prompt(collector.target_language, collector.source_language);
+
+    if grader_prompt.is_none() {
+        let message: String = format!(
+            "open_answer needs a grader prompt, and there is none for {} taught in {}",
+            collector.target_language, collector.source_language,
+        );
+
+        collector.error(location, message);
+    }
+}
+
 fn check_exercise(collector: &mut IssueCollector, location: &str, exercise: &Exercise) {
     match exercise {
         Exercise::MultipleChoice(exercise) => {
@@ -321,6 +352,10 @@ fn check_exercise(collector: &mut IssueCollector, location: &str, exercise: &Exe
         Exercise::Match(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
             check_match(collector, location, exercise);
+        },
+        Exercise::OpenAnswer(exercise) => {
+            collector.check_explanation(location, &exercise.explanation);
+            check_open_answer(collector, location, exercise);
         },
     }
 }
@@ -590,8 +625,13 @@ fn check_exercises(collector: &mut IssueCollector, exercises: &[Exercise]) {
         check_exercise(collector, &format!("exercises[{exercise_index}]"), exercise);
     }
 
-    if exercises.len() < MINIMUM_EXERCISES {
-        collector.error("exercises", format!("need at least {MINIMUM_EXERCISES} (found {})", exercises.len()));
+    let counted_exercise_count: usize = exercises.iter().filter(|exercise| exercise.kind() != ExerciseKind::OpenAnswer).count();
+
+    if counted_exercise_count < MINIMUM_EXERCISES {
+        collector.error(
+            "exercises",
+            format!("need at least {MINIMUM_EXERCISES} besides open_answer (found {counted_exercise_count})"),
+        );
     }
 
     for (kind, minimum) in MINIMUM_EXERCISES_BY_KIND {
@@ -614,6 +654,7 @@ pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, 
     let mut collector: IssueCollector = IssueCollector {
         unit_id: &curriculum_unit.id,
         target_language: &curriculum.target_language,
+        source_language: &curriculum.source_language,
         issues: Vec::new(),
     };
     let requires_readings: bool = match curriculum.levels.iter().find(|level| level.code == unit.level) {
@@ -657,6 +698,36 @@ pub fn validate_unit(curriculum: &Curriculum, curriculum_unit: &CurriculumUnit, 
 mod tests {
     use super::*;
 
+    const EXAMPLE_ANSWER: &str = "Oi, eu sou a Ana.";
+
+    fn issue_collector(source_language: &str) -> IssueCollector<'_> {
+        IssueCollector {
+            unit_id: "unit",
+            target_language: "pt-BR",
+            source_language,
+            issues: Vec::new(),
+        }
+    }
+
+    fn open_answer(example_answers: &[&str]) -> OpenAnswerExercise {
+        OpenAnswerExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: None,
+            example_answers: example_answers.iter().map(|example_answer| example_answer.to_string()).collect(),
+            explanation: None,
+            clip_key: None,
+        }
+    }
+
+    fn error_messages(collector: &IssueCollector) -> Vec<String> {
+        collector
+            .issues
+            .iter()
+            .filter(|issue| issue.severity == SeverityKind::Error)
+            .map(|issue| issue.message.clone())
+            .collect()
+    }
+
     #[test]
     fn table_field_label_line_count_wraps_between_words_within_a_line() {
         assert_eq!(table_field_label_line_count("Sound"), 1);
@@ -689,11 +760,7 @@ mod tests {
             ],
             rows: vec![vec!["a".to_string(), "b".to_string(), "c".to_string(), "d".to_string()]],
         };
-        let mut collector: IssueCollector = IssueCollector {
-            unit_id: "unit",
-            target_language: "pt-BR",
-            issues: Vec::new(),
-        };
+        let mut collector: IssueCollector = issue_collector("en");
 
         check_table_field_labels(&mut collector, "grammar[0].table", &table);
 
@@ -713,11 +780,7 @@ mod tests {
     fn check_match_side_length_rejects_a_side_longer_than_the_maximum() {
         let fitting_side: String = "a".repeat(MAXIMUM_MATCH_SIDE_CHARACTERS);
         let long_side: String = "ã".repeat(MAXIMUM_MATCH_SIDE_CHARACTERS + 1);
-        let mut collector: IssueCollector = IssueCollector {
-            unit_id: "unit",
-            target_language: "pt-BR",
-            issues: Vec::new(),
-        };
+        let mut collector: IssueCollector = issue_collector("en");
 
         check_match_side_length(&mut collector, "exercises[0].pairs[0].source", &fitting_side);
         check_match_side_length(&mut collector, "exercises[0].pairs[1].source", &long_side);
@@ -726,5 +789,39 @@ mod tests {
             collector.issues.iter().map(|issue| (issue.severity, issue.location.as_str())).collect();
 
         assert_eq!(graded_locations, vec![(SeverityKind::Error, "exercises[0].pairs[1].source")]);
+    }
+
+    #[test]
+    fn check_exercises_leaves_open_answers_out_of_the_exercise_minimum() {
+        let mut collector: IssueCollector = issue_collector("en");
+
+        check_exercises(&mut collector, &[Exercise::OpenAnswer(open_answer(&[EXAMPLE_ANSWER]))]);
+
+        let total_message: String = format!("need at least {MINIMUM_EXERCISES} besides open_answer (found 0)");
+
+        assert!(error_messages(&collector).contains(&total_message));
+    }
+
+    #[test]
+    fn check_open_answer_rejects_a_course_whose_languages_have_no_grader_prompt() {
+        let mut graded_collector: IssueCollector = issue_collector("en");
+        let mut ungraded_collector: IssueCollector = issue_collector("es");
+
+        check_open_answer(&mut graded_collector, "exercises[0]", &open_answer(&[EXAMPLE_ANSWER]));
+        check_open_answer(&mut ungraded_collector, "exercises[0]", &open_answer(&[EXAMPLE_ANSWER]));
+
+        assert!(error_messages(&graded_collector).is_empty());
+        assert_eq!(
+            error_messages(&ungraded_collector),
+            vec!["open_answer needs a grader prompt, and there is none for pt-BR taught in es".to_string()],
+        );
+    }
+
+    #[test]
+    fn check_open_answer_requires_an_example_answer() {
+        let mut collector: IssueCollector = issue_collector("en");
+        check_open_answer(&mut collector, "exercises[0]", &open_answer(&[]));
+
+        assert_eq!(error_messages(&collector), vec!["example_answers must be a non-empty array".to_string()]);
     }
 }

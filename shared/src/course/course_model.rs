@@ -195,10 +195,11 @@ pub enum ExerciseKind {
     ListeningChoice,
     Dictation,
     Match,
+    OpenAnswer,
 }
 
 impl ExerciseKind {
-    pub const ALL: [ExerciseKind; 7] = [
+    pub const ALL: [ExerciseKind; 8] = [
         ExerciseKind::MultipleChoice,
         ExerciseKind::FillBlank,
         ExerciseKind::TranslateToTarget,
@@ -206,6 +207,7 @@ impl ExerciseKind {
         ExerciseKind::ListeningChoice,
         ExerciseKind::Dictation,
         ExerciseKind::Match,
+        ExerciseKind::OpenAnswer,
     ];
 
     pub fn code(self) -> &'static str {
@@ -217,6 +219,7 @@ impl ExerciseKind {
             ExerciseKind::ListeningChoice => "listening_choice",
             ExerciseKind::Dictation => "dictation",
             ExerciseKind::Match => "match",
+            ExerciseKind::OpenAnswer => "open_answer",
         }
     }
 
@@ -229,6 +232,7 @@ impl ExerciseKind {
             ExerciseKind::ListeningChoice => "Listen and choose the meaning",
             ExerciseKind::Dictation => "Listen and type what you hear",
             ExerciseKind::Match => "Match the pairs",
+            ExerciseKind::OpenAnswer => "Write your answer",
         }
     }
 }
@@ -261,6 +265,8 @@ pub enum Exercise {
     Dictation(DictationExercise),
     #[serde(rename = "match")]
     Match(MatchExercise),
+    #[serde(rename = "open_answer")]
+    OpenAnswer(OpenAnswerExercise),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -358,6 +364,21 @@ pub struct MatchExercise {
     pub explanation: Option<String>,
 }
 
+/// A task the learner answers in their own words, in the target language.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpenAnswerExercise {
+    pub prompt_source: String,
+    /// The facts of the scene the answer must convey; absent when the learner writes about their own life.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub context_source: Option<String>,
+    pub example_answers: Vec<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub explanation: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub clip_key: Option<String>,
+}
+
 impl Exercise {
     pub fn kind(&self) -> ExerciseKind {
         match self {
@@ -368,6 +389,7 @@ impl Exercise {
             Exercise::ListeningChoice(_) => ExerciseKind::ListeningChoice,
             Exercise::Dictation(_) => ExerciseKind::Dictation,
             Exercise::Match(_) => ExerciseKind::Match,
+            Exercise::OpenAnswer(_) => ExerciseKind::OpenAnswer,
         }
     }
 
@@ -380,6 +402,7 @@ impl Exercise {
             Exercise::ListeningChoice(exercise) => &exercise.explanation,
             Exercise::Dictation(exercise) => &exercise.explanation,
             Exercise::Match(exercise) => &exercise.explanation,
+            Exercise::OpenAnswer(exercise) => &exercise.explanation,
         };
 
         explanation.as_deref()
@@ -392,6 +415,7 @@ impl Exercise {
             Exercise::OrderWords(exercise) => &exercise.clip_key,
             Exercise::ListeningChoice(exercise) => &exercise.clip_key,
             Exercise::Dictation(exercise) => &exercise.clip_key,
+            Exercise::OpenAnswer(exercise) => &exercise.clip_key,
             Exercise::MultipleChoice(_) | Exercise::Match(_) => return None,
         };
 
@@ -406,6 +430,7 @@ impl Exercise {
             Exercise::OrderWords(exercise) => Some(exercise.sentence()),
             Exercise::ListeningChoice(exercise) => Some(exercise.audio_target.clone()),
             Exercise::Dictation(exercise) => Some(exercise.audio_target.clone()),
+            Exercise::OpenAnswer(exercise) => exercise.example_answers.first().cloned(),
             Exercise::MultipleChoice(_) | Exercise::Match(_) => None,
         }
     }
@@ -423,6 +448,7 @@ impl Exercise {
                 .prompt
                 .clone()
                 .unwrap_or_else(|| ExerciseKind::Match.instruction().to_string()),
+            Exercise::OpenAnswer(exercise) => exercise.prompt_source.clone(),
         }
     }
 }

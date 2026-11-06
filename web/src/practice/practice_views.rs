@@ -6,7 +6,7 @@ use leptos::html;
 use leptos::prelude::*;
 use shared::course::{
     DictationExercise, Exercise, FillBlankExercise, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
-    OrderWordsExercise, TranslateToTargetExercise,
+    OpenAnswerExercise, OrderWordsExercise, TranslateToTargetExercise,
 };
 use shared::practice::{AnswerStatus, check_typed_answer, shuffled, shuffled_avoiding_identity};
 use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
@@ -16,6 +16,8 @@ use crate::pending_indication::PendingIcon;
 use crate::platform::{self, AudioClip};
 
 const WRONG_FLASH_MILLISECONDS: u64 = 500;
+const OPEN_ANSWER_ROWS: u32 = 4;
+const SELF_CHECK_NOTICE: &str = "Automatic grading by an AI model is available on computers that can run it.";
 
 fn choice_result(chosen_correctly: bool, answer_text: &str) -> SavedExerciseResult {
     let status: AnswerStatus = if chosen_correctly { AnswerStatus::Correct } else { AnswerStatus::Wrong };
@@ -35,6 +37,7 @@ pub fn exercise_body(exercise: Exercise, on_submit: Callback<SavedExerciseResult
         Exercise::ListeningChoice(exercise) => view! { <ListeningChoiceView exercise on_submit /> }.into_any(),
         Exercise::Dictation(exercise) => view! { <DictationView exercise on_submit /> }.into_any(),
         Exercise::Match(exercise) => view! { <MatchView exercise on_submit /> }.into_any(),
+        Exercise::OpenAnswer(exercise) => view! { <OpenAnswerView exercise on_submit /> }.into_any(),
     }
 }
 
@@ -429,5 +432,88 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) 
             <div class="choices">{left_buttons}</div>
             <div class="choices">{right_buttons}</div>
         </div>
+    }
+}
+
+fn submit_open_answer(written: RwSignal<String>, answered: RwSignal<bool>, on_submit: Callback<SavedExerciseResult>) {
+    let written_text: String = written.get_untracked();
+
+    if answered.get_untracked() || written_text.trim().is_empty() {
+        return;
+    }
+
+    answered.set(true);
+
+    on_submit.run(SavedExerciseResult {
+        status: AnswerStatus::Unscored,
+        answer_text: written_text.trim().to_string(),
+    });
+}
+
+#[component]
+fn OpenAnswerView(exercise: OpenAnswerExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+    let written: RwSignal<String> = RwSignal::new(String::new());
+    let answered: RwSignal<bool> = RwSignal::new(false);
+    let textarea_ref: NodeRef<html::Textarea> = NodeRef::new();
+
+    Effect::new(move |_| {
+        if let Some(textarea) = textarea_ref.get() {
+            _ = textarea.focus();
+        }
+    });
+
+    // A form submits on Enter only from a single-line field, so Enter in the textarea starts a new line.
+    view! {
+        <form on:submit=move |event: SubmitEvent| {
+            event.prevent_default();
+            submit_open_answer(written, answered, on_submit);
+        }>
+            <p class="prompt">{exercise.prompt_source.clone()}</p>
+            {exercise.context_source.clone().map(|context_source| view! { <p class="hint">{context_source}</p> })}
+            <textarea
+                node_ref=textarea_ref
+                class="open-answer"
+                rows=OPEN_ANSWER_ROWS
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                prop:value=move || written.get()
+                on:input:target=move |event| written.set(event.target().value())
+                disabled=move || answered.get()
+            ></textarea>
+            <CheckButton answered />
+        </form>
+    }
+}
+
+/// The learner's answer beside the example answers, for an answer no model graded.
+#[component]
+pub fn OpenAnswerSelfCheck(exercise: OpenAnswerExercise, answer_text: String) -> impl IntoView {
+    let example_items: Vec<_> = exercise
+        .example_answers
+        .iter()
+        .enumerate()
+        .map(|(example_index, example_answer)| {
+            // The exercise's clip speaks the first example answer.
+            let play_button = (example_index == 0).then(|| {
+                view! { <PlayButton clip_key=exercise.clip_key.clone() text=example_answer.clone() label="Hear it" /> }
+            });
+
+            view! {
+                <li>
+                    <span>{example_answer.clone()}</span>
+                    {play_button}
+                </li>
+            }
+        })
+        .collect();
+
+    view! {
+        <div class="field-label">"Your answer"</div>
+        <p class="written-answer">{answer_text}</p>
+        <div class="field-label">"Example answers"</div>
+        <ul class="example-answers">{example_items}</ul>
+        {exercise.explanation.clone().map(|explanation| view! { <p class="explanation">{explanation}</p> })}
+        <p class="muted">{SELF_CHECK_NOTICE}</p>
     }
 }
