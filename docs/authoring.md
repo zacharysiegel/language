@@ -44,7 +44,7 @@ These rules come from the course owner's feedback on the content. They apply to 
   - No parentheses, markdown, symbols, em or en dashes, or `___`.
   - Write numbers as words when they are short.
   - Keep each string under about 200 characters.
-- Source-language text (`source`, `explanation`, `prompt`, `hint_source`, `context`, `context_source`, `note`) is plain natural language. Explanations and culture text may contain `\n\n` to separate paragraphs and lists (content rule 5). Plain text only, no other markdown syntax.
+- Source-language text (`source`, `explanation`, `prompt`, `prompt_source`, `hint_source`, `context`, `context_source`, `note`) is plain natural language. Explanations and culture text may contain `\n\n` to separate paragraphs and lists (content rule 5). Plain text only, no other markdown syntax.
 - Use natural, current speech in dialogues, inside the level. Dialogues sound like real speakers, not textbook robots. Keep grammar notes honest about formal versus colloquial usage.
 - Difficulty matches the level.
   - The lowest level uses very short sentences and only the grammar covered so far: the current unit's focus plus all earlier units in the curriculum.
@@ -184,7 +184,7 @@ The learner types what they hear. Keep it short (3 to 10 words) and unambiguous 
 ```json
 {"type": "open_answer", "prompt_source": "Tell a friend about Paulo: what he is like and how he is today.", "context_source": "Paulo is tall and he is a doctor. Today he is tired and hungry.", "example_answers": ["O Paulo é alto e é médico. Hoje ele está cansado e com fome."], "explanation": "optional"}
 ```
-The learner writes their own answer to the task. A language model grades it where the web app can run one; elsewhere the learner compares it with `example_answers`. It never counts toward the score, and the iOS and Android apps leave it out. `context_source` holds the facts of a scene the answer must convey. Each example answer is a `target` string. Only a course whose language pair has a grader prompt (`shared/src/grading/`) can have open answers, and a reading question is never one.
+The learner writes their own answer to the task. A language model grades it where the web app can run one; elsewhere the learner compares it with `example_answers`. It never counts toward the score, and the iOS and Android apps leave it out. `context_source` holds the facts of a scene the answer must convey. Only a course whose language pair has a grader prompt (`shared/src/grading/`) can have open answers, and a reading question is never one.
 
 - Answerable with grammar and vocabulary taught in the unit or earlier.
 - The task's wording makes the unit's grammar the natural answer; never rely on naming a grammar term.
