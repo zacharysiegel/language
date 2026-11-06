@@ -2,6 +2,8 @@ pub mod course_clips;
 pub mod course_identity;
 pub mod course_model;
 pub mod course_outline;
+#[cfg(test)] // test fixtures
+pub mod course_test_fixtures;
 pub mod course_validation;
 pub mod curriculum_model;
 pub mod grouped_table;

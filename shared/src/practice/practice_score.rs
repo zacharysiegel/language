@@ -54,30 +54,16 @@ impl SessionScore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::course::{MultipleChoiceExercise, OpenAnswerExercise};
-
-    fn choice() -> Exercise {
-        Exercise::MultipleChoice(MultipleChoiceExercise {
-            prompt: "Which is a greeting?".to_string(),
-            choices: vec!["Oi".to_string(), "Casa".to_string()],
-            answer_index: 0,
-            explanation: None,
-        })
-    }
-
-    fn open_answer() -> Exercise {
-        Exercise::OpenAnswer(OpenAnswerExercise {
-            prompt_source: "Introduce yourself.".to_string(),
-            context_source: None,
-            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
-            explanation: None,
-            clip_key: None,
-        })
-    }
+    use crate::course::course_test_fixtures;
 
     #[test]
     fn of_answers_counts_only_scored_exercises_and_unanswered_ones_as_missed() {
-        let exercises: Vec<Exercise> = vec![choice(), open_answer(), choice(), choice()];
+        let exercises: Vec<Exercise> = vec![
+            course_test_fixtures::multiple_choice("a"),
+            course_test_fixtures::open_answer(),
+            course_test_fixtures::multiple_choice("b"),
+            course_test_fixtures::multiple_choice("c"),
+        ];
         let statuses: Vec<AnswerStatus> = vec![AnswerStatus::Correct, AnswerStatus::Unscored, AnswerStatus::Wrong];
 
         assert_eq!(SessionScore::of_answers(&exercises, &statuses), SessionScore { correct_count: 1, total_count: 3 });
