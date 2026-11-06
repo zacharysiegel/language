@@ -70,15 +70,25 @@ fn session_exit_kind(mode: PracticeModeKind) -> SessionExitKind {
     }
 }
 
+fn counted(count: usize, singular_noun: &str, plural_noun: &str) -> String {
+    let noun: &str = if count == 1 { singular_noun } else { plural_noun };
+
+    format!("{count} {noun}")
+}
+
 fn quiz_label(exercises: &[Exercise]) -> String {
     let scored_count: usize = exercises.iter().filter(|exercise| exercise.kind().is_scored()).count();
     let unscored_count: usize = exercises.len() - scored_count;
 
-    match unscored_count {
-        0 => format!("Quiz ({scored_count} exercises)"),
-        1 => format!("Quiz ({scored_count} scored exercises and 1 open answer)"),
-        _ => format!("Quiz ({scored_count} scored exercises and {unscored_count} open answers)"),
+    if unscored_count == 0 {
+        return format!("Quiz ({})", counted(scored_count, "exercise", "exercises"));
     }
+
+    format!(
+        "Quiz ({} and {})",
+        counted(scored_count, "scored exercise", "scored exercises"),
+        counted(unscored_count, "open answer", "open answers"),
+    )
 }
 
 fn resume_label(paused_practice: &PausedPractice) -> String {
@@ -273,5 +283,41 @@ fn practice_start_buttons(
             {full_practice_buttons}
             <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Quick)>{quick_label}</button>
         </div>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use shared::course::{MultipleChoiceExercise, OpenAnswerExercise};
+
+    use super::*;
+
+    fn choice() -> Exercise {
+        Exercise::MultipleChoice(MultipleChoiceExercise {
+            prompt: "Which is a greeting?".to_string(),
+            choices: vec!["Oi".to_string(), "Casa".to_string(), "Rua".to_string()],
+            answer_index: 0,
+            explanation: None,
+        })
+    }
+
+    fn open_answer() -> Exercise {
+        Exercise::OpenAnswer(OpenAnswerExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: None,
+            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
+            explanation: None,
+            clip_key: None,
+        })
+    }
+
+    #[test]
+    fn quiz_label_counts_scored_exercises_and_open_answers_apart() {
+        assert_eq!(quiz_label(&[choice(), choice()]), "Quiz (2 exercises)");
+        assert_eq!(quiz_label(&[choice(), open_answer(), choice()]), "Quiz (2 scored exercises and 1 open answer)");
+        assert_eq!(
+            quiz_label(&[open_answer(), choice(), open_answer()]),
+            "Quiz (1 scored exercise and 2 open answers)",
+        );
     }
 }
