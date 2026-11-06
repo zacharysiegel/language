@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use crate::grading::CharacterSpan;
 use crate::grading::text_span;
 
-// Ollama writes a schema's properties in alphabetical order, so the wire names sort in the order the model should write them.
+// A serialized schema lists properties alphabetically, so the wire names sort in the order the model should write them.
 #[derive(Debug, Deserialize, Serialize)]
 pub struct GraderResponse {
     pub answers_the_question: bool,
