@@ -15,6 +15,10 @@ impl SavedExerciseResult {
     pub fn is_correct(&self) -> bool {
         self.status.is_correct()
     }
+
+    pub fn is_missed(&self) -> bool {
+        self.status.is_missed()
+    }
 }
 
 /// A quiz of one unit, saved after every graded answer so it can be left and continued exactly.
@@ -24,15 +28,26 @@ pub struct PausedPractice {
     pub exercise_list_fingerprint: String,
     /// Indices into the unit's exercises, in the order the practice asks them.
     pub exercise_order: Vec<usize>,
+    /// Indices into the unit's exercises of those that do not count toward the score.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub unscored_exercise_indices: Vec<usize>,
     /// One per answered question, in the order asked.
     pub results: Vec<SavedExerciseResult>,
 }
 
 impl PausedPractice {
     pub fn new(exercises: &[Exercise]) -> PausedPractice {
+        let unscored_exercise_indices: Vec<usize> = exercises
+            .iter()
+            .enumerate()
+            .filter(|(_, exercise)| !exercise.kind().is_scored())
+            .map(|(exercise_index, _)| exercise_index)
+            .collect();
+
         PausedPractice {
             exercise_list_fingerprint: exercise_list_fingerprint(exercises),
             exercise_order: (0..exercises.len()).collect(),
+            unscored_exercise_indices,
             results: Vec::new(),
         }
     }
@@ -46,15 +61,22 @@ impl PausedPractice {
         self.exercise_order.len()
     }
 
+    pub fn scored_question_count(&self) -> usize {
+        self.exercise_order
+            .iter()
+            .filter(|exercise_index| !self.unscored_exercise_indices.contains(exercise_index))
+            .count()
+    }
+
     pub fn is_every_question_answered(&self) -> bool {
         self.next_question_index() >= self.question_count()
     }
 
-    /// Unanswered questions count as missed.
+    /// Unanswered scored questions count as missed.
     pub fn score(&self) -> SessionScore {
         SessionScore {
             correct_count: self.results.iter().filter(|result| result.is_correct()).count(),
-            total_count: self.question_count(),
+            total_count: self.scored_question_count(),
         }
     }
 
@@ -117,7 +139,7 @@ fn exercise_without_clip_keys(exercise: &Exercise) -> Exercise {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::course::{DictationExercise, MultipleChoiceExercise};
+    use crate::course::{DictationExercise, MultipleChoiceExercise, OpenAnswerExercise};
 
     fn choice(prompt: &str) -> Exercise {
         Exercise::MultipleChoice(MultipleChoiceExercise {
@@ -134,6 +156,16 @@ mod tests {
             hint_source: "Good morning.".to_string(),
             explanation: None,
             clip_key: clip_key.map(str::to_string),
+        })
+    }
+
+    fn open_answer() -> Exercise {
+        Exercise::OpenAnswer(OpenAnswerExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: None,
+            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
+            explanation: None,
+            clip_key: None,
         })
     }
 
@@ -190,6 +222,16 @@ mod tests {
         paused_practice.record_result(result(AnswerStatus::Wrong));
 
         assert_eq!(paused_practice.score(), SessionScore { correct_count: 2, total_count: 4 });
+    }
+
+    #[test]
+    fn score_leaves_open_answers_out_whether_answered_or_not() {
+        let mut paused_practice: PausedPractice = PausedPractice::new(&[choice("a"), open_answer(), choice("b"), open_answer()]);
+
+        paused_practice.record_result(result(AnswerStatus::Correct));
+        paused_practice.record_result(result(AnswerStatus::Unscored));
+
+        assert_eq!(paused_practice.score(), SessionScore { correct_count: 1, total_count: 2 });
     }
 
     #[test]

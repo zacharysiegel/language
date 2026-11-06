@@ -70,6 +70,17 @@ fn session_exit_kind(mode: PracticeModeKind) -> SessionExitKind {
     }
 }
 
+fn quiz_label(exercises: &[Exercise]) -> String {
+    let scored_count: usize = exercises.iter().filter(|exercise| exercise.kind().is_scored()).count();
+    let unscored_count: usize = exercises.len() - scored_count;
+
+    match unscored_count {
+        0 => format!("Quiz ({scored_count} exercises)"),
+        1 => format!("Quiz ({scored_count} scored exercises and 1 open answer)"),
+        _ => format!("Quiz ({scored_count} scored exercises and {unscored_count} open answers)"),
+    }
+}
+
 fn resume_label(paused_practice: &PausedPractice) -> String {
     let question_count: usize = paused_practice.question_count();
     // A practice paused on the last answer's feedback has no unanswered question left.
@@ -84,7 +95,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
     let unit_id: String = unit.id.clone();
     let active_session: RwSignal<Option<ActiveSession>> = RwSignal::new(None);
     let exercises_changed_note: RwSignal<ExercisesChangedNoteKind> = RwSignal::new(ExercisesChangedNoteKind::Hidden);
-    let exercise_count: usize = unit.exercises.len();
+    let quiz_label: String = quiz_label(&unit.exercises);
     let vocabulary_count: usize = unit.vocabulary.len();
 
     drop_paused_practice_of_changed_exercises(progress_store, &course_id, &unit, exercises_changed_note);
@@ -190,6 +201,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
             },
             None => {
                 let paused_practice_state = paused_practice_state.clone();
+                let quiz_label: String = quiz_label.clone();
                 let is_note_shown = move || exercises_changed_note.get() == ExercisesChangedNoteKind::Shown;
 
                 view! {
@@ -198,7 +210,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
                     <Show when=is_note_shown>
                         <p class="muted">{EXERCISES_CHANGED_NOTE}</p>
                     </Show>
-                    {move || practice_start_buttons(paused_practice_state(), exercise_count, start_session)}
+                    {move || practice_start_buttons(paused_practice_state(), quiz_label.clone(), start_session)}
                 }
                 .into_any()
             },
@@ -231,7 +243,7 @@ fn drop_paused_practice_of_changed_exercises(
 
 fn practice_start_buttons(
     paused_practice_state: PausedPracticeStateKind,
-    exercise_count: usize,
+    quiz_label: String,
     start_session: Callback<PracticeStartKind>,
 ) -> impl IntoView {
     let quick_label: String = format!("Quick practice ({} random exercises)", practice::QUICK_PRACTICE_EXERCISE_COUNT);
@@ -250,7 +262,7 @@ fn practice_start_buttons(
         },
         PausedPracticeStateKind::NotPaused | PausedPracticeStateKind::ExercisesChanged => view! {
             <button type="button" class="primary" on:click=move |_| start_session.run(PracticeStartKind::FullFromTheStart)>
-                {format!("Quiz ({exercise_count} exercises)")}
+                {quiz_label}
             </button>
         }
         .into_any(),
