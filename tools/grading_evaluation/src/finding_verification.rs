@@ -4,11 +4,11 @@ use std::time::Instant;
 use clap::ValueEnum;
 use serde::{Deserialize, Serialize};
 use shared::AppError;
+use shared::grading::GraderFinding;
 
 use crate::decisor_client::{DecisorClient, YesProbability};
 use crate::evaluation_report::{ScoredCall, ScoredRun};
 use crate::finding_scoring::FindingOutcomeKind;
-use crate::grader_response::GraderFinding;
 use crate::grading_case::{GradingCase, GradingCaseKind};
 
 const VERIFICATION_QUESTION: &str = "Is the quoted text a real mistake in the answer, in Brazilian Portuguese?";

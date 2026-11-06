@@ -1,79 +1,12 @@
 use std::collections::HashSet;
 use std::path::Path;
 
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use sha2::{Digest, Sha256};
 use shared::AppError;
-
-use crate::text_span::{self, CharacterSpan};
+use shared::grading::{CharacterSpan, ErrorCategoryKind, GradedAnswer, text_span};
 
 const LEVELS: [&str; 4] = ["a1", "a2", "b1", "b2"];
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ErrorCategoryKind {
-    Spelling,
-    VerbForm,
-    SerEstar,
-    Agreement,
-    ArticlePreposition,
-    WordChoice,
-    WordOrder,
-    Pronoun,
-    NotBrazilian,
-    ContentMismatch,
-}
-
-impl ErrorCategoryKind {
-    pub const ALL: [ErrorCategoryKind; 10] = [
-        ErrorCategoryKind::Spelling,
-        ErrorCategoryKind::VerbForm,
-        ErrorCategoryKind::SerEstar,
-        ErrorCategoryKind::Agreement,
-        ErrorCategoryKind::ArticlePreposition,
-        ErrorCategoryKind::WordChoice,
-        ErrorCategoryKind::WordOrder,
-        ErrorCategoryKind::Pronoun,
-        ErrorCategoryKind::NotBrazilian,
-        ErrorCategoryKind::ContentMismatch,
-    ];
-
-    pub fn as_str(self) -> &'static str {
-        match self {
-            ErrorCategoryKind::Spelling => "spelling",
-            ErrorCategoryKind::VerbForm => "verb_form",
-            ErrorCategoryKind::SerEstar => "ser_estar",
-            ErrorCategoryKind::Agreement => "agreement",
-            ErrorCategoryKind::ArticlePreposition => "article_preposition",
-            ErrorCategoryKind::WordChoice => "word_choice",
-            ErrorCategoryKind::WordOrder => "word_order",
-            ErrorCategoryKind::Pronoun => "pronoun",
-            ErrorCategoryKind::NotBrazilian => "not_brazilian",
-            ErrorCategoryKind::ContentMismatch => "content_mismatch",
-        }
-    }
-
-    pub fn description(self) -> &'static str {
-        match self {
-            ErrorCategoryKind::Spelling => "a misspelled word, including a missing or wrong accent mark or cedilla",
-            ErrorCategoryKind::VerbForm => {
-                "a wrong conjugation, tense or mood of a verb, or a verb that does not agree with its subject"
-            }
-            ErrorCategoryKind::SerEstar => "ser used where estar is needed, or the reverse",
-            ErrorCategoryKind::Agreement => "a gender or number mismatch between a noun and its article or adjective",
-            ErrorCategoryKind::ArticlePreposition => {
-                "a missing, extra or wrong article or preposition, including a missing contraction such as no for em o"
-            }
-            ErrorCategoryKind::WordChoice => {
-                "a wrong word for the meaning, a false friend, or a word from another language"
-            }
-            ErrorCategoryKind::WordOrder => "words in an order a Portuguese speaker would not use",
-            ErrorCategoryKind::Pronoun => "a missing or wrong subject, object or reflexive pronoun",
-            ErrorCategoryKind::NotBrazilian => "a form or construction used only in European Portuguese",
-            ErrorCategoryKind::ContentMismatch => "a statement that contradicts the facts given about the scene",
-        }
-    }
-}
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum GradingCaseKind {
@@ -142,6 +75,15 @@ impl GradingCase {
         }
 
         format!("{:x}", hasher.finalize())[..16].to_string()
+    }
+
+    pub fn graded_answer(&self) -> GradedAnswer<'_> {
+        GradedAnswer {
+            level: &self.level,
+            prompt_source: &self.task.prompt_source,
+            context_source: self.task.context_source.as_deref(),
+            submission: &self.submission,
+        }
     }
 
     pub fn reference_spans(&self) -> Vec<Option<CharacterSpan>> {
@@ -325,14 +267,5 @@ mod tests {
         });
 
         assert!(validate_cases(&[case]).is_err());
-    }
-
-    #[test]
-    fn category_names_round_trip_through_serde() {
-        for category in ErrorCategoryKind::ALL {
-            let serialized: String = serde_json::to_string(&category).expect("a category serializes");
-
-            assert_eq!(serialized, format!("\"{}\"", category.as_str()));
-        }
     }
 }

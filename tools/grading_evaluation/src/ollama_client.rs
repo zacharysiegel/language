@@ -6,15 +6,11 @@ use reqwest::blocking::{Client, Response};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use shared::AppError;
+use shared::grading::ChatMessage;
 
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(300);
 const MAXIMUM_RESPONSE_TOKENS: u32 = 1024;
 const KEEP_MODEL_LOADED: &str = "30m";
-
-pub struct ChatMessage {
-    pub role: &'static str,
-    pub content: String,
-}
 
 pub struct ChatRequest<'request_lifetime> {
     pub model: &'request_lifetime str,
@@ -183,7 +179,7 @@ impl OllamaConnection {
         let messages: Vec<Value> = request
             .messages
             .iter()
-            .map(|message| json!({ "role": message.role, "content": message.content }))
+            .map(|message| json!({ "role": message.role.as_str(), "content": message.text }))
             .collect();
 
         let mut body: Value = json!({
