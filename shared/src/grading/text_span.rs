@@ -59,8 +59,19 @@ pub fn slice_text(text: &str, span: &CharacterSpan) -> String {
     text.chars().skip(span.start).take(span.length()).collect()
 }
 
-pub fn count_words(text: &str) -> usize {
-    text.split_whitespace().count()
+pub fn normalize_for_comparison(text: &str) -> String {
+    let lowered: String = text
+        .chars()
+        .map(|character| {
+            if character.is_alphanumeric() {
+                fold_character(character)
+            } else {
+                ' '
+            }
+        })
+        .collect();
+
+    lowered.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 
 fn trim_quotation(text: &str) -> &str {
@@ -135,5 +146,10 @@ mod tests {
     fn locate_text_returns_none_when_the_text_is_absent() {
         assert_eq!(locate_text("Eu chamo Pedro.", "Ana", &[]), None);
         assert_eq!(locate_text("Eu chamo Pedro.", "", &[]), None);
+    }
+
+    #[test]
+    fn normalize_for_comparison_ignores_case_punctuation_and_spacing() {
+        assert_eq!(normalize_for_comparison("  Me,  CHAMO. "), "me chamo");
     }
 }

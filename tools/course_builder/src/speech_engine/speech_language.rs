@@ -1,4 +1,5 @@
 use shared::AppError;
+use shared::course;
 
 use crate::speech_engine::VoiceProfile;
 
@@ -28,7 +29,7 @@ const fn profile(voice_id: &'static str, speed: f32) -> VoiceProfile {
 }
 
 pub const BRAZILIAN_PORTUGUESE: SpeechLanguage = SpeechLanguage {
-    language_tag: "pt-BR",
+    language_tag: course::BRAZILIAN_PORTUGUESE_LANGUAGE_TAG,
     espeak_voice: "pt-br",
     kokoro_voices: PersonaVoices {
         narrator: profile("pf_dora", 0.95),

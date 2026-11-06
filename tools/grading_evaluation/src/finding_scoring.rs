@@ -1,8 +1,8 @@
 use serde::{Deserialize, Serialize};
 
-use crate::grader_response::{GraderFinding, GraderResponse};
+use shared::grading::{CharacterSpan, GraderFinding, GraderResponse, grader_response, text_span};
+
 use crate::grading_case::{GradingCase, GradingCaseKind, ReferenceError};
-use crate::text_span::{self, CharacterSpan};
 
 const EXTRA_QUOTE_WORDS_BEFORE_IMPRECISE: usize = 3;
 
@@ -191,7 +191,7 @@ fn match_findings(case: &GradingCase, findings: &[GraderFinding]) -> FindingTall
             continue;
         };
 
-        if changes_nothing(&case.submission, &quote_span, finding) {
+        if grader_response::changes_nothing(&case.submission, &quote_span, finding) {
             tally.record_change_nothing();
             continue;
         }
@@ -219,12 +219,6 @@ fn match_findings(case: &GradingCase, findings: &[GraderFinding]) -> FindingTall
     }
 
     tally
-}
-
-fn changes_nothing(submission: &str, quote_span: &CharacterSpan, finding: &GraderFinding) -> bool {
-    let quoted_text: String = text_span::slice_text(submission, quote_span);
-
-    normalize_for_comparison(&quoted_text) == normalize_for_comparison(&finding.correction)
 }
 
 fn best_unmatched_reference_index(
@@ -283,8 +277,8 @@ fn score_match(
     let reference_error: &ReferenceError = &case.reference.errors[reference_index];
     let reference_span: CharacterSpan = reference_spans[reference_index].expect("a matched reference error has a span");
 
-    let quote_word_count: usize = text_span::count_words(&text_span::slice_text(&case.submission, quote_span));
-    let reference_word_count: usize = text_span::count_words(&reference_error.wrong_text);
+    let quote_word_count: usize = count_words(&text_span::slice_text(&case.submission, quote_span));
+    let reference_word_count: usize = count_words(&reference_error.wrong_text);
 
     FindingMatch {
         reference_index,
@@ -301,10 +295,10 @@ fn correction_agrees(
     reference_span: &CharacterSpan,
     reference_error: &ReferenceError,
 ) -> bool {
-    let found_correction: String = normalize_for_comparison(&finding.correction);
+    let found_correction: String = text_span::normalize_for_comparison(&finding.correction);
 
     reference_error.accepted_corrections.iter().any(|accepted_correction| {
-        let direct: bool = normalize_for_comparison(accepted_correction) == found_correction;
+        let direct: bool = text_span::normalize_for_comparison(accepted_correction) == found_correction;
 
         if direct {
             return true;
@@ -329,29 +323,20 @@ fn correction_agrees(
             },
         );
 
-        normalize_for_comparison(&format!("{before}{accepted_correction}{after}")) == found_correction
+        text_span::normalize_for_comparison(&format!("{before}{accepted_correction}{after}")) == found_correction
     })
 }
 
-pub fn normalize_for_comparison(text: &str) -> String {
-    let lowered: String = text
-        .chars()
-        .map(|character| {
-            if character.is_alphanumeric() {
-                character.to_lowercase().next().unwrap_or(character)
-            } else {
-                ' '
-            }
-        })
-        .collect();
-
-    lowered.split_whitespace().collect::<Vec<&str>>().join(" ")
+fn count_words(text: &str) -> usize {
+    text.split_whitespace().count()
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::grading_case::{ErrorCategoryKind, GradingTask, ReferenceAnnotation};
+    use shared::grading::ErrorCategoryKind;
+
+    use crate::grading_case::{GradingTask, ReferenceAnnotation};
 
     fn finding(quote: &str, category: &str, correction: &str) -> GraderFinding {
         GraderFinding {
@@ -526,10 +511,5 @@ mod tests {
         assert!(!score.response_valid);
         assert_eq!(score.missed_reference_indexes, vec![0]);
         assert!(score.has_failure());
-    }
-
-    #[test]
-    fn normalize_for_comparison_ignores_case_punctuation_and_spacing() {
-        assert_eq!(normalize_for_comparison("  Me,  CHAMO. "), "me chamo");
     }
 }
