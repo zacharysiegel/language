@@ -8,6 +8,10 @@ pub fn pass_percent() -> u32 {
     (PASS_PROPORTION * 100.0).round() as u32
 }
 
+pub fn scored_exercise_count(exercises: &[Exercise]) -> usize {
+    exercises.iter().filter(|exercise| exercise.kind().is_scored()).count()
+}
+
 /// The quiz runs every exercise of a unit and counts toward completing it; quick practice samples a few.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum PracticeModeKind {
@@ -26,7 +30,7 @@ impl SessionScore {
     pub fn of_answers(exercises: &[Exercise], statuses: &[AnswerStatus]) -> SessionScore {
         SessionScore {
             correct_count: statuses.iter().filter(|status| status.is_correct()).count(),
-            total_count: exercises.iter().filter(|exercise| exercise.kind().is_scored()).count(),
+            total_count: scored_exercise_count(exercises),
         }
     }
 
