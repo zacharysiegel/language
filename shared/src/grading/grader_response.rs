@@ -28,7 +28,7 @@ pub fn parse_grader_response(content: &str) -> Result<GraderResponse, serde_json
     serde_json::from_str(content)
 }
 
-/// The findings whose quote is in the answer and whose correction changes it.
+/// The findings whose quote is in the answer and whose correction changes more than spacing or surrounding punctuation.
 pub fn retain_applicable_findings(answer: &str, findings: Vec<GraderFinding>) -> Vec<GraderFinding> {
     findings.into_iter().filter(|finding| finding_applies(answer, finding)).collect()
 }
@@ -46,7 +46,15 @@ fn finding_applies(answer: &str, finding: &GraderFinding) -> bool {
         return false;
     };
 
-    !changes_nothing(answer, &quote_span, finding)
+    let quoted_text: String = text_span::slice_text(answer, &quote_span);
+
+    trim_punctuation_and_collapse_spacing(&quoted_text) != trim_punctuation_and_collapse_spacing(&finding.correction)
+}
+
+fn trim_punctuation_and_collapse_spacing(text: &str) -> String {
+    let trimmed_text: &str = text.trim_matches(|character: char| !character.is_alphanumeric());
+
+    trimmed_text.split_whitespace().collect::<Vec<&str>>().join(" ")
 }
 
 #[cfg(test)]
@@ -67,12 +75,24 @@ mod tests {
         let findings: Vec<GraderFinding> = vec![
             finding("chamo", "me chamo"),
             finding("Ana", "a Ana"),
-            finding("Pedro", "pedro."),
+            finding("Pedro", " Pedro. "),
         ];
 
         let retained_findings: Vec<GraderFinding> = retain_applicable_findings("Eu chamo Pedro.", findings);
         let retained_quotes: Vec<&str> = retained_findings.iter().map(|finding| finding.quote.as_str()).collect();
 
         assert_eq!(retained_quotes, vec!["chamo"]);
+    }
+
+    #[test]
+    fn retain_applicable_findings_keeps_corrections_of_capital_letters_and_hyphens() {
+        let findings: Vec<GraderFinding> =
+            vec![finding("Janeiro", "janeiro"), finding("segunda feira", "segunda-feira")];
+
+        let retained_findings: Vec<GraderFinding> =
+            retain_applicable_findings("Eu nasci em Janeiro, numa segunda feira.", findings);
+        let retained_quotes: Vec<&str> = retained_findings.iter().map(|finding| finding.quote.as_str()).collect();
+
+        assert_eq!(retained_quotes, vec!["Janeiro", "segunda feira"]);
     }
 }
