@@ -70,6 +70,27 @@ fn session_exit_kind(mode: PracticeModeKind) -> SessionExitKind {
     }
 }
 
+fn counted(count: usize, singular_noun: &str, plural_noun: &str) -> String {
+    let noun: &str = if count == 1 { singular_noun } else { plural_noun };
+
+    format!("{count} {noun}")
+}
+
+fn quiz_label(exercises: &[Exercise]) -> String {
+    let scored_count: usize = practice::scored_exercise_count(exercises);
+    let unscored_count: usize = exercises.len() - scored_count;
+
+    if unscored_count == 0 {
+        return format!("Quiz ({})", counted(scored_count, "exercise", "exercises"));
+    }
+
+    format!(
+        "Quiz ({} and {})",
+        counted(scored_count, "scored exercise", "scored exercises"),
+        counted(unscored_count, "open answer", "open answers"),
+    )
+}
+
 fn resume_label(paused_practice: &PausedPractice) -> String {
     let question_count: usize = paused_practice.question_count();
     // A practice paused on the last answer's feedback has no unanswered question left.
@@ -84,7 +105,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
     let unit_id: String = unit.id.clone();
     let active_session: RwSignal<Option<ActiveSession>> = RwSignal::new(None);
     let exercises_changed_note: RwSignal<ExercisesChangedNoteKind> = RwSignal::new(ExercisesChangedNoteKind::Hidden);
-    let exercise_count: usize = unit.exercises.len();
+    let quiz_label: String = quiz_label(&unit.exercises);
     let vocabulary_count: usize = unit.vocabulary.len();
 
     drop_paused_practice_of_changed_exercises(progress_store, &course_id, &unit, exercises_changed_note);
@@ -190,6 +211,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
             },
             None => {
                 let paused_practice_state = paused_practice_state.clone();
+                let quiz_label: String = quiz_label.clone();
                 let is_note_shown = move || exercises_changed_note.get() == ExercisesChangedNoteKind::Shown;
 
                 view! {
@@ -198,7 +220,7 @@ pub fn PracticeSection(course_id: String, unit: Unit) -> impl IntoView {
                     <Show when=is_note_shown>
                         <p class="muted">{EXERCISES_CHANGED_NOTE}</p>
                     </Show>
-                    {move || practice_start_buttons(paused_practice_state(), exercise_count, start_session)}
+                    {move || practice_start_buttons(paused_practice_state(), quiz_label.clone(), start_session)}
                 }
                 .into_any()
             },
@@ -231,7 +253,7 @@ fn drop_paused_practice_of_changed_exercises(
 
 fn practice_start_buttons(
     paused_practice_state: PausedPracticeStateKind,
-    exercise_count: usize,
+    quiz_label: String,
     start_session: Callback<PracticeStartKind>,
 ) -> impl IntoView {
     let quick_label: String = format!("Quick practice ({} random exercises)", practice::QUICK_PRACTICE_EXERCISE_COUNT);
@@ -250,7 +272,7 @@ fn practice_start_buttons(
         },
         PausedPracticeStateKind::NotPaused | PausedPracticeStateKind::ExercisesChanged => view! {
             <button type="button" class="primary" on:click=move |_| start_session.run(PracticeStartKind::FullFromTheStart)>
-                {format!("Quiz ({exercise_count} exercises)")}
+                {quiz_label}
             </button>
         }
         .into_any(),
@@ -261,5 +283,41 @@ fn practice_start_buttons(
             {full_practice_buttons}
             <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Quick)>{quick_label}</button>
         </div>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use shared::course::{MultipleChoiceExercise, OpenAnswerExercise};
+
+    use super::*;
+
+    fn choice() -> Exercise {
+        Exercise::MultipleChoice(MultipleChoiceExercise {
+            prompt: "Which is a greeting?".to_string(),
+            choices: vec!["Oi".to_string(), "Casa".to_string(), "Rua".to_string()],
+            answer_index: 0,
+            explanation: None,
+        })
+    }
+
+    fn open_answer() -> Exercise {
+        Exercise::OpenAnswer(OpenAnswerExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: None,
+            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
+            explanation: None,
+            clip_key: None,
+        })
+    }
+
+    #[test]
+    fn quiz_label_counts_scored_exercises_and_open_answers_apart() {
+        assert_eq!(quiz_label(&[choice(), choice()]), "Quiz (2 exercises)");
+        assert_eq!(quiz_label(&[choice(), open_answer(), choice()]), "Quiz (2 scored exercises and 1 open answer)");
+        assert_eq!(
+            quiz_label(&[open_answer(), choice(), open_answer()]),
+            "Quiz (1 scored exercise and 2 open answers)",
+        );
     }
 }

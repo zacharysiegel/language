@@ -320,6 +320,7 @@ fn insert_readings(transaction: &Transaction, readings: &[Reading]) -> Result<()
 /// The columns of the `exercise` table that vary by kind.
 struct ExerciseColumns<'a> {
     prompt: Option<&'a str>,
+    context_source: Option<&'a str>,
     correct_choice_index: Option<usize>,
     hint_source: Option<&'a str>,
 }
@@ -338,8 +339,8 @@ impl<'transaction> ExerciseWriter<'transaction> {
         Ok(ExerciseWriter {
             next_exercise_id: 0,
             exercise_statement: transaction.prepare(
-                "insert into exercise (exercise_id, reading_position, position, exercise_kind, prompt, correct_choice_index, \
-                 hint_source, explanation, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9);",
+                "insert into exercise (exercise_id, reading_position, position, exercise_kind, prompt, context_source, \
+                 correct_choice_index, hint_source, explanation, clip_key) values (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10);",
             )?,
             choice_statement: transaction
                 .prepare("insert into exercise_choice (exercise_id, position, choice_text) values (?1, ?2, ?3);")?,
@@ -365,6 +366,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
             position,
             exercise.kind().code(),
             columns.prompt,
+            columns.context_source,
             columns.correct_choice_index,
             columns.hint_source,
             exercise.explanation(),
@@ -380,6 +382,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
             Exercise::ListeningChoice(listening) => self.insert_choices(exercise_id, &listening.choices),
             Exercise::FillBlank(fill_blank) => self.insert_answers(exercise_id, &fill_blank.answers),
             Exercise::TranslateToTarget(translate) => self.insert_answers(exercise_id, &translate.answers),
+            Exercise::OpenAnswer(open_answer) => self.insert_answers(exercise_id, &open_answer.example_answers),
             Exercise::OrderWords(order_words) => self.insert_words(exercise_id, &order_words.words, &order_words.distractors),
             Exercise::Match(matching) => self.insert_pairs(exercise_id, &matching.pairs),
             Exercise::Dictation(_) => Ok(()),
@@ -425,36 +428,49 @@ fn exercise_columns(exercise: &Exercise) -> ExerciseColumns<'_> {
     match exercise {
         Exercise::MultipleChoice(multiple_choice) => ExerciseColumns {
             prompt: Some(&multiple_choice.prompt),
+            context_source: None,
             correct_choice_index: Some(multiple_choice.answer_index),
             hint_source: None,
         },
         Exercise::FillBlank(fill_blank) => ExerciseColumns {
             prompt: Some(&fill_blank.prompt_target),
+            context_source: None,
             correct_choice_index: None,
             hint_source: Some(&fill_blank.hint_source),
         },
         Exercise::TranslateToTarget(translate) => ExerciseColumns {
             prompt: Some(&translate.prompt_source),
+            context_source: None,
             correct_choice_index: None,
             hint_source: None,
         },
         Exercise::OrderWords(order_words) => ExerciseColumns {
             prompt: Some(&order_words.prompt_source),
+            context_source: None,
             correct_choice_index: None,
             hint_source: None,
         },
         Exercise::ListeningChoice(listening) => ExerciseColumns {
             prompt: Some(&listening.audio_target),
+            context_source: None,
             correct_choice_index: Some(listening.answer_index),
             hint_source: None,
         },
         Exercise::Dictation(dictation) => ExerciseColumns {
             prompt: Some(&dictation.audio_target),
+            context_source: None,
             correct_choice_index: None,
             hint_source: Some(&dictation.hint_source),
         },
         Exercise::Match(matching) => ExerciseColumns {
             prompt: matching.prompt.as_deref(),
+            context_source: None,
+            correct_choice_index: None,
+            hint_source: None,
+        },
+        Exercise::OpenAnswer(open_answer) => ExerciseColumns {
+            prompt: Some(&open_answer.prompt_source),
+            context_source: open_answer.context_source.as_deref(),
             correct_choice_index: None,
             hint_source: None,
         },
@@ -491,19 +507,10 @@ mod tests {
             .collect()
     }
 
-    #[test]
-    fn every_unit_round_trips_through_its_shards() {
-        let mut plan: AudioPlan = AudioPlan::new();
-        let course: Course = test_courses::read_keyed_courses(&mut plan).remove(0);
-        let audio_index: ClipAudioIndex = synthetic_audio_index(&plan);
-        let clip_catalog: ClipCatalog = ClipCatalog {
-            plan: &plan,
-            audio_index: &audio_index,
-        };
-        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
-        let course_path: PathBuf = directory.path().join("course.sqlite");
+    fn assert_course_round_trips_through_its_shards(course: &Course, clip_catalog: &ClipCatalog, directory: &Path) {
+        let course_path: PathBuf = directory.join(format!("{}.sqlite", course.id));
 
-        write_course_shard(&course_path, &course, &clip_catalog).unwrap();
+        write_course_shard(&course_path, course, clip_catalog).unwrap();
 
         let course_contents: CourseShardContents = shared::course_shard::read_course_shard(&fs::read(&course_path).unwrap()).unwrap();
         let expected_outline: CourseOutline = course.outline();
@@ -512,9 +519,9 @@ mod tests {
         assert!(!course_contents.clip_audio.is_empty());
 
         for unit in &course.units {
-            let unit_path: PathBuf = directory.path().join(format!("{}.sqlite", unit.id));
+            let unit_path: PathBuf = directory.join(format!("{}-{}.sqlite", course.id, unit.id));
 
-            write_unit_shard(&unit_path, unit, &clip_catalog).unwrap();
+            write_unit_shard(&unit_path, unit, clip_catalog).unwrap();
 
             let unit_contents: UnitShardContents = shared::course_shard::read_unit_shard(&fs::read(&unit_path).unwrap()).unwrap();
             let expected_lesson: UnitLesson = unit.lesson();
@@ -524,6 +531,22 @@ mod tests {
             let reassembled: Unit = course_contents.outline.find_unit(&unit.id).unwrap().with_lesson(unit_contents.lesson);
 
             assert_eq!(&reassembled, unit);
+        }
+    }
+
+    #[test]
+    fn every_unit_of_every_course_round_trips_through_its_shards() {
+        let mut plan: AudioPlan = AudioPlan::new();
+        let courses: Vec<Course> = test_courses::read_keyed_courses(&mut plan);
+        let audio_index: ClipAudioIndex = synthetic_audio_index(&plan);
+        let clip_catalog: ClipCatalog = ClipCatalog {
+            plan: &plan,
+            audio_index: &audio_index,
+        };
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+
+        for course in &courses {
+            assert_course_round_trips_through_its_shards(course, &clip_catalog, directory.path());
         }
     }
 

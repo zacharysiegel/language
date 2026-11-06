@@ -4,8 +4,8 @@ use crate::AppError;
 use crate::course::{
     CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind,
     FillBlankExercise, GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
-    OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson, UnitOutline,
-    VocabularyItem,
+    OpenAnswerExercise, OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson,
+    UnitOutline, VocabularyItem,
 };
 use crate::course_shard::{APPLICATION_ID, ClipAudioEntry, CourseShardContents, SCHEMA_VERSION, UnitShardContents, VoiceEngineKind};
 use crate::sqlite::{ReadOnlyDatabase, SqlRecord, validate_shard_header};
@@ -374,7 +374,8 @@ struct ExerciseChildren {
 fn read_exercises(database: &ReadOnlyDatabase) -> Result<BTreeMap<Option<usize>, Vec<Exercise>>, AppError> {
     let mut children: ExerciseChildren = read_exercise_children(database)?;
     let records: Vec<SqlRecord> = database.query(
-        "select exercise_id, reading_position, exercise_kind, prompt, correct_choice_index, hint_source, explanation, clip_key \
+        "select exercise_id, reading_position, exercise_kind, prompt, correct_choice_index, hint_source, explanation, clip_key, \
+         context_source \
          from exercise order by reading_position asc, position asc;",
     )?;
     let mut exercises_by_reading: BTreeMap<Option<usize>, Vec<Exercise>> = BTreeMap::new();
@@ -404,6 +405,7 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
     let hint_source: Option<String> = record.optional_text(5)?;
     let explanation: Option<String> = record.optional_text(6)?;
     let clip_key: Option<String> = record.optional_text(7)?;
+    let context_source: Option<String> = record.optional_text(8)?;
     let required_prompt = || {
         prompt
             .clone()
@@ -464,6 +466,13 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
             prompt,
             pairs: children.pairs.remove(&exercise_id).unwrap_or_default(),
             explanation,
+        }),
+        ExerciseKind::OpenAnswer => Exercise::OpenAnswer(OpenAnswerExercise {
+            prompt_source: required_prompt()?,
+            context_source,
+            example_answers: children.answers.remove(&exercise_id).unwrap_or_default(),
+            explanation,
+            clip_key,
         }),
     };
 

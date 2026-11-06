@@ -1,8 +1,15 @@
+use crate::course::Exercise;
+use crate::practice::AnswerStatus;
+
 pub const PASS_PROPORTION: f64 = 0.8;
 pub const QUICK_PRACTICE_EXERCISE_COUNT: usize = 10;
 
 pub fn pass_percent() -> u32 {
     (PASS_PROPORTION * 100.0).round() as u32
+}
+
+pub fn scored_exercise_count(exercises: &[Exercise]) -> usize {
+    exercises.iter().filter(|exercise| exercise.kind().is_scored()).count()
 }
 
 /// The quiz runs every exercise of a unit and counts toward completing it; quick practice samples a few.
@@ -19,6 +26,14 @@ pub struct SessionScore {
 }
 
 impl SessionScore {
+    /// `statuses` are the answers to the first of `exercises`; a scored exercise without one counts as missed.
+    pub fn of_answers(exercises: &[Exercise], statuses: &[AnswerStatus]) -> SessionScore {
+        SessionScore {
+            correct_count: statuses.iter().filter(|status| status.is_correct()).count(),
+            total_count: scored_exercise_count(exercises),
+        }
+    }
+
     pub fn proportion(&self) -> f64 {
         if self.total_count == 0 {
             return 0.0;
@@ -39,6 +54,20 @@ impl SessionScore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::course::course_test_fixtures;
+
+    #[test]
+    fn of_answers_counts_only_scored_exercises_and_unanswered_ones_as_missed() {
+        let exercises: Vec<Exercise> = vec![
+            course_test_fixtures::multiple_choice("a"),
+            course_test_fixtures::open_answer(),
+            course_test_fixtures::multiple_choice("b"),
+            course_test_fixtures::multiple_choice("c"),
+        ];
+        let statuses: Vec<AnswerStatus> = vec![AnswerStatus::Correct, AnswerStatus::Unscored, AnswerStatus::Wrong];
+
+        assert_eq!(SessionScore::of_answers(&exercises, &statuses), SessionScore { correct_count: 1, total_count: 3 });
+    }
 
     #[test]
     fn passed_requires_the_pass_proportion() {
