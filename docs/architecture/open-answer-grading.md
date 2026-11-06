@@ -45,8 +45,10 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - Requests: context 4096 tokens, `SlidingWindowCache::Full`, reply maximum 1024 tokens, temperature 0.
 - Findings whose quote is not in the answer, or whose replacement changes nothing, are dropped before display.
 
-## `cross-llama` 0.1.1
+## `cross-llama` 0.2.0
 
+- Prompts are formatted with the model's own Jinja chat template (`tokenizer.chat_template`) on both backends: wllama with `jinja: true`, llama.cpp through `minijinja`. llama.cpp's built-in templates do not recognize gemma4.
+- Thinking is off: `enable_thinking: false` in the template's variables, and an empty thought block is stripped from the reply (`reasoning_format: "deepseek"` in wllama).
 - `download_model(&ModelSource, on_progress)`: downloads into wllama's cache without loading.
 - `is_model_downloaded(&ModelSource)`: no network.
 - `probe_browser_capability()`: WebGPU adapter present, cross-origin isolation, which wllama build applies, storage quota and usage, `navigator.deviceMemory` when present.
@@ -139,16 +141,16 @@ Authoring rules, added to `docs/authoring.md` with the exercise type:
 
 ## Phases
 
-Each `language` phase merges into `main` locally once its checks pass; `cross-llama` 0.1.1 is published before phase 5.
+Each `language` phase merges into `main` locally once its checks pass; `cross-llama` 0.2.0 is published before phase 5.
 
 1. `language`: R2 CORS for the production origin (done).
 2. `language`: grader prompt into `shared`; the evaluation reproduces its recorded results.
 3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only.
-4. `cross-llama`: 0.1.1.
+4. `cross-llama`: 0.2.0.
 5. `language`: model hosting and `publish-model`.
 6. `language`: isolation headers, wllama files, and grading in the web view.
 7. `language`: author open-answer exercises into the chosen units; docs.
 
 ## Pull request description
 
-- `cross-llama`: A download-only function, a download check and a browser capability check let an app download a model in the background and decide whether it can run, without loading the model into memory. A Web Lock keeps two tabs from writing the same cached model file.
+- `cross-llama`: Models whose chat template llama.cpp's built-in formats do not recognize, such as Gemma 4, failed every request. Both backends now format prompts with the model's own Jinja template, with thinking off. A download-only function, a download check and a browser capability check let an app download a model in the background and decide whether it can run, without loading the model into memory. A Web Lock keeps two tabs from writing the same cached model file.
