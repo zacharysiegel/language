@@ -139,16 +139,7 @@ fn exercise_without_clip_keys(exercise: &Exercise) -> Exercise {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::course::{DictationExercise, MultipleChoiceExercise, OpenAnswerExercise};
-
-    fn choice(prompt: &str) -> Exercise {
-        Exercise::MultipleChoice(MultipleChoiceExercise {
-            prompt: prompt.to_string(),
-            choices: vec!["sim".to_string(), "não".to_string()],
-            answer_index: 0,
-            explanation: None,
-        })
-    }
+    use crate::course::{course_test_fixtures, DictationExercise};
 
     fn dictation(clip_key: Option<&str>) -> Exercise {
         Exercise::Dictation(DictationExercise {
@@ -156,16 +147,6 @@ mod tests {
             hint_source: "Good morning.".to_string(),
             explanation: None,
             clip_key: clip_key.map(str::to_string),
-        })
-    }
-
-    fn open_answer() -> Exercise {
-        Exercise::OpenAnswer(OpenAnswerExercise {
-            prompt_source: "Introduce yourself.".to_string(),
-            context_source: None,
-            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
-            explanation: None,
-            clip_key: None,
         })
     }
 
@@ -178,24 +159,24 @@ mod tests {
 
     #[test]
     fn exercise_list_fingerprint_ignores_clip_keys() {
-        let with_clip_key: String = exercise_list_fingerprint(&[choice("a"), dictation(Some("bom-dia-clip"))]);
-        let without_clip_key: String = exercise_list_fingerprint(&[choice("a"), dictation(None)]);
+        let with_clip_key: String = exercise_list_fingerprint(&[course_test_fixtures::multiple_choice("a"), dictation(Some("bom-dia-clip"))]);
+        let without_clip_key: String = exercise_list_fingerprint(&[course_test_fixtures::multiple_choice("a"), dictation(None)]);
 
         assert_eq!(with_clip_key, without_clip_key);
     }
 
     #[test]
     fn exercise_list_fingerprint_changes_with_a_question_or_the_order() {
-        let original: String = exercise_list_fingerprint(&[choice("a"), choice("b")]);
+        let original: String = exercise_list_fingerprint(&course_test_fixtures::multiple_choice_exercises(&["a", "b"]));
 
-        assert_ne!(exercise_list_fingerprint(&[choice("a"), choice("c")]), original);
-        assert_ne!(exercise_list_fingerprint(&[choice("b"), choice("a")]), original);
-        assert_ne!(exercise_list_fingerprint(&[choice("a")]), original);
+        assert_ne!(exercise_list_fingerprint(&course_test_fixtures::multiple_choice_exercises(&["a", "c"])), original);
+        assert_ne!(exercise_list_fingerprint(&course_test_fixtures::multiple_choice_exercises(&["b", "a"])), original);
+        assert_ne!(exercise_list_fingerprint(&[course_test_fixtures::multiple_choice("a")]), original);
     }
 
     #[test]
     fn new_asks_every_exercise_in_the_unit_order() {
-        let paused_practice: PausedPractice = PausedPractice::new(&[choice("a"), choice("b"), choice("c")]);
+        let paused_practice: PausedPractice = PausedPractice::new(&course_test_fixtures::multiple_choice_exercises(&["a", "b", "c"]));
 
         assert_eq!(paused_practice.exercise_order, vec![0, 1, 2]);
         assert_eq!(paused_practice.next_question_index(), 0);
@@ -204,7 +185,7 @@ mod tests {
 
     #[test]
     fn record_result_ignores_results_after_the_last_question() {
-        let mut paused_practice: PausedPractice = PausedPractice::new(&[choice("a")]);
+        let mut paused_practice: PausedPractice = PausedPractice::new(&[course_test_fixtures::multiple_choice("a")]);
 
         paused_practice.record_result(result(AnswerStatus::Correct));
         paused_practice.record_result(result(AnswerStatus::Wrong));
@@ -215,7 +196,7 @@ mod tests {
 
     #[test]
     fn score_counts_accent_mistakes_as_correct_and_unanswered_questions_as_missed() {
-        let mut paused_practice: PausedPractice = PausedPractice::new(&[choice("a"), choice("b"), choice("c"), choice("d")]);
+        let mut paused_practice: PausedPractice = PausedPractice::new(&course_test_fixtures::multiple_choice_exercises(&["a", "b", "c", "d"]));
 
         paused_practice.record_result(result(AnswerStatus::Correct));
         paused_practice.record_result(result(AnswerStatus::AccentMistake));
@@ -226,7 +207,12 @@ mod tests {
 
     #[test]
     fn score_leaves_open_answers_out_whether_answered_or_not() {
-        let mut paused_practice: PausedPractice = PausedPractice::new(&[choice("a"), open_answer(), choice("b"), open_answer()]);
+        let mut paused_practice: PausedPractice = PausedPractice::new(&[
+            course_test_fixtures::multiple_choice("a"),
+            course_test_fixtures::open_answer(),
+            course_test_fixtures::multiple_choice("b"),
+            course_test_fixtures::open_answer(),
+        ]);
 
         paused_practice.record_result(result(AnswerStatus::Correct));
         paused_practice.record_result(result(AnswerStatus::Unscored));
@@ -236,16 +222,16 @@ mod tests {
 
     #[test]
     fn matches_exercises_only_for_the_exercises_it_started_with() {
-        let exercises: Vec<Exercise> = vec![choice("a"), choice("b")];
+        let exercises: Vec<Exercise> = course_test_fixtures::multiple_choice_exercises(&["a", "b"]);
         let paused_practice: PausedPractice = PausedPractice::new(&exercises);
 
         assert!(paused_practice.matches_exercises(&exercises));
-        assert!(!paused_practice.matches_exercises(&[choice("a"), choice("changed")]));
+        assert!(!paused_practice.matches_exercises(&course_test_fixtures::multiple_choice_exercises(&["a", "changed"])));
     }
 
     #[test]
     fn matches_exercises_rejects_an_order_outside_the_exercises() {
-        let exercises: Vec<Exercise> = vec![choice("a"), choice("b")];
+        let exercises: Vec<Exercise> = course_test_fixtures::multiple_choice_exercises(&["a", "b"]);
         let mut paused_practice: PausedPractice = PausedPractice::new(&exercises);
 
         paused_practice.exercise_order = vec![0, 2];
