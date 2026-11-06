@@ -28,13 +28,16 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - Shard: `prompt` holds `prompt_source`; a new nullable `context_source` column; example answers in `exercise_answer`.
 - Versions: `SCHEMA_VERSION` 2 to 3, `COURSE_MANIFEST_SCHEMA_VERSION` 3 to 4.
 - Native apps: the `ffi` crate leaves open answers out of `UnitLessonRecord` and native recording prefetch; `ExerciseRecord` gains no variant.
+- The iOS and Android UI tests read a unit's exercises from its JSON without the open answers.
 - The test course gets one open-answer exercise per unit.
 
 ## Scoring
 
 - `ExerciseKind::is_scored`; false for `OpenAnswer`.
 - `AnswerStatus::Unscored`, the result of an open answer.
-- `SessionScore` and `PausedPractice::score` count only scored exercises.
+- `SessionScore` and `PausedPractice::score` count only scored exercises; an open answer is never missed.
+- `PausedPractice::unscored_exercise_indices`, so a paused quiz is scored without its exercises.
+- The quiz button counts scored exercises and open answers separately.
 - The grader's mistakes are shown, not saved.
 
 ## Grader
@@ -145,7 +148,7 @@ Each `language` phase merges into `main` locally once its checks pass; `cross-ll
 
 1. `language`: R2 CORS for the production origin (done).
 2. `language`: grader prompt into `shared` (done; every rendered prompt byte-identical).
-3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only.
+3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only (done).
 4. `cross-llama`: 0.2.0.
 5. `language`: model hosting and `publish-model`.
 6. `language`: isolation headers, wllama files, and grading in the web view.
