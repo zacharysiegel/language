@@ -7,7 +7,7 @@ use crate::course::{
     OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table,
     prose, target_language_rules,
 };
-use crate::grading;
+use crate::grading::{self, GraderPromptKind};
 
 const MINIMUM_OBJECTIVES: usize = 3;
 const MINIMUM_VOCABULARY: usize = 12;
@@ -310,7 +310,7 @@ fn check_open_answer(collector: &mut IssueCollector, location: &str, exercise: &
         collector.check_spoken_target(&format!("{location}.example_answers"), example_answer);
     }
 
-    let grader_prompt: Option<grading::GraderPromptKind> =
+    let grader_prompt: Option<GraderPromptKind> =
         grading::find_grader_prompt(collector.target_language, collector.source_language);
 
     if grader_prompt.is_none() {
