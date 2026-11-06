@@ -102,6 +102,7 @@ fn exercise_without_clip_keys(exercise: &Exercise) -> Exercise {
         Exercise::OrderWords(exercise) => exercise.clip_key = None,
         Exercise::ListeningChoice(exercise) => exercise.clip_key = None,
         Exercise::Dictation(exercise) => exercise.clip_key = None,
+        Exercise::OpenAnswer(exercise) => exercise.clip_key = None,
         Exercise::Match(exercise) => {
             for pair in &mut exercise.pairs {
                 pair.clip_key = None;
