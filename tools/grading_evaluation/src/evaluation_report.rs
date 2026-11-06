@@ -1,9 +1,10 @@
 use std::collections::{BTreeMap, HashMap};
 
+use shared::grading::{ErrorCategoryKind, GraderResponse, grader_response};
+
 use crate::evaluation_run::RunRecord;
 use crate::finding_scoring::{self, CaseScore};
-use crate::grader_response::{self, GraderResponse};
-use crate::grading_case::{ErrorCategoryKind, GradingCase, GradingCaseKind};
+use crate::grading_case::{GradingCase, GradingCaseKind};
 
 const MAXIMUM_CONTROL_FALSE_ALARM_RATE: f64 = 0.10;
 const MAXIMUM_HALLUCINATED_QUOTE_RATE: f64 = 0.02;

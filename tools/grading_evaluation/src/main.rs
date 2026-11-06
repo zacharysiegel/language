@@ -4,10 +4,8 @@ mod evaluation_run;
 mod finding_scoring;
 mod finding_verification;
 mod grader_prompt;
-mod grader_response;
 mod grading_case;
 mod ollama_client;
-mod text_span;
 mod verification_report;
 
 use std::collections::BTreeMap;
@@ -17,13 +15,14 @@ use std::process::ExitCode;
 use clap::{Args, Parser, Subcommand};
 use shared::AppError;
 use shared::filesystem;
+use shared::grading::ErrorCategoryKind;
 
 use crate::decisor_client::DecisorClient;
 use crate::evaluation_report::{ModelSummary, ScoredRun};
 use crate::evaluation_run::{RunOptions, RunRecord};
 use crate::finding_verification::{VerificationInputKind, VerificationRecord};
 use crate::grader_prompt::PromptVariantKind;
-use crate::grading_case::{ErrorCategoryKind, GradingCase, GradingCaseKind};
+use crate::grading_case::{GradingCase, GradingCaseKind};
 use crate::ollama_client::OllamaConnection;
 
 const DEFAULT_CASES_PATH: &str = "tools/grading_evaluation/cases/pt_br.en.json";

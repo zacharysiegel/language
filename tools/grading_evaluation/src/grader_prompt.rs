@@ -1,8 +1,16 @@
 use clap::ValueEnum;
-use serde_json::{Value, json};
+use shared::grading::{ChatMessage, GraderExample, GraderPromptKind};
 
-use crate::grading_case::{ErrorCategoryKind, GradingCase};
-use crate::ollama_client::ChatMessage;
+use crate::grading_case::GradingCase;
+
+pub const GRADER_PROMPT: GraderPromptKind = GraderPromptKind::BrazilianPortugueseTaughtInEnglish;
+
+const SPELLING_MISTAKE: usize = 0;
+const CORRECT_COLLOQUIAL: usize = 1;
+const VERB_MISTAKE: usize = 2;
+const CORRECT_SUNDAYS: usize = 3;
+const PREPOSITION_MISTAKE: usize = 4;
+const OFF_TOPIC_WITH_MISTAKE: usize = 5;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, ValueEnum)]
 #[value(rename_all = "snake_case")]
@@ -48,7 +56,7 @@ impl PromptVariantKind {
         }
     }
 
-    pub fn examples(self) -> Vec<&'static FewShotExample> {
+    pub fn examples(self) -> Vec<&'static GraderExample> {
         let indexes: &[usize] = match self {
             PromptVariantKind::Plain => &[],
             PromptVariantKind::OneShotMistake => &[SPELLING_MISTAKE],
@@ -68,7 +76,7 @@ impl PromptVariantKind {
             PromptVariantKind::FewShotMostlyCorrect => &[CORRECT_SUNDAYS, CORRECT_COLLOQUIAL, SPELLING_MISTAKE],
         };
 
-        indexes.iter().map(|index| &EXAMPLE_POOL[*index]).collect()
+        indexes.iter().map(|index| &GRADER_PROMPT.examples()[*index]).collect()
     }
 
     pub fn example_placement(self) -> ExamplePlacementKind {
@@ -79,199 +87,25 @@ impl PromptVariantKind {
     }
 }
 
-pub struct FewShotExample {
-    pub level: &'static str,
-    pub prompt_source: &'static str,
-    pub context_source: Option<&'static str>,
-    pub submission: &'static str,
-    pub response_json: &'static str,
-}
-
-const SPELLING_MISTAKE: usize = 0;
-const CORRECT_SUNDAYS: usize = 1;
-const OFF_TOPIC_WITH_MISTAKE: usize = 2;
-const VERB_MISTAKE: usize = 3;
-const CORRECT_COLLOQUIAL: usize = 4;
-const PREPOSITION_MISTAKE: usize = 5;
-
-pub const EXAMPLE_POOL: [FewShotExample; 6] = [
-    FewShotExample {
-        level: "a2",
-        prompt_source: "Describe what Paulo is eating.",
-        context_source: Some("Paulo is at a café. He eats a cheese sandwich and drinks orange juice."),
-        submission: "O Paulo come um sanduiche de queijo e bebe suco de laranja no café.",
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"sanduiche","explanation":"The word needs an accent on the i: sanduíche.","kind":"spelling","replacement":"sanduíche"}]}"#,
-    },
-    FewShotExample {
-        level: "a1",
-        prompt_source: "What do you do on Sundays?",
-        context_source: None,
-        submission: "Aos domingos eu almoço com a minha família e descanso.",
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
-    },
-    FewShotExample {
-        level: "a1",
-        prompt_source: "Describe the weather today.",
-        context_source: Some("It is cold and rainy."),
-        submission: "Eu gosto de pizza. Minhas irmãs são muito alta.",
-        response_json: r#"{"answers_the_question":false,"language_is_portuguese":true,"mistakes":[{"error_text":"alta","explanation":"The adjective must be plural to agree with 'irmãs'.","kind":"agreement","replacement":"altas"}]}"#,
-    },
-    FewShotExample {
-        level: "a2",
-        prompt_source: "What did you do yesterday?",
-        context_source: None,
-        submission: "Ontem eu comeu uma pizza e depois saí com os meus amigos.",
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"comeu","explanation":"The verb must agree with 'eu': comi.","kind":"verb_form","replacement":"comi"}]}"#,
-    },
-    FewShotExample {
-        level: "a1",
-        prompt_source: "How was your weekend?",
-        context_source: None,
-        submission: "A gente foi à praia no sábado e eu tô com um pouco de sono hoje.",
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[]}"#,
-    },
-    FewShotExample {
-        level: "a1",
-        prompt_source: "Where do you study?",
-        context_source: None,
-        submission: "Eu estudo em a universidade perto de casa.",
-        response_json: r#"{"answers_the_question":true,"language_is_portuguese":true,"mistakes":[{"error_text":"em a","explanation":"'em' and 'a' contract to 'na'.","kind":"article_preposition","replacement":"na"}]}"#,
-    },
-];
-
 pub fn build_messages(variant: PromptVariantKind, case: &GradingCase) -> Vec<ChatMessage> {
-    let examples: Vec<&FewShotExample> = variant.examples();
-    let placement: ExamplePlacementKind = variant.example_placement();
+    let examples: Vec<&GraderExample> = variant.examples();
 
-    let system_examples: &[&FewShotExample] = match placement {
-        ExamplePlacementKind::SystemPrompt => &examples,
-        ExamplePlacementKind::ChatTurns => &[],
-    };
-    let mut messages: Vec<ChatMessage> = vec![ChatMessage {
-        role: "system",
-        content: render_system_prompt(system_examples),
-    }];
+    let (system_prompt_examples, chat_turn_examples): (&[&GraderExample], &[&GraderExample]) =
+        match variant.example_placement() {
+            ExamplePlacementKind::SystemPrompt => (&examples, &[]),
+            ExamplePlacementKind::ChatTurns => (&[], &examples),
+        };
 
-    if placement == ExamplePlacementKind::ChatTurns {
-        for example in &examples {
-            messages.push(ChatMessage {
-                role: "user",
-                content: render_example_input(example),
-            });
-            messages.push(ChatMessage {
-                role: "assistant",
-                content: example.response_json.to_string(),
-            });
-        }
-    }
-
-    messages.push(ChatMessage {
-        role: "user",
-        content: render_user_message(
-            &case.level,
-            &case.task.prompt_source,
-            case.task.context_source.as_deref(),
-            &case.submission,
-        ),
-    });
-
-    messages
-}
-
-fn render_example_input(example: &FewShotExample) -> String {
-    render_user_message(
-        example.level,
-        example.prompt_source,
-        example.context_source,
-        example.submission,
-    )
-}
-
-pub fn response_schema() -> Value {
-    let category_names: Vec<&str> = ErrorCategoryKind::ALL.iter().map(|category| category.as_str()).collect();
-
-    json!({
-        "type": "object",
-        "properties": {
-            "answers_the_question": { "type": "boolean" },
-            "language_is_portuguese": { "type": "boolean" },
-            "mistakes": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {
-                        "error_text": { "type": "string" },
-                        "explanation": { "type": "string" },
-                        "kind": { "type": "string", "enum": category_names },
-                        "replacement": { "type": "string" },
-                    },
-                    "required": ["error_text", "explanation", "kind", "replacement"],
-                },
-            },
-        },
-        "required": ["answers_the_question", "language_is_portuguese", "mistakes"],
-    })
-}
-
-fn render_user_message(level: &str, prompt_source: &str, context_source: Option<&str>, submission: &str) -> String {
-    let mut message: String = format!("Task: {prompt_source}\n");
-
-    if let Some(context) = context_source {
-        message.push_str(&format!("Scene facts: {context}\n"));
-    }
-
-    message.push_str(&format!("Level: {}\nAnswer: {submission}", level.to_uppercase()));
-
-    message
-}
-
-fn render_system_prompt(examples: &[&FewShotExample]) -> String {
-    let category_lines: Vec<String> = ErrorCategoryKind::ALL
-        .iter()
-        .map(|category| format!("- {}: {}", category.as_str(), category.description()))
-        .collect();
-
-    let mut prompt: String = format!(
-        "You check short written answers from an English-speaking learner of Brazilian Portuguese (pt-BR). \
-You are given a task, sometimes facts about the scene, the learner's level and the learner's answer. \
-Report only real mistakes in the answer.\n\
-\n\
-For every mistake give:\n\
-- error_text: the wrong word or the smallest wrong phrase, copied exactly from the answer. Never copy a whole sentence for one mistake.\n\
-- explanation: one short sentence in English saying why it is wrong.\n\
-- kind: one of the kinds below.\n\
-- replacement: the text that replaces error_text.\n\
-\n\
-Kinds:\n\
-{categories}\n\
-\n\
-Rules:\n\
-- Spoken Brazilian forms are correct; do not report them: tô, a gente, pra, né, você for 'you'.\n\
-- Do not report style, correct but unusual wording, or punctuation.\n\
-- Do not report a mistake you are not sure about. If the answer has no mistakes, return an empty mistakes list.\n\
-- language_is_portuguese is false when the answer is written in another language.\n\
-- answers_the_question is true when the answer is about what the task asked, even if it contains mistakes.",
-        categories = category_lines.join("\n"),
-    );
-
-    for (index, example) in examples.iter().enumerate() {
-        prompt.push_str(&format!(
-            "\n\nExample {}:\n{}\nOutput: {}",
-            index + 1,
-            render_example_input(example),
-            example.response_json
-        ));
-    }
-
-    prompt
+    GRADER_PROMPT.build_messages_with_examples(system_prompt_examples, chat_turn_examples, &case.graded_answer())
 }
 
 #[cfg(test)]
 mod tests {
     use std::path::PathBuf;
 
+    use shared::grading::ChatRoleKind;
+
     use super::*;
-    use crate::grader_response;
     use crate::grading_case;
 
     fn load_shipped_cases() -> Vec<GradingCase> {
@@ -281,18 +115,11 @@ mod tests {
     }
 
     #[test]
-    fn example_responses_parse_as_grader_responses() {
-        for example in &EXAMPLE_POOL {
-            assert!(grader_response::parse_grader_response(example.response_json).is_ok());
-        }
-    }
-
-    #[test]
     fn examples_are_not_graded_cases() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
-        for example in &EXAMPLE_POOL {
-            assert!(cases.iter().all(|case| case.submission != example.submission));
+        for example in GRADER_PROMPT.examples() {
+            assert!(cases.iter().all(|case| case.submission != example.graded_answer.submission));
         }
     }
 
@@ -304,7 +131,12 @@ mod tests {
 
         for holdout_case in &holdout_cases {
             assert!(tuned_cases.iter().all(|case| case.id != holdout_case.id && case.submission != holdout_case.submission));
-            assert!(EXAMPLE_POOL.iter().all(|example| example.submission != holdout_case.submission));
+            assert!(
+                GRADER_PROMPT
+                    .examples()
+                    .iter()
+                    .all(|example| example.graded_answer.submission != holdout_case.submission)
+            );
         }
     }
 
@@ -316,8 +148,8 @@ mod tests {
             let messages: Vec<ChatMessage> = build_messages(variant, &cases[0]);
             let last_message: &ChatMessage = messages.last().expect("there is a final message");
 
-            assert_eq!(last_message.role, "user");
-            assert!(last_message.content.ends_with(&cases[0].submission));
+            assert_eq!(last_message.role, ChatRoleKind::User);
+            assert!(last_message.text.ends_with(&cases[0].submission));
         }
     }
 
@@ -343,8 +175,18 @@ mod tests {
 
         let messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotInSystem, &cases[0]);
 
-        assert!(messages[0].content.contains("Example 3:"));
-        assert!(messages[0].content.contains(EXAMPLE_POOL[SPELLING_MISTAKE].submission));
+        assert!(messages[0].text.contains("Example 3:"));
+        assert!(messages[0].text.contains(GRADER_PROMPT.examples()[SPELLING_MISTAKE].graded_answer.submission));
+    }
+
+    #[test]
+    fn few_shot_six_is_the_shared_grader_prompt() {
+        let cases: Vec<GradingCase> = load_shipped_cases();
+
+        let evaluated_messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotSix, &cases[0]);
+        let shared_messages: Vec<ChatMessage> = GRADER_PROMPT.build_messages(&cases[0].graded_answer());
+
+        assert_eq!(evaluated_messages, shared_messages);
     }
 
     #[test]
@@ -353,16 +195,5 @@ mod tests {
             PromptVariantKind::ALL.iter().map(|variant| variant.as_str()).collect();
 
         assert_eq!(names.len(), PromptVariantKind::ALL.len());
-    }
-
-    #[test]
-    fn response_schema_lists_every_error_category() {
-        let schema: Value = response_schema();
-        let category_names: &Value = &schema["properties"]["mistakes"]["items"]["properties"]["kind"]["enum"];
-
-        assert_eq!(
-            category_names.as_array().expect("the categories are an array").len(),
-            ErrorCategoryKind::ALL.len()
-        );
     }
 }

@@ -4,10 +4,11 @@ use std::time::Instant;
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use shared::AppError;
+use shared::grading::ChatMessage;
 
 use crate::grader_prompt::{self, PromptVariantKind};
 use crate::grading_case::GradingCase;
-use crate::ollama_client::{ChatMessage, ChatReply, ChatRequest, ModelDescription, OllamaConnection};
+use crate::ollama_client::{ChatReply, ChatRequest, ModelDescription, OllamaConnection};
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RunRecord {
@@ -45,7 +46,7 @@ pub fn run_evaluation(
     ensure_models_installed(connection, options.models)?;
     std::fs::create_dir_all(options.output_directory)?;
 
-    let schema: Value = grader_prompt::response_schema();
+    let schema: Value = grader_prompt::GRADER_PROMPT.response_schema();
     let mut written_paths: Vec<PathBuf> = Vec::new();
 
     for model in options.models {
