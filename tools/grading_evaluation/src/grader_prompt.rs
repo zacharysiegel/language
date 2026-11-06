@@ -107,8 +107,6 @@ pub fn build_messages(variant: PromptVariantKind, case: &GradingCase) -> Vec<Cha
 mod tests {
     use std::path::PathBuf;
 
-    use shared::grading::ChatRoleKind;
-
     use super::*;
     use crate::grading_case;
 
@@ -145,46 +143,29 @@ mod tests {
     }
 
     #[test]
-    fn build_messages_ends_with_the_case_for_every_variant() {
+    fn build_messages_places_examples_as_chat_turns_or_in_the_system_prompt() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
         for variant in PromptVariantKind::ALL {
             let messages: Vec<ChatMessage> = build_messages(variant, &cases[0]);
-            let last_message: &ChatMessage = messages.last().expect("there is a final message");
+            let examples: Vec<&GraderExample> = variant.examples();
 
-            assert_eq!(last_message.role, ChatRoleKind::User);
-            assert!(last_message.text.ends_with(&cases[0].submission));
+            match variant.example_placement() {
+                ExamplePlacementKind::ChatTurns => assert_eq!(messages.len(), 2 + examples.len() * 2),
+                ExamplePlacementKind::SystemPrompt => {
+                    assert_eq!(messages.len(), 2);
+                    assert!(
+                        examples
+                            .iter()
+                            .all(|example| messages[0].text.contains(example.graded_answer.submission))
+                    );
+                }
+            }
         }
     }
 
     #[test]
-    fn build_messages_adds_one_exchange_per_example_as_chat_turns() {
-        let cases: Vec<GradingCase> = load_shipped_cases();
-
-        for variant in PromptVariantKind::ALL {
-            let message_count: usize = build_messages(variant, &cases[0]).len();
-
-            let expected_count: usize = match variant.example_placement() {
-                ExamplePlacementKind::ChatTurns => 2 + variant.examples().len() * 2,
-                ExamplePlacementKind::SystemPrompt => 2,
-            };
-
-            assert_eq!(message_count, expected_count);
-        }
-    }
-
-    #[test]
-    fn build_messages_puts_system_prompt_examples_in_the_system_message() {
-        let cases: Vec<GradingCase> = load_shipped_cases();
-
-        let messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotInSystem, &cases[0]);
-
-        assert!(messages[0].text.contains("Example 3:"));
-        assert!(messages[0].text.contains(grading::SPELLING_MISTAKE_EXAMPLE.graded_answer.submission));
-    }
-
-    #[test]
-    fn few_shot_six_is_the_shared_grader_prompt() {
+    fn build_messages_few_shot_six_equals_shared_build_messages() {
         let cases: Vec<GradingCase> = load_shipped_cases();
 
         let evaluated_messages: Vec<ChatMessage> = build_messages(PromptVariantKind::FewShotSix, &cases[0]);

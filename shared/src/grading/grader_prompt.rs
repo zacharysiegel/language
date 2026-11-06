@@ -145,4 +145,20 @@ mod tests {
             grader_prompt.render_user_message(&GRADED_ANSWER)
         );
     }
+
+    #[test]
+    fn build_messages_with_examples_renders_system_prompt_examples_into_the_system_message() {
+        let grader_prompt: GraderPromptKind = GraderPromptKind::BrazilianPortugueseTaughtInEnglish;
+        let system_prompt_examples: Vec<&GraderExample> = grader_prompt.examples().iter().collect();
+
+        let messages: Vec<ChatMessage> =
+            grader_prompt.build_messages_with_examples(&system_prompt_examples, &[], &GRADED_ANSWER);
+        let roles: Vec<ChatRoleKind> = messages.iter().map(|message| message.role).collect();
+
+        assert_eq!(roles, vec![ChatRoleKind::System, ChatRoleKind::User]);
+        assert_eq!(
+            messages[0].text,
+            grader_prompt.render_system_prompt(&system_prompt_examples)
+        );
+    }
 }
