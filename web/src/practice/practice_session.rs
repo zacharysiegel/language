@@ -10,6 +10,7 @@ use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_st
 use crate::practice;
 
 const ENTER_KEY: &str = "Enter";
+const UNSCORED_NOTE: &str = "Open answers do not count toward the score.";
 
 /* Kinds whose answer is a target-language sentence the learner did not just hear, so the sentence is played
    once the answer is checked. */
@@ -50,11 +51,10 @@ struct SessionProgress {
     exit_kind: SessionExitKind,
 }
 
-fn score_of(results: &[SavedExerciseResult], total_count: usize) -> SessionScore {
-    SessionScore {
-        correct_count: results.iter().filter(|result| result.is_correct()).count(),
-        total_count,
-    }
+fn score_of(exercises: &[Exercise], results: &[SavedExerciseResult]) -> SessionScore {
+    let statuses: Vec<AnswerStatus> = results.iter().map(|result| result.status).collect();
+
+    SessionScore::of_answers(exercises, &statuses)
 }
 
 #[component]
@@ -103,7 +103,7 @@ pub fn ExerciseSession(
 
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
-            on_complete.run(score_of(&results.get_untracked(), active_exercises.get_untracked().len()));
+            on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
         }
     });
 
@@ -125,7 +125,7 @@ pub fn ExerciseSession(
             .get_untracked()
             .iter()
             .zip(exercises_in_session.iter())
-            .filter(|(result, _)| !result.is_correct())
+            .filter(|(result, _)| result.is_missed())
             .map(|(_, exercise)| exercise.clone())
             .collect();
 
@@ -303,11 +303,12 @@ fn summary_view(
     retry_missed: impl Fn() + Copy + Send + Sync + 'static,
     on_exit: Callback<()>,
 ) -> impl IntoView {
-    let score: SessionScore = score_of(&results, exercises.len());
+    let score: SessionScore = score_of(&exercises, &results);
+    let has_unscored: bool = exercises.iter().any(|exercise| !exercise.kind().is_scored());
     let missed_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
-        .filter(|(result, _)| !result.is_correct())
+        .filter(|(result, _)| result.is_missed())
         .map(|(result, exercise)| {
             view! {
                 <li>
@@ -328,6 +329,7 @@ fn summary_view(
     view! {
         <h3>{format!("{title}: {} of {} correct ({}%)", score.correct_count, score.total_count, score.percent())}</h3>
         <p class=verdict_class>{verdict}</p>
+        {has_unscored.then(|| view! { <p class="muted">{UNSCORED_NOTE}</p> })}
         {has_missed.then(|| view! { <h4>"To review"</h4> })}
         <ul class="missed">{missed_items}</ul>
         <div class="row">

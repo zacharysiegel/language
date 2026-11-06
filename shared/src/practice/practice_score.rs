@@ -1,3 +1,6 @@
+use crate::course::Exercise;
+use crate::practice::AnswerStatus;
+
 pub const PASS_PROPORTION: f64 = 0.8;
 pub const QUICK_PRACTICE_EXERCISE_COUNT: usize = 10;
 
@@ -19,6 +22,14 @@ pub struct SessionScore {
 }
 
 impl SessionScore {
+    /// `statuses` are the answers to the first of `exercises`; a scored exercise without one counts as missed.
+    pub fn of_answers(exercises: &[Exercise], statuses: &[AnswerStatus]) -> SessionScore {
+        SessionScore {
+            correct_count: statuses.iter().filter(|status| status.is_correct()).count(),
+            total_count: exercises.iter().filter(|exercise| exercise.kind().is_scored()).count(),
+        }
+    }
+
     pub fn proportion(&self) -> f64 {
         if self.total_count == 0 {
             return 0.0;
@@ -39,6 +50,34 @@ impl SessionScore {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::course::{MultipleChoiceExercise, OpenAnswerExercise};
+
+    fn choice() -> Exercise {
+        Exercise::MultipleChoice(MultipleChoiceExercise {
+            prompt: "Which is a greeting?".to_string(),
+            choices: vec!["Oi".to_string(), "Casa".to_string()],
+            answer_index: 0,
+            explanation: None,
+        })
+    }
+
+    fn open_answer() -> Exercise {
+        Exercise::OpenAnswer(OpenAnswerExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: None,
+            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
+            explanation: None,
+            clip_key: None,
+        })
+    }
+
+    #[test]
+    fn of_answers_counts_only_scored_exercises_and_unanswered_ones_as_missed() {
+        let exercises: Vec<Exercise> = vec![choice(), open_answer(), choice(), choice()];
+        let statuses: Vec<AnswerStatus> = vec![AnswerStatus::Correct, AnswerStatus::Unscored, AnswerStatus::Wrong];
+
+        assert_eq!(SessionScore::of_answers(&exercises, &statuses), SessionScore { correct_count: 1, total_count: 3 });
+    }
 
     #[test]
     fn passed_requires_the_pass_proportion() {
