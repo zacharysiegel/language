@@ -1,4 +1,4 @@
-const BRAZILIAN_PORTUGUESE: &str = "pt-BR";
+use crate::course;
 
 /* Stems match any word beginning with them; the remaining lists match whole words or whole phrases. */
 const EUROPEAN_PORTUGUESE_STEMS: [&str; 12] = [
@@ -34,7 +34,7 @@ const INFINITIVE_LOOKALIKES: [&str; 1] = ["favor"];
 /// The check a course's target language adds to every spoken text, if any; the message describes the problem.
 pub fn target_language_issue(target_language: &str, text: &str) -> Option<String> {
     match target_language {
-        BRAZILIAN_PORTUGUESE => contains_european_portuguese(text).then(|| format!("European Portuguese form in spoken text: {text}")),
+        course::BRAZILIAN_PORTUGUESE_LANGUAGE_TAG => contains_european_portuguese(text).then(|| format!("European Portuguese form in spoken text: {text}")),
         _ => None,
     }
 }
