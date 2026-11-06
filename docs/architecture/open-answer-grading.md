@@ -75,9 +75,9 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 
 ## Phases
 
-Linear stack in `language`; `cross-llama` 0.1.1 is published before phase 5.
+Each `language` phase merges into `main` locally once its checks pass; `cross-llama` 0.1.1 is published before phase 5.
 
-1. `language`: R2 CORS for the production origin (PR #1).
+1. `language`: R2 CORS for the production origin (done).
 2. `language`: grader prompt into `shared`; the evaluation reproduces its recorded results.
 3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only.
 4. `cross-llama`: 0.1.1.
@@ -85,7 +85,6 @@ Linear stack in `language`; `cross-llama` 0.1.1 is published before phase 5.
 6. `language`: isolation headers, wllama files, and grading in the web view.
 7. `language`: author open-answer exercises into the chosen units; docs.
 
-## Pull request descriptions
+## Pull request description
 
 - `cross-llama`: A download-only function, a download check and a browser capability check let an app download a model in the background and decide whether it can run, without loading the model into memory. A Web Lock keeps two tabs from writing the same cached model file.
-- `language`: Adds open-answer exercises, which the learner answers in free text. In the browser, a local AI model grades the answer and lists mistakes; elsewhere the learner compares with example answers. Open answers do not count toward a quiz's score.
