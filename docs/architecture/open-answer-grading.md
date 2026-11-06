@@ -144,7 +144,7 @@ Authoring rules, added to `docs/authoring.md` with the exercise type:
 Each `language` phase merges into `main` locally once its checks pass; `cross-llama` 0.2.0 is published before phase 5.
 
 1. `language`: R2 CORS for the production origin (done).
-2. `language`: grader prompt into `shared`; the evaluation reproduces its recorded results.
+2. `language`: grader prompt into `shared` (done; every rendered prompt byte-identical).
 3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only.
 4. `cross-llama`: 0.2.0.
 5. `language`: model hosting and `publish-model`.
