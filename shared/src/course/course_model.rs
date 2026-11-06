@@ -236,7 +236,6 @@ impl ExerciseKind {
         }
     }
 
-    /// Whether the exercise's result counts toward a practice session's score.
     pub fn is_scored(self) -> bool {
         match self {
             ExerciseKind::MultipleChoice
