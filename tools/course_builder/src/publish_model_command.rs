@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use shared::AppError;
 
@@ -7,12 +7,19 @@ use crate::model_hosting::{self, HostedModel, ModelPublicationReport, ModelSplit
 use crate::publish_command::{self, RepositoryLocationKind};
 use crate::workspace::WorkspacePaths;
 
-pub fn run_publish_model(paths: &WorkspacePaths, location: RepositoryLocationKind, model_file: &Path) -> Result<bool, AppError> {
+/* Ollama stores each model file as `sha256-<hex digest>` in this directory under the home directory. */
+const OLLAMA_BLOB_DIRECTORY: &str = ".ollama/models/blobs";
+
+pub fn run_publish_model(paths: &WorkspacePaths, location: RepositoryLocationKind, model_file: Option<PathBuf>) -> Result<bool, AppError> {
     let model: HostedModel = HostedModel::grading_model();
+    let model_file: PathBuf = match model_file {
+        Some(model_file) => model_file,
+        None => ollama_blob_path(&model)?,
+    };
 
     log::info!("checking the model file; [path={} model={}]", model_file.display(), model.name);
 
-    let model_split: ModelSplit = model_hosting::plan_model_split(&model, model_file, model_hosting::MAXIMUM_PART_TENSOR_BYTES)?;
+    let model_split: ModelSplit = model_hosting::plan_model_split(&model, &model_file, model_hosting::MAXIMUM_PART_TENSOR_BYTES)?;
     let split_directory: PathBuf = paths.model_split_directory.join(&model.name);
     let runtime: tokio::runtime::Runtime = tokio::runtime::Builder::new_multi_thread().enable_all().build()?;
 
@@ -35,4 +42,11 @@ pub fn run_publish_model(paths: &WorkspacePaths, location: RepositoryLocationKin
     );
 
     Ok(true)
+}
+
+fn ollama_blob_path(model: &HostedModel) -> Result<PathBuf, AppError> {
+    let home_directory: String =
+        std::env::var("HOME").map_err(|error| AppError::from(format!("reading the home directory failed; [variable=HOME error={error}]")))?;
+
+    Ok(PathBuf::from(home_directory).join(OLLAMA_BLOB_DIRECTORY).join(format!("sha256-{}", model.sha256)))
 }
