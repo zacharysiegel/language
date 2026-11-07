@@ -64,7 +64,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - `course_builder publish-model <target>`: uploads to R2 or copies into the local repository.
 - The client derives the model URL from the repository base and a constant in `shared`.
 - Deviations, as built:
-  - A Rust splitter in `course_builder` (`model_hosting`) writes what `llama-gguf-split --split-max-size` writes, byte for byte, instead of running it.
+  - A Rust splitter in `course_builder` (`model_hosting`) writes what `llama-gguf-split --split-max-size` writes, byte for byte for a file aligned to 32 whose first tensor fits the limit, instead of running it.
   - The limit counts a part's padded tensor data, as `llama-gguf-split` does, so a part may exceed 512 MiB: the 826 MB `token_embd.weight` has a part of its own. 14 parts.
   - `shared::grading` also holds the unsplit file's size, checked before hashing.
   - `ListedObject` gained `size_bytes`, so a rerun skips a part present at its size.
