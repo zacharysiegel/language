@@ -12,6 +12,7 @@ const UNITS_DIRECTORY_NAME: &str = "units";
 const SPEECH_MODELS_DIRECTORY: &str = "models";
 const CLIP_STORE_DIRECTORY: &str = "build/clips";
 const BUNDLES_DIRECTORY: &str = "build/artifacts";
+const MODEL_SPLIT_DIRECTORY: &str = "build/model_split";
 const EMBEDDED_BUNDLE_DIRECTORY: &str = "web/static/embedded";
 
 pub struct WorkspacePaths {
@@ -19,6 +20,7 @@ pub struct WorkspacePaths {
     pub speech_models_directory: PathBuf,
     pub clip_store_directory: PathBuf,
     pub bundles_directory: PathBuf,
+    pub model_split_directory: PathBuf,
     pub local_repository_directory: PathBuf,
     pub embedded_bundle_directory: PathBuf,
 }
@@ -37,6 +39,7 @@ impl WorkspacePaths {
             speech_models_directory: root.join(SPEECH_MODELS_DIRECTORY),
             clip_store_directory: root.join(CLIP_STORE_DIRECTORY),
             bundles_directory: root.join(BUNDLES_DIRECTORY),
+            model_split_directory: root.join(MODEL_SPLIT_DIRECTORY),
             local_repository_directory: root.join(local_repository::DEFAULT_LOCAL_REPOSITORY_DIRECTORY),
             embedded_bundle_directory: root.join(EMBEDDED_BUNDLE_DIRECTORY),
         }
