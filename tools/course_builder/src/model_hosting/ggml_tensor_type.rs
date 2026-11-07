@@ -1,24 +1,5 @@
 use shared::AppError;
 
-/// A ggml tensor type's elements and bytes per block, as ggml's `type_traits` table states them.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-struct TensorTypeLayout {
-    /// ggml's `enum ggml_type` value.
-    type_id: u32,
-    name: &'static str,
-    block_element_count: u64,
-    block_size_bytes: u64,
-}
-
-const fn layout(type_id: u32, name: &'static str, block_element_count: u64, block_size_bytes: u64) -> TensorTypeLayout {
-    TensorTypeLayout {
-        type_id,
-        name,
-        block_element_count,
-        block_size_bytes,
-    }
-}
-
 const SUPER_BLOCK: u64 = 256;
 
 /* The ids ggml removed are absent. */
@@ -60,6 +41,25 @@ const TENSOR_TYPE_LAYOUTS: [TensorTypeLayout; 36] = [
     layout(42, "Q2_0", 64, 2 + 16),
     layout(43, "F8_E4M3", 1, 1),
 ];
+
+/// A tensor type's block layout in ggml's `type_traits` table.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct TensorTypeLayout {
+    /// ggml's `enum ggml_type` value.
+    type_id: u32,
+    name: &'static str,
+    block_element_count: u64,
+    block_size_bytes: u64,
+}
+
+const fn layout(type_id: u32, name: &'static str, block_element_count: u64, block_size_bytes: u64) -> TensorTypeLayout {
+    TensorTypeLayout {
+        type_id,
+        name,
+        block_element_count,
+        block_size_bytes,
+    }
+}
 
 /// `ggml_nbytes` of a contiguous tensor.
 pub fn tensor_size_bytes(tensor_name: &str, type_id: u32, dimensions: &[i64]) -> Result<u64, AppError> {
