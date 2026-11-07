@@ -3,12 +3,14 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use leptos_router::hooks::{use_params_map, use_query_map};
-use shared::course::{CourseOutline, Dialogue, Exercise, GrammarNote, Reading, SpokenClip, Unit, VocabularyItem};
+use shared::course::{CourseOutline, Dialogue, Exercise, ExerciseKind, GrammarNote, Reading, SpokenClip, Unit, VocabularyItem};
+use shared::grading;
 use shared::progress::AudioEngineKind;
 
 use crate::course_data::{
-    self, CourseStore, LoadState, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
+    self, CourseStore, LoadState, LoadedCoursePublication, TAB_QUERY_KEY, UNIT_ID_PARAM, course_gate, use_course_store, use_route_course_id,
 };
+use crate::grading::{GradingStore, use_grading_store};
 use crate::pending_indication::PageLoadStatus;
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 use crate::recording_prefetch::{self, RecordingPrefetchId};
@@ -109,6 +111,7 @@ pub fn UnitPage() -> impl IntoView {
 
     remember_route_course(progress_store, course_id);
     prefetch_shown_tab_recordings(unit_state, active_tab, audio_engine);
+    prepare_open_answer_grading(course_store, course_id, unit_state);
 
     Effect::new(move |_| {
         let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(LoadState::Loaded(_)));
@@ -146,6 +149,40 @@ fn prefetch_shown_tab_recordings(unit_state: Memo<LoadState<Unit>>, active_tab: 
     });
 }
 
+/// Downloads the grading model in the background on a unit whose open answers its course can grade, unless the setting
+/// is off.
+fn prepare_open_answer_grading(course_store: CourseStore, course_id: Memo<String>, unit_state: Memo<LoadState<Unit>>) {
+    let grading_store: GradingStore = use_grading_store();
+    let progress_store: ProgressStore = use_progress_store();
+
+    Effect::new(move |_| {
+        let LoadState::Loaded(unit) = unit_state.get()
+        else {
+            return;
+        };
+
+        let has_open_answers: bool = unit.exercises.iter().any(|exercise| exercise.kind() == ExerciseKind::OpenAnswer);
+        let shown_course_id: String = course_id.get();
+        let outline_state: Option<LoadState<CourseOutline>> = course_store.outline_state(&shown_course_id);
+        let publication_state: Option<LoadState<LoadedCoursePublication>> = course_store.publication_state(&shown_course_id);
+
+        let (Some(LoadState::Loaded(outline)), Some(LoadState::Loaded(publication))) = (outline_state, publication_state)
+        else {
+            return;
+        };
+
+        let course_is_graded: bool = grading::find_grader_prompt(&outline.target_language, &outline.source_language).is_some();
+
+        if !has_open_answers || !course_is_graded {
+            return;
+        }
+
+        let download_enabled: bool = progress_store.read(|progress| progress.settings.download_grading_model);
+
+        grading_store.prepare(&publication.audio_base_url, download_enabled);
+    });
+}
+
 fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> impl IntoView + use<> {
     let available_tabs: Vec<UnitTabKind> = UnitTabKind::available_tabs(&unit);
     let tab_links: Vec<_> = available_tabs
@@ -174,7 +211,15 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
         UnitTabKind::Dialogues => view! { <DialoguesSection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Grammar => view! { <GrammarSection unit=unit.clone() /> }.into_any(),
         UnitTabKind::Readings => view! { <ReadingsSection unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Practice => view! { <PracticeSection course_id=course.id.clone() unit=unit.clone() /> }.into_any(),
+        UnitTabKind::Practice => view! {
+            <PracticeSection
+                course_id=course.id.clone()
+                target_language=course.target_language.clone()
+                source_language=course.source_language.clone()
+                unit=unit.clone()
+            />
+        }
+        .into_any(),
     };
 
     view! {
