@@ -1,12 +1,40 @@
+use std::io::{self, Read};
+
 use sha2::{Digest, Sha256};
 
 use crate::AppError;
 
 pub const SHA256_HEX_LENGTH: usize = 64;
 
+const STREAMED_HASH_BUFFER_BYTES: usize = 8 * 1024 * 1024;
+
 pub fn sha256_hex(bytes: &[u8]) -> String {
     let digest: [u8; 32] = Sha256::digest(bytes).into();
 
+    lowercase_hex(&digest)
+}
+
+/// Reads `reader` to its end in fixed-size pieces, for inputs too large to hold in memory.
+pub fn sha256_hex_of_reader(reader: &mut impl Read) -> Result<String, io::Error> {
+    let mut hasher: Sha256 = Sha256::new();
+    let mut buffer: Vec<u8> = vec![0; STREAMED_HASH_BUFFER_BYTES];
+
+    loop {
+        let read_count: usize = reader.read(&mut buffer)?;
+
+        if read_count == 0 {
+            break;
+        }
+
+        hasher.update(&buffer[..read_count]);
+    }
+
+    let digest: [u8; 32] = hasher.finalize().into();
+
+    Ok(lowercase_hex(&digest))
+}
+
+fn lowercase_hex(digest: &[u8]) -> String {
     digest.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
@@ -38,6 +66,13 @@ mod tests {
     #[test]
     fn sha256_hex_matches_the_known_digest_of_the_empty_input() {
         assert_eq!(sha256_hex(b""), "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855");
+    }
+
+    #[test]
+    fn sha256_hex_of_reader_matches_sha256_hex_across_buffer_boundaries() {
+        let bytes: Vec<u8> = (0..STREAMED_HASH_BUFFER_BYTES + 3).map(|index| (index % 251) as u8).collect();
+
+        assert_eq!(sha256_hex_of_reader(&mut bytes.as_slice()).unwrap(), sha256_hex(&bytes));
     }
 
     #[test]
