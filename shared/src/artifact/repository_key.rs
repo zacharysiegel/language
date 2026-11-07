@@ -4,6 +4,8 @@ pub const COURSE_INDEX_KEY: &str = "course-index.json";
 pub const COURSES_DIRECTORY: &str = "courses";
 pub const REPOSITORY_LOCK_KEY: &str = ".repository-lock";
 pub const RECORDINGS_FILENAME: &str = "recordings.json";
+pub const MODELS_DIRECTORY: &str = "models";
+pub const MODEL_FILE_EXTENSION: &str = "gguf";
 
 /* The directory in a course's directory that holds its pointers, which is not a publication. */
 pub const COURSE_LATEST_DIRECTORY: &str = "latest";
@@ -54,6 +56,21 @@ pub fn audio_key(audio_sha256: &str) -> String {
     format!("{}/{audio_sha256}.{}", manifest::SUBDIR_AUDIO, manifest::AUDIO_FILE_EXTENSION)
 }
 
+/// `model_sha256` is the hash of the unsplit model file.
+pub fn model_directory_key(model_name: &str, model_sha256: &str) -> String {
+    format!("{MODELS_DIRECTORY}/{model_name}/{model_sha256}/")
+}
+
+/* llama.cpp's split file name; llama.cpp and wllama derive every part's name from the first part's. */
+pub fn model_part_file_name(model_name: &str, part_number: u16, part_count: u16) -> String {
+    format!("{model_name}-{part_number:05}-of-{part_count:05}.{MODEL_FILE_EXTENSION}")
+}
+
+/// `part_number` counts from 1.
+pub fn model_part_key(model_name: &str, model_sha256: &str, part_number: u16, part_count: u16) -> String {
+    format!("{}{}", model_directory_key(model_name, model_sha256), model_part_file_name(model_name, part_number, part_count))
+}
+
 /// A key whose object is replaced in place, so caches must revalidate it.
 pub fn is_pointer_key(key: &str) -> bool {
     if key == COURSE_INDEX_KEY {
@@ -102,6 +119,7 @@ mod tests {
             "courses/pt_br.en.foundations/2026-10-08+duluth/data/course-ab.sqlite.br",
         );
         assert_eq!(audio_key("abc"), "audio/abc.m4a");
+        assert_eq!(model_part_key("gemma", "abc", 2, 14), "models/gemma/abc/gemma-00002-of-00014.gguf");
     }
 
     #[test]
@@ -140,5 +158,6 @@ mod tests {
         assert_eq!(cache_control_for_key(&course_latest_manifest_key(COURSE_ID)), CACHE_CONTROL_POINTER);
         assert_eq!(cache_control_for_key(&publication_manifest_key(COURSE_ID, PUBLICATION_LABEL)), CACHE_CONTROL_IMMUTABLE);
         assert_eq!(cache_control_for_key(&audio_key("ab")), CACHE_CONTROL_IMMUTABLE);
+        assert_eq!(cache_control_for_key(&model_part_key("gemma", "ab", 1, 2)), CACHE_CONTROL_IMMUTABLE);
     }
 }
