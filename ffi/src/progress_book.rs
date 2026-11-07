@@ -113,15 +113,15 @@ impl From<&Settings> for SettingsRecord {
     }
 }
 
-impl From<SettingsRecord> for Settings {
-    fn from(record: SettingsRecord) -> Settings {
-        Settings {
-            show_translations: record.show_translations,
-            slow_audio: record.slow_audio,
-            review_direction: record.review_direction.into(),
-            audio_engine: record.audio_engine.into(),
-            last_course_id: record.last_course_id,
-        }
+/// The native apps do not grade, so they leave the web app's grading model setting as it is.
+fn settings_from_record(record: SettingsRecord, download_grading_model: bool) -> Settings {
+    Settings {
+        show_translations: record.show_translations,
+        slow_audio: record.slow_audio,
+        review_direction: record.review_direction.into(),
+        audio_engine: record.audio_engine.into(),
+        last_course_id: record.last_course_id,
+        download_grading_model,
     }
 }
 
@@ -310,7 +310,7 @@ impl ProgressBook {
     }
 
     pub fn update_settings(&self, settings: SettingsRecord) -> Result<(), CoreError> {
-        self.change(|progress| progress.settings = settings.into())
+        self.change(|progress| progress.settings = settings_from_record(settings, progress.settings.download_grading_model))
     }
 
     pub fn unit_progress(&self, course_id: String, unit_id: String) -> UnitProgressRecord {
@@ -703,6 +703,20 @@ mod tests {
 
         assert_eq!(book.card_count(COURSE_ID.to_string()), 0);
         assert!(directory.path().join("progress.unreadable").exists());
+    }
+
+    #[test]
+    fn update_settings_keeps_the_grading_model_setting() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let progress_path: PathBuf = directory.path().join("progress.json");
+        fs::write(&progress_path, r#"{"settings": {"download_grading_model": false}}"#).unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        let settings: SettingsRecord = book.settings();
+
+        book.update_settings(settings).unwrap();
+
+        let saved_progress: Progress = Progress::from_json(&fs::read_to_string(&progress_path).unwrap()).unwrap();
+        assert!(!saved_progress.settings.download_grading_model);
     }
 
     #[test]

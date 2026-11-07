@@ -84,6 +84,13 @@ pub struct Settings {
     /// The course the learner opened last.
     #[serde(default)]
     pub last_course_id: Option<String>,
+    /// Whether the web app downloads the grading model in the background.
+    #[serde(default = "default_download_grading_model")]
+    pub download_grading_model: bool,
+}
+
+fn default_download_grading_model() -> bool {
+    true
 }
 
 fn default_audio_engine() -> AudioEngineKind {
@@ -106,6 +113,7 @@ impl Default for Settings {
             review_direction: default_review_direction(),
             audio_engine: default_audio_engine(),
             last_course_id: None,
+            download_grading_model: default_download_grading_model(),
         }
     }
 }
@@ -425,6 +433,13 @@ mod tests {
         let progress: Progress = Progress::from_json(&format!(r#"{{"courses": {{"{COURSE_ID}": {{"units": {{"u": {text}}}}}}}}}"#)).unwrap();
 
         progress.course_progress(COURSE_ID).unit_progress("u")
+    }
+
+    #[test]
+    fn from_json_downloads_the_grading_model_for_settings_saved_without_the_setting() {
+        let progress: Progress = Progress::from_json(r#"{"settings": {"slow_audio": true}}"#).unwrap();
+
+        assert!(progress.settings.download_grading_model);
     }
 
     #[test]
