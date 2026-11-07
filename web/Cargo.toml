@@ -52,6 +52,8 @@ web-sys = { workspace = true, optional = true, features = [
 ] }
 console_log = { workspace = true, optional = true }
 console_error_panic_hook = { workspace = true, optional = true }
+cross-llama = { workspace = true, optional = true }
+futures-util = { workspace = true, optional = true, features = ["alloc"] }
 leptos_axum = { workspace = true, optional = true }
 axum = { workspace = true, optional = true }
 tokio = { workspace = true, optional = true }
@@ -68,6 +70,8 @@ hydrate = [
     "dep:web-sys",
     "dep:console_log",
     "dep:console_error_panic_hook",
+    "dep:cross-llama",
+    "dep:futures-util",
 ]
 ssr = [
     "leptos/ssr",

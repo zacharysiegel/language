@@ -14,6 +14,10 @@ readonly DOCUMENT_PATH="${SITE_DIR}/index.html"
 readonly DISCOVERY_PATH="${SITE_DIR}/discovery"
 readonly HEADERS_PATH="${SITE_DIR}/_headers"
 readonly EMBEDDED_COURSE_INDEX_PATH="${SITE_DIR}/embedded/course-index.json"
+readonly WLLAMA_DIR="${SITE_DIR}/wllama"
+# The files cross-llama's fetch-wllama.sh writes, which the grader loads from /wllama/, and the version
+# scripts/build/prepare-wllama.sh records beside them.
+readonly WLLAMA_FILES=(index.js wllama.wasm compat/wllama.js compat/wllama.wasm VERSION)
 
 # STATIC_SHELL_ELEMENT_ID in web/src/app.rs.
 readonly STATIC_SHELL_MARKER='id="static-shell"'
@@ -97,6 +101,12 @@ for icon_file in favicon-32.png apple-touch-icon.png favicon.ico; do
     fi
 done
 
+for wllama_file in "${WLLAMA_FILES[@]}"; do
+    if test ! -s "${WLLAMA_DIR}/${wllama_file}"; then
+        fail "${WLLAMA_DIR}/${wllama_file} is missing, so open answers cannot be graded; run ./scripts/build/build-site.sh"
+    fi
+done
+
 if test ! -f "${DISCOVERY_PATH}"; then
     fail "${DISCOVERY_PATH} is missing, so a client has nothing to resolve the repository from"
 fi
@@ -117,3 +127,4 @@ fi
 
 printf '%s: static shell present, %d referenced assets present and content-hashed\n' "${SITE_DIR}" "${reference_count}"
 printf '%s: discovery and the client both name %s\n' "${SITE_DIR}" "${repository_base_url}"
+printf '%s: wllama %s present\n' "${SITE_DIR}" "$(cat "${WLLAMA_DIR}/VERSION")"
