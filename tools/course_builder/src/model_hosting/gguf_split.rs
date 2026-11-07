@@ -152,6 +152,8 @@ mod tests {
     use std::fs;
     use std::path::PathBuf;
 
+    use shared::artifact::repository_key;
+
     use super::*;
     use crate::model_hosting::gguf_file::GgufReader;
     use crate::model_hosting::test_model_files;
@@ -168,10 +170,11 @@ mod tests {
         let source: GgufHeader = gguf_file::read_gguf_header_of_file(&source_path).unwrap();
         let parts: Vec<GgufSplitPart> = plan_split(&source, maximum_part_tensor_bytes).unwrap();
         let mut source_file: File = File::open(&source_path).unwrap();
+        let part_count: u16 = u16::try_from(parts.len()).unwrap();
         let mut part_paths: Vec<PathBuf> = Vec::new();
 
         for part in &parts {
-            let part_path: PathBuf = directory.join(format!("model-{:05}-of-{:05}.gguf", part.part_number, parts.len()));
+            let part_path: PathBuf = directory.join(repository_key::model_part_file_name("model", part.part_number, part_count));
 
             write_part(&mut source_file, &source, part, &part_path).unwrap();
             part_paths.push(part_path);
