@@ -2,7 +2,7 @@
 
 # Serves the app at http://127.0.0.1:3000 with rebuild on change, and the local repository at http://127.0.0.1:3002.
 # Builds and publishes the courses, the test courses included, to the local repository first when it has no
-# course index.
+# course index, and fetches wllama's files into web/static/wllama/ when they are missing or of another version.
 
 set -euo pipefail
 
@@ -14,6 +14,8 @@ readonly REPOSITORY_SERVER_BINARY="${REPO_ROOT}/target/debug/repository_server"
 if test ! -f "${COURSE_INDEX_PATH}"; then
     "${REPO_ROOT}/scripts/dev/build-local-repository.sh"
 fi
+
+"${REPO_ROOT}/scripts/build/prepare-wllama.sh"
 
 cd "${REPO_ROOT}"
 
