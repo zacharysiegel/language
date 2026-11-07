@@ -4,6 +4,11 @@
 # A path with no rule keeps the edge's default `Cache-Control: public, max-age=0, must-revalidate` and an ETag,
 # which is what index.html needs: a stable name served at every route, with bytes that change every build.
 
+/*
+  # wllama's multithreaded build, which grades open answers, needs cross-origin isolation.
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Embedder-Policy: require-corp
+
 /discovery
   # Extensionless, so the edge would send no Content-Type. One hour bounds how long a client keeps using a
   # superseded repository base after this document is redeployed.
