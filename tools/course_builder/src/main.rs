@@ -78,15 +78,15 @@ enum PublishModelTargetArgument {
         #[arg(long)]
         root: Option<PathBuf>,
 
-        /// The unsplit GGUF file, whose SHA-256 must be the grading model's.
+        /// The unsplit GGUF file, whose SHA-256 must be the grading model's; Ollama's blob of that hash when omitted.
         #[arg(long)]
-        model_file: PathBuf,
+        model_file: Option<PathBuf>,
     },
     /// The R2 bucket; reads the bucket settings as `publish cloudflare-r2` does.
     CloudflareR2 {
-        /// The unsplit GGUF file, whose SHA-256 must be the grading model's.
+        /// The unsplit GGUF file, whose SHA-256 must be the grading model's; Ollama's blob of that hash when omitted.
         #[arg(long)]
-        model_file: PathBuf,
+        model_file: Option<PathBuf>,
     },
 }
 
@@ -319,10 +319,10 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
         },
         CommandKind::PublishModel(arguments) => match arguments.target {
             PublishModelTargetArgument::Local { root, model_file } => {
-                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::Local { root }), &model_file)
+                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::Local { root }), model_file)
             },
             PublishModelTargetArgument::CloudflareR2 { model_file } => {
-                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::CloudflareR2), &model_file)
+                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::CloudflareR2), model_file)
             },
         },
         CommandKind::RemoveCourse(arguments) => match arguments.target {
