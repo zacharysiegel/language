@@ -230,6 +230,23 @@ mod tests {
 
         let planned: Result<ModelSplit, AppError> = plan_model_split(&model, &model_file, FIXTURE_PART_TENSOR_BYTES * 4);
 
-        assert!(planned.is_err());
+        assert!(planned.err().unwrap().to_string().contains("part count"));
+    }
+
+    #[test]
+    fn plan_model_split_refuses_a_file_with_another_size() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let model_file: PathBuf = test_model_files::write_fixture_model(directory.path());
+        let fixture: HostedModel = fixture_model(&model_file);
+        let model: HostedModel = HostedModel {
+            name: fixture.name,
+            sha256: fixture.sha256,
+            size_bytes: fixture.size_bytes + 1,
+            part_count: fixture.part_count,
+        };
+
+        let planned: Result<ModelSplit, AppError> = plan_model_split(&model, &model_file, FIXTURE_PART_TENSOR_BYTES);
+
+        assert!(planned.err().unwrap().to_string().contains("another size"));
     }
 }
