@@ -114,11 +114,13 @@ fn collect_files_recursively(directory: &Path, key_prefix: &str, listed_objects:
             continue;
         }
 
-        let modified: SystemTime = directory_entry.metadata()?.modified()?;
+        let metadata: fs::Metadata = directory_entry.metadata()?;
+        let modified: SystemTime = metadata.modified()?;
 
         listed_objects.push(ListedObject {
             key: format!("{key_prefix}{name}"),
             uploaded: DateTime::<Utc>::from(modified),
+            size_bytes: metadata.len(),
         });
     }
 

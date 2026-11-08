@@ -74,6 +74,7 @@ pub enum WriteOutcomeKind {
 pub struct ListedObject {
     pub key: String,
     pub uploaded: DateTime<Utc>,
+    pub size_bytes: u64,
 }
 
 /// An object store that published bundles are written to.
