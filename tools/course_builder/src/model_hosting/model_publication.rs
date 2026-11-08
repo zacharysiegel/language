@@ -14,10 +14,12 @@ use crate::model_hosting::gguf_split::{self, GgufSplitPart};
 /* About 512 MiB per part, measured as llama-gguf-split measures it. */
 pub const MAXIMUM_PART_TENSOR_BYTES: u64 = 512 * 1024 * 1024;
 
-/// A model file a repository serves in llama.cpp's split format.
+/// A model file a repository serves, unsplit or in llama.cpp's split format.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct HostedModel {
     pub name: String,
+    /// Of the unsplit file.
+    pub file_name: String,
     /// Of the unsplit file.
     pub sha256: String,
     pub size_bytes: u64,
@@ -28,10 +30,15 @@ impl HostedModel {
     pub fn grading_model() -> HostedModel {
         HostedModel {
             name: grading::GRADING_MODEL_NAME.to_string(),
+            file_name: grading::GRADING_MODEL_FILE_NAME.to_string(),
             sha256: grading::GRADING_MODEL_SHA256.to_string(),
             size_bytes: grading::GRADING_MODEL_SIZE_BYTES,
             part_count: grading::GRADING_MODEL_PART_COUNT,
         }
+    }
+
+    pub fn file_key(&self) -> String {
+        repository_key::model_file_key(&self.name, &self.sha256, &self.file_name)
     }
 
     fn part_key(&self, part_number: u16) -> String {
@@ -75,7 +82,7 @@ pub fn plan_model_split(model: &HostedModel, model_file: &Path, maximum_part_ten
     })
 }
 
-fn verify_model_file(model: &HostedModel, model_file: &Path) -> Result<(), AppError> {
+pub fn verify_model_file(model: &HostedModel, model_file: &Path) -> Result<(), AppError> {
     let size_bytes: u64 = fs::metadata(model_file)
         .map_err(|error| AppError::from(format!("reading the model file failed; [path={} error={error}]", model_file.display())))?
         .len();
@@ -170,14 +177,7 @@ mod tests {
     const FIXTURE_PART_COUNT: u16 = 3;
 
     fn fixture_model(model_file: &Path) -> HostedModel {
-        let bytes: Vec<u8> = fs::read(model_file).unwrap();
-
-        HostedModel {
-            name: "fixture".to_string(),
-            sha256: content_address::sha256_hex(&bytes),
-            size_bytes: bytes.len() as u64,
-            part_count: FIXTURE_PART_COUNT,
-        }
+        test_model_files::fixture_hosted_model(model_file, FIXTURE_PART_COUNT)
     }
 
     #[tokio::test]
@@ -212,6 +212,7 @@ mod tests {
         let fixture: HostedModel = fixture_model(&model_file);
         let model: HostedModel = HostedModel {
             name: fixture.name,
+            file_name: fixture.file_name,
             sha256: content_address::sha256_hex(b"another file"),
             size_bytes: fixture.size_bytes,
             part_count: fixture.part_count,
@@ -240,6 +241,7 @@ mod tests {
         let fixture: HostedModel = fixture_model(&model_file);
         let model: HostedModel = HostedModel {
             name: fixture.name,
+            file_name: fixture.file_name,
             sha256: fixture.sha256,
             size_bytes: fixture.size_bytes + 1,
             part_count: fixture.part_count,
