@@ -4,8 +4,7 @@ use shared::grading::GraderPromptKind;
 use crate::grading::GraderStateKind;
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-/// The open answers of a practice session, and how their grader reads them; provided only where a grader prompt exists
-/// for the course's language pair.
+/// How the grader reads a practice session's open answers.
 #[derive(Debug, Clone)]
 pub struct OpenAnswerGradingContext {
     pub grader_prompt: GraderPromptKind,
@@ -13,7 +12,6 @@ pub struct OpenAnswerGradingContext {
     pub target_language_name: String,
 }
 
-/// One open answer as the grader reads it.
 #[derive(Debug, Clone)]
 pub struct OpenAnswerSubmission {
     pub grader_prompt: GraderPromptKind,

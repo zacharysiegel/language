@@ -20,7 +20,6 @@ impl ModelDownloadProgress {
         self.total_byte_count.unwrap_or(grading::GRADING_MODEL_SIZE_BYTES).max(1)
     }
 
-    /// Thousandths of the download done, which change often enough to show progress and seldom enough to redraw it.
     pub fn downloaded_permille(&self) -> u64 {
         let total_byte_count: u64 = self.total_or_expected_byte_count();
 
@@ -139,7 +138,7 @@ mod tests {
     }
 
     #[test]
-    fn description_states_gigabytes_against_the_expected_size_until_the_total_is_known() {
+    fn description_and_downloaded_permille_measure_against_the_expected_size_until_the_total_is_known() {
         let progress: ModelDownloadProgress = ModelDownloadProgress {
             downloaded_byte_count: 1_260_000_000,
             total_byte_count: None,
