@@ -1892,6 +1892,16 @@
       ]
     },
     {
+      "type": "open_answer",
+      "prompt_source": "A friend asks how you make rice. Tell them the steps.",
+      "context_source": "Chop the onion and fry it in a little oil. Add the rice, the water and a pinch of salt. Leave it on low heat for twenty minutes.",
+      "example_answers": [
+        "Pique a cebola e frite num pouco de óleo. Acrescente o arroz e a água com uma pitada de sal. Cozinhe em fogo baixo por vinte minutos.",
+        "Primeiro pique a cebola e frite no óleo. Depois coloque o arroz, a água e uma pitada de sal. Deixe em fogo baixo por vinte minutos."
+      ],
+      "explanation": "Each step is a command for 'você', built from the 'eu' form with the opposite vowel: 'frito' gives 'frite', 'acrescento' gives 'acrescente'. 'Picar' and 'colocar' write 'pique' and 'coloque' to keep the 'k' sound before 'e'."
+    },
+    {
       "type": "translate_to_target",
       "prompt_source": "Open the door, please.",
       "answers": [
@@ -1926,6 +1936,16 @@
         "Não se preocupem."
       ],
       "explanation": "Reflexive pronouns always come before the verb in negative commands."
+    },
+    {
+      "type": "open_answer",
+      "prompt_source": "A new colleague starts tomorrow. Write them a short message with the office rules.",
+      "context_source": "Arrive at eight, hand in the reports on Friday, and do not use your phone in meetings.",
+      "example_answers": [
+        "Chegue às oito, por favor. Entregue os relatórios na sexta-feira e não use o celular nas reuniões.",
+        "Por favor, esteja aqui às oito. Entregue os relatórios na sexta-feira e não use o celular durante as reuniões."
+      ],
+      "explanation": "A negative command puts 'não' before the same form: 'não use'. 'Chegar' and 'entregar' write 'chegue' and 'entregue' so that the 'g' stays hard, and 'esteja' is the irregular command of 'estar'."
     },
     {
       "type": "dictation",

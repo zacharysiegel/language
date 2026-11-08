@@ -99,7 +99,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 
 ## Course content
 
-`pt_br.en.foundations`: 80 open-answer tasks in 40 units, chosen by a review of the whole course against the grader's tested scope (answers of up to 27 words; scene facts checked; use of a taught structure not checked).
+`pt_br.en.foundations`: 79 open-answer tasks in 40 units, chosen by a review of the whole course against the grader's tested scope (answers of up to 27 words; scene facts checked; use of a taught structure not checked).
 
 - Personal: about the learner's own life, no `context_source`. Scene: `context_source` holds the facts the answer must convey.
 - No open answers: `a1-02-sounds-alphabet`, `a1-00-stress-and-diacritics`, `a1-00-how-portuguese-works` (no communicative goal yet), `b2-05-literature-poetry` (reading and recognition only).
@@ -109,12 +109,12 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - `a1-04-numbers-time`: your age and birthday (personal).
   - `a1-05-family-possessives`: your family (personal); a relative and their pet with `dele` or `dela` (scene).
   - `a1-06-food-drinks-ordering`: order at a padaria with `eu queria` (scene); food you like and dislike (personal).
-  - `a1-07-daily-routine`: your weekday with times and frequency (personal, up to three sentences); someone else's routine with `se levanta` (scene).
+  - `a1-07-daily-routine`: your weekday with times and frequency (personal); someone else's routine with `se levanta` (scene).
   - `a1-08-places-directions`: directions with `vire`, `siga`, `atravesse` (scene); where a place is (scene).
   - `a1-09-shopping-colors-prices`: what someone is wearing (scene); ask for an item's size, color and price (scene).
   - `a1-10-home-housing`: your home with `tem` (personal); where the furniture is with `fica` (scene).
-  - `a1-11-plans-weather-leisure`: weekend plans with `ir` and an infinitive (personal); today's weather (scene); decline an invitation (scene).
-  - `a1-12-consolidation`: introduce yourself with `e`, `mas`, `então` (personal, three sentences); why you learn Portuguese, with `porque` (personal); lost, ask for help (scene).
+  - `a1-11-plans-weather-leisure`: weekend plans with `ir` and an infinitive (personal); today's weather (scene).
+  - `a1-12-consolidation`: introduce yourself with `e`, `mas`, `então` (personal); why you learn Portuguese, with `porque` (personal); lost, ask for help (scene).
 - A2, up to three sentences:
   - `a2-01-past-regular`: last weekend (personal); yesterday with regular verbs including `paguei`, `cheguei` (scene).
   - `a2-02-irregular-preterite`: a trip with `primeiro`, `depois`, `por fim` (personal); an event needing `fui`, `fiz`, `trouxe` (scene).
