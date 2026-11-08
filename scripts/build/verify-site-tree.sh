@@ -19,6 +19,9 @@ readonly WLLAMA_DIR="${SITE_DIR}/wllama"
 # scripts/build/prepare-wllama.sh records beside them.
 readonly WLLAMA_FILES=(index.js wllama.wasm compat/wllama.js compat/wllama.wasm VERSION)
 
+# The start of shared::grading::GRADING_MODEL_HUGGING_FACE_URL.
+readonly GRADING_MODEL_URL_PREFIX="https://huggingface.co/"
+
 # STATIC_SHELL_ELEMENT_ID in web/src/app.rs.
 readonly STATIC_SHELL_MARKER='id="static-shell"'
 
@@ -125,6 +128,14 @@ if test "${compiled_in_count}" -eq 0; then
     fail "${wasm_path} was not compiled with the repository the discovery document names; [repository_base_url=${repository_base_url}]"
 fi
 
+# A device cannot reach the local repository, from which a build without the site's features downloads the model.
+grading_model_url_count="$(grep -F -a -c "${GRADING_MODEL_URL_PREFIX}" "${wasm_path}" || true)"
+
+if test "${grading_model_url_count}" -eq 0; then
+    fail "${wasm_path} was not compiled to download the grading model from ${GRADING_MODEL_URL_PREFIX}; run ./scripts/build/build-site.sh"
+fi
+
 printf '%s: static shell present, %d referenced assets present and content-hashed\n' "${SITE_DIR}" "${reference_count}"
 printf '%s: discovery and the client both name %s\n' "${SITE_DIR}" "${repository_base_url}"
+printf '%s: the client downloads the grading model from %s\n' "${SITE_DIR}" "${GRADING_MODEL_URL_PREFIX}"
 printf '%s: wllama %s present\n' "${SITE_DIR}" "$(cat "${WLLAMA_DIR}/VERSION")"
