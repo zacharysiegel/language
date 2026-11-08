@@ -61,6 +61,10 @@ pub fn model_directory_key(model_name: &str, model_sha256: &str) -> String {
     format!("{MODELS_DIRECTORY}/{model_name}/{model_sha256}/")
 }
 
+pub fn model_file_key(model_name: &str, model_sha256: &str, file_name: &str) -> String {
+    format!("{}{file_name}", model_directory_key(model_name, model_sha256))
+}
+
 /* llama.cpp's split file name; llama.cpp and wllama derive every part's name from the first part's. */
 pub fn model_part_file_name(model_name: &str, part_number: u16, part_count: u16) -> String {
     format!("{model_name}-{part_number:05}-of-{part_count:05}.{MODEL_FILE_EXTENSION}")
@@ -119,6 +123,7 @@ mod tests {
             "courses/pt_br.en.foundations/2026-10-08+duluth/data/course-ab.sqlite.br",
         );
         assert_eq!(audio_key("abc"), "audio/abc.m4a");
+        assert_eq!(model_file_key("gemma", "abc", "gemma.gguf"), "models/gemma/abc/gemma.gguf");
         assert_eq!(model_part_key("gemma", "abc", 2, 14), "models/gemma/abc/gemma-00002-of-00014.gguf");
     }
 

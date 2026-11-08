@@ -442,9 +442,17 @@ mod browser {
     fn remember_model_url(repository_base_url: &str) {
         MODEL_URL.with(|model_url| {
             if model_url.borrow().is_none() {
-                model_url.replace(Some(fetch::join_url(repository_base_url, &grading::grading_model_first_part_key())));
+                model_url.replace(Some(grading_model_url(repository_base_url)));
             }
         });
+    }
+
+    fn grading_model_url(repository_base_url: &str) -> String {
+        if cfg!(feature = "grading-model-from-hugging-face") {
+            grading::GRADING_MODEL_HUGGING_FACE_URL.to_string()
+        } else {
+            fetch::join_url(repository_base_url, &grading::grading_model_file_key())
+        }
     }
 
     fn model_source() -> Option<ModelSource> {
