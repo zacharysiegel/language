@@ -682,7 +682,11 @@ fn OpenAnswerView(
                 disabled=move || phase.get() != OpenAnswerPhaseKind::Writing
             ></textarea>
             <OpenAnswerCheckButton phase />
-            {graded_course.then(|| view! { <ModelDownloadStatus /> })}
+            {move || {
+                let shows_download_status: bool = graded_course && phase.get() != OpenAnswerPhaseKind::Answered;
+
+                shows_download_status.then(|| view! { <ModelDownloadStatus /> })
+            }}
         </form>
     }
 }
