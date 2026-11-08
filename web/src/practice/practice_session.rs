@@ -7,7 +7,8 @@ use shared::practice::{AnswerStatus, SessionScore};
 use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
-use crate::practice;
+use crate::grading::{GradingStore, use_grading_store};
+use crate::practice::{self, OpenAnswerOutcomeKind};
 
 const ENTER_KEY: &str = "Enter";
 const UNSCORED_NOTE: &str = "Open answers do not count toward the score.";
@@ -77,6 +78,7 @@ pub fn ExerciseSession(
     let current_result: RwSignal<Option<SavedExerciseResult>> = RwSignal::new(None);
     let round: RwSignal<SessionRoundKind> = RwSignal::new(SessionRoundKind::First);
     let completion_reported: RwSignal<bool> = RwSignal::new(false);
+    let grading_store: GradingStore = use_grading_store();
 
     let advance = move || {
         if current_result.get_untracked().is_none() {
@@ -96,10 +98,15 @@ pub fn ExerciseSession(
         }
     });
     on_cleanup(move || keydown_listener.remove());
+    on_cleanup(move || grading_store.unload());
 
     Effect::new(move |_| {
         let finished: bool = current_index.get() >= active_exercises.get().len();
         let is_first_round: bool = round.get_untracked() == SessionRoundKind::First;
+
+        if finished {
+            grading_store.unload();
+        }
 
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
@@ -208,6 +215,7 @@ fn question_view(
     } = session_progress;
     let instruction: &'static str = exercise.kind().instruction();
     let feedback_exercise: Exercise = exercise.clone();
+    let open_answer_outcome: RwSignal<Option<OpenAnswerOutcomeKind>> = RwSignal::new(None);
 
     view! {
         <div class="session-header">
@@ -216,11 +224,11 @@ fn question_view(
         </div>
         <progress max=total_count value=index></progress>
         <div class="exercise-type">{instruction}</div>
-        {practice::exercise_body(exercise, on_submit)}
+        {practice::exercise_body(exercise, on_submit, open_answer_outcome)}
         {move || {
             current_result
                 .get()
-                .map(|result| feedback_view(feedback_exercise.clone(), result, advance))
+                .map(|result| feedback_view(feedback_exercise.clone(), result, open_answer_outcome.get_untracked(), advance))
         }}
     }
 }
@@ -230,7 +238,7 @@ fn feedback_heading(status: AnswerStatus) -> &'static str {
         AnswerStatus::Correct => "Correct",
         AnswerStatus::AccentMistake => "Correct, but check the accents",
         AnswerStatus::Wrong => "Not quite",
-        AnswerStatus::Unscored => "Compare with the examples",
+        AnswerStatus::Unscored => practice::SELF_CHECK_HEADING,
     }
 }
 
@@ -261,6 +269,7 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
     let explanation: Option<String> = exercise.explanation().map(str::to_string);
 
     view! {
+        <strong>{feedback_heading(result.status)}</strong>
         {shows_answer.then(|| view! { <p>"Answer: "{answer_text}</p> })}
         {explanation.map(|explanation| view! { <p class="explanation">{explanation}</p> })}
     }
@@ -269,16 +278,23 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
+    open_answer_outcome: Option<OpenAnswerOutcomeKind>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
     speak_after_answer(&exercise);
 
     let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
     let (details, row_spoken_text): (AnyView, Option<String>) = match &exercise {
-        // The self-check plays its clip beside the example answer the clip speaks.
+        // The feedback plays its clip beside the example answer the clip speaks.
         Exercise::OpenAnswer(open_answer) => (
-            view! { <practice::OpenAnswerSelfCheck exercise=open_answer.clone() answer_text=result.answer_text.clone() /> }
-                .into_any(),
+            view! {
+                <practice::OpenAnswerFeedback
+                    exercise=open_answer.clone()
+                    answer_text=result.answer_text.clone()
+                    outcome=open_answer_outcome
+                />
+            }
+            .into_any(),
             None,
         ),
         _ => (scored_answer_details(&exercise, &result).into_any(), exercise.spoken_text()),
@@ -286,7 +302,6 @@ fn feedback_view(
 
     view! {
         <div class=feedback_class(result.status) aria-live="polite">
-            <strong>{feedback_heading(result.status)}</strong>
             {details}
             <div class="row">
                 {row_spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text label="Hear it" /> })}

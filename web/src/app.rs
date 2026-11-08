@@ -10,6 +10,7 @@ use crate::course_data::{
 use crate::audio_player::{PlaybackAnnouncement, provide_playback_store};
 use crate::courses::CoursesPage;
 use crate::glossary::GlossaryPage;
+use crate::grading::{GradingModelDownloadSetting, provide_grading_store};
 use crate::home::HomePage;
 use crate::pending_indication::{PageBusyStore, provide_page_busy_store, use_page_busy_store};
 use crate::progress_state::{ProgressStore, provide_progress_store, use_progress_store};
@@ -86,6 +87,7 @@ mod ssr {
 pub fn App() -> impl IntoView {
     provide_course_store();
     provide_progress_store();
+    provide_grading_store();
     provide_playback_store();
     provide_page_busy_store();
 
@@ -187,6 +189,7 @@ fn NavigationBar() -> impl IntoView {
                     />
                     <span class="field-label">"Slow audio"</span>
                 </label>
+                <GradingModelDownloadSetting />
             </div>
         </nav>
     }

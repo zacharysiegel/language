@@ -4,7 +4,7 @@ use crate::grading::CharacterSpan;
 use crate::grading::text_span;
 
 // A serialized schema lists properties alphabetically, so the wire names sort in the order the model should write them.
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct GraderResponse {
     pub answers_the_question: bool,
     #[serde(rename = "language_is_portuguese")]
@@ -13,7 +13,7 @@ pub struct GraderResponse {
     pub findings: Vec<GraderFinding>,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Clone, Debug, PartialEq, Deserialize, Serialize)]
 pub struct GraderFinding {
     #[serde(rename = "error_text")]
     pub quote: String,

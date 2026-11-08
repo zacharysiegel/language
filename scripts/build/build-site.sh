@@ -53,6 +53,9 @@ if test ! -f "${EMBEDDED_COURSE_INDEX_PATH}"; then
     fail "${EMBEDDED_COURSE_INDEX_PATH} is missing; publish the courses first"
 fi
 
+# The build copies web/static into the tree, and wllama's files there are generated rather than committed.
+"${SCRIPT_DIR}/prepare-wllama.sh"
+
 rm -rf "${SITE_DIR}"
 
 printf 'building the release site; [site_dir=%s repository_base_url=%s]\n' "${SITE_DIR}" "${LANGUAGE_REPOSITORY_BASE_URL}"
