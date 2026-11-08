@@ -117,7 +117,7 @@ async fn read_file_bytes(file: &File) -> Result<Vec<u8>, AppErrorStatic> {
 }
 
 /* `keys()` returns a JS async iterator, so each step's `{ value, done }` arrives through a promise. */
-async fn list_directory_names(directory: &FileSystemDirectoryHandle) -> Result<Vec<String>, AppErrorStatic> {
+pub async fn list_directory_names(directory: &FileSystemDirectoryHandle) -> Result<Vec<String>, AppErrorStatic> {
     let iterator: AsyncIterator = directory.keys();
     let mut names: Vec<String> = Vec::new();
 

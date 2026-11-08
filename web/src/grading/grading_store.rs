@@ -88,12 +88,13 @@ mod browser {
     };
     use futures_util::future::{AbortHandle, AbortRegistration, Abortable, Aborted};
     use leptos::task::spawn_local;
+    use shared::AppErrorStatic;
     use shared::artifact::fetch;
     use shared::grading::{self, ChatRoleKind, GradedAnswer, GraderResponse};
     use wasm_bindgen_futures::JsFuture;
 
     use super::*;
-    use crate::grading::{self as web_grading, BrowserCapabilityFacts, ModelDownloadProgress};
+    use crate::grading::{self as web_grading, BrowserCapabilityFacts, ModelDownloadProgress, wllama_cache_repair};
     use crate::platform;
 
     const WLLAMA_DIRECTORY_URL: &str = "/wllama/";
@@ -278,9 +279,7 @@ mod browser {
         async fn download(self, model_source: ModelSource, abort_registration: AbortRegistration) {
             request_persistent_storage().await;
 
-            log::info!("downloading the grading model; [url={}]", model_source.model_url);
-
-            let downloading = cross_llama::download_model(&model_source, move |progress: DownloadProgress| self.show_download_progress(progress));
+            let downloading = self.download_repairing_an_incomplete_model(&model_source);
             let downloaded: Result<Result<(), cross_llama::Error>, Aborted> = Abortable::new(downloading, abort_registration).await;
 
             // An aborted download was stopped by `stop_download`, which has already moved the state on.
@@ -302,6 +301,39 @@ mod browser {
                     self.set_state(GraderStateKind::NotDownloaded);
                 },
             }
+        }
+
+        /// A download stopped before every part's metadata was written leaves the model unusable to wllama until its files
+        /// are removed.
+        async fn download_repairing_an_incomplete_model(self, model_source: &ModelSource) -> Result<(), cross_llama::Error> {
+            let first_attempt: Result<(), cross_llama::Error> = self.download_once(model_source).await;
+
+            let Err(error) = first_attempt
+            else {
+                return Ok(());
+            };
+
+            if !error.to_string().contains(wllama_cache_repair::INCOMPLETE_MODEL_ERROR_TEXT) {
+                return Err(error);
+            }
+
+            let removed: Result<usize, AppErrorStatic> = wllama_cache_repair::remove_grading_model_files().await;
+
+            match removed {
+                Ok(removed_count) => log::warn!("removed an incomplete grading model from wllama's cache; [files={removed_count}]"),
+                Err(removal_error) => {
+                    log::warn!("could not remove an incomplete grading model from wllama's cache; [error={removal_error}]");
+                    return Err(error);
+                },
+            }
+
+            self.download_once(model_source).await
+        }
+
+        async fn download_once(self, model_source: &ModelSource) -> Result<(), cross_llama::Error> {
+            log::info!("downloading the grading model; [url={}]", model_source.model_url);
+
+            cross_llama::download_model(model_source, move |progress: DownloadProgress| self.show_download_progress(progress)).await
         }
 
         fn show_download_progress(self, progress: DownloadProgress) {
