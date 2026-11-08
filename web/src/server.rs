@@ -3,7 +3,7 @@ use std::net::SocketAddr;
 use std::path::{Path, PathBuf};
 
 use axum::Router;
-use axum::http::{HeaderValue, header};
+use axum::http::{HeaderMap, HeaderValue, header};
 use axum::response::Response;
 use leptos::logging::log;
 use leptos::prelude::*;
@@ -14,6 +14,10 @@ use shared::filesystem;
 use crate::app::{App, shell, static_shell};
 
 const CACHE_CONTROL_REVALIDATE: &str = "no-cache";
+const CROSS_ORIGIN_OPENER_POLICY: &str = "cross-origin-opener-policy";
+const CROSS_ORIGIN_EMBEDDER_POLICY: &str = "cross-origin-embedder-policy";
+const SAME_ORIGIN: &str = "same-origin";
+const REQUIRE_CORP: &str = "require-corp";
 const STATIC_SHELL_DOCUMENT_NAME: &str = "index.html";
 const CRATE_DIRECTORY: &str = env!("CARGO_MANIFEST_DIR");
 const MANIFEST_PATH: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/Cargo.toml");
@@ -32,6 +36,7 @@ pub async fn serve() -> Result<(), AppError> {
         })
         .fallback(leptos_axum::file_and_error_handler(shell))
         .layer(axum::middleware::map_response(require_revalidation))
+        .layer(axum::middleware::map_response(require_cross_origin_isolation))
         .with_state(leptos_options);
 
     let listener: tokio::net::TcpListener = tokio::net::TcpListener::bind(&address)
@@ -49,6 +54,16 @@ pub async fn serve() -> Result<(), AppError> {
    can pair a cached script with a newer module and never start. */
 async fn require_revalidation(mut response: Response) -> Response {
     response.headers_mut().insert(header::CACHE_CONTROL, HeaderValue::from_static(CACHE_CONTROL_REVALIDATE));
+
+    response
+}
+
+// The same headers web/static/_headers gives the deployed site.
+async fn require_cross_origin_isolation(mut response: Response) -> Response {
+    let headers: &mut HeaderMap = response.headers_mut();
+
+    headers.insert(CROSS_ORIGIN_OPENER_POLICY, HeaderValue::from_static(SAME_ORIGIN));
+    headers.insert(CROSS_ORIGIN_EMBEDDER_POLICY, HeaderValue::from_static(REQUIRE_CORP));
 
     response
 }
