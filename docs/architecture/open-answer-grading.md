@@ -99,7 +99,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - An unknown storage estimate counts as too little room.
   - Once loaded, the model reads the question's prompt without the answer in one throwaway generation (one token, no schema), so the answer reads only its own tokens.
   - A failed download is not retried in the same page.
-  - wllama 3.8.1 cannot use or download again a split model whose download stopped before every part's metadata was written ("Model file not found"); the app then deletes the model's files from wllama's cache in the origin private file system, holding cross-llama's lock on the model, and downloads it again. An unsplit model cannot reach that state.
+  - Removed with the unsplit model: deleting a split model's files from wllama's cache, and downloading it again, after wllama 3.8.1 fails with "Model file not found" on a split model whose download stopped before every part's metadata was written (commit `4542479`, language). An unsplit model cannot reach that state.
   - The native apps keep the stored `download_grading_model` when they save settings.
   - Measured in headless Chrome against the local repository: Check to feedback 3.1 s after the warm-up, 1,018 of 1,043 prompt tokens reused; a Check during the load waited 4 s for it, then graded in 9 s.
 
