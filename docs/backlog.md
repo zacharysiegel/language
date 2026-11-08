@@ -2,6 +2,10 @@
 
 Known gaps, recorded when found.
 
+## Web app
+
+- Settings are controls in the navigation bar; the web app needs a settings page, as the iOS and Android apps have.
+
 ## iOS app
 
 - On iPhone a unit's tab row scrolls sideways, so the Practice tab starts off-screen.
