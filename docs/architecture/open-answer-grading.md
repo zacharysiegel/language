@@ -73,6 +73,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
     - `scripts/dev/fetch-grading-model.sh` downloads it into `models/`; `publish-model local` hard links it into the local repository at `models/<name>/<sha256>/<file name>`.
     - The client takes the Hugging Face URL when built with the web feature `grading-model-from-hugging-face`, which `build-site.sh` enables, and the local repository's key otherwise. A build switch rather than a discovery field: the model's size and hash are compiled into the client anyway, and the native apps, which read discovery, never grade.
     - R2 model hosting stays behind `R2_MODEL_HOSTING_ENABLED`, false: `publish-model cloudflare-r2` warns and uploads nothing; set true, it splits the file `shared::grading` names (14 parts).
+    - No client requests those parts. Serving the model from R2 also needs the client to request the first part's key, `repository_key::model_part_key(name, sha256, 1, GRADING_MODEL_PART_COUNT)`, `build-site.sh` to drop `grading-model-from-hugging-face`, and the removal of an incomplete split model from wllama's cache restored (see Web).
     - wllama 3.8.1 downloads, caches and loads the 6.98 GB unsplit file in headless Chrome.
 
 ## Web
