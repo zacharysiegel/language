@@ -594,6 +594,9 @@ fn OpenAnswerCheckButton(phase: RwSignal<OpenAnswerPhaseKind>) -> impl IntoView 
     let pending_label = move || phase.get().pending_label().filter(|_| pending_shown.get());
 
     view! {
+        <p class="visually-hidden" role="status" aria-live="polite">
+            {pending_label}
+        </p>
         <button
             type="submit"
             class="primary check"

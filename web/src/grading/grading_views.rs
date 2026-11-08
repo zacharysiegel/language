@@ -7,6 +7,7 @@ use crate::progress_state::{ProgressStore, use_progress_store};
 const SELF_CHECK_NOTICE: &str = "Automatic grading by an AI model is available on computers that can run it.";
 const IN_USE_IN_ANOTHER_PAGE_NOTICE: &str = "This answer was not graded automatically, because the AI model is in use in another tab or window of this site.";
 const DOWNLOAD_TURNED_OFF_NOTICE: &str = "Automatic grading by an AI model needs the model's download, which is turned off in the settings.";
+const DOWNLOAD_PROGRESS_LABEL: &str = "AI grading model download";
 const AI_MODEL_TAG: &str = "AI model";
 
 fn download_progress_text(progress: &ModelDownloadProgress) -> String {
@@ -57,7 +58,7 @@ pub fn ModelDownloadStatus() -> impl IntoView {
         Some(view! {
             <div class="model-download">
                 <p class="muted">{download_progress_text(&progress)}</p>
-                <progress max=1000 value=progress.downloaded_permille()></progress>
+                <progress max=1000 value=progress.downloaded_permille() aria-label=DOWNLOAD_PROGRESS_LABEL></progress>
             </div>
         })
     }
@@ -103,7 +104,8 @@ pub fn GraderFindings(response: GraderResponse, target_language_name: String) ->
                 <li>
                     <div class="finding-change">
                         <span class="finding-quote">{finding.quote}</span>
-                        <span class="finding-arrow" aria-label="becomes">"→"</span>
+                        <span class="finding-arrow" aria-hidden="true">"→"</span>
+                        <span class="visually-hidden">"becomes"</span>
                         <span class="finding-replacement">{finding.correction}</span>
                     </div>
                     <p class="explanation">{finding.explanation}</p>
