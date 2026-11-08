@@ -121,9 +121,7 @@ mod browser {
     }
 
     impl GradingStore {
-        /// Checks the browser once per page; once the check finds the model missing, downloads it in the background
-        /// when `download_enabled`, unless a download failed in this page. Reads the state tracked, so an effect calling
-        /// it runs again when the state moves on.
+        /// Checks this browser and starts the background download when `download_enabled`; reads the grader state tracked.
         pub fn prepare(self, repository_base_url: &str, download_enabled: bool) {
             remember_model_url(repository_base_url);
 
@@ -170,8 +168,7 @@ mod browser {
             spawn_local(self.load(model_source, abort_handle, abort_registration));
         }
 
-        /// Reads the grader's prompt for `submission`, without its answer, into the model's cache, so grading the answer
-        /// reads only the answer's own tokens.
+        /// Reads the grader's prompt for `submission` into the model's cache.
         pub fn warm_up(self, submission: OpenAnswerSubmission) {
             let Some(model) = loaded_model()
             else {
