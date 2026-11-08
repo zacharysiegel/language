@@ -84,13 +84,16 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - Feedback: an "AI model" tag; whether the answer addresses the task and is in the target language; each mistake's quote, replacement and explanation; the example answers.
   - Self-check: the example answers, plus the notice; while the model is still downloading, the download's progress; with the setting off, that automatic grading needs the download turned on.
 - Deviations, as built:
-  - `GraderStateKind` also has `Unchecked`, before the browser is checked.
+  - `GraderStateKind` also has `Unchecked`, before the browser is checked, and `InUseInAnotherPage`.
+  - An app-level Web Lock (`ifAvailable`) is held while a page loads or holds the model, so one copy is in memory; a page without it gets the self-check and tries again at its next open answer.
+  - Only a failure in wllama's load step is recorded as a failed load, not one in the download or the cache.
+  - The model is also unloaded when the session reaches its summary.
   - `scripts/build/prepare-wllama.sh` runs the crate's script, found through `cargo metadata`, and records wllama's version in `web/static/wllama/VERSION`; `verify-site-tree.sh` checks the files.
   - The model URL is built against the repository of the open course's publication, which also serves its recordings.
   - An unknown storage estimate counts as too little room.
   - Once loaded, the model reads the question's prompt without the answer in one throwaway generation (one token, no schema), so the answer reads only its own tokens.
   - A failed download is not retried in the same page.
-  - wllama 3.8.1 cannot use or download again a split model whose download stopped before every part's metadata was written ("Model file not found"); the app then deletes the model's files from wllama's cache in the origin private file system and downloads it again.
+  - wllama 3.8.1 cannot use or download again a split model whose download stopped before every part's metadata was written ("Model file not found"); the app then deletes the model's files from wllama's cache in the origin private file system, holding cross-llama's lock on the model, and downloads it again.
   - The native apps keep the stored `download_grading_model` when they save settings.
   - Measured in headless Chrome against the local repository: Check to feedback 3.1 s after the warm-up, 1,018 of 1,043 prompt tokens reused; a Check during the load waited 4 s for it, then graded in 9 s.
 
