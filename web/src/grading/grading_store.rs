@@ -93,7 +93,7 @@ mod browser {
 
     use super::*;
     use crate::grading::web_lock::{self, HeldWebLock};
-    use crate::grading::{self as web_grading, BrowserCapabilityFacts, ModelDownloadProgress, wllama_cache_repair};
+    use crate::grading::{self as web_grading, BrowserCapabilityFacts, ModelDownloadProgress};
     use crate::platform;
 
     const WLLAMA_DIRECTORY_URL: &str = "/wllama/";
@@ -288,7 +288,7 @@ mod browser {
         async fn download(self, model_source: ModelSource, abort_registration: AbortRegistration) {
             request_persistent_storage().await;
 
-            let downloading = self.download_repairing_an_incomplete_model(&model_source);
+            let downloading = self.download_once(&model_source);
             let downloaded: Result<Result<(), cross_llama::Error>, Aborted> = Abortable::new(downloading, abort_registration).await;
 
             // An aborted download was stopped by `stop_download`, which has already moved the state on.
@@ -310,33 +310,6 @@ mod browser {
                     self.set_state(GraderStateKind::NotDownloaded);
                 },
             }
-        }
-
-        /// A download stopped before every part's metadata was written leaves the model unusable to wllama until its files
-        /// are removed.
-        async fn download_repairing_an_incomplete_model(self, model_source: &ModelSource) -> Result<(), cross_llama::Error> {
-            let first_attempt: Result<(), cross_llama::Error> = self.download_once(model_source).await;
-
-            let Err(error) = first_attempt
-            else {
-                return Ok(());
-            };
-
-            if !error.to_string().contains(wllama_cache_repair::INCOMPLETE_MODEL_ERROR_TEXT) {
-                return Err(error);
-            }
-
-            let removed: Result<usize, AppErrorStatic> = wllama_cache_repair::remove_grading_model_files(&model_source.model_url).await;
-
-            match removed {
-                Ok(removed_count) => log::warn!("removed an incomplete grading model from wllama's cache; [files={removed_count}]"),
-                Err(removal_error) => {
-                    log::warn!("could not remove an incomplete grading model from wllama's cache; [error={removal_error}]");
-                    return Err(error);
-                },
-            }
-
-            self.download_once(model_source).await
         }
 
         async fn download_once(self, model_source: &ModelSource) -> Result<(), cross_llama::Error> {
@@ -442,9 +415,17 @@ mod browser {
     fn remember_model_url(repository_base_url: &str) {
         MODEL_URL.with(|model_url| {
             if model_url.borrow().is_none() {
-                model_url.replace(Some(fetch::join_url(repository_base_url, &grading::grading_model_first_part_key())));
+                model_url.replace(Some(grading_model_url(repository_base_url)));
             }
         });
+    }
+
+    fn grading_model_url(repository_base_url: &str) -> String {
+        if cfg!(feature = "grading-model-from-hugging-face") {
+            grading::GRADING_MODEL_HUGGING_FACE_URL.to_string()
+        } else {
+            fetch::join_url(repository_base_url, &grading::grading_model_file_key())
+        }
     }
 
     fn model_source() -> Option<ModelSource> {

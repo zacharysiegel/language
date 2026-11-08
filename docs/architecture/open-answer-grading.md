@@ -2,7 +2,7 @@
 
 Status: planned.
 
-A new exercise type in which the learner writes a free answer to a task. In the browser, a local language model (gemma4:12b-it-qat through `cross-llama`'s wllama backend) grades it and lists mistakes. Where the model cannot run, the learner compares their answer with the author's example answers.
+A new exercise type in which the learner writes a free answer to a task. In the browser, a local language model (Google's Gemma 4 12B QAT Q4_0 GGUF, the weights of Ollama's gemma4:12b-it-qat, through `cross-llama`'s wllama backend) grades it and lists mistakes. Where the model cannot run, the learner compares their answer with the author's example answers.
 
 ## Decisions
 
@@ -68,6 +68,13 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - The limit counts a part's padded tensor data, as `llama-gguf-split` does, so a part may exceed 512 MiB: the 826 MB `token_embd.weight` has a part of its own. 14 parts.
   - `shared::grading` also holds the unsplit file's size, checked before hashing.
   - `ListedObject` gained `size_bytes`, so a rerun skips a part present at its size.
+  - Then replaced: production downloads Google's `gemma-4-12b-it-qat-q4_0.gguf`, unsplit, from its Hugging Face repository at a pinned commit (Apache 2.0, not gated; the CDN allows cross-origin reads and sends `Content-Length`). `shared::grading` names it.
+    - Against Ollama's copy: tensor infos and data section byte-identical; metadata 50 entries against 44 (name, license, base model, tags, and a newer chat template); all 12 grader cases give Ollama's replies byte for byte through llama.cpp.
+    - `scripts/dev/fetch-grading-model.sh` downloads it into `models/`; `publish-model local` hard links it into the local repository at `models/<name>/<sha256>/<file name>`.
+    - The client takes the Hugging Face URL when built with the web feature `grading-model-from-hugging-face`, which `build-site.sh` enables, and the local repository's key otherwise. A build switch rather than a discovery field: the model's size and hash are compiled into the client anyway, and the native apps, which read discovery, never grade.
+    - R2 model hosting stays behind `R2_MODEL_HOSTING_ENABLED`, false: `publish-model cloudflare-r2` warns and uploads nothing; set true, it splits the file `shared::grading` names (14 parts).
+    - No client requests those parts. Serving the model from R2 also needs the client to request the first part's key, `repository_key::model_part_key(name, sha256, 1, GRADING_MODEL_PART_COUNT)`, `build-site.sh` to drop `grading-model-from-hugging-face`, and the removal of an incomplete split model from wllama's cache restored (see Web).
+    - wllama 3.8.1 downloads, caches and loads the 6.98 GB unsplit file in headless Chrome.
 
 ## Web
 
@@ -89,11 +96,11 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - Only a failure in wllama's load step is recorded as a failed load, not one in the download or the cache.
   - The model is also unloaded when the session reaches its summary.
   - `scripts/build/prepare-wllama.sh` runs the crate's script, found through `cargo metadata`, and records wllama's version in `web/static/wllama/VERSION`; `verify-site-tree.sh` checks the files.
-  - The model URL is built against the repository of the open course's publication, which also serves its recordings.
+  - Outside the site build, the model URL is built against the repository of the open course's publication, which also serves its recordings.
   - An unknown storage estimate counts as too little room.
   - Once loaded, the model reads the question's prompt without the answer in one throwaway generation (one token, no schema), so the answer reads only its own tokens.
   - A failed download is not retried in the same page.
-  - wllama 3.8.1 cannot use or download again a split model whose download stopped before every part's metadata was written ("Model file not found"); the app then deletes the model's files from wllama's cache in the origin private file system, holding cross-llama's lock on the model, and downloads it again.
+  - Removed with the unsplit model: deleting a split model's files from wllama's cache, and downloading it again, after wllama 3.8.1 fails with "Model file not found" on a split model whose download stopped before every part's metadata was written (commit `4542479`, language). An unsplit model cannot reach that state.
   - The native apps keep the stored `download_grading_model` when they save settings.
   - Measured in headless Chrome against the local repository: Check to feedback 3.1 s after the warm-up, 1,018 of 1,043 prompt tokens reused; a Check during the load waited 4 s for it, then graded in 9 s.
 

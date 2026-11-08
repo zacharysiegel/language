@@ -1,3 +1,4 @@
+use std::ffi::OsString;
 use std::fs;
 use std::io;
 use std::path::{Path, PathBuf};
@@ -24,6 +25,38 @@ impl LocalArtifactRepository {
 
     pub fn root(&self) -> &Path {
         &self.root
+    }
+
+    /// A hard link to `source_path`, or a copy when it is on another filesystem; replaces an object at `key`.
+    pub fn link_file(&self, key: &str, source_path: &Path) -> Result<(), AppError> {
+        let destination: PathBuf = self.path_for_key(key)?;
+        let partial_destination: PathBuf = partial_path(&destination);
+
+        if let Some(parent) = destination.parent() {
+            fs::create_dir_all(parent)?;
+        }
+
+        remove_file_if_present(&partial_destination)?;
+
+        let linked: Result<(), io::Error> = fs::hard_link(source_path, &partial_destination);
+
+        match linked {
+            Ok(()) => {},
+            Err(error) if error.kind() == io::ErrorKind::CrossesDevices => {
+                fs::copy(source_path, &partial_destination)?;
+            },
+            Err(error) => {
+                return Err(AppError::from(format!(
+                    "linking a file into the repository failed; [source={} destination={} error={error}]",
+                    source_path.display(),
+                    partial_destination.display(),
+                )));
+            },
+        }
+
+        fs::rename(&partial_destination, &destination)?;
+
+        Ok(())
     }
 
     fn path_for_key(&self, key: &str) -> Result<PathBuf, AppError> {
@@ -59,6 +92,24 @@ impl LocalArtifactRepository {
         }
 
         Ok(())
+    }
+}
+
+fn partial_path(destination: &Path) -> PathBuf {
+    let mut partial_name: OsString = destination.as_os_str().to_owned();
+
+    partial_name.push(".partial");
+
+    PathBuf::from(partial_name)
+}
+
+fn remove_file_if_present(path: &Path) -> Result<(), AppError> {
+    let removed: Result<(), io::Error> = fs::remove_file(path);
+
+    match removed {
+        Ok(()) => Ok(()),
+        Err(error) if error.kind() == io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(AppError::from(format!("removing a file failed; [path={} error={error}]", path.display()))),
     }
 }
 
@@ -221,6 +272,7 @@ impl ArtifactRepository for LocalArtifactRepository {
 #[cfg(test)]
 mod tests {
     use std::collections::BTreeSet;
+    use std::os::unix::fs::MetadataExt;
     use std::time::Duration;
 
     use shared::artifact::repository_key;
@@ -240,6 +292,25 @@ mod tests {
         let outcome: WriteOutcomeKind = repository.put_bytes(key, key.as_bytes(), PUBLICATION_HEADERS, WriteConditionKind::Unconditional).await.unwrap();
 
         assert_eq!(outcome, WriteOutcomeKind::Written);
+    }
+
+    #[tokio::test]
+    async fn link_file_replaces_the_object_with_a_hard_link_to_the_source() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let repository: LocalArtifactRepository = repository_in(&workspace_directory);
+        let source_path: PathBuf = workspace_directory.path().join("model.gguf");
+        let key: &str = "models/fixture/ab/fixture.gguf";
+
+        fs::write(&source_path, b"model").unwrap();
+        put(&repository, key).await;
+
+        repository.link_file(key, &source_path).unwrap();
+
+        let destination: PathBuf = repository.root().join(key);
+
+        assert_eq!(fs::read(&destination).unwrap(), b"model");
+        assert_eq!(fs::metadata(&destination).unwrap().ino(), fs::metadata(&source_path).unwrap().ino());
+        assert!(!partial_path(&destination).exists());
     }
 
     #[tokio::test]

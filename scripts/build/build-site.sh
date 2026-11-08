@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 
-# Builds the deployable site tree into target/deploy-site: a release build of the app, the static shell every
-# route serves, the static assets, the header rules, and a discovery document naming the production repository.
+# Builds the deployable site tree into target/deploy-site: a release build of the app, which downloads the grading
+# model from its Hugging Face repository, the static shell every route serves, the static assets, the header rules,
+# and a discovery document naming the production repository.
 #
 # Usage:
 #   ./scripts/build/build-site.sh
@@ -21,6 +22,7 @@ readonly SITE_ROOT="target/deploy-site"
 readonly SITE_DIR="${REPO_ROOT}/${SITE_ROOT}"
 readonly SERVER_BINARY="${REPO_ROOT}/target/release/web"
 readonly PRODUCTION_REPOSITORY_BASE_URL="https://repository.language.zach.ro"
+readonly SITE_FEATURES="grading-model-from-hugging-face"
 
 # cargo-leptos's own variables, which the server binary's prerender reads too, so both agree on the tree and its
 # file names. cargo-leptos re-hashes only on a full build, so hashed names are a release setting.
@@ -58,9 +60,9 @@ fi
 
 rm -rf "${SITE_DIR}"
 
-printf 'building the release site; [site_dir=%s repository_base_url=%s]\n' "${SITE_DIR}" "${LANGUAGE_REPOSITORY_BASE_URL}"
+printf 'building the release site; [site_dir=%s repository_base_url=%s features=%s]\n' "${SITE_DIR}" "${LANGUAGE_REPOSITORY_BASE_URL}" "${SITE_FEATURES}"
 cd "${WEB_DIR}"
-cargo leptos build --release
+cargo leptos build --release --features "${SITE_FEATURES}"
 
 if test ! -x "${SERVER_BINARY}"; then
     fail "the release build produced no server binary at ${SERVER_BINARY}"
