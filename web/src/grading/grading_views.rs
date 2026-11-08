@@ -5,6 +5,7 @@ use crate::grading::{self as web_grading, GraderStateKind, GradingStore, ModelDo
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 const SELF_CHECK_NOTICE: &str = "Automatic grading by an AI model is available on computers that can run it.";
+const IN_USE_IN_ANOTHER_PAGE_NOTICE: &str = "This answer was not graded automatically, because the AI model is in use in another tab or window of this site.";
 const DOWNLOAD_TURNED_OFF_NOTICE: &str = "Automatic grading by an AI model needs the model's download, which is turned off in the settings.";
 const AI_MODEL_TAG: &str = "AI model";
 
@@ -76,6 +77,7 @@ pub fn SelfCheckNotice() -> impl IntoView {
             GraderStateKind::Unchecked | GraderStateKind::NotDownloaded if !download_enabled => {
                 view! { <p class="muted">{DOWNLOAD_TURNED_OFF_NOTICE}</p> }.into_any()
             },
+            GraderStateKind::InUseInAnotherPage => view! { <p class="muted">{IN_USE_IN_ANOTHER_PAGE_NOTICE}</p> }.into_any(),
             _ => view! { <p class="muted">{SELF_CHECK_NOTICE}</p> }.into_any(),
         }
     }

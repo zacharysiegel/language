@@ -43,6 +43,8 @@ pub enum GraderStateKind {
     NotDownloaded,
     Downloading(ModelDownloadProgress),
     Downloaded,
+    /// Another page of this site holds a grading model in memory, or is loading one.
+    InUseInAnotherPage,
     Loading,
     Ready,
     /// The model failed to load in this browser.

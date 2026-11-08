@@ -92,6 +92,7 @@ mod browser {
     use wasm_bindgen_futures::JsFuture;
 
     use super::*;
+    use crate::grading::web_lock::{self, HeldWebLock};
     use crate::grading::{self as web_grading, BrowserCapabilityFacts, ModelDownloadProgress, wllama_cache_repair};
     use crate::platform;
 
@@ -104,6 +105,8 @@ mod browser {
     const WARM_UP_REPLY_TOKEN_COUNT: usize = 1;
     // Holds the SHA-256 of the model that failed, so a different model is tried again.
     const FAILED_LOAD_STORAGE_KEY: &str = "language.grading.failed-load-model-sha256";
+    // Held across this site's pages while one loads or holds a grading model, so only one copy is in memory.
+    const MODEL_IN_MEMORY_LOCK_NAME: &str = "language grading model in memory";
 
     thread_local! {
         // Set by the first unit page that prepares grading.
@@ -114,6 +117,7 @@ mod browser {
         static LOADED_MODEL: RefCell<Option<Rc<Model>>> = const { RefCell::new(None) };
         static RUNNING_DOWNLOAD: RefCell<Option<AbortHandle>> = const { RefCell::new(None) };
         static RUNNING_LOAD: RefCell<Option<AbortHandle>> = const { RefCell::new(None) };
+        static MODEL_IN_MEMORY_LOCK: RefCell<Option<HeldWebLock>> = const { RefCell::new(None) };
     }
 
     impl GradingStore {
@@ -146,9 +150,11 @@ mod browser {
             log::info!("stopped the grading model's download");
         }
 
-        /// Loads a downloaded model into memory.
+        /// Loads a downloaded model into memory, unless another page of this site holds one.
         pub fn load_model(self) {
-            if self.state_untracked() != GraderStateKind::Downloaded {
+            let loadable: bool = matches!(self.state_untracked(), GraderStateKind::Downloaded | GraderStateKind::InUseInAnotherPage);
+
+            if !loadable {
                 return;
             }
 
@@ -159,9 +165,9 @@ mod browser {
 
             let (abort_handle, abort_registration): (AbortHandle, AbortRegistration) = AbortHandle::new_pair();
 
-            RUNNING_LOAD.with(|running| running.replace(Some(abort_handle)));
+            RUNNING_LOAD.with(|running| running.replace(Some(abort_handle.clone())));
             self.set_state(GraderStateKind::Loading);
-            spawn_local(self.load(model_source, abort_registration));
+            spawn_local(self.load(model_source, abort_handle, abort_registration));
         }
 
         /// Reads the grader's prompt for `submission`, without its answer, into the model's cache, so grading the answer
@@ -228,15 +234,23 @@ mod browser {
         pub fn unload(self) {
             let running_load: Option<AbortHandle> = RUNNING_LOAD.with(|running| running.borrow_mut().take());
             let loaded: Option<Rc<Model>> = LOADED_MODEL.with(|model| model.borrow_mut().take());
+            let model_in_memory_lock: Option<HeldWebLock> = MODEL_IN_MEMORY_LOCK.with(|lock| lock.borrow_mut().take());
             let held_in_memory: bool = matches!(self.state_untracked(), GraderStateKind::Loading | GraderStateKind::Ready);
 
             if let Some(running_load) = running_load {
                 running_load.abort();
             }
 
-            if let Some(model) = loaded {
-                model.cancel();
-                spawn_local(unload_once_released(model));
+            match loaded {
+                Some(model) => {
+                    model.cancel();
+                    spawn_local(unload_once_released(model, model_in_memory_lock));
+                },
+                None => {
+                    if let Some(model_in_memory_lock) = model_in_memory_lock {
+                        model_in_memory_lock.release();
+                    }
+                },
             }
 
             if held_in_memory {
@@ -315,7 +329,7 @@ mod browser {
                 return Err(error);
             }
 
-            let removed: Result<usize, AppErrorStatic> = wllama_cache_repair::remove_grading_model_files().await;
+            let removed: Result<usize, AppErrorStatic> = wllama_cache_repair::remove_grading_model_files(&model_source.model_url).await;
 
             match removed {
                 Ok(removed_count) => log::warn!("removed an incomplete grading model from wllama's cache; [files={removed_count}]"),
@@ -352,15 +366,33 @@ mod browser {
             }
         }
 
-        async fn load(self, model_source: ModelSource, abort_registration: AbortRegistration) {
+        async fn load(self, model_source: ModelSource, abort_handle: AbortHandle, abort_registration: AbortRegistration) {
+            let Some(model_in_memory_lock) = self.take_model_in_memory_lock().await
+            else {
+                return;
+            };
+
+            // The lock request cannot be abandoned once made, so a load stopped meanwhile releases what it was granted.
+            if abort_handle.is_aborted() {
+                model_in_memory_lock.release();
+                return;
+            }
+
+            MODEL_IN_MEMORY_LOCK.with(|lock| lock.replace(Some(model_in_memory_lock)));
+
             let load_options: LoadOptions = LoadOptions {
                 context_token_count: CONTEXT_TOKEN_COUNT,
                 sliding_window_cache: SlidingWindowCache::Full,
             };
-            let loading = Model::load(model_source, &load_options, |_: LoadProgress| {});
+            let reached_wllama_load_step: Cell<bool> = Cell::new(false);
+            let loading = Model::load(model_source, &load_options, |progress: LoadProgress| {
+                if matches!(progress, LoadProgress::Loading { .. }) {
+                    reached_wllama_load_step.set(true);
+                }
+            });
             let loaded: Result<Result<Model, cross_llama::Error>, Aborted> = Abortable::new(loading, abort_registration).await;
 
-            // An aborted load was stopped by `unload`, which has already moved the state on.
+            // An aborted load was stopped by `unload`, which has already moved the state on and released the lock.
             let Ok(loaded) = loaded
             else {
                 return;
@@ -375,11 +407,38 @@ mod browser {
                     log::info!("loaded the grading model");
                 },
                 Err(error) => {
-                    log::error!("could not load the grading model; [error={error}]");
-                    platform::store_text(FAILED_LOAD_STORAGE_KEY, grading::GRADING_MODEL_SHA256);
+                    log::error!("could not load the grading model; [error={error} reached_wllama_load_step={}]", reached_wllama_load_step.get());
+                    release_model_in_memory_lock();
+
+                    // Failures before wllama's load step, in the download or the cache, say nothing about this browser.
+                    if reached_wllama_load_step.get() {
+                        platform::store_text(FAILED_LOAD_STORAGE_KEY, grading::GRADING_MODEL_SHA256);
+                    }
+
                     self.set_state(GraderStateKind::Failed);
                 },
             }
+        }
+
+        /// The lock on holding a model in memory, or `None` with the state moved on when this page cannot have it.
+        async fn take_model_in_memory_lock(self) -> Option<HeldWebLock> {
+            let requested: Result<Option<HeldWebLock>, AppErrorStatic> = web_lock::request_if_available(MODEL_IN_MEMORY_LOCK_NAME).await;
+
+            let unavailable_state: GraderStateKind = match requested {
+                Ok(Some(model_in_memory_lock)) => return Some(model_in_memory_lock),
+                Ok(None) => {
+                    log::info!("another page of this site holds the grading model");
+                    GraderStateKind::InUseInAnotherPage
+                },
+                Err(error) => {
+                    log::error!("could not take the lock on holding the grading model; [error={error}]");
+                    GraderStateKind::Failed
+                },
+            };
+
+            RUNNING_LOAD.with(|running| running.replace(None));
+            self.set_state(unavailable_state);
+            None
         }
     }
 
@@ -398,6 +457,14 @@ mod browser {
             model_url,
             wllama_directory_url: WLLAMA_DIRECTORY_URL.to_string(),
         })
+    }
+
+    fn release_model_in_memory_lock() {
+        let model_in_memory_lock: Option<HeldWebLock> = MODEL_IN_MEMORY_LOCK.with(|lock| lock.borrow_mut().take());
+
+        if let Some(model_in_memory_lock) = model_in_memory_lock {
+            model_in_memory_lock.release();
+        }
     }
 
     fn loaded_model() -> Option<Rc<Model>> {
@@ -451,16 +518,17 @@ mod browser {
     }
 
     /// A generation cancelled just before still holds the model; wllama exits once that generation drops it.
-    async fn unload_once_released(model: Rc<Model>) {
-        let Ok(model) = Rc::try_unwrap(model)
-        else {
-            return;
-        };
+    async fn unload_once_released(model: Rc<Model>, model_in_memory_lock: Option<HeldWebLock>) {
+        if let Ok(model) = Rc::try_unwrap(model) {
+            let unloaded: Result<(), cross_llama::Error> = model.unload().await;
 
-        let unloaded: Result<(), cross_llama::Error> = model.unload().await;
+            if let Err(error) = unloaded {
+                log::warn!("could not unload the grading model; [error={error}]");
+            }
+        }
 
-        if let Err(error) = unloaded {
-            log::warn!("could not unload the grading model; [error={error}]");
+        if let Some(model_in_memory_lock) = model_in_memory_lock {
+            model_in_memory_lock.release();
         }
     }
 
