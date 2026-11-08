@@ -67,7 +67,7 @@ fn synthesize_missing_engine_audio(plan: &AudioPlan, paths: &WorkspacePaths, eng
     );
 
     match engine {
-        SpeechEngineKind::Kokoro => kokoro_synthesis::synthesize_clips(&missing_clips, &engine_directory, &paths.speech_models_directory),
+        SpeechEngineKind::Kokoro => kokoro_synthesis::synthesize_clips(&missing_clips, &engine_directory, &paths.models_directory),
         SpeechEngineKind::MacosSay => synthesize_with_macos_say(&missing_clips, &engine_directory),
     }
 }

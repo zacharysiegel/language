@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-# Splits the grading model into llama.cpp's split format and publishes the parts a repository lacks: `local`
-# (build/repository/, which `repository_server` serves) or `cloudflare-r2`. The model file must have the SHA-256
-# `shared::grading::GRADING_MODEL_SHA256` names; without --model-file, `course_builder` reads Ollama's copy.
+# Publishes the grading model, checked against the size and SHA-256 in shared/src/grading/grading_model.rs: `local`
+# links the file into build/repository/, which `repository_server` serves; `cloudflare-r2` uploads it in llama.cpp's
+# split format, and does nothing while R2 model hosting is turned off. Without --model-file, `course_builder` reads
+# models/<its file name>, where ./scripts/dev/fetch-grading-model.sh downloads it.
 #
 # Usage:
 #   ./scripts/publish/publish-model.sh <local|cloudflare-r2> [--model-file <path>]
 #   ./scripts/publish/publish-model.sh local
-#   ./scripts/publish/publish-model.sh cloudflare-r2 --model-file ~/Downloads/gemma4-12b-it-qat.gguf
 
 set -euo pipefail
 

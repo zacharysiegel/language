@@ -170,17 +170,19 @@ pub async fn create_cloudflare_r2_repository() -> Result<CloudflareR2ArtifactRep
 
 pub async fn create_repository(paths: &WorkspacePaths, location: RepositoryLocationKind) -> Result<ArtifactRepositoryKind, AppError> {
     match location {
-        RepositoryLocationKind::Local { root, public_base_url } => {
-            let root: PathBuf = root
-                .or_else(|| dotenvy::var(local_repository::ENV_LOCAL_REPOSITORY_ROOT).ok().map(PathBuf::from))
-                .unwrap_or_else(|| paths.local_repository_directory.clone());
-            let public_base_url: String = public_base_url.unwrap_or_else(|| local_repository::LOCAL_REPOSITORY_BASE_URL.to_string());
-
-            Ok(ArtifactRepositoryKind::Local(LocalArtifactRepository::new(root, public_base_url)))
-        },
+        RepositoryLocationKind::Local { root, public_base_url } => Ok(ArtifactRepositoryKind::Local(create_local_repository(paths, root, public_base_url))),
         RepositoryLocationKind::CloudflareR2 => Ok(ArtifactRepositoryKind::CloudflareR2(create_cloudflare_r2_repository().await?)),
         RepositoryLocationKind::Dry => Ok(ArtifactRepositoryKind::Dry(DryArtifactRepository::new())),
     }
+}
+
+pub fn create_local_repository(paths: &WorkspacePaths, root: Option<PathBuf>, public_base_url: Option<String>) -> LocalArtifactRepository {
+    let root: PathBuf = root
+        .or_else(|| dotenvy::var(local_repository::ENV_LOCAL_REPOSITORY_ROOT).ok().map(PathBuf::from))
+        .unwrap_or_else(|| paths.local_repository_directory.clone());
+    let public_base_url: String = public_base_url.unwrap_or_else(|| local_repository::LOCAL_REPOSITORY_BASE_URL.to_string());
+
+    LocalArtifactRepository::new(root, public_base_url)
 }
 
 #[cfg(test)]

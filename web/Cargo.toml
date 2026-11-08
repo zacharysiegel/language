@@ -20,7 +20,6 @@ js-sys = { workspace = true, optional = true }
 web-sys = { workspace = true, optional = true, features = [
     "Window",
     "Navigator",
-    "Location",
     "Storage",
     "StorageManager",
     "FileSystemDirectoryHandle",
@@ -74,6 +73,8 @@ hydrate = [
     "dep:cross-llama",
     "dep:futures-util",
 ]
+# Downloads the grading model from its Hugging Face repository rather than from the open course's repository.
+grading-model-from-hugging-face = []
 ssr = [
     "leptos/ssr",
     "leptos_router/ssr",

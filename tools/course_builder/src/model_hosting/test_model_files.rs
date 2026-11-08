@@ -1,6 +1,9 @@
 use std::fs;
 use std::path::{Path, PathBuf};
 
+use shared::artifact::content_address;
+
+use crate::model_hosting::HostedModel;
 use crate::model_hosting::gguf_file::{self, GgufKeyValue, GgufTensorInfo};
 use crate::model_hosting::gguf_split;
 
@@ -106,4 +109,16 @@ pub fn write_fixture_model(directory: &Path) -> PathBuf {
     fs::write(&path, file_bytes).unwrap();
 
     path
+}
+
+pub fn fixture_hosted_model(model_file: &Path, part_count: u16) -> HostedModel {
+    let bytes: Vec<u8> = fs::read(model_file).unwrap();
+
+    HostedModel {
+        name: "fixture".to_string(),
+        file_name: MODEL_FILE_NAME.to_string(),
+        sha256: content_address::sha256_hex(&bytes),
+        size_bytes: bytes.len() as u64,
+        part_count,
+    }
 }

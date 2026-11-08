@@ -1,7 +1,3 @@
-use std::cell::RefCell;
-use std::future::Future;
-use std::rc::Rc;
-
 use js_sys::{Function, Object, Promise, Reflect};
 use shared::{AppError, AppErrorStatic};
 use wasm_bindgen::closure::Closure;
@@ -17,9 +13,6 @@ const IF_AVAILABLE_OPTION: &str = "ifAvailable";
 #[wasm_bindgen]
 extern "C" {
     type LockManager;
-
-    #[wasm_bindgen(method, js_name = request)]
-    fn request(this: &LockManager, name: &str, on_granted: &Function) -> Promise;
 
     #[wasm_bindgen(method, js_name = request)]
     fn request_with_options(this: &LockManager, name: &str, options: &Object, on_granted: &Function) -> LockRequest;
@@ -81,28 +74,6 @@ pub async fn request_if_available(name: &str) -> Result<Option<HeldWebLock>, App
     Ok(Some(HeldWebLock {
         release: js_interop::dyn_into(granted_release)?,
     }))
-}
-
-/// Runs `operation` once this page holds the lock named `name`, waiting for any other holder, and holds it until
-/// `operation` ends.
-pub async fn run_while_holding<T: 'static>(name: &str, operation: impl Future<Output = T> + 'static) -> Result<T, AppErrorStatic> {
-    let outcome: Rc<RefCell<Option<T>>> = Rc::new(RefCell::new(None));
-    let recorded_outcome: Rc<RefCell<Option<T>>> = Rc::clone(&outcome);
-    let on_granted: JsValue = Closure::once_into_js(move |_lock: JsValue| -> Promise {
-        wasm_bindgen_futures::future_to_promise(async move {
-            let operation_outcome: T = operation.await;
-
-            recorded_outcome.replace(Some(operation_outcome));
-            Ok(JsValue::UNDEFINED)
-        })
-    });
-
-    let requested: Promise = get_lock_manager()?.request(name, on_granted.unchecked_ref());
-    JsFuture::from(requested).await.map_err(js_interop::error)?;
-
-    let operation_outcome: Option<T> = outcome.take();
-
-    operation_outcome.ok_or_else(|| AppErrorStatic::from(AppError::from(format!("the Web Lock's holder did not finish; [name={name}]"))))
 }
 
 fn get_lock_manager() -> Result<LockManager, AppError> {
