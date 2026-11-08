@@ -10,35 +10,25 @@ set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-readonly GRADING_MODEL_SOURCE_PATH="${REPO_ROOT}/shared/src/grading/grading_model.rs"
 readonly MODELS_DIR="${REPO_ROOT}/models"
+
+source "${REPO_ROOT}/scripts/build/grading-model-constants.sh"
 
 function fail {
     printf 'error: %s\n' "$1" >&2
     exit 1
 }
 
-# Prints the value of a `pub const <name>` in grading_model.rs, without quotes.
-function read_grading_model_constant {
-    local constant_name="$1"
-    local value
-    value="$(grep -E "^pub const ${constant_name}: " "${GRADING_MODEL_SOURCE_PATH}" | sed -E 's/^[^=]*= *"?([^";]*)"?;$/\1/')"
-
-    if test -z "${value}"; then
-        fail "${GRADING_MODEL_SOURCE_PATH} defines no ${constant_name}"
-    fi
-
-    printf '%s\n' "${value}"
-}
-
 function file_size_bytes {
     stat -f '%z' "$1"
 }
 
-readonly FILE_NAME="$(read_grading_model_constant GRADING_MODEL_FILE_NAME)"
-readonly SIZE_BYTES="$(read_grading_model_constant GRADING_MODEL_SIZE_BYTES | tr -d '_')"
-readonly SHA256="$(read_grading_model_constant GRADING_MODEL_SHA256)"
-readonly MODEL_URL="$(read_grading_model_constant GRADING_MODEL_HUGGING_FACE_URL)"
+# Plain assignments, so that a failed read stops the script under `set -e`.
+FILE_NAME="$(read_grading_model_constant GRADING_MODEL_FILE_NAME)"
+SIZE_BYTES="$(read_grading_model_constant GRADING_MODEL_SIZE_BYTES | tr -d '_')"
+SHA256="$(read_grading_model_constant GRADING_MODEL_SHA256)"
+MODEL_URL="$(read_grading_model_constant GRADING_MODEL_HUGGING_FACE_URL)"
+readonly FILE_NAME SIZE_BYTES SHA256 MODEL_URL
 readonly MODEL_PATH="${MODELS_DIR}/${FILE_NAME}"
 readonly PARTIAL_PATH="${MODEL_PATH}.partial"
 
