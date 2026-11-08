@@ -524,12 +524,13 @@ fn create_submission(grading_context: &OpenAnswerGradingContext, exercise: &Open
     }
 }
 
-/// Loads a downloaded model while the question is open, then reads the grader's prompt into its cache once.
+/// Loads a downloaded model once while the question is open, then reads the grader's prompt into its cache once.
 fn prepare_model_while_writing(
     grading_store: GradingStore,
     phase: RwSignal<OpenAnswerPhaseKind>,
     warm_up_submission: OpenAnswerSubmission,
 ) {
+    let load_requested: StoredValue<bool> = StoredValue::new(false);
     let warmed_up: StoredValue<bool> = StoredValue::new(false);
 
     Effect::new(move |_| {
@@ -538,7 +539,10 @@ fn prepare_model_while_writing(
         }
 
         match grading_store.state() {
-            GraderStateKind::Downloaded => grading_store.load_model(),
+            GraderStateKind::Downloaded | GraderStateKind::InUseInAnotherPage if !load_requested.get_value() => {
+                load_requested.set_value(true);
+                grading_store.load_model();
+            },
             GraderStateKind::Ready if !warmed_up.get_value() => {
                 warmed_up.set_value(true);
                 grading_store.warm_up(warm_up_submission.clone());
