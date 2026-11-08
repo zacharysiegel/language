@@ -1,6 +1,6 @@
 # Open-answer exercises and their grading
 
-Status: planned.
+Status: implemented and deployed. `overview.md` describes the current design; this file keeps the plan and its deviations.
 
 A new exercise type in which the learner writes a free answer to a task. In the browser, a local language model (Google's Gemma 4 12B QAT Q4_0 GGUF, the weights of Ollama's gemma4:12b-it-qat, through `cross-llama`'s wllama backend) grades it and lists mistakes. Where the model cannot run, the learner compares their answer with the author's example answers.
 
@@ -174,10 +174,10 @@ Each `language` phase merges into `main` locally once its checks pass; `cross-ll
 1. `language`: R2 CORS for the production origin (done).
 2. `language`: grader prompt into `shared` (done; every rendered prompt byte-identical).
 3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only (done).
-4. `cross-llama`: 0.2.0.
-5. `language`: model hosting and `publish-model` (done; llama.cpp loads the parts and gives the unsplit file's reply).
+4. `cross-llama`: 0.2.0 (done; 0.2.1 later resumed a stopped split download).
+5. `language`: model hosting and `publish-model` (done; production later moved to Google's file on Hugging Face, with R2 model hosting kept but turned off).
 6. `language`: isolation headers, wllama files, and grading in the web view (done).
-7. `language`: author open-answer exercises into the chosen units; docs.
+7. `language`: author open-answer exercises into the chosen units; docs (done; 79 tasks, published to R2 as `2026-11-08+henderson` and deployed).
 
 ## Pull request description
 
