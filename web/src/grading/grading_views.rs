@@ -24,7 +24,6 @@ pub fn mistake_count_heading(findings: &[GraderFinding]) -> String {
     }
 }
 
-/// The settings control that turns the grading model's background download on and off.
 #[component]
 pub fn GradingModelDownloadSetting() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
@@ -82,7 +81,6 @@ pub fn SelfCheckNotice() -> impl IntoView {
     }
 }
 
-/// The heading of a graded answer's feedback, labelled as graded by an AI model.
 #[component]
 pub fn GradedFeedbackHeading(heading: String) -> impl IntoView {
     view! {
@@ -93,7 +91,6 @@ pub fn GradedFeedbackHeading(heading: String) -> impl IntoView {
     }
 }
 
-/// What the grader found in the answer.
 #[component]
 pub fn GraderFindings(response: GraderResponse, target_language_name: String) -> impl IntoView {
     let finding_items: Vec<_> = response
