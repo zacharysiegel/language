@@ -104,6 +104,10 @@ pub fn ExerciseSession(
         let finished: bool = current_index.get() >= active_exercises.get().len();
         let is_first_round: bool = round.get_untracked() == SessionRoundKind::First;
 
+        if finished {
+            grading_store.unload();
+        }
+
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
             on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
