@@ -7,8 +7,10 @@ mod check_embedded_bundle_command;
 mod cors_command;
 mod course_source;
 mod kokoro;
+mod model_hosting;
 mod publication_label;
 mod publish_command;
+mod publish_model_command;
 mod remove_course_command;
 mod remove_unused_recordings_command;
 mod secrets;
@@ -48,6 +50,8 @@ enum CommandKind {
     Build(BuildArguments),
     /// Publish courses' bundles to a repository: every course its index lists, unless told otherwise.
     Publish(PublishArguments),
+    /// Split the grading model into llama.cpp's split format and publish the parts a repository lacks.
+    PublishModel(PublishModelArguments),
     /// Take a course out of a repository's index, then delete its publications.
     RemoveCourse(RemoveCourseArguments),
     /// Delete the recordings no publication in a repository names.
@@ -58,6 +62,32 @@ enum CommandKind {
     SetArtifactCors(SetArtifactCorsArguments),
     /// Remove the repository lease a writing command left behind when it stopped without releasing it.
     Unlock(UnlockArguments),
+}
+
+#[derive(Args)]
+struct PublishModelArguments {
+    #[command(subcommand)]
+    target: PublishModelTargetArgument,
+}
+
+#[derive(Subcommand)]
+enum PublishModelTargetArgument {
+    /// The local repository directory.
+    Local {
+        /// The repository directory; `LANGUAGE_LOCAL_REPOSITORY_ROOT`, else `build/repository/`, when omitted.
+        #[arg(long)]
+        root: Option<PathBuf>,
+
+        /// The unsplit GGUF file, whose SHA-256 must be the grading model's; Ollama's blob of that hash when omitted.
+        #[arg(long)]
+        model_file: Option<PathBuf>,
+    },
+    /// The R2 bucket; reads the bucket settings as `publish cloudflare-r2` does.
+    CloudflareR2 {
+        /// The unsplit GGUF file, whose SHA-256 must be the grading model's; Ollama's blob of that hash when omitted.
+        #[arg(long)]
+        model_file: Option<PathBuf>,
+    },
 }
 
 #[derive(Args)]
@@ -286,6 +316,14 @@ fn run(command: CommandKind) -> Result<bool, AppError> {
             };
 
             publish_command::run_publish(&paths, location, options)
+        },
+        CommandKind::PublishModel(arguments) => match arguments.target {
+            PublishModelTargetArgument::Local { root, model_file } => {
+                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::Local { root }), model_file)
+            },
+            PublishModelTargetArgument::CloudflareR2 { model_file } => {
+                publish_model_command::run_publish_model(&paths, writable_location(WritableTargetArgument::CloudflareR2), model_file)
+            },
         },
         CommandKind::RemoveCourse(arguments) => match arguments.target {
             RemoveCourseTargetArgument::Local { root, course_id } => {

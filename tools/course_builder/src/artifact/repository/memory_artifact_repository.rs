@@ -174,6 +174,7 @@ impl ArtifactRepository for MemoryArtifactRepository {
             .map(|(key, object)| ListedObject {
                 key: key.clone(),
                 uploaded: object.uploaded,
+                size_bytes: object.bytes.len() as u64,
             })
             .collect();
 

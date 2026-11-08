@@ -171,10 +171,15 @@ fn listed_object(object: &Object) -> Result<ListedObject, AppError> {
     else {
         return Err(AppError::from(format!("list_objects_v2 returned an unrepresentable LastModified; [key={key}]")));
     };
+    let Some(size_bytes) = object.size().and_then(|size| u64::try_from(size).ok())
+    else {
+        return Err(AppError::from(format!("list_objects_v2 returned an object without a size; [key={key}]")));
+    };
 
     Ok(ListedObject {
         key: key.to_string(),
         uploaded,
+        size_bytes,
     })
 }
 
@@ -391,7 +396,7 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn list_objects_sends_the_directory_prefix_and_reads_last_modified() {
+    async fn list_objects_sends_the_directory_prefix_and_reads_last_modified_and_size() {
         let listing: String = concat!(
             "<?xml version=\"1.0\" encoding=\"UTF-8\"?>",
             "<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">",
@@ -419,6 +424,7 @@ mod tests {
             vec![ListedObject {
                 key: "courses/pt_br.en.foundations/2026-10-08+charlotte/manifest.json".to_string(),
                 uploaded: DateTime::parse_from_rfc3339("2026-10-08T14:02:11Z").unwrap().with_timezone(&Utc),
+                size_bytes: 2,
             }],
         );
     }
