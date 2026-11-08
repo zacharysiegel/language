@@ -1,6 +1,7 @@
 use std::path::PathBuf;
 
 use shared::AppError;
+use shared::grading;
 
 use crate::artifact::repository::{self, ArtifactRepository, ArtifactRepositoryKind, LocalArtifactRepository, LocalRepositoryLock, RepositoryLockKind};
 use crate::model_hosting::{self, HostedModel, ModelFilePlacementKind, ModelPublicationReport, ModelSplit};
@@ -37,7 +38,7 @@ pub fn run_publish_model_local(paths: &WorkspacePaths, root: Option<PathBuf>, mo
 
 pub fn run_publish_model_cloudflare_r2(paths: &WorkspacePaths, model_file: Option<PathBuf>) -> Result<bool, AppError> {
     if !R2_MODEL_HOSTING_ENABLED {
-        log::warn!("R2 model hosting is turned off for now, so nothing was uploaded; production downloads the grading model from Hugging Face");
+        log::warn!("R2 model hosting is turned off for now, so nothing was uploaded; [model={}]", grading::GRADING_MODEL_NAME);
         return Ok(true);
     }
 
