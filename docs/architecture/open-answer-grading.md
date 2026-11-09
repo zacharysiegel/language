@@ -7,6 +7,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 ## Decisions
 
 - Placement: mixed into a unit's quiz and quick practice, only in the units whose files contain open-answer exercises; no per-unit flag.
+  - Reversed by the owner after deployment: open answers are a separate writing practice (see Scoring).
 - Scoring: feedback only. An open answer never counts toward a quiz's pass mark or score.
 - Grading runs only in the web app. The iOS and Android apps never see open-answer exercises.
 - Fallback, on a computer or browser that cannot run the model: self-check against the example answers, with a notice that automatic grading by an AI model is available on supported computers.
@@ -39,6 +40,11 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - `PausedPractice::unscored_exercise_indices`, so a paused quiz is scored without its exercises.
 - The quiz button counts scored exercises and open answers separately.
 - The grader's mistakes are shown, not saved.
+- Deviations, as built:
+  - The owner reversed the placement: open answers left the quiz and quick practice for a third option on the Practice tab, writing practice, shown only on a unit with open answers. It runs the unit's open answers in unit order through the same session view, keeps no score, records nothing (the unit is not marked started), and ends with the learner's answers and no pass mark.
+  - `shared::practice` builds the three lists: `quiz_exercises`, `quick_practice_exercises` and `writing_practice_exercises`.
+  - Removed: `ExerciseKind::is_scored`, `PausedPractice::unscored_exercise_indices` (a saved one still parses; serde ignores the field), the two-count quiz label and the summary's note on open answers. `AnswerStatus::Unscored` stays as an open answer's result.
+  - A paused quiz's fingerprint covers the quiz's exercises without open answers, so a quiz paused on a unit with open answers under the previous build is cleared with the existing note.
 
 ## Grader
 
