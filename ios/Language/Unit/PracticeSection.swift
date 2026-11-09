@@ -2,8 +2,32 @@ import SwiftUI
 
 /// A session open on the Practice tab.
 private enum PracticeSessionKind: Equatable {
-    case scored(PracticeModeRecord)
+    case quiz
+    case quickPractice
     case openResponse
+
+    func title() -> String {
+        switch self {
+        case .quiz:
+            return "Quiz"
+        case .quickPractice:
+            return "Practice"
+        case .openResponse:
+            return "Open response"
+        }
+    }
+
+    /// `nil` for a session that records nothing.
+    func practiceMode() -> PracticeModeRecord? {
+        switch self {
+        case .quiz:
+            return .full
+        case .quickPractice:
+            return .quick
+        case .openResponse:
+            return nil
+        }
+    }
 }
 
 struct PracticeSection: View {
@@ -20,20 +44,9 @@ struct PracticeSection: View {
     @State private var noticeMessage: String?
 
     var body: some View {
-        switch activeSession {
-        case .scored(let mode):
-            ExerciseSession(
-                title: sessionTitle(mode: mode),
-                exercises: sessionExercises,
-                answeredResults: answeredResults,
-                exitKind: exitKind(mode: mode),
-                onAnswer: { result in recordAnswer(mode: mode, result: result) },
-                onComplete: { score in record(mode: mode, score: score) },
-                onExit: { activeSession = nil },
-            )
-        case .openResponse:
-            OpenResponseSession(exercises: unitOpenResponseExercises(), onExit: { activeSession = nil })
-        case nil:
+        if let activeSession {
+            sessionView(sessionKind: activeSession)
+        } else {
             VStack(alignment: .leading, spacing: .spaceSm) {
                 Text(bestSummary()).font(.bodyText)
                 Text("Pass mark: \(passPercent())%.").font(.captionText).foregroundStyle(Color.inkMuted)
@@ -48,6 +61,23 @@ struct PracticeSection: View {
                 startButtons()
             }
             .onAppear { dropThePausedPracticeIfTheExercisesChanged() }
+        }
+    }
+
+    @ViewBuilder
+    private func sessionView(sessionKind: PracticeSessionKind) -> some View {
+        if let mode = sessionKind.practiceMode() {
+            ExerciseSession(
+                title: sessionKind.title(),
+                exercises: sessionExercises,
+                answeredResults: answeredResults,
+                exitKind: exitKind(mode: mode),
+                onAnswer: { result in recordAnswer(mode: mode, result: result) },
+                onComplete: { score in record(mode: mode, score: score) },
+                onExit: { activeSession = nil },
+            )
+        } else {
+            OpenResponseSession(title: sessionKind.title(), exercises: unitOpenResponseExercises(), onExit: { activeSession = nil })
         }
     }
 
@@ -67,7 +97,7 @@ struct PracticeSection: View {
                 .buttonStyle(SquareButtonStyle())
                 .accessibilityIdentifier("start-over")
         case .notPaused, .exercisesChanged:
-            Button("Quiz (\(unitQuizExercises().count) exercises)") { start(.full) }
+            Button(quizLabel(exerciseCount: unitQuizExercises().count)) { start(.full) }
                 .buttonStyle(SquareButtonStyle(isPrimary: true))
                 .accessibilityIdentifier("quiz")
         }
@@ -85,10 +115,18 @@ struct PracticeSection: View {
         }
     }
 
-    private func openResponseLabel(taskCount: Int) -> String {
-        let noun: String = taskCount == 1 ? "task" : "tasks"
+    private func counted(count: Int, singularNoun: String, pluralNoun: String) -> String {
+        let noun: String = count == 1 ? singularNoun : pluralNoun
 
-        return "Open response (\(taskCount) \(noun))"
+        return "\(count) \(noun)"
+    }
+
+    private func quizLabel(exerciseCount: Int) -> String {
+        "Quiz (\(counted(count: exerciseCount, singularNoun: "exercise", pluralNoun: "exercises")))"
+    }
+
+    private func openResponseLabel(taskCount: Int) -> String {
+        "Open response (\(counted(count: taskCount, singularNoun: "task", pluralNoun: "tasks")))"
     }
 
     /* A practice left on its last feedback has every question answered and resumes at its summary. */
@@ -116,23 +154,23 @@ struct PracticeSection: View {
                 return
             }
 
-            open(mode: .full, exercises: exercisesInOrder(pausedPractice: pausedPractice), answeredResults: [])
+            open(sessionKind: .quiz, exercises: exercisesInOrder(pausedPractice: pausedPractice), answeredResults: [])
         case .quick:
-            open(mode: .quick, exercises: quickPracticeExercises(unitExercises: lesson.exercises), answeredResults: [])
+            open(sessionKind: .quickPractice, exercises: quickPracticeExercises(unitExercises: lesson.exercises), answeredResults: [])
         }
     }
 
     private func resume(pausedPractice: PausedPracticeRecord) {
         let savedResults: [ExerciseResult] = pausedPractice.results.map { savedResult in ExerciseResult.fromSaved(savedResult) }
 
-        open(mode: .full, exercises: exercisesInOrder(pausedPractice: pausedPractice), answeredResults: savedResults)
+        open(sessionKind: .quiz, exercises: exercisesInOrder(pausedPractice: pausedPractice), answeredResults: savedResults)
     }
 
-    private func open(mode: PracticeModeRecord, exercises: [ExerciseRecord], answeredResults: [ExerciseResult]) {
+    private func open(sessionKind: PracticeSessionKind, exercises: [ExerciseRecord], answeredResults: [ExerciseResult]) {
         sessionExercises = exercises
         self.answeredResults = answeredResults
         noticeMessage = nil
-        activeSession = .scored(mode)
+        activeSession = sessionKind
         progressStore.startUnit(courseId: courseId, unitId: unit.id)
     }
 
@@ -194,15 +232,6 @@ struct PracticeSection: View {
                 totalCount: Int(score.totalCount),
                 vocabularyCount: unit.vocabulary.count,
             )
-        }
-    }
-
-    private func sessionTitle(mode: PracticeModeRecord) -> String {
-        switch mode {
-        case .full:
-            return "Quiz"
-        case .quick:
-            return "Practice"
         }
     }
 
