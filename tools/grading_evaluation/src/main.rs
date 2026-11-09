@@ -74,9 +74,9 @@ struct RunArguments {
     #[arg(long = "prompt-variant", value_enum)]
     variants: Vec<PromptVariantKind>,
 
-    /// Grade only the cases whose id contains this text.
-    #[arg(long)]
-    only: Option<String>,
+    /// Grade only the cases whose id contains this text; repeat for several.
+    #[arg(long = "only")]
+    only: Vec<String>,
 
     /// The sampling temperature.
     #[arg(long, default_value_t = 0.0)]
@@ -219,8 +219,8 @@ fn run_run(root: &Path, arguments: RunArguments) -> Result<(), AppError> {
     let output_directory: PathBuf = resolve(root, arguments.output, DEFAULT_RUNS_DIRECTORY);
     let mut cases: Vec<GradingCase> = grading_case::load_cases(&cases_path)?;
 
-    if let Some(only) = &arguments.only {
-        cases.retain(|case| case.id.contains(only.as_str()));
+    if !arguments.only.is_empty() {
+        cases.retain(|case| arguments.only.iter().any(|only| case.id.contains(only.as_str())));
     }
 
     if cases.is_empty() {
