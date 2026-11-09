@@ -1,50 +1,52 @@
-# Open-answer exercises and their grading
+# Open-response exercises and their grading
 
 Status: implemented and deployed. `overview.md` describes the current design; this file keeps the plan and its deviations.
+
+Deviation: after deployment the owner renamed the exercise type and its Practice-tab option to "open response" in course data, code, user-facing text and docs. The new kind code `open_response` moved `SCHEMA_VERSION` 3 to 4 and `COURSE_MANIFEST_SCHEMA_VERSION` 4 to 5.
 
 A new exercise type in which the learner writes a free answer to a task. In the browser, a local language model (Google's Gemma 4 12B QAT Q4_0 GGUF, the weights of Ollama's gemma4:12b-it-qat, through `cross-llama`'s wllama backend) grades it and lists mistakes. Where the model cannot run, the learner compares their answer with the author's example answers.
 
 ## Decisions
 
-- Placement: mixed into a unit's quiz and quick practice, only in the units whose files contain open-answer exercises; no per-unit flag.
-  - Reversed by the owner after deployment: open answers are a separate writing practice (see Scoring).
-- Scoring: feedback only. An open answer never counts toward a quiz's pass mark or score.
-- Grading runs only in the web app. The iOS and Android apps never see open-answer exercises.
+- Placement: mixed into a unit's quiz and quick practice, only in the units whose files contain open-response exercises; no per-unit flag.
+  - Reversed by the owner after deployment: open responses are a practice of their own (see Scoring).
+- Scoring: feedback only. An open response never counts toward a quiz's pass mark or score.
+- Grading runs only in the web app. The iOS and Android apps never see open-response exercises.
 - Fallback, on a computer or browser that cannot run the model: self-check against the example answers, with a notice that automatic grading by an AI model is available on supported computers.
-- Model download: automatic in the background unless the learner turns it off in settings. The model is loaded into memory only when an open-answer question appears, and unloaded when the practice session ends.
+- Model download: automatic in the background unless the learner turns it off in settings. The model is loaded into memory only when an open-response question appears, and unloaded when the practice session ends.
 - Every graded result is labelled as graded by an AI model.
 - Grader: the evaluated prompt (`few_shot_six`, temperature 0), unchanged.
 
 ## Course data
 
-- `Exercise::OpenAnswer(OpenAnswerExercise)`, kind code `open_answer`:
+- `Exercise::OpenResponse(OpenResponseExercise)`, kind code `open_response`:
   - `prompt_source`: the task, in the source language.
   - `context_source`: optional scene facts, in the source language.
   - `example_answers`: at least one, in the target language, each checked by `check_spoken_target`.
   - `explanation`, `clip_key`: as on the other kinds; the clip speaks the first example answer.
 - Validator:
-  - No per-kind minimum; open answers do not count toward the 22-exercise minimum.
+  - No per-kind minimum; open responses do not count toward the 22-exercise minimum.
   - Not allowed as reading questions.
   - Rejected in a course whose language pair has no grader prompt.
 - Shard: `prompt` holds `prompt_source`; a new nullable `context_source` column; example answers in `exercise_answer`.
 - Versions: `SCHEMA_VERSION` 2 to 3, `COURSE_MANIFEST_SCHEMA_VERSION` 3 to 4.
-- Native apps: the `ffi` crate leaves open answers out of `UnitLessonRecord` and native recording prefetch; `ExerciseRecord` gains no variant.
-- The iOS and Android UI tests read a unit's exercises from its JSON without the open answers.
-- The test course gets one open-answer exercise per unit.
+- Native apps: the `ffi` crate leaves open responses out of `UnitLessonRecord` and native recording prefetch; `ExerciseRecord` gains no variant.
+- The iOS and Android UI tests read a unit's exercises from its JSON without the open responses.
+- The test course gets one open-response exercise per unit.
 
 ## Scoring
 
-- `ExerciseKind::is_scored`; false for `OpenAnswer`.
-- `AnswerStatus::Unscored`, the result of an open answer.
-- `SessionScore` and `PausedPractice::score` count only scored exercises; an open answer is never missed.
+- `ExerciseKind::is_scored`; false for `OpenResponse`.
+- `AnswerStatus::Unscored`, the result of an open response.
+- `SessionScore` and `PausedPractice::score` count only scored exercises; an open response is never missed.
 - `PausedPractice::unscored_exercise_indices`, so a paused quiz is scored without its exercises.
-- The quiz button counts scored exercises and open answers separately.
+- The quiz button counts scored exercises and open responses separately.
 - The grader's mistakes are shown, not saved.
 - Deviations, as built:
-  - The owner reversed the placement. Writing practice: a third Practice-tab option on units with open answers, in unit order; no score, nothing recorded, ends with the learner's answers.
-  - `shared::practice` builds the three lists: `quiz_exercises`, `quick_practice_exercises` and `writing_practice_exercises`.
-  - Removed: `ExerciseKind::is_scored`, `PausedPractice::unscored_exercise_indices` (a saved one still parses; serde ignores the field), the two-count quiz label and the summary's note on open answers. `AnswerStatus::Unscored` stays as an open answer's result.
-  - A paused quiz's fingerprint covers the quiz's exercises without open answers, so a quiz paused on a unit with open answers under the previous build is cleared with the existing note.
+  - The owner reversed the placement. Open response: a third Practice-tab option on units with open responses, in unit order; no score, nothing recorded, ends with the learner's answers.
+  - `shared::practice` builds the three lists: `quiz_exercises`, `quick_practice_exercises` and `open_response_exercises`.
+  - Removed: `ExerciseKind::is_scored`, `PausedPractice::unscored_exercise_indices` (a saved one still parses; serde ignores the field), the two-count quiz label and the summary's note on open responses. `AnswerStatus::Unscored` stays as an open response's result.
+  - A paused quiz's fingerprint covers the quiz's exercises without open responses, so a quiz paused on a unit with open responses under the previous build is cleared with the existing note.
 
 ## Grader
 
@@ -89,16 +91,16 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - `web/src/grading/`, gated on `hydrate`:
   - `GraderStateKind`: unsupported, not downloaded, downloading, downloaded, loading, ready, failed.
   - Capable: WebGPU adapter, wllama's default build, enough storage quota for the model, and no earlier failed load recorded in this browser. The default build was added after generation failed in Safari's compatibility build.
-  - Background download when a unit page with open-answer exercises opens, unless the setting is off; `navigator.storage.persist()` first.
-  - Load when an open-answer question appears; unload when the session ends.
+  - Background download when a unit page with open-response exercises opens, unless the setting is off; `navigator.storage.persist()` first.
+  - Load when an open-response question appears; unload when the session ends.
 - Setting: `Settings::download_grading_model`, default on (a serde default), in the settings controls with the model's download size. Turning it off stops a running download; a downloaded model stays and keeps grading.
-- Open-answer view: a multi-line field with spell checking off and a Check button, which shows the pending state.
+- Open-response view: a multi-line field with spell checking off and a Check button, which shows the pending state.
   - States: loading the model, grading, then feedback; cancelled when the session unmounts.
   - Feedback: an "AI model" tag; whether the answer addresses the task and is in the target language; each mistake's quote, replacement and explanation; the example answers.
   - Self-check: the example answers, plus the notice; while the model is still downloading, the download's progress; with the setting off, that automatic grading needs the download turned on.
 - Deviations, as built:
   - `GraderStateKind` also has `Unchecked`, before the browser is checked, and `InUseInAnotherPage`.
-  - An app-level Web Lock (`ifAvailable`) is held while a page loads or holds the model, so one copy is in memory; a page without it gets the self-check and tries again at its next open answer.
+  - An app-level Web Lock (`ifAvailable`) is held while a page loads or holds the model, so one copy is in memory; a page without it gets the self-check and tries again at its next open response.
   - Only a failure in wllama's load step is recorded as a failed load, not one in the download or the cache.
   - The model is also unloaded when the session reaches its summary.
   - `scripts/build/prepare-wllama.sh` runs the crate's script, found through `cargo metadata`, and records wllama's version in `web/static/wllama/VERSION`; `verify-site-tree.sh` checks the files.
@@ -112,10 +114,10 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 
 ## Course content
 
-`pt_br.en.foundations`: 79 open-answer tasks in 40 units, chosen by a review of the whole course against the grader's tested scope (answers of up to 27 words; scene facts checked; use of a taught structure not checked).
+`pt_br.en.foundations`: 79 open-response tasks in 40 units, chosen by a review of the whole course against the grader's tested scope (answers of up to 27 words; scene facts checked; use of a taught structure not checked).
 
 - Personal: about the learner's own life, no `context_source`. Scene: `context_source` holds the facts the answer must convey.
-- No open answers: `a1-02-sounds-alphabet`, `a1-00-stress-and-diacritics`, `a1-00-how-portuguese-works` (no communicative goal yet), `b2-05-literature-poetry` (reading and recognition only).
+- No open responses: `a1-02-sounds-alphabet`, `a1-00-stress-and-diacritics`, `a1-00-how-portuguese-works` (no communicative goal yet), `b2-05-literature-poetry` (reading and recognition only).
 - A1, one or two sentences:
   - `a1-01-greetings-introductions`: introduce yourself (personal; not where you live, since `morar` is not taught).
   - `a1-03-ser-estar-feelings`: how you are today (personal); a person needing both `ser` and `estar` (scene).
@@ -179,11 +181,11 @@ Each `language` phase merges into `main` locally once its checks pass; `cross-ll
 
 1. `language`: R2 CORS for the production origin (done).
 2. `language`: grader prompt into `shared` (done; every rendered prompt byte-identical).
-3. `language`: open-answer course data, validator, shard, native exclusion, unscored results, and the web view with self-check only (done).
+3. `language`: open-response course data, validator, shard, native exclusion, unscored results, and the web view with self-check only (done).
 4. `cross-llama`: 0.2.0 (done; 0.2.1 later resumed a stopped split download).
 5. `language`: model hosting and `publish-model` (done; production later moved to Google's file on Hugging Face, with R2 model hosting kept but turned off).
 6. `language`: isolation headers, wllama files, and grading in the web view (done).
-7. `language`: author open-answer exercises into the chosen units; docs (done; 79 tasks, published to R2 as `2026-11-08+henderson` and deployed).
+7. `language`: author open-response exercises into the chosen units; docs (done; 79 tasks, published to R2 as `2026-11-08+henderson` and deployed).
 
 ## Pull request description
 

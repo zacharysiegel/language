@@ -142,7 +142,7 @@ Rules for each section:
   - Put explanations of a convention in the note's explanation, not in a header, and give the same column concept the same header in every unit.
 - `culture`: one note of at least 200 characters.
 - `readings`: optional at the lowest levels (omit the key or use `[]`), required at the higher levels as the curriculum's `requires_readings` says. A reading has at least 2 paragraphs of real connected text at the level, and at least 2 (ideally 3 to 4) `multiple_choice` comprehension questions.
-- `exercises`: at least 22 besides open answers, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30. Cover the whole unit: vocabulary, the grammar notes and the dialogues. Open answers are optional and follow the rules under their type.
+- `exercises`: at least 22 besides open responses, mixed in order of increasing difficulty, with at least this many of each type: multiple_choice 5, fill_blank 5, translate_to_target 3, order_words 3, listening_choice 3, dictation 2, match 1. Aim for about 26 to 30. Cover the whole unit: vocabulary, the grammar notes and the dialogues. Open responses are optional and follow the rules under their type.
 
 ## Exercise types
 
@@ -182,9 +182,9 @@ The learner types what they hear. Keep it short (3 to 10 words) and unambiguous 
 4 to 6 pairs, all unambiguous. A phone shows the two sides in two narrow columns, so keep each side to a short phrase of at most 35 characters, which the validator enforces. A full sentence of explanation belongs in `explanation`.
 
 ```json
-{"type": "open_answer", "prompt_source": "Tell a friend about Paulo: what he is like and how he is today.", "context_source": "Paulo is tall and he is a doctor. Today he is tired and hungry.", "example_answers": ["O Paulo é alto e é médico. Hoje ele está cansado e com fome."], "explanation": "optional"}
+{"type": "open_response", "prompt_source": "Tell a friend about Paulo: what he is like and how he is today.", "context_source": "Paulo is tall and he is a doctor. Today he is tired and hungry.", "example_answers": ["O Paulo é alto e é médico. Hoje ele está cansado e com fome."], "explanation": "optional"}
 ```
-The learner writes their own answer to the task. A language model grades it where the web app can run one; elsewhere the learner compares it with `example_answers`. The learner practises a unit's open answers in its writing practice, in file order, apart from the quiz and quick practice, so an open answer never counts toward the score and its position among the exercises does not matter. The iOS and Android apps leave it out. `context_source` holds the facts of a scene the answer must convey. Only a course whose language pair has a grader prompt (`shared/src/grading/`) can have open answers, and a reading question is never one.
+The learner writes their own answer to the task. A language model grades it where the web app can run one; elsewhere the learner compares it with `example_answers`. The learner practises a unit's open responses in its Open response option on the Practice tab, in file order, apart from the quiz and quick practice, so an open response never counts toward the score and its position among the exercises does not matter. The iOS and Android apps leave it out. `context_source` holds the facts of a scene the answer must convey. Only a course whose language pair has a grader prompt (`shared/src/grading/`) can have open responses, and a reading question is never one.
 
 - Answerable with grammar and vocabulary taught in the unit or earlier.
 - The task's wording makes the unit's grammar the natural answer; never rely on naming a grammar term.
@@ -199,7 +199,7 @@ The learner writes their own answer to the task. A language model grades it wher
 ## Quality bar
 
 - Content is teachable from the page alone by a complete beginner who speaks only the source language. Explain with source-language comparisons where they help.
-- Exercises other than open answers have exactly one defensible correct answer, or every defensible answer listed. No trick questions. Explanations on multiple_choice and fill_blank are strongly encouraged.
+- Exercises other than open responses have exactly one defensible correct answer, or every defensible answer listed. No trick questions. Explanations on multiple_choice and fill_blank are strongly encouraged.
 - No two exercises in a unit test the same sentence.
 - Write valid JSON (double quotes, no trailing commas, escaped quotes inside strings as `\"`, newlines in strings as `\n`). Use real UTF-8 characters, not escapes.
 - Write the file, run the validator, fix all errors, then do a last careful pass over the target-language text for mistakes.
