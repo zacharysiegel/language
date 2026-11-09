@@ -367,8 +367,8 @@ class LanguageUITestCase: XCTestCase {
         try? data.write(to: URL(fileURLWithPath: "\(Self.screenshotDirectory)/\(name).png"))
     }
 
-    /// The unit's exercises the app offers, which leaves out open responses.
-    static func readExercises(_ unitId: String, courseId: String = LanguageUITestCase.courseId) throws -> [[String: Any]] {
+    /// The unit's exercises other than its open responses, which the quiz asks.
+    static func readQuizExercises(_ unitId: String, courseId: String = LanguageUITestCase.courseId) throws -> [[String: Any]] {
         let exercises: [[String: Any]] = try readUnit(unitId, courseId: courseId)["exercises"] as? [[String: Any]] ?? []
 
         return exercises.filter { exercise in exercise["type"] as? String != "open_response" }

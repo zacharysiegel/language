@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -22,6 +23,8 @@ import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
 import ro.zach.language.core.passPercent
 import ro.zach.language.core.quickPracticeExerciseCount
+import ro.zach.language.core.quickPracticeExercises
+import ro.zach.language.core.quizExercises
 import ro.zach.language.design.LanguageColors
 import ro.zach.language.design.LanguageSpacing
 import ro.zach.language.design.LanguageText
@@ -41,8 +44,9 @@ private const val CHANGED_PRACTICE_NOTE: String = "The practice changed since yo
 @Composable
 fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, modifier: Modifier = Modifier) {
     val progressStore: ProgressStore = LocalProgressStore.current
+    val unitQuizExercises: List<ExerciseRecord> = remember(lesson) { quizExercises(lesson.exercises) }
     var activeMode: PracticeModeRecord? by rememberSaveable { mutableStateOf(null) }
-    /* Indexes into the lesson's exercises, in the order the session asks them. */
+    /* Indexes into the unit's quiz exercises, in the order the session asks them. */
     var sessionExerciseIndexes: List<Int> by rememberSaveable { mutableStateOf(emptyList()) }
     var answeredResults: List<ExerciseResult> by rememberSaveable { mutableStateOf(emptyList()) }
     var noticeMessage: String? by rememberSaveable { mutableStateOf(null) }
@@ -58,7 +62,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
     if (mode != null) {
         ExerciseSession(
             title = sessionTitle(mode),
-            exercises = sessionExerciseIndexes.mapNotNull { exerciseIndex -> lesson.exercises.getOrNull(exerciseIndex) },
+            exercises = sessionExerciseIndexes.mapNotNull { exerciseIndex -> unitQuizExercises.getOrNull(exerciseIndex) },
             answeredResults = answeredResults,
             exitKind = exitKind(mode),
             onAnswer = { result -> recordAnswer(progressStore, courseId, unit.id, mode, result) },
@@ -77,7 +81,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
     }
 
     LaunchedEffect(Unit) {
-        val dropOutcome: PausedPracticeDropOutcome = dropThePausedPracticeIfTheExercisesChanged(progressStore, courseId, unit.id, lesson.exercises)
+        val dropOutcome: PausedPracticeDropOutcome = dropThePausedPracticeIfTheExercisesChanged(progressStore, courseId, unit.id, unitQuizExercises)
 
         if (dropOutcome == PausedPracticeDropOutcome.Dropped) {
             noticeMessage = CHANGED_PRACTICE_NOTE
@@ -93,10 +97,10 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
         }
 
         PracticeStartButtons(
-            pausedPracticeState = progressStore.pausedPracticeState(courseId, unit.id, lesson.exercises),
-            exerciseCount = lesson.exercises.size,
+            pausedPracticeState = progressStore.pausedPracticeState(courseId, unit.id, unitQuizExercises),
+            exerciseCount = unitQuizExercises.size,
             onStartFull = {
-                val pausedPractice: PausedPracticeRecord? = progressStore.startFullPractice(courseId, unit.id, lesson.exercises)
+                val pausedPractice: PausedPracticeRecord? = progressStore.startFullPractice(courseId, unit.id, unitQuizExercises)
 
                 if (pausedPractice != null) {
                     open(PracticeModeRecord.FULL, exerciseIndexes(pausedPractice), emptyList())
@@ -107,7 +111,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
 
                 open(PracticeModeRecord.FULL, exerciseIndexes(pausedPractice), savedResults)
             },
-            onStartQuick = { open(PracticeModeRecord.QUICK, quickPracticeExerciseIndexes(lesson.exercises), emptyList()) },
+            onStartQuick = { open(PracticeModeRecord.QUICK, quickPracticeExerciseIndexes(lesson.exercises, unitQuizExercises), emptyList()) },
         )
     }
 }
@@ -178,8 +182,9 @@ private fun exerciseIndexes(pausedPractice: PausedPracticeRecord): List<Int> {
     return pausedPractice.exerciseOrder.map { exerciseIndex -> exerciseIndex.toInt() }
 }
 
-private fun quickPracticeExerciseIndexes(exercises: List<ExerciseRecord>): List<Int> {
-    return exercises.indices.shuffled().take(quickPracticeExerciseCount().toInt())
+/* Each quick practice exercise is one of the quiz exercises. */
+private fun quickPracticeExerciseIndexes(unitExercises: List<ExerciseRecord>, unitQuizExercises: List<ExerciseRecord>): List<Int> {
+    return quickPracticeExercises(unitExercises).map { exercise -> unitQuizExercises.indexOf(exercise) }
 }
 
 private fun exitKind(mode: PracticeModeRecord): ExerciseSessionExitKind {

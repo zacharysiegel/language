@@ -44,7 +44,7 @@ struct PracticeSection: View {
 
     @ViewBuilder
     private func startButtons() -> some View {
-        let pausedPracticeState: PausedPracticeStateRecord = progressStore.pausedPracticeState(courseId: courseId, unitId: unit.id, exercises: lesson.exercises)
+        let pausedPracticeState: PausedPracticeStateRecord = progressStore.pausedPracticeState(courseId: courseId, unitId: unit.id, exercises: unitQuizExercises())
 
         switch pausedPracticeState {
         case .resumable(let pausedPractice):
@@ -58,7 +58,7 @@ struct PracticeSection: View {
                 .buttonStyle(SquareButtonStyle())
                 .accessibilityIdentifier("start-over")
         case .notPaused, .exercisesChanged:
-            Button("Quiz (\(lesson.exercises.count) exercises)") { start(.full) }
+            Button("Quiz (\(unitQuizExercises().count) exercises)") { start(.full) }
                 .buttonStyle(SquareButtonStyle(isPrimary: true))
                 .accessibilityIdentifier("quiz")
         }
@@ -74,7 +74,7 @@ struct PracticeSection: View {
     }
 
     private func dropThePausedPracticeIfTheExercisesChanged() {
-        let pausedPracticeState: PausedPracticeStateRecord = progressStore.pausedPracticeState(courseId: courseId, unitId: unit.id, exercises: lesson.exercises)
+        let pausedPracticeState: PausedPracticeStateRecord = progressStore.pausedPracticeState(courseId: courseId, unitId: unit.id, exercises: unitQuizExercises())
 
         guard pausedPracticeState == .exercisesChanged else {
             return
@@ -87,7 +87,7 @@ struct PracticeSection: View {
     private func start(_ mode: PracticeModeRecord) {
         switch mode {
         case .full:
-            let pausedPractice: PausedPracticeRecord? = progressStore.startFullPractice(courseId: courseId, unitId: unit.id, exercises: lesson.exercises)
+            let pausedPractice: PausedPracticeRecord? = progressStore.startFullPractice(courseId: courseId, unitId: unit.id, exercises: unitQuizExercises())
 
             guard let pausedPractice else {
                 return
@@ -95,7 +95,7 @@ struct PracticeSection: View {
 
             open(mode: .full, exercises: exercisesInOrder(pausedPractice: pausedPractice), answeredResults: [])
         case .quick:
-            open(mode: .quick, exercises: Array(lesson.exercises.shuffled().prefix(Int(quickPracticeExerciseCount()))), answeredResults: [])
+            open(mode: .quick, exercises: quickPracticeExercises(unitExercises: lesson.exercises), answeredResults: [])
         }
     }
 
@@ -113,8 +113,14 @@ struct PracticeSection: View {
         progressStore.startUnit(courseId: courseId, unitId: unit.id)
     }
 
+    private func unitQuizExercises() -> [ExerciseRecord] {
+        quizExercises(unitExercises: lesson.exercises)
+    }
+
     private func exercisesInOrder(pausedPractice: PausedPracticeRecord) -> [ExerciseRecord] {
-        pausedPractice.exerciseOrder.map { exerciseIndex in lesson.exercises[Int(exerciseIndex)] }
+        let quizExercises: [ExerciseRecord] = unitQuizExercises()
+
+        return pausedPractice.exerciseOrder.map { exerciseIndex in quizExercises[Int(exerciseIndex)] }
     }
 
     private func exitKind(mode: PracticeModeRecord) -> ExerciseSessionExitKind {
