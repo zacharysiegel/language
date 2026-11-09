@@ -227,11 +227,12 @@ Every screen, from its iOS file to its Kotlin file. Test tags equal the iOS acce
   - `UnitOutlineRecord.itemLabel(itemNumber)` from `unitItemLabel(...)`.
 - `Unit/PhraseRow.swift` to `unit/PhraseRow.kt`: `TranslationToggle`, `PhraseRow` (target, translation and "literally: ..." when translations are shown).
 - `Unit/GrammarTable.swift` to `unit/GrammarTable.kt`: below the compact width, `GroupedTableView` from `groupedTable(table)`: the key (`grouped-table-key`, uppercase headers over an ink rule), group headings (`grouped-table-heading`, heading semantics), rows (`grouped-table-row`, merged semantics with the spoken text "<header>: <value>." per field); at regular width the hairline paradigm grid, scrolling sideways.
-- `Unit/PracticeSection.swift` to `unit/PracticeSection.kt`: quiz score summary, pass mark, the notice (`practice-notice`, including "The practice changed since you paused, so it starts over."), Resume full practice "(question n of m)" (`resume-full-practice`) and Start over (`start-over`) when paused, else Full practice (`full-practice`), Quick practice (`quick-practice`); full practice saves each answer and pauses, quick practice quits; finishing records the outcome and reports words added.
+- `Unit/PracticeSection.swift` to `unit/PracticeSection.kt`: `PracticeSessionKind` (Quiz, QuickPractice, OpenResponse; `title()`, `practiceMode()`), quiz score summary, pass mark, the notice (`practice-notice`, including "The practice changed since you paused, so it starts over."), Resume quiz "(question n of m)" (`resume-quiz`) and Start over (`start-over`) when paused, else "Quiz (n exercises)" (`quiz`), Quick practice (`quick-practice`), and "Open response (n tasks)" (`open-response`) only when the unit has open responses; the quiz and quick practice take `quizExercises` and `quickPracticeExercises` from the core; the quiz saves each answer and pauses, quick practice quits; finishing records the outcome and reports words added; the open response neither starts the unit nor records anything.
 
 ### Practice
 
-- `Practice/ExerciseSession.swift` to `practice/ExerciseSession.kt`: `ExerciseResult`, `ExerciseSessionExitKind` (Quit `quit`, Pause `pause`), `ExerciseRecord.clipKey()`, `explanation()`, `speaksAfterAnswer()`; question position (`question-position`), progress bar, instruction, the exercise body keyed by retry and index, feedback (`feedback-heading`, Hear it, Continue `continue-exercise`), the summary (`session-summary`, Retry missed, Done `session-done`), completion reported once.
+- `Practice/ExerciseSession.swift` to `practice/ExerciseSession.kt`: `ExerciseResult`, `ExerciseSessionExitKind` (Quit `quit`, Pause `pause`), `ExerciseRecord.clipKey()`, `explanation()`, `speaksAfterAnswer()`; `SessionHeader` (question position `question-position`, the exit control, progress bar), instruction, the exercise body keyed by retry and index, feedback (`feedback-heading`, Hear it, Continue `continue-exercise`), the summary (`session-summary`, Retry missed, Done `session-done`), completion reported once.
+- `Practice/OpenResponseSession.swift` to `practice/OpenResponseSession.kt`: the task, scene facts, a multi-line `SquareTextField` (`open-response-field`, `minLines`), Check (`check`); the self-check (`feedback-heading` "Compare with the examples", `written-answer`, `example-answer` with Hear it on the first playing the exercise's clip, the explanation, `self-check-notice`, Continue `continue-exercise`); "Your answers" (`session-summary`, `your-answer`, Done `session-done`); no score.
 - `Practice/ExerciseViews.swift` to `practice/ExerciseViews.kt`: `ExerciseBody`, `ListeningControls` (plays once on appearing), `ChoiceList` (`choice`, shuffled once), `TypedAnswerView` and `AnswerField` (`answer-field`, focused on appearing, no capitalisation or autocorrect, IME Done checks), `FillBlankView`, `OrderWordsView` (`answer-area` with a dashed hairline, `bank-token`, shuffle avoiding sentence order), `MatchView` (`match-left`, `match-right`, the pending glyph on a left choice whose clip waits, 500 ms wrong flash), Check (`check`).
 
 ### Review, glossary, progress, settings
@@ -269,6 +270,7 @@ Plain Kotlin logic only; nothing that calls into the core, whose library is buil
 - `design/IndexRailTrackerTest.kt`: the entry passed at a reading line, a jump held until the learner scrolls, the entry number under a drag position.
 - `practice/ExerciseRecordsTest.kt`: `speaksAfterAnswer`, `clipKey`, `explanation` per kind; the order-words shuffle never returns sentence order.
 - `unit/GroupedTableRowTest.kt`: the spoken text of a row.
+- `unit/PracticeStartLabelsTest.kt`: the quiz and open response labels in the singular and plural.
 - `audio/AudioInterruptionEventTest.kt`: focus change codes to interruption events.
 
 ### Instrumented tests (`./gradlew connectedDebugAndroidTest`)
@@ -303,6 +305,10 @@ From `CourseUITests.swift`, one Android test per iOS test, in the feature packag
   - `startOver_replacesThePausedQuiz`
   - `quickPractice_isQuitAndLeavesThePausedQuiz`
   - `readingQuestions_canBeAnswered`
+- `practice/OpenResponseEndToEndTest.kt`
+  - `practiceTab_offersTheOpenResponsesWithTheirTaskCount`
+  - `practiceTab_offersNoOpenResponseInAUnitWithoutThem`
+  - `openResponses_showTheExampleAnswersAfterCheckThenListYourAnswersAndRecordNothing`
 - `review/ReviewEndToEndTest.kt`: `review_addsWordsAndGradesACard`.
 - `glossary/GlossaryEndToEndTest.kt`
   - `glossaryLevelRail_jumpsToTheFirstWordOfALevel`
