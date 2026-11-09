@@ -105,7 +105,7 @@ done
 
 for wllama_file in "${WLLAMA_FILES[@]}"; do
     if test ! -s "${WLLAMA_DIR}/${wllama_file}"; then
-        fail "${WLLAMA_DIR}/${wllama_file} is missing, so open answers cannot be graded; run ./scripts/build/build-site.sh"
+        fail "${WLLAMA_DIR}/${wllama_file} is missing, so open responses cannot be graded; run ./scripts/build/build-site.sh"
     fi
 done
 
