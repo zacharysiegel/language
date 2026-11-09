@@ -15,7 +15,6 @@ const EXERCISES_CHANGED_NOTE: &str = "The practice changed since you paused, so 
 enum PracticeSessionKind {
     Quiz,
     QuickPractice,
-    /// The unit's open answers; keeps no score and records nothing.
     WritingPractice,
 }
 
@@ -151,21 +150,16 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
         let unit_id: String = unit_id.clone();
 
         Callback::new(move |start: PracticeStartKind| {
+            if !matches!(start, PracticeStartKind::Writing) {
+                progress_store.start_unit(&course_id, &unit_id);
+            }
+
             let session: Option<ActiveSession> = match start {
-                PracticeStartKind::FullFromTheStart => {
-                    progress_store.start_unit(&course_id, &unit_id);
-                    progress_store
-                        .start_full_practice(&course_id, &unit_id, &quiz_exercises)
-                        .map(|paused_practice| full_session(&paused_practice, &quiz_exercises))
-                },
-                PracticeStartKind::ResumeFull(paused_practice) => {
-                    progress_store.start_unit(&course_id, &unit_id);
-                    Some(full_session(&paused_practice, &quiz_exercises))
-                },
-                PracticeStartKind::Quick => {
-                    progress_store.start_unit(&course_id, &unit_id);
-                    Some(quick_session(&unit_exercises))
-                },
+                PracticeStartKind::FullFromTheStart => progress_store
+                    .start_full_practice(&course_id, &unit_id, &quiz_exercises)
+                    .map(|paused_practice| full_session(&paused_practice, &quiz_exercises)),
+                PracticeStartKind::ResumeFull(paused_practice) => Some(full_session(&paused_practice, &quiz_exercises)),
+                PracticeStartKind::Quick => Some(quick_session(&unit_exercises)),
                 PracticeStartKind::Writing => Some(writing_session(&writing_exercises)),
             };
 
