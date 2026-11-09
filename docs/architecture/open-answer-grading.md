@@ -88,7 +88,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - wllama's files: fetched by the `fetch-wllama.sh` that ships in the `cross-llama` crate, into a generated, uncommitted `web/static/wllama/`; by `serve.sh` and `build-site.sh`.
 - `web/src/grading/`, gated on `hydrate`:
   - `GraderStateKind`: unsupported, not downloaded, downloading, downloaded, loading, ready, failed.
-  - Capable: WebGPU adapter, enough storage quota for the model, and no earlier failed load recorded in this browser.
+  - Capable: WebGPU adapter, wllama's default build, enough storage quota for the model, and no earlier failed load recorded in this browser. The default build was added after generation failed in Safari's compatibility build.
   - Background download when a unit page with open-answer exercises opens, unless the setting is off; `navigator.storage.persist()` first.
   - Load when an open-answer question appears; unload when the session ends.
 - Setting: `Settings::download_grading_model`, default on (a serde default), in the settings controls with the model's download size. Turning it off stops a running download; a downloaded model stays and keeps grading.
