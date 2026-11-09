@@ -3,7 +3,7 @@ import XCTest
 /// A unit's open responses on the Practice tab, on the test course, whose units each have one.
 final class OpenResponseUITests: LanguageUITestCase {
     static let selfCheckHeading: String = "Compare with the examples"
-    static let selfCheckNotice: String = "Automatic grading by an AI model is available on computers that can run it."
+    static let selfCheckNotice: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
     /* The test course's unit whose open response gives the facts of a scene. */
     static let sceneUnitId: String = "a1-02-feelings"
     static let writtenAnswerLines: [String] = ["O Paulo e alto.", "Hoje ele esta cansado."]
@@ -44,10 +44,16 @@ final class OpenResponseUITests: LanguageUITestCase {
 
         XCTAssertTrue(heading.waitForExistence(timeout: 5))
         XCTAssertEqual(heading.label, Self.selfCheckHeading)
-        XCTAssertEqual(app.staticTexts["written-answer"].label, writtenAnswer)
+
+        let notice: XCUIElement = app.staticTexts["self-check-notice"]
+        let writtenAnswerElement: XCUIElement = app.staticTexts["written-answer"]
+
+        XCTAssertEqual(notice.label, Self.selfCheckNotice)
+        XCTAssertGreaterThanOrEqual(notice.frame.minY, heading.frame.maxY)
+        XCTAssertLessThanOrEqual(notice.frame.maxY, writtenAnswerElement.frame.minY)
+        XCTAssertEqual(writtenAnswerElement.label, writtenAnswer)
         XCTAssertEqual(app.staticTexts.matching(identifier: "example-answer").allElementsBoundByIndex.map { exampleElement in exampleElement.label }, exampleAnswers)
         XCTAssertTrue(app.buttons["Play audio: \(exampleAnswers[0])"].exists)
-        XCTAssertEqual(app.staticTexts["self-check-notice"].label, Self.selfCheckNotice)
         saveScreenshot("25-open-response-self-check")
     }
 

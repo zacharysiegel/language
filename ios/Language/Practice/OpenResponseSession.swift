@@ -150,7 +150,7 @@ struct OpenResponseQuestion: View {
 /// The feedback on an open response that no model graded: the learner's answer beside the example answers.
 struct OpenResponseSelfCheck: View {
     static let heading: String = "Compare with the examples"
-    static let notice: String = "Automatic grading by an AI model is available on computers that can run it."
+    static let notice: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
 
     let answerText: String
     let exampleAnswers: [String]
@@ -160,10 +160,19 @@ struct OpenResponseSelfCheck: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
-            Text(Self.heading)
-                .font(.titleText)
-                .foregroundStyle(Color.ink)
-                .accessibilityIdentifier("feedback-heading")
+            VStack(alignment: .leading, spacing: .spaceXs) {
+                Text(Self.heading)
+                    .font(.titleText)
+                    .foregroundStyle(Color.ink)
+                    .accessibilityIdentifier("feedback-heading")
+
+                Text(Self.notice)
+                    .font(.captionText)
+                    .foregroundStyle(Color.inkMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .accessibilityIdentifier("self-check-notice")
+            }
+            .accessibilityElement(children: .contain)
 
             MicroLabel(text: "Your answer")
 
@@ -191,12 +200,6 @@ struct OpenResponseSelfCheck: View {
             if let explanation {
                 Text(explanation).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
             }
-
-            Text(Self.notice)
-                .font(.captionText)
-                .foregroundStyle(Color.inkMuted)
-                .fixedSize(horizontal: false, vertical: true)
-                .accessibilityIdentifier("self-check-notice")
 
             Button("Continue") { onContinue() }
                 .buttonStyle(SquareButtonStyle(isPrimary: true))

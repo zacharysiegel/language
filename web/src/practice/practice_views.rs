@@ -742,10 +742,12 @@ pub fn OpenResponseFeedback(exercise: OpenResponseExercise, answer_text: String,
             .into_any()
         },
         Some(OpenResponseOutcomeKind::SelfCheck) | None => view! {
-            <strong>{SELF_CHECK_HEADING}</strong>
+            <div class="self-check-heading">
+                <strong>{SELF_CHECK_HEADING}</strong>
+                <SelfCheckNotice />
+            </div>
             {written_answer}
             <ExampleAnswers exercise />
-            <SelfCheckNotice />
         }
         .into_any(),
     }
