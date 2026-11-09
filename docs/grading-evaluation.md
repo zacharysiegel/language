@@ -2,7 +2,7 @@
 
 Measures how well small local language models grade a learner's short written answer to an open question, by pointing at specific mistakes. The grader is meant to be labelled to the learner as model-graded, so some inaccuracy is tolerated; false alarms on correct answers are the costliest failure.
 
-The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wraps it. Models run through Ollama.
+The tool is `tools/grading_evaluation`; `./scripts/dev/evaluate-grading.sh` wraps it. Models run through Ollama, or through cross-llama (see Runtimes).
 
 ## What is graded
 
@@ -70,6 +70,18 @@ Latency excludes the model load time. Results come from one machine; the downloa
 
 The variants differ only in the worked examples given to the model: none, one mistake, one correct answer, three mixed examples in two orders, six, mostly correct, and the three mixed examples placed in the system message instead of as chat turns. `--prompt-variant` selects them; all run by default.
 
+## Runtimes
+
+`run --runtime` picks how models run; Ollama is the default.
+
+- Ollama: `--model` names the models; thinking is off
+- cross-llama: loads a GGUF file (`--model-file`, the grading model's file in `models/` by default) once per run through llama.cpp, with the same messages, schema, temperature and seed
+- `--thinking on`: the model reasons before the answer; the answer keeps its own token maximum on top of the reasoning allowance
+- `--thinking-budget`: the reasoning allowance in tokens; without it the reasoning stops at a fixed allowance, which the run records
+- `--thinking-effort`: only for a chat template that reads a reasoning effort
+- Each reply records the reasoning text and tokens, the answer's tokens and the duration of each; `report` adds the mean reasoning tokens and the p95 reasoning latency
+- A reply that runs out of answer tokens before completing its JSON counts as an invalid response
+
 ## Requirements this implies for the app
 
 - Grading may ship on web and desktop only if no model small enough for a phone meets the bar
@@ -96,6 +108,8 @@ The lists are in `scripts/dev/evaluate-grading.sh`. A model shipped inside the a
 ./scripts/dev/evaluate-grading.sh run --model gemma3:4b
 ./scripts/dev/evaluate-grading.sh run-candidates
 ./scripts/dev/evaluate-grading.sh report
+./scripts/dev/evaluate-grading.sh run --runtime cross-llama --thinking on --thinking-budget 128
+./scripts/dev/evaluate-grading.sh run-thinking
 ```
 
-`run` records raw replies in `build/grading_evaluation/`; `report` writes `report.md`, `failures.md` and `review-sample.md` beside them.
+`run` records raw replies in `build/grading_evaluation/`; `report` writes `report.md`, `failures.md` and `review-sample.md` beside them. `run-thinking` grades both case sets with `few_shot_six` through cross-llama with thinking off, on, and on with a 128-token budget, into `build/grading_evaluation_thinking/` and `build/grading_evaluation_thinking_holdout/`, and reports each.
