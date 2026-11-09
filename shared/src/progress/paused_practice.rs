@@ -12,10 +12,6 @@ pub struct SavedExerciseResult {
 }
 
 impl SavedExerciseResult {
-    pub fn is_correct(&self) -> bool {
-        self.status.is_correct()
-    }
-
     pub fn is_missed(&self) -> bool {
         self.status.is_missed()
     }
@@ -24,30 +20,19 @@ impl SavedExerciseResult {
 /// A quiz of one unit, saved after every graded answer so it can be left and continued exactly.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct PausedPractice {
-    /// The `exercise_list_fingerprint` of the unit's exercises when the practice started.
+    /// The `exercise_list_fingerprint` of the quiz's exercises when the practice started.
     pub exercise_list_fingerprint: String,
-    /// Indices into the unit's exercises, in the order the practice asks them.
+    /// Indices into the quiz's exercises, in the order the practice asks them.
     pub exercise_order: Vec<usize>,
-    /// Indices into the unit's exercises of those that do not count toward the score.
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub unscored_exercise_indices: Vec<usize>,
     /// One per answered question, in the order asked.
     pub results: Vec<SavedExerciseResult>,
 }
 
 impl PausedPractice {
     pub fn new(exercises: &[Exercise]) -> PausedPractice {
-        let unscored_exercise_indices: Vec<usize> = exercises
-            .iter()
-            .enumerate()
-            .filter(|(_, exercise)| !exercise.kind().is_scored())
-            .map(|(exercise_index, _)| exercise_index)
-            .collect();
-
         PausedPractice {
             exercise_list_fingerprint: exercise_list_fingerprint(exercises),
             exercise_order: (0..exercises.len()).collect(),
-            unscored_exercise_indices,
             results: Vec::new(),
         }
     }
@@ -61,23 +46,15 @@ impl PausedPractice {
         self.exercise_order.len()
     }
 
-    pub fn scored_question_count(&self) -> usize {
-        self.exercise_order
-            .iter()
-            .filter(|exercise_index| !self.unscored_exercise_indices.contains(exercise_index))
-            .count()
-    }
-
     pub fn is_every_question_answered(&self) -> bool {
         self.next_question_index() >= self.question_count()
     }
 
-    /// Unanswered scored questions count as missed.
+    /// Unanswered questions count as missed.
     pub fn score(&self) -> SessionScore {
-        SessionScore {
-            correct_count: self.results.iter().filter(|result| result.is_correct()).count(),
-            total_count: self.scored_question_count(),
-        }
+        let statuses: Vec<AnswerStatus> = self.results.iter().map(|result| result.status).collect();
+
+        SessionScore::of_answers(self.question_count(), &statuses)
     }
 
     /// Ignores a result once every question is answered.
@@ -206,18 +183,16 @@ mod tests {
     }
 
     #[test]
-    fn score_leaves_open_answers_out_whether_answered_or_not() {
-        let mut paused_practice: PausedPractice = PausedPractice::new(&[
-            course_test_fixtures::multiple_choice("a"),
-            course_test_fixtures::open_answer(),
-            course_test_fixtures::multiple_choice("b"),
-            course_test_fixtures::open_answer(),
-        ]);
+    fn deserialize_reads_a_paused_practice_saved_with_unscored_exercise_indices() {
+        let saved_json: &str = r#"{"exercise_list_fingerprint":"f","exercise_order":[0,1,2],"unscored_exercise_indices":[1],"results":[{"status":"correct","answer_text":"sim"},{"status":"unscored","answer_text":"Oi"}]}"#;
 
-        paused_practice.record_result(result(AnswerStatus::Correct));
-        paused_practice.record_result(result(AnswerStatus::Unscored));
+        let paused_practice: PausedPractice = serde_json::from_str(saved_json).unwrap();
 
-        assert_eq!(paused_practice.score(), SessionScore { correct_count: 1, total_count: 2 });
+        assert_eq!(paused_practice.exercise_order, vec![0, 1, 2]);
+        assert_eq!(paused_practice.results, vec![result(AnswerStatus::Correct), SavedExerciseResult {
+            status: AnswerStatus::Unscored,
+            answer_text: "Oi".to_string(),
+        }]);
     }
 
     #[test]

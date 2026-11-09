@@ -9,9 +9,9 @@ pub fn multiple_choice(prompt: &str) -> Exercise {
     })
 }
 
-pub fn open_answer() -> Exercise {
+pub fn open_answer(prompt_source: &str) -> Exercise {
     Exercise::OpenAnswer(OpenAnswerExercise {
-        prompt_source: "Introduce yourself.".to_string(),
+        prompt_source: prompt_source.to_string(),
         context_source: None,
         example_answers: vec!["Oi, eu sou a Ana.".to_string()],
         explanation: None,
