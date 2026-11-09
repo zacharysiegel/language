@@ -1,5 +1,6 @@
 package ro.zach.language.practice
 
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.assert
@@ -32,7 +33,7 @@ import ro.zach.language.unit.UnitTabKind
 /* A unit with more than one open response, so the summary lists several answers. */
 private const val OPEN_RESPONSE_UNIT_ID: String = "a1-03-ser-estar-feelings"
 private const val UNIT_WITHOUT_OPEN_RESPONSES_ID: String = "a1-02-sounds-alphabet"
-private const val SELF_CHECK_NOTICE_START: String = "Automatic grading by an AI model"
+private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
 private const val NO_QUIZ_TAKEN_SUMMARY: String = "You have not taken the quiz yet."
 private const val OPEN_RESPONSE_TIMEOUT_MILLISECONDS: Long = 5_000
 
@@ -135,10 +136,20 @@ class OpenResponseEndToEndTest {
 
         driver.waitForTag("feedback-heading", OPEN_RESPONSE_TIMEOUT_MILLISECONDS)
         composeRule.onNodeWithTag("feedback-heading").assertTextEquals("Compare with the examples")
+        composeRule.onNodeWithTag("self-check-notice").assertTextEquals(SELF_CHECK_NOTICE)
+        assertTheNoticeIsBetweenTheHeadingAndTheWrittenAnswer()
         composeRule.onNodeWithTag("written-answer").assertTextEquals(writtenAnswer)
         assertEquals((0 until exampleAnswers.length()).map { answerIndex -> exampleAnswers.getString(answerIndex) }, texts("example-answer"))
         composeRule.onNode(hasContentDescription("Play audio: ${exampleAnswers.getString(0)}")).assertExists()
-        composeRule.onNodeWithTag("self-check-notice").assert(hasText(SELF_CHECK_NOTICE_START, substring = true))
+    }
+
+    private fun assertTheNoticeIsBetweenTheHeadingAndTheWrittenAnswer() {
+        val headingBounds: Rect = boundsInRoot("feedback-heading")
+        val noticeBounds: Rect = boundsInRoot("self-check-notice")
+        val writtenAnswerBounds: Rect = boundsInRoot("written-answer")
+
+        assertTrue(noticeBounds.top >= headingBounds.bottom)
+        assertTrue(noticeBounds.bottom <= writtenAnswerBounds.top)
     }
 
     private fun tap(testTag: String) {
@@ -148,6 +159,10 @@ class OpenResponseEndToEndTest {
 
     private fun isTextShown(text: String): Boolean {
         return composeRule.onAllNodes(hasText(text)).fetchSemanticsNodes().isNotEmpty()
+    }
+
+    private fun boundsInRoot(testTag: String): Rect {
+        return composeRule.onNodeWithTag(testTag).fetchSemanticsNode().boundsInRoot
     }
 
     private fun texts(testTag: String): List<String> {
