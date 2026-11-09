@@ -124,17 +124,7 @@ private fun QuestionView(
     val currentResult: ExerciseResult? = sessionState.currentResult()
 
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
-        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            LanguageText(
-                text = "$shownTitle: question ${sessionState.currentPosition() + 1} of $total",
-                style = LanguageType.captionText,
-                color = LanguageColors.inkMuted,
-                modifier = Modifier.weight(1f).testTag("question-position"),
-            )
-            TextLink(text = shownExitKind.label(), onClick = onExit, modifier = Modifier.testTag(shownExitKind.testTag()))
-        }
-
-        SquareProgressBar(value = sessionState.currentPosition(), total = total)
+        SessionHeader(title = shownTitle, position = sessionState.currentPosition(), total = total, exitKind = shownExitKind, onExit = onExit)
         MicroLabel(text = exerciseInstruction(exercise))
 
         key(sessionState.isRetry(), sessionState.currentPosition()) {
@@ -145,6 +135,22 @@ private fun QuestionView(
             FeedbackView(exercise = exercise, result = currentResult, onContinue = sessionState::advance)
         }
     }
+}
+
+/** The position of the question asked among `total`, a control to leave the session and a progress bar. */
+@Composable
+internal fun SessionHeader(title: String, position: Int, total: Int, exitKind: ExerciseSessionExitKind, onExit: () -> Unit) {
+    Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        LanguageText(
+            text = "$title: question ${position + 1} of $total",
+            style = LanguageType.captionText,
+            color = LanguageColors.inkMuted,
+            modifier = Modifier.weight(1f).testTag("question-position"),
+        )
+        TextLink(text = exitKind.label(), onClick = onExit, modifier = Modifier.testTag(exitKind.testTag()))
+    }
+
+    SquareProgressBar(value = position, total = total)
 }
 
 @Composable

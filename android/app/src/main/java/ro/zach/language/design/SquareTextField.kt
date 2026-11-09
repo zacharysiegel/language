@@ -23,6 +23,7 @@ fun SquareTextField(
     modifier: Modifier = Modifier,
     textStyle: TextStyle = LanguageType.bodyText,
     singleLine: Boolean = true,
+    minLines: Int = 1,
     enabled: Boolean = true,
     imeAction: ImeAction = ImeAction.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
@@ -34,6 +35,7 @@ fun SquareTextField(
         enabled = enabled,
         textStyle = textStyle.copy(color = LanguageColors.ink),
         singleLine = singleLine,
+        minLines = minLines,
         keyboardOptions = KeyboardOptions(
             capitalization = KeyboardCapitalization.None,
             autoCorrectEnabled = false,
