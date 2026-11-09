@@ -15,7 +15,7 @@ const EXERCISES_CHANGED_NOTE: &str = "The practice changed since you paused, so 
 enum PracticeSessionKind {
     Quiz,
     QuickPractice,
-    WritingPractice,
+    OpenResponse,
 }
 
 impl PracticeSessionKind {
@@ -23,7 +23,7 @@ impl PracticeSessionKind {
         match self {
             PracticeSessionKind::Quiz => "Quiz",
             PracticeSessionKind::QuickPractice => "Practice",
-            PracticeSessionKind::WritingPractice => "Writing practice",
+            PracticeSessionKind::OpenResponse => "Open response",
         }
     }
 
@@ -31,21 +31,21 @@ impl PracticeSessionKind {
         match self {
             PracticeSessionKind::Quiz => Some(PracticeModeKind::Full),
             PracticeSessionKind::QuickPractice => Some(PracticeModeKind::Quick),
-            PracticeSessionKind::WritingPractice => None,
+            PracticeSessionKind::OpenResponse => None,
         }
     }
 
     fn exit_kind(self) -> SessionExitKind {
         match self {
             PracticeSessionKind::Quiz => SessionExitKind::Pause,
-            PracticeSessionKind::QuickPractice | PracticeSessionKind::WritingPractice => SessionExitKind::Quit,
+            PracticeSessionKind::QuickPractice | PracticeSessionKind::OpenResponse => SessionExitKind::Quit,
         }
     }
 
     fn scoring(self) -> SessionScoringKind {
         match self {
             PracticeSessionKind::Quiz | PracticeSessionKind::QuickPractice => SessionScoringKind::Scored,
-            PracticeSessionKind::WritingPractice => SessionScoringKind::Unscored,
+            PracticeSessionKind::OpenResponse => SessionScoringKind::Unscored,
         }
     }
 }
@@ -64,7 +64,7 @@ enum PracticeStartKind {
     FullFromTheStart,
     ResumeFull(PausedPractice),
     Quick,
-    Writing,
+    OpenResponse,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -95,10 +95,10 @@ fn full_session(paused_practice: &PausedPractice, quiz_exercises: &[Exercise]) -
     }
 }
 
-fn writing_session(writing_exercises: &[Exercise]) -> ActiveSession {
+fn open_response_session(open_response_exercises: &[Exercise]) -> ActiveSession {
     ActiveSession {
-        kind: PracticeSessionKind::WritingPractice,
-        exercises: writing_exercises.to_vec(),
+        kind: PracticeSessionKind::OpenResponse,
+        exercises: open_response_exercises.to_vec(),
         answered_results: Vec::new(),
     }
 }
@@ -113,8 +113,8 @@ fn quiz_label(exercise_count: usize) -> String {
     format!("Quiz ({})", counted(exercise_count, "exercise", "exercises"))
 }
 
-fn writing_practice_label(task_count: usize) -> String {
-    format!("Writing practice ({})", counted(task_count, "task", "tasks"))
+fn open_response_label(task_count: usize) -> String {
+    format!("Open response ({})", counted(task_count, "task", "tasks"))
 }
 
 fn resume_label(paused_practice: &PausedPractice) -> String {
@@ -132,12 +132,12 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
     let progress_store: ProgressStore = use_progress_store();
     let unit_id: String = unit.id.clone();
     let quiz_exercises: Vec<Exercise> = practice::quiz_exercises(&unit.exercises);
-    let writing_exercises: Vec<Exercise> = practice::writing_practice_exercises(&unit.exercises);
+    let open_response_exercises: Vec<Exercise> = practice::open_response_exercises(&unit.exercises);
     let active_session: RwSignal<Option<ActiveSession>> = RwSignal::new(None);
     let exercises_changed_note: RwSignal<ExercisesChangedNoteKind> = RwSignal::new(ExercisesChangedNoteKind::Hidden);
     let start_labels: PracticeStartLabels = PracticeStartLabels {
         quiz: quiz_label(quiz_exercises.len()),
-        writing_practice: (!writing_exercises.is_empty()).then(|| writing_practice_label(writing_exercises.len())),
+        open_response: (!open_response_exercises.is_empty()).then(|| open_response_label(open_response_exercises.len())),
     };
     let vocabulary_count: usize = unit.vocabulary.len();
 
@@ -150,7 +150,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
         let unit_id: String = unit_id.clone();
 
         Callback::new(move |start: PracticeStartKind| {
-            if !matches!(start, PracticeStartKind::Writing) {
+            if !matches!(start, PracticeStartKind::OpenResponse) {
                 progress_store.start_unit(&course_id, &unit_id);
             }
 
@@ -160,7 +160,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                     .map(|paused_practice| full_session(&paused_practice, &quiz_exercises)),
                 PracticeStartKind::ResumeFull(paused_practice) => Some(full_session(&paused_practice, &quiz_exercises)),
                 PracticeStartKind::Quick => Some(quick_session(&unit_exercises)),
-                PracticeStartKind::Writing => Some(writing_session(&writing_exercises)),
+                PracticeStartKind::OpenResponse => Some(open_response_session(&open_response_exercises)),
             };
 
             exercises_changed_note.set(ExercisesChangedNoteKind::Hidden);
@@ -226,7 +226,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                 let kind: PracticeSessionKind = session.kind;
                 let on_answer: Option<Callback<SavedExerciseResult>> = match kind {
                     PracticeSessionKind::Quiz => Some(record_full_practice_answer),
-                    PracticeSessionKind::QuickPractice | PracticeSessionKind::WritingPractice => None,
+                    PracticeSessionKind::QuickPractice | PracticeSessionKind::OpenResponse => None,
                 };
                 let on_complete: Option<Callback<SessionScore>> = kind
                     .practice_mode()
@@ -305,7 +305,7 @@ fn drop_paused_practice_of_changed_exercises(
 struct PracticeStartLabels {
     quiz: String,
     /// `None` for a unit without open responses.
-    writing_practice: Option<String>,
+    open_response: Option<String>,
 }
 
 fn practice_start_buttons(
@@ -335,15 +335,15 @@ fn practice_start_buttons(
         .into_any(),
     };
 
-    let writing_practice_button = start_labels.writing_practice.map(|label| {
-        view! { <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Writing)>{label}</button> }
+    let open_response_button = start_labels.open_response.map(|label| {
+        view! { <button type="button" on:click=move |_| start_session.run(PracticeStartKind::OpenResponse)>{label}</button> }
     });
 
     view! {
         <div class="row">
             {full_practice_buttons}
             <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Quick)>{quick_label}</button>
-            {writing_practice_button}
+            {open_response_button}
         </div>
     }
 }
@@ -359,8 +359,8 @@ mod tests {
     }
 
     #[test]
-    fn writing_practice_label_counts_the_tasks() {
-        assert_eq!(writing_practice_label(1), "Writing practice (1 task)");
-        assert_eq!(writing_practice_label(2), "Writing practice (2 tasks)");
+    fn open_response_label_counts_the_tasks() {
+        assert_eq!(open_response_label(1), "Open response (1 task)");
+        assert_eq!(open_response_label(2), "Open response (2 tasks)");
     }
 }
