@@ -51,7 +51,7 @@ mod tests {
     }
 
     #[test]
-    fn quick_practice_exercises_samples_only_scored_exercises() {
+    fn quick_practice_exercises_leaves_out_open_answers_and_takes_at_most_the_count() {
         let many_exercises: Vec<Exercise> = (0..QUICK_PRACTICE_EXERCISE_COUNT * 2)
             .flat_map(|exercise_index| {
                 [
