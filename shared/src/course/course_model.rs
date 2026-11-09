@@ -195,7 +195,7 @@ pub enum ExerciseKind {
     ListeningChoice,
     Dictation,
     Match,
-    OpenAnswer,
+    OpenResponse,
 }
 
 impl ExerciseKind {
@@ -207,7 +207,7 @@ impl ExerciseKind {
         ExerciseKind::ListeningChoice,
         ExerciseKind::Dictation,
         ExerciseKind::Match,
-        ExerciseKind::OpenAnswer,
+        ExerciseKind::OpenResponse,
     ];
 
     pub fn code(self) -> &'static str {
@@ -219,7 +219,7 @@ impl ExerciseKind {
             ExerciseKind::ListeningChoice => "listening_choice",
             ExerciseKind::Dictation => "dictation",
             ExerciseKind::Match => "match",
-            ExerciseKind::OpenAnswer => "open_answer",
+            ExerciseKind::OpenResponse => "open_response",
         }
     }
 
@@ -232,7 +232,7 @@ impl ExerciseKind {
             ExerciseKind::ListeningChoice => "Listen and choose the meaning",
             ExerciseKind::Dictation => "Listen and type what you hear",
             ExerciseKind::Match => "Match the pairs",
-            ExerciseKind::OpenAnswer => "Write your answer",
+            ExerciseKind::OpenResponse => "Write your answer",
         }
     }
 }
@@ -265,8 +265,8 @@ pub enum Exercise {
     Dictation(DictationExercise),
     #[serde(rename = "match")]
     Match(MatchExercise),
-    #[serde(rename = "open_answer")]
-    OpenAnswer(OpenAnswerExercise),
+    #[serde(rename = "open_response")]
+    OpenResponse(OpenResponseExercise),
 }
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -367,7 +367,7 @@ pub struct MatchExercise {
 /// A task the learner answers in their own words, in the target language.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub struct OpenAnswerExercise {
+pub struct OpenResponseExercise {
     pub prompt_source: String,
     /// The facts of the scene the answer must convey; absent when the learner writes about their own life.
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -389,7 +389,7 @@ impl Exercise {
             Exercise::ListeningChoice(_) => ExerciseKind::ListeningChoice,
             Exercise::Dictation(_) => ExerciseKind::Dictation,
             Exercise::Match(_) => ExerciseKind::Match,
-            Exercise::OpenAnswer(_) => ExerciseKind::OpenAnswer,
+            Exercise::OpenResponse(_) => ExerciseKind::OpenResponse,
         }
     }
 
@@ -402,7 +402,7 @@ impl Exercise {
             Exercise::ListeningChoice(exercise) => &exercise.explanation,
             Exercise::Dictation(exercise) => &exercise.explanation,
             Exercise::Match(exercise) => &exercise.explanation,
-            Exercise::OpenAnswer(exercise) => &exercise.explanation,
+            Exercise::OpenResponse(exercise) => &exercise.explanation,
         };
 
         explanation.as_deref()
@@ -415,7 +415,7 @@ impl Exercise {
             Exercise::OrderWords(exercise) => &exercise.clip_key,
             Exercise::ListeningChoice(exercise) => &exercise.clip_key,
             Exercise::Dictation(exercise) => &exercise.clip_key,
-            Exercise::OpenAnswer(exercise) => &exercise.clip_key,
+            Exercise::OpenResponse(exercise) => &exercise.clip_key,
             Exercise::MultipleChoice(_) | Exercise::Match(_) => return None,
         };
 
@@ -430,7 +430,7 @@ impl Exercise {
             Exercise::OrderWords(exercise) => Some(exercise.sentence()),
             Exercise::ListeningChoice(exercise) => Some(exercise.audio_target.clone()),
             Exercise::Dictation(exercise) => Some(exercise.audio_target.clone()),
-            Exercise::OpenAnswer(exercise) => exercise.example_answers.first().cloned(),
+            Exercise::OpenResponse(exercise) => exercise.example_answers.first().cloned(),
             Exercise::MultipleChoice(_) | Exercise::Match(_) => None,
         }
     }
@@ -448,7 +448,7 @@ impl Exercise {
                 .prompt
                 .clone()
                 .unwrap_or_else(|| ExerciseKind::Match.instruction().to_string()),
-            Exercise::OpenAnswer(exercise) => exercise.prompt_source.clone(),
+            Exercise::OpenResponse(exercise) => exercise.prompt_source.clone(),
         }
     }
 }

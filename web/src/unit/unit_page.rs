@@ -111,7 +111,7 @@ pub fn UnitPage() -> impl IntoView {
 
     remember_route_course(progress_store, course_id);
     prefetch_shown_tab_recordings(unit_state, active_tab, audio_engine);
-    prepare_open_answer_grading(course_store, course_id, unit_state);
+    prepare_open_response_grading(course_store, course_id, unit_state);
 
     Effect::new(move |_| {
         let outline_loaded: bool = matches!(course_store.outline_state(&course_id.get()), Some(LoadState::Loaded(_)));
@@ -149,9 +149,9 @@ fn prefetch_shown_tab_recordings(unit_state: Memo<LoadState<Unit>>, active_tab: 
     });
 }
 
-/// Downloads the grading model in the background on a unit whose open answers its course can grade, unless the setting
+/// Downloads the grading model in the background on a unit whose open responses its course can grade, unless the setting
 /// is off.
-fn prepare_open_answer_grading(course_store: CourseStore, course_id: Memo<String>, unit_state: Memo<LoadState<Unit>>) {
+fn prepare_open_response_grading(course_store: CourseStore, course_id: Memo<String>, unit_state: Memo<LoadState<Unit>>) {
     let grading_store: GradingStore = use_grading_store();
     let progress_store: ProgressStore = use_progress_store();
 
@@ -161,7 +161,7 @@ fn prepare_open_answer_grading(course_store: CourseStore, course_id: Memo<String
             return;
         };
 
-        let has_open_answers: bool = unit.exercises.iter().any(|exercise| exercise.kind() == ExerciseKind::OpenAnswer);
+        let has_open_responses: bool = unit.exercises.iter().any(|exercise| exercise.kind() == ExerciseKind::OpenResponse);
         let shown_course_id: String = course_id.get();
         let outline_state: Option<LoadState<CourseOutline>> = course_store.outline_state(&shown_course_id);
         let publication_state: Option<LoadState<LoadedCoursePublication>> = course_store.publication_state(&shown_course_id);
@@ -173,7 +173,7 @@ fn prepare_open_answer_grading(course_store: CourseStore, course_id: Memo<String
 
         let course_is_graded: bool = grading::find_grader_prompt(&outline.target_language, &outline.source_language).is_some();
 
-        if !has_open_answers || !course_is_graded {
+        if !has_open_responses || !course_is_graded {
             return;
         }
 

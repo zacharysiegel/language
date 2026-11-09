@@ -4,16 +4,16 @@ use shared::grading::GraderPromptKind;
 use crate::grading::GraderStateKind;
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-/// How the grader reads a practice session's open answers.
+/// How the grader reads a practice session's open responses.
 #[derive(Debug, Clone)]
-pub struct OpenAnswerGradingContext {
+pub struct OpenResponseGradingContext {
     pub grader_prompt: GraderPromptKind,
     pub level: String,
     pub target_language_name: String,
 }
 
 #[derive(Debug, Clone)]
-pub struct OpenAnswerSubmission {
+pub struct OpenResponseSubmission {
     pub grader_prompt: GraderPromptKind,
     pub level: String,
     pub prompt_source: String,
@@ -170,7 +170,7 @@ mod browser {
         }
 
         /// Reads the grader's prompt for `submission` into the model's cache.
-        pub fn warm_up(self, submission: OpenAnswerSubmission) {
+        pub fn warm_up(self, submission: OpenResponseSubmission) {
             let Some(model) = loaded_model()
             else {
                 return;
@@ -192,7 +192,7 @@ mod browser {
             });
         }
 
-        pub async fn grade(self, submission: OpenAnswerSubmission) -> Result<GraderResponse, GradingFailureKind> {
+        pub async fn grade(self, submission: OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
             let model: Rc<Model> = loaded_model().ok_or(GradingFailureKind::ModelNotLoaded)?;
             let response_schema: serde_json::Value = submission.grader_prompt.response_schema();
             let request: GenerationRequest = create_generation_request(&submission, Some(response_schema), MAXIMUM_REPLY_TOKEN_COUNT);
@@ -203,13 +203,13 @@ mod browser {
                 Ok(generation) => generation,
                 Err(GenerationError::Cancelled) => return Err(GradingFailureKind::Cancelled),
                 Err(GenerationError::Failed(error)) => {
-                    log::warn!("could not grade an open answer; [error={error}]");
+                    log::warn!("could not grade an open response; [error={error}]");
                     return Err(GradingFailureKind::Failed);
                 },
             };
 
             log::info!(
-                "graded an open answer; [prompt_tokens={} reused_tokens={} generated_tokens={} reading_seconds={:.1} generating_seconds={:.1}]",
+                "graded an open response; [prompt_tokens={} reused_tokens={} generated_tokens={} reading_seconds={:.1} generating_seconds={:.1}]",
                 generation.prompt_token_count,
                 generation.reused_token_count,
                 generation.generated_token_count,
@@ -523,7 +523,7 @@ mod browser {
     }
 
     fn create_generation_request(
-        submission: &OpenAnswerSubmission,
+        submission: &OpenResponseSubmission,
         json_schema: Option<serde_json::Value>,
         maximum_token_count: usize,
     ) -> GenerationRequest {
@@ -574,9 +574,9 @@ mod server {
 
         pub fn load_model(self) {}
 
-        pub fn warm_up(self, _submission: OpenAnswerSubmission) {}
+        pub fn warm_up(self, _submission: OpenResponseSubmission) {}
 
-        pub async fn grade(self, _submission: OpenAnswerSubmission) -> Result<GraderResponse, GradingFailureKind> {
+        pub async fn grade(self, _submission: OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
             Err(GradingFailureKind::ModelNotLoaded)
         }
 

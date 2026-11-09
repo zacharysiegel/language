@@ -4,7 +4,7 @@ use crate::AppError;
 use crate::course::{
     CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind,
     FillBlankExercise, GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
-    OpenAnswerExercise, OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson,
+    OpenResponseExercise, OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson,
     UnitOutline, VocabularyItem,
 };
 use crate::course_shard::{APPLICATION_ID, ClipAudioEntry, CourseShardContents, SCHEMA_VERSION, UnitShardContents, VoiceEngineKind};
@@ -467,7 +467,7 @@ fn assemble_exercise(record: &SqlRecord, exercise_id: i64, children: &mut Exerci
             pairs: children.pairs.remove(&exercise_id).unwrap_or_default(),
             explanation,
         }),
-        ExerciseKind::OpenAnswer => Exercise::OpenAnswer(OpenAnswerExercise {
+        ExerciseKind::OpenResponse => Exercise::OpenResponse(OpenResponseExercise {
             prompt_source: required_prompt()?,
             context_source,
             example_answers: children.answers.remove(&exercise_id).unwrap_or_default(),
