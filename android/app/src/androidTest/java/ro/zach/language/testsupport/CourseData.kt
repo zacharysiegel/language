@@ -5,6 +5,8 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.io.InputStream
 
+private const val OPEN_RESPONSE_TYPE: String = "open_response"
+
 /** The repository's course data, which the test APK carries as assets. */
 object CourseData {
     const val COURSE_ID: String = "pt_br.en.foundations"
@@ -20,22 +22,30 @@ object CourseData {
 
     /** The unit's exercises other than its open responses, which the quiz asks. */
     fun readQuizExercises(unitId: String): JSONArray {
-        val allExercises: JSONArray = readUnit(unitId).getJSONArray("exercises")
-        val quizExercises: JSONArray = JSONArray()
+        return readExercises(unitId) { exercise -> exercise.getString("type") != OPEN_RESPONSE_TYPE }
+    }
 
-        for (index in 0 until allExercises.length()) {
-            val exercise: JSONObject = allExercises.getJSONObject(index)
-
-            if (exercise.getString("type") != "open_response") {
-                quizExercises.put(exercise)
-            }
-        }
-
-        return quizExercises
+    fun readOpenResponseExercises(unitId: String): JSONArray {
+        return readExercises(unitId) { exercise -> exercise.getString("type") == OPEN_RESPONSE_TYPE }
     }
 
     fun readCourseTitle(): String {
         return readCurriculum().getString("title")
+    }
+
+    private fun readExercises(unitId: String, isIncluded: (JSONObject) -> Boolean): JSONArray {
+        val allExercises: JSONArray = readUnit(unitId).getJSONArray("exercises")
+        val includedExercises: JSONArray = JSONArray()
+
+        for (index in 0 until allExercises.length()) {
+            val exercise: JSONObject = allExercises.getJSONObject(index)
+
+            if (isIncluded(exercise)) {
+                includedExercises.put(exercise)
+            }
+        }
+
+        return includedExercises
     }
 
     private fun readJson(assetPath: String): JSONObject {
