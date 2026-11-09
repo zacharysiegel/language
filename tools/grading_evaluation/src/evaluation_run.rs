@@ -6,9 +6,15 @@ use serde_json::Value;
 use shared::AppError;
 use shared::grading::ChatMessage;
 
+use crate::cross_llama_runtime::{CrossLlamaRunRecord, CrossLlamaRuntime, ThinkingSettings};
 use crate::grader_prompt::{self, PromptVariantKind};
 use crate::grading_case::GradingCase;
-use crate::ollama_client::{ChatReply, ChatRequest, ModelDescription, OllamaConnection};
+use crate::grading_runtime::{ChatReply, GradingRequest, GradingRuntime, ModelDescription};
+use crate::ollama_client::{OllamaConnection, OllamaModel};
+
+const CROSS_LLAMA_MODEL_LABEL_PREFIX: &str = "cross-llama";
+const TEMPLATE_TOKEN_ALLOWANCE_PER_MESSAGE: usize = 16;
+const TEMPLATE_TOKEN_ALLOWANCE_PER_PROMPT: usize = 64;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct RunRecord {
@@ -18,7 +24,17 @@ pub struct RunRecord {
     pub repeats: u32,
     pub started_at: String,
     pub model_description: ModelDescription,
+    #[serde(default)]
+    pub runtime: RuntimeRecord,
     pub case_calls: Vec<CaseCallRecord>,
+}
+
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "snake_case")]
+pub enum RuntimeRecord {
+    #[default]
+    Ollama,
+    CrossLlama(CrossLlamaRunRecord),
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -31,40 +47,146 @@ pub struct CaseCallRecord {
 }
 
 pub struct RunOptions<'options_lifetime> {
-    pub models: &'options_lifetime [String],
     pub variants: &'options_lifetime [PromptVariantKind],
     pub temperature: f64,
     pub repeats: u32,
     pub output_directory: &'options_lifetime Path,
 }
 
-pub fn run_evaluation(
+struct RunModel<'model_lifetime> {
+    label: &'model_lifetime str,
+    description: &'model_lifetime ModelDescription,
+    runtime_record: &'model_lifetime RuntimeRecord,
+}
+
+pub fn run_ollama_evaluation(
     connection: &OllamaConnection,
+    models: &[String],
     cases: &[GradingCase],
     options: &RunOptions,
 ) -> Result<Vec<PathBuf>, AppError> {
-    ensure_models_installed(connection, options.models)?;
-    std::fs::create_dir_all(options.output_directory)?;
+    ensure_models_installed(connection, models)?;
 
-    let schema: Value = grader_prompt::GRADER_PROMPT.response_schema();
     let mut written_paths: Vec<PathBuf> = Vec::new();
 
-    for model in options.models {
+    for model in models {
         let model_description: ModelDescription = connection.describe_model(model)?;
-        warm_up_model(connection, model, &schema, options.temperature, cases.first());
+        let runtime: OllamaModel = OllamaModel {
+            connection,
+            model,
+        };
+        let run_model: RunModel = RunModel {
+            label: model,
+            description: &model_description,
+            runtime_record: &RuntimeRecord::Ollama,
+        };
 
-        for variant in options.variants {
-            let record: RunRecord =
-                run_variant(connection, cases, options, model, *variant, &schema, &model_description);
-            let path: PathBuf = options.output_directory.join(run_file_name(model, *variant));
-
-            std::fs::write(&path, serde_json::to_string_pretty(&record)?)?;
-            log::info!("wrote the run; [path={}]", path.display());
-            written_paths.push(path);
-        }
+        written_paths.extend(run_model_evaluation(&runtime, &run_model, cases, options)?);
     }
 
     Ok(written_paths)
+}
+
+pub fn run_cross_llama_evaluation(
+    model_path: &Path,
+    thinking_settings: &ThinkingSettings,
+    cases: &[GradingCase],
+    options: &RunOptions,
+) -> Result<Vec<PathBuf>, AppError> {
+    let context_token_count: u32 =
+        bound_context_token_count(cases, options.variants, thinking_settings.maximum_token_count())?;
+    let model_description: ModelDescription = describe_model_file(model_path)?;
+    let runtime: CrossLlamaRuntime =
+        CrossLlamaRuntime::load(model_path, context_token_count, thinking_settings.clone())?;
+
+    let label: String = cross_llama_model_label(model_path, thinking_settings);
+    let runtime_record: RuntimeRecord = RuntimeRecord::CrossLlama(CrossLlamaRunRecord {
+        model_path: model_path.to_path_buf(),
+        context_token_count,
+        maximum_token_count: thinking_settings.maximum_token_count(),
+        reasoning_token_allowance: thinking_settings.reasoning_token_allowance(),
+        thinking: thinking_settings.clone(),
+    });
+    let run_model: RunModel = RunModel {
+        label: &label,
+        description: &model_description,
+        runtime_record: &runtime_record,
+    };
+
+    run_model_evaluation(&runtime, &run_model, cases, options)
+}
+
+fn run_model_evaluation<Runtime: GradingRuntime>(
+    runtime: &Runtime,
+    run_model: &RunModel,
+    cases: &[GradingCase],
+    options: &RunOptions,
+) -> Result<Vec<PathBuf>, AppError> {
+    std::fs::create_dir_all(options.output_directory)?;
+
+    let schema: Value = grader_prompt::GRADER_PROMPT.response_schema();
+    warm_up_model(runtime, run_model.label, &schema, options.temperature, cases.first());
+
+    let mut written_paths: Vec<PathBuf> = Vec::new();
+
+    for variant in options.variants {
+        let record: RunRecord = run_variant(runtime, run_model, cases, options, *variant, &schema);
+        let path: PathBuf = options.output_directory.join(run_file_name(run_model.label, *variant));
+
+        std::fs::write(&path, serde_json::to_string_pretty(&record)?)?;
+        log::info!("wrote the run; [path={}]", path.display());
+        written_paths.push(path);
+    }
+
+    Ok(written_paths)
+}
+
+/// At least the longest prompt's token count plus `maximum_token_count`.
+fn bound_context_token_count(
+    cases: &[GradingCase],
+    variants: &[PromptVariantKind],
+    maximum_token_count: usize,
+) -> Result<u32, AppError> {
+    let mut longest_prompt_token_bound: usize = 0;
+
+    for variant in variants {
+        for case in cases {
+            let messages: Vec<ChatMessage> = grader_prompt::build_messages(*variant, case);
+            // A token holds at least one byte of text.
+            let prompt_token_bound: usize = messages
+                .iter()
+                .map(|message| message.text.len() + TEMPLATE_TOKEN_ALLOWANCE_PER_MESSAGE)
+                .sum::<usize>()
+                + TEMPLATE_TOKEN_ALLOWANCE_PER_PROMPT;
+
+            longest_prompt_token_bound = longest_prompt_token_bound.max(prompt_token_bound);
+        }
+    }
+
+    Ok(u32::try_from(longest_prompt_token_bound + maximum_token_count)?)
+}
+
+fn describe_model_file(model_path: &Path) -> Result<ModelDescription, AppError> {
+    let metadata: std::fs::Metadata = std::fs::metadata(model_path).map_err(|error| {
+        AppError::from(format!(
+            "could not read the model file; [path={} error={error}]",
+            model_path.display()
+        ))
+    })?;
+
+    Ok(ModelDescription {
+        family: String::new(),
+        parameter_size: String::new(),
+        quantization_level: String::new(),
+        size_bytes: metadata.len(),
+    })
+}
+
+fn cross_llama_model_label(model_path: &Path, thinking_settings: &ThinkingSettings) -> String {
+    let model_name: String =
+        model_path.file_stem().map(|stem| stem.to_string_lossy().to_string()).unwrap_or_default();
+
+    format!("{CROSS_LLAMA_MODEL_LABEL_PREFIX}:{model_name}:{}", thinking_settings.label())
 }
 
 pub fn run_file_name(model: &str, variant: PromptVariantKind) -> String {
@@ -106,9 +228,9 @@ fn ensure_models_installed(connection: &OllamaConnection, models: &[String]) -> 
     )))
 }
 
-fn warm_up_model(
-    connection: &OllamaConnection,
-    model: &str,
+fn warm_up_model<Runtime: GradingRuntime>(
+    runtime: &Runtime,
+    model_label: &str,
     schema: &Value,
     temperature: f64,
     first_case: Option<&GradingCase>,
@@ -118,8 +240,7 @@ fn warm_up_model(
     };
 
     let messages: Vec<ChatMessage> = grader_prompt::build_messages(PromptVariantKind::Plain, case);
-    let request: ChatRequest = ChatRequest {
-        model,
+    let request: GradingRequest = GradingRequest {
         messages: &messages,
         response_schema: schema,
         temperature,
@@ -127,26 +248,26 @@ fn warm_up_model(
     };
 
     let started: Instant = Instant::now();
-    let warm_up: Result<ChatReply, AppError> = connection.chat(&request);
+    let warm_up: Result<ChatReply, AppError> = runtime.grade(&request);
 
     match warm_up {
         Ok(_) => log::info!(
-            "loaded the model; [model={model} seconds={:.1}]",
+            "warmed up the model; [model={model_label} seconds={:.1}]",
             started.elapsed().as_secs_f64()
         ),
-        Err(error) => log::warn!("the warm-up call failed; [model={model} error={error}]"),
+        Err(error) => log::warn!("the warm-up call failed; [model={model_label} error={error}]"),
     }
 }
 
-fn run_variant(
-    connection: &OllamaConnection,
+fn run_variant<Runtime: GradingRuntime>(
+    runtime: &Runtime,
+    run_model: &RunModel,
     cases: &[GradingCase],
     options: &RunOptions,
-    model: &str,
     variant: PromptVariantKind,
     schema: &Value,
-    model_description: &ModelDescription,
 ) -> RunRecord {
+    let model: &str = run_model.label;
     let started_at: String = chrono::Utc::now().to_rfc3339();
     let mut case_calls: Vec<CaseCallRecord> = Vec::new();
 
@@ -154,16 +275,15 @@ fn run_variant(
         let messages: Vec<ChatMessage> = grader_prompt::build_messages(variant, case);
 
         for repeat in 1..=options.repeats {
-            let request: ChatRequest = ChatRequest {
-                model,
+            let request: GradingRequest = GradingRequest {
                 messages: &messages,
                 response_schema: schema,
                 temperature: options.temperature,
-                seed: i64::from(repeat),
+                seed: repeat,
             };
 
             let started: Instant = Instant::now();
-            let result: Result<ChatReply, AppError> = connection.chat(&request);
+            let result: Result<ChatReply, AppError> = runtime.grade(&request);
             let seconds: f64 = started.elapsed().as_secs_f64();
 
             log::info!(
@@ -185,7 +305,8 @@ fn run_variant(
         temperature: options.temperature,
         repeats: options.repeats,
         started_at,
-        model_description: model_description.clone(),
+        model_description: run_model.description.clone(),
+        runtime: run_model.runtime_record.clone(),
         case_calls,
     }
 }
@@ -220,4 +341,40 @@ pub fn read_run_record(path: &Path) -> Result<RunRecord, AppError> {
     })?;
 
     Ok(record)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn run_record_without_runtime_or_thinking_reads_as_ollama() {
+        let recorded: &str = r#"{
+            "model": "gemma3:12b",
+            "prompt_variant": "few_shot_six",
+            "temperature": 0.0,
+            "repeats": 1,
+            "started_at": "2026-11-03T00:00:00Z",
+            "model_description": { "family": "gemma3", "parameter_size": "12B", "quantization_level": "Q4_K_M", "size_bytes": 1 },
+            "case_calls": [{
+                "case_id": "a1-control-coffee",
+                "case_fingerprint": "0",
+                "repeat": 1,
+                "reply": {
+                    "content": "{}",
+                    "total_duration_nanoseconds": 1,
+                    "load_duration_nanoseconds": 0,
+                    "prompt_token_count": 1,
+                    "response_token_count": 1,
+                    "response_duration_nanoseconds": 1
+                },
+                "error": null
+            }]
+        }"#;
+
+        let record: RunRecord = serde_json::from_str(recorded).expect("an earlier record parses");
+
+        assert!(matches!(record.runtime, RuntimeRecord::Ollama));
+        assert!(record.case_calls[0].reply.as_ref().is_some_and(|reply| reply.thinking.is_none()));
+    }
 }
