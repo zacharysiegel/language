@@ -18,20 +18,20 @@ object CourseData {
         return readJson("courses/$COURSE_ID/units/$unitId.json")
     }
 
-    /** The unit's exercises the app offers, which leaves out open responses. */
-    fun readExercises(unitId: String): JSONArray {
+    /** The unit's exercises other than its open responses, which the quiz asks. */
+    fun readQuizExercises(unitId: String): JSONArray {
         val allExercises: JSONArray = readUnit(unitId).getJSONArray("exercises")
-        val offeredExercises: JSONArray = JSONArray()
+        val quizExercises: JSONArray = JSONArray()
 
         for (index in 0 until allExercises.length()) {
             val exercise: JSONObject = allExercises.getJSONObject(index)
 
             if (exercise.getString("type") != "open_response") {
-                offeredExercises.put(exercise)
+                quizExercises.put(exercise)
             }
         }
 
-        return offeredExercises
+        return quizExercises
     }
 
     fun readCourseTitle(): String {

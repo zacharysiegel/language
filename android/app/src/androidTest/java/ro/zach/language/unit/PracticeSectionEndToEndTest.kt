@@ -33,7 +33,7 @@ class PracticeSectionEndToEndTest {
     private val driver: CourseAppDriver = CourseAppDriver(composeRule)
     private val unitPageDriver: UnitPageDriver = UnitPageDriver(composeRule)
     private val solver: ExerciseSolver = ExerciseSolver(composeRule)
-    private val exercises: JSONArray = CourseData.readExercises(CourseData.PRACTICED_UNIT_ID)
+    private val exercises: JSONArray = CourseData.readQuizExercises(CourseData.PRACTICED_UNIT_ID)
 
     @Before
     fun launch() {

@@ -55,7 +55,8 @@ extension ExerciseRecord {
              .translateToTarget(_, _, _, let clipKey),
              .orderWords(_, _, _, _, let clipKey),
              .listeningChoice(_, _, _, _, let clipKey),
-             .dictation(_, _, _, let clipKey):
+             .dictation(_, _, _, let clipKey),
+             .openResponse(_, _, _, _, let clipKey):
             return clipKey
         case .multipleChoice, .match:
             return nil
@@ -70,7 +71,8 @@ extension ExerciseRecord {
              .orderWords(_, _, _, let explanation, _),
              .listeningChoice(_, _, _, let explanation, _),
              .dictation(_, _, let explanation, _),
-             .match(_, _, let explanation):
+             .match(_, _, let explanation),
+             .openResponse(_, _, _, let explanation, _):
             return explanation
         }
     }
@@ -80,7 +82,7 @@ extension ExerciseRecord {
         switch self {
         case .fillBlank, .translateToTarget, .orderWords:
             return true
-        case .multipleChoice, .listeningChoice, .dictation, .match:
+        case .multipleChoice, .listeningChoice, .dictation, .match, .openResponse:
             return false
         }
     }
