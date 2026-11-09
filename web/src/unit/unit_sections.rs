@@ -242,7 +242,6 @@ fn ReadingView(reading: Reading, label: String) -> impl IntoView {
                         <ExerciseSession
                             title=format!("{title}: questions")
                             exercises=questions.clone()
-                            on_complete=Callback::new(|_| {})
                             on_exit=Callback::new(move |()| questions_open.set(false))
                         />
                     }

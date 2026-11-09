@@ -6,24 +6,58 @@ use shared::progress::{PausedPractice, PausedPracticeStateKind, PracticeOutcome,
 
 use crate::grading::OpenAnswerGradingContext;
 use crate::platform;
-use crate::practice::{ExerciseSession, SessionExitKind};
+use crate::practice::{ExerciseSession, SessionExitKind, SessionScoringKind};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 const EXERCISES_CHANGED_NOTE: &str = "The practice changed since you paused, so it starts over.";
 
+/// The kinds of session the Practice tab starts.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PracticeSessionKind {
+    Quiz,
+    QuickPractice,
+    /// The unit's open answers; keeps no score and records nothing.
+    WritingPractice,
+}
+
+impl PracticeSessionKind {
+    fn title(self) -> &'static str {
+        match self {
+            PracticeSessionKind::Quiz => "Quiz",
+            PracticeSessionKind::QuickPractice => "Practice",
+            PracticeSessionKind::WritingPractice => "Writing practice",
+        }
+    }
+
+    fn practice_mode(self) -> Option<PracticeModeKind> {
+        match self {
+            PracticeSessionKind::Quiz => Some(PracticeModeKind::Full),
+            PracticeSessionKind::QuickPractice => Some(PracticeModeKind::Quick),
+            PracticeSessionKind::WritingPractice => None,
+        }
+    }
+
+    fn exit_kind(self) -> SessionExitKind {
+        match self {
+            PracticeSessionKind::Quiz => SessionExitKind::Pause,
+            PracticeSessionKind::QuickPractice | PracticeSessionKind::WritingPractice => SessionExitKind::Quit,
+        }
+    }
+
+    fn scoring(self) -> SessionScoringKind {
+        match self {
+            PracticeSessionKind::Quiz | PracticeSessionKind::QuickPractice => SessionScoringKind::Scored,
+            PracticeSessionKind::WritingPractice => SessionScoringKind::Unscored,
+        }
+    }
+}
+
 #[derive(Debug, Clone)]
 struct ActiveSession {
-    mode: PracticeModeKind,
+    kind: PracticeSessionKind,
     /// In the order the session asks them.
     exercises: Vec<Exercise>,
     answered_results: Vec<SavedExerciseResult>,
-}
-
-fn session_title(mode: PracticeModeKind) -> &'static str {
-    match mode {
-        PracticeModeKind::Full => "Quiz",
-        PracticeModeKind::Quick => "Practice",
-    }
 }
 
 #[derive(Debug, Clone)]
@@ -32,6 +66,7 @@ enum PracticeStartKind {
     FullFromTheStart,
     ResumeFull(PausedPractice),
     Quick,
+    Writing,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -40,35 +75,33 @@ enum ExercisesChangedNoteKind {
     Shown,
 }
 
-fn quick_session(all_exercises: &[Exercise]) -> ActiveSession {
-    let mut sampled: Vec<Exercise> = practice::shuffled(all_exercises, platform::random_unit);
-    sampled.truncate(practice::QUICK_PRACTICE_EXERCISE_COUNT);
-
+fn quick_session(quiz_exercises: &[Exercise]) -> ActiveSession {
     ActiveSession {
-        mode: PracticeModeKind::Quick,
-        exercises: sampled,
+        kind: PracticeSessionKind::QuickPractice,
+        exercises: practice::quick_practice_exercises(quiz_exercises, platform::random_unit),
         answered_results: Vec::new(),
     }
 }
 
-fn full_session(paused_practice: &PausedPractice, all_exercises: &[Exercise]) -> ActiveSession {
+fn full_session(paused_practice: &PausedPractice, quiz_exercises: &[Exercise]) -> ActiveSession {
     let ordered_exercises: Vec<Exercise> = paused_practice
         .exercise_order
         .iter()
-        .filter_map(|exercise_index| all_exercises.get(*exercise_index).cloned())
+        .filter_map(|exercise_index| quiz_exercises.get(*exercise_index).cloned())
         .collect();
 
     ActiveSession {
-        mode: PracticeModeKind::Full,
+        kind: PracticeSessionKind::Quiz,
         exercises: ordered_exercises,
         answered_results: paused_practice.results.clone(),
     }
 }
 
-fn session_exit_kind(mode: PracticeModeKind) -> SessionExitKind {
-    match mode {
-        PracticeModeKind::Full => SessionExitKind::Pause,
-        PracticeModeKind::Quick => SessionExitKind::Quit,
+fn writing_session(writing_exercises: &[Exercise]) -> ActiveSession {
+    ActiveSession {
+        kind: PracticeSessionKind::WritingPractice,
+        exercises: writing_exercises.to_vec(),
+        answered_results: Vec::new(),
     }
 }
 
@@ -78,19 +111,12 @@ fn counted(count: usize, singular_noun: &str, plural_noun: &str) -> String {
     format!("{count} {noun}")
 }
 
-fn quiz_label(exercises: &[Exercise]) -> String {
-    let scored_count: usize = practice::scored_exercise_count(exercises);
-    let unscored_count: usize = exercises.len() - scored_count;
+fn quiz_label(exercise_count: usize) -> String {
+    format!("Quiz ({})", counted(exercise_count, "exercise", "exercises"))
+}
 
-    if unscored_count == 0 {
-        return format!("Quiz ({})", counted(scored_count, "exercise", "exercises"));
-    }
-
-    format!(
-        "Quiz ({} and {})",
-        counted(scored_count, "scored exercise", "scored exercises"),
-        counted(unscored_count, "open answer", "open answers"),
-    )
+fn writing_practice_label(task_count: usize) -> String {
+    format!("Writing practice ({})", counted(task_count, "task", "tasks"))
 }
 
 fn resume_label(paused_practice: &PausedPractice) -> String {
@@ -107,27 +133,40 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
 
     let progress_store: ProgressStore = use_progress_store();
     let unit_id: String = unit.id.clone();
+    let quiz_exercises: Vec<Exercise> = practice::quiz_exercises(&unit.exercises);
+    let writing_exercises: Vec<Exercise> = practice::writing_practice_exercises(&unit.exercises);
     let active_session: RwSignal<Option<ActiveSession>> = RwSignal::new(None);
     let exercises_changed_note: RwSignal<ExercisesChangedNoteKind> = RwSignal::new(ExercisesChangedNoteKind::Hidden);
-    let quiz_label: String = quiz_label(&unit.exercises);
+    let start_labels: PracticeStartLabels = PracticeStartLabels {
+        quiz: quiz_label(quiz_exercises.len()),
+        writing_practice: (!writing_exercises.is_empty()).then(|| writing_practice_label(writing_exercises.len())),
+    };
     let vocabulary_count: usize = unit.vocabulary.len();
 
-    drop_paused_practice_of_changed_exercises(progress_store, &course_id, &unit, exercises_changed_note);
+    drop_paused_practice_of_changed_exercises(progress_store, &course_id, &unit_id, &quiz_exercises, exercises_changed_note);
 
     let start_session: Callback<PracticeStartKind> = {
-        let all_exercises: Vec<Exercise> = unit.exercises.clone();
+        let quiz_exercises: Vec<Exercise> = quiz_exercises.clone();
         let course_id: String = course_id.clone();
         let unit_id: String = unit_id.clone();
 
         Callback::new(move |start: PracticeStartKind| {
-            progress_store.start_unit(&course_id, &unit_id);
-
             let session: Option<ActiveSession> = match start {
-                PracticeStartKind::FullFromTheStart => progress_store
-                    .start_full_practice(&course_id, &unit_id, &all_exercises)
-                    .map(|paused_practice| full_session(&paused_practice, &all_exercises)),
-                PracticeStartKind::ResumeFull(paused_practice) => Some(full_session(&paused_practice, &all_exercises)),
-                PracticeStartKind::Quick => Some(quick_session(&all_exercises)),
+                PracticeStartKind::FullFromTheStart => {
+                    progress_store.start_unit(&course_id, &unit_id);
+                    progress_store
+                        .start_full_practice(&course_id, &unit_id, &quiz_exercises)
+                        .map(|paused_practice| full_session(&paused_practice, &quiz_exercises))
+                },
+                PracticeStartKind::ResumeFull(paused_practice) => {
+                    progress_store.start_unit(&course_id, &unit_id);
+                    Some(full_session(&paused_practice, &quiz_exercises))
+                },
+                PracticeStartKind::Quick => {
+                    progress_store.start_unit(&course_id, &unit_id);
+                    Some(quick_session(&quiz_exercises))
+                },
+                PracticeStartKind::Writing => Some(writing_session(&writing_exercises)),
             };
 
             exercises_changed_note.set(ExercisesChangedNoteKind::Hidden);
@@ -184,30 +223,30 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
         }
     };
 
-    let paused_practice_state = {
-        let all_exercises: Vec<Exercise> = unit.exercises.clone();
-
-        move || progress_store.paused_practice_state(&course_id, &unit_id, &all_exercises)
-    };
+    let paused_practice_state = move || progress_store.paused_practice_state(&course_id, &unit_id, &quiz_exercises);
 
     view! {
         {move || match active_session.get() {
             Some(session) => {
                 let record_completion = record_completion.clone();
-                let mode: PracticeModeKind = session.mode;
-                let on_answer: Option<Callback<SavedExerciseResult>> = match mode {
-                    PracticeModeKind::Full => Some(record_full_practice_answer),
-                    PracticeModeKind::Quick => None,
+                let kind: PracticeSessionKind = session.kind;
+                let on_answer: Option<Callback<SavedExerciseResult>> = match kind {
+                    PracticeSessionKind::Quiz => Some(record_full_practice_answer),
+                    PracticeSessionKind::QuickPractice | PracticeSessionKind::WritingPractice => None,
                 };
+                let on_complete: Option<Callback<SessionScore>> = kind
+                    .practice_mode()
+                    .map(|mode| Callback::new(move |score: SessionScore| record_completion(mode, score)));
 
                 view! {
                     <ExerciseSession
-                        title=session_title(mode)
+                        title=kind.title()
                         exercises=session.exercises
                         answered_results=session.answered_results
                         on_answer
-                        exit_kind=session_exit_kind(mode)
-                        on_complete=Callback::new(move |score: SessionScore| record_completion(mode, score))
+                        exit_kind=kind.exit_kind()
+                        scoring=kind.scoring()
+                        on_complete
                         on_exit=Callback::new(move |()| active_session.set(None))
                     />
                 }
@@ -215,7 +254,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
             },
             None => {
                 let paused_practice_state = paused_practice_state.clone();
-                let quiz_label: String = quiz_label.clone();
+                let start_labels: PracticeStartLabels = start_labels.clone();
                 let is_note_shown = move || exercises_changed_note.get() == ExercisesChangedNoteKind::Shown;
 
                 view! {
@@ -224,7 +263,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                     <Show when=is_note_shown>
                         <p class="muted">{EXERCISES_CHANGED_NOTE}</p>
                     </Show>
-                    {move || practice_start_buttons(paused_practice_state(), quiz_label.clone(), start_session)}
+                    {move || practice_start_buttons(paused_practice_state(), start_labels.clone(), start_session)}
                 }
                 .into_any()
             },
@@ -244,19 +283,20 @@ fn provide_open_answer_grading(target_language: &str, source_language: &str, uni
     }
 }
 
-/// Clears the unit's paused quiz, and shows the note, whenever its exercises differ from the unit's.
+/// Clears the unit's paused quiz, and shows the note, whenever its exercises differ from the quiz's.
 fn drop_paused_practice_of_changed_exercises(
     progress_store: ProgressStore,
     course_id: &str,
-    unit: &Unit,
+    unit_id: &str,
+    quiz_exercises: &[Exercise],
     exercises_changed_note: RwSignal<ExercisesChangedNoteKind>,
 ) {
     let course_id: String = course_id.to_string();
-    let unit_id: String = unit.id.clone();
-    let all_exercises: Vec<Exercise> = unit.exercises.clone();
+    let unit_id: String = unit_id.to_string();
+    let quiz_exercises: Vec<Exercise> = quiz_exercises.to_vec();
 
     Effect::new(move |_| {
-        let state: PausedPracticeStateKind = progress_store.paused_practice_state(&course_id, &unit_id, &all_exercises);
+        let state: PausedPracticeStateKind = progress_store.paused_practice_state(&course_id, &unit_id, &quiz_exercises);
 
         if state != PausedPracticeStateKind::ExercisesChanged {
             return;
@@ -267,9 +307,16 @@ fn drop_paused_practice_of_changed_exercises(
     });
 }
 
+#[derive(Debug, Clone)]
+struct PracticeStartLabels {
+    quiz: String,
+    /// `None` for a unit without open answers.
+    writing_practice: Option<String>,
+}
+
 fn practice_start_buttons(
     paused_practice_state: PausedPracticeStateKind,
-    quiz_label: String,
+    start_labels: PracticeStartLabels,
     start_session: Callback<PracticeStartKind>,
 ) -> impl IntoView {
     let quick_label: String = format!("Quick practice ({} random exercises)", practice::QUICK_PRACTICE_EXERCISE_COUNT);
@@ -288,52 +335,38 @@ fn practice_start_buttons(
         },
         PausedPracticeStateKind::NotPaused | PausedPracticeStateKind::ExercisesChanged => view! {
             <button type="button" class="primary" on:click=move |_| start_session.run(PracticeStartKind::FullFromTheStart)>
-                {quiz_label}
+                {start_labels.quiz}
             </button>
         }
         .into_any(),
     };
 
+    let writing_practice_button = start_labels.writing_practice.map(|label| {
+        view! { <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Writing)>{label}</button> }
+    });
+
     view! {
         <div class="row">
             {full_practice_buttons}
             <button type="button" on:click=move |_| start_session.run(PracticeStartKind::Quick)>{quick_label}</button>
+            {writing_practice_button}
         </div>
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use shared::course::{MultipleChoiceExercise, OpenAnswerExercise};
-
     use super::*;
 
-    fn choice() -> Exercise {
-        Exercise::MultipleChoice(MultipleChoiceExercise {
-            prompt: "Which is a greeting?".to_string(),
-            choices: vec!["Oi".to_string(), "Casa".to_string(), "Rua".to_string()],
-            answer_index: 0,
-            explanation: None,
-        })
-    }
-
-    fn open_answer() -> Exercise {
-        Exercise::OpenAnswer(OpenAnswerExercise {
-            prompt_source: "Introduce yourself.".to_string(),
-            context_source: None,
-            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
-            explanation: None,
-            clip_key: None,
-        })
+    #[test]
+    fn quiz_label_counts_the_exercises() {
+        assert_eq!(quiz_label(1), "Quiz (1 exercise)");
+        assert_eq!(quiz_label(26), "Quiz (26 exercises)");
     }
 
     #[test]
-    fn quiz_label_counts_scored_exercises_and_open_answers_apart() {
-        assert_eq!(quiz_label(&[choice(), choice()]), "Quiz (2 exercises)");
-        assert_eq!(quiz_label(&[choice(), open_answer(), choice()]), "Quiz (2 scored exercises and 1 open answer)");
-        assert_eq!(
-            quiz_label(&[open_answer(), choice(), open_answer()]),
-            "Quiz (1 scored exercise and 2 open answers)",
-        );
+    fn writing_practice_label_counts_the_tasks() {
+        assert_eq!(writing_practice_label(1), "Writing practice (1 task)");
+        assert_eq!(writing_practice_label(2), "Writing practice (2 tasks)");
     }
 }

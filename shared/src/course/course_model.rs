@@ -235,19 +235,6 @@ impl ExerciseKind {
             ExerciseKind::OpenAnswer => "Write your answer",
         }
     }
-
-    pub fn is_scored(self) -> bool {
-        match self {
-            ExerciseKind::MultipleChoice
-            | ExerciseKind::FillBlank
-            | ExerciseKind::TranslateToTarget
-            | ExerciseKind::OrderWords
-            | ExerciseKind::ListeningChoice
-            | ExerciseKind::Dictation
-            | ExerciseKind::Match => true,
-            ExerciseKind::OpenAnswer => false,
-        }
-    }
 }
 
 impl TryFrom<&str> for ExerciseKind {
