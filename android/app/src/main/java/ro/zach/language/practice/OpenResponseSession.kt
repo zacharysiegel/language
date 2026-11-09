@@ -109,7 +109,7 @@ private fun OpenResponseQuestion(exercise: ExerciseRecord.OpenResponse, isAnswer
         LanguageText(text = exercise.promptSource, style = LanguageType.targetText)
 
         exercise.contextSource?.let { contextSource: String ->
-            LanguageText(text = contextSource, style = LanguageType.bodyText, color = LanguageColors.inkMuted)
+            LanguageText(text = contextSource, style = LanguageType.captionText, color = LanguageColors.inkMuted)
         }
 
         SquareTextField(
@@ -162,7 +162,7 @@ private fun ExampleAnswers(exercise: ExerciseRecord.OpenResponse) {
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
         exercise.exampleAnswers.forEachIndexed { exampleIndex: Int, exampleAnswer: String ->
             Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
-                LanguageText(text = exampleAnswer, style = LanguageType.targetText, modifier = Modifier.weight(1f, fill = false).testTag("example-answer"))
+                LanguageText(text = exampleAnswer, style = LanguageType.bodyText, modifier = Modifier.weight(1f, fill = false).testTag("example-answer"))
 
                 /* The exercise's clip speaks the first example answer. */
                 if (exampleIndex == 0) {
