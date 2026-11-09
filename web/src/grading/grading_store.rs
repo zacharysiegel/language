@@ -83,6 +83,7 @@ mod browser {
         ModelSource,
         Role,
         SlidingWindowCache,
+        WllamaBuildKind,
     };
     use futures_util::future::{AbortHandle, AbortRegistration, Abortable, Aborted};
     use leptos::task::spawn_local;
@@ -470,13 +471,24 @@ mod browser {
             .zip(capability.storage_usage_byte_count)
             .map(|(quota_byte_count, usage_byte_count)| quota_byte_count.saturating_sub(usage_byte_count));
         let earlier_load_failed: bool = platform::read_stored_text(FAILED_LOAD_STORAGE_KEY).as_deref() == Some(grading::GRADING_MODEL_SHA256);
-
-        web_grading::assess_browser_capability(&BrowserCapabilityFacts {
+        let facts: BrowserCapabilityFacts = BrowserCapabilityFacts {
             has_webgpu_adapter: capability.webgpu_adapter.is_some(),
+            uses_wllama_default_build: capability.wllama_build == WllamaBuildKind::Default,
             available_storage_byte_count,
             model_downloaded,
             earlier_load_failed,
-        })
+        };
+
+        log::info!(
+            "read this browser's capability; [webgpu_adapter={} wllama_default_build={} available_storage_bytes={:?} model_downloaded={} earlier_load_failed={}]",
+            facts.has_webgpu_adapter,
+            facts.uses_wllama_default_build,
+            facts.available_storage_byte_count,
+            facts.model_downloaded,
+            facts.earlier_load_failed,
+        );
+
+        web_grading::assess_browser_capability(&facts)
     }
 
     /// Asks the browser not to evict the model under storage pressure; a refusal leaves it evictable.

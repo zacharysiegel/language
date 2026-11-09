@@ -56,6 +56,8 @@ pub enum GraderStateKind {
 pub struct BrowserCapabilityFacts {
     /// A WebGPU adapter that is not a fallback adapter, which runs on the CPU.
     pub has_webgpu_adapter: bool,
+    /// wllama's compatibility build cannot grade with the model.
+    pub uses_wllama_default_build: bool,
     /// Absent when the browser does not estimate its storage.
     pub available_storage_byte_count: Option<u64>,
     pub model_downloaded: bool,
@@ -63,7 +65,7 @@ pub struct BrowserCapabilityFacts {
 }
 
 pub fn assess_browser_capability(facts: &BrowserCapabilityFacts) -> GraderStateKind {
-    if !facts.has_webgpu_adapter || facts.earlier_load_failed {
+    if !facts.has_webgpu_adapter || !facts.uses_wllama_default_build || facts.earlier_load_failed {
         return GraderStateKind::Unsupported;
     }
 
@@ -105,6 +107,7 @@ mod tests {
     fn capable_facts() -> BrowserCapabilityFacts {
         BrowserCapabilityFacts {
             has_webgpu_adapter: true,
+            uses_wllama_default_build: true,
             available_storage_byte_count: Some(grading::GRADING_MODEL_SIZE_BYTES),
             model_downloaded: false,
             earlier_load_failed: false,
@@ -112,9 +115,11 @@ mod tests {
     }
 
     #[test]
-    fn assess_browser_capability_needs_an_adapter_room_for_the_model_and_no_failed_load() {
+    fn assess_browser_capability_needs_an_adapter_the_default_build_room_for_the_model_and_no_failed_load() {
         let mut without_adapter: BrowserCapabilityFacts = capable_facts();
         without_adapter.has_webgpu_adapter = false;
+        let mut with_compatibility_build: BrowserCapabilityFacts = capable_facts();
+        with_compatibility_build.uses_wllama_default_build = false;
         let mut without_room: BrowserCapabilityFacts = capable_facts();
         without_room.available_storage_byte_count = Some(grading::GRADING_MODEL_SIZE_BYTES - 1);
         let mut without_estimate: BrowserCapabilityFacts = capable_facts();
@@ -125,6 +130,7 @@ mod tests {
 
         assert_eq!(assess_browser_capability(&capable_facts()), GraderStateKind::NotDownloaded);
         assert_eq!(assess_browser_capability(&without_adapter), GraderStateKind::Unsupported);
+        assert_eq!(assess_browser_capability(&with_compatibility_build), GraderStateKind::Unsupported);
         assert_eq!(assess_browser_capability(&without_room), GraderStateKind::Unsupported);
         assert_eq!(assess_browser_capability(&without_estimate), GraderStateKind::Unsupported);
         assert_eq!(assess_browser_capability(&after_failed_load), GraderStateKind::Unsupported);
