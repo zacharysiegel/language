@@ -83,6 +83,7 @@ mod browser {
         ModelSource,
         Role,
         SlidingWindowCache,
+        ThinkingKind,
         WllamaBuildKind,
     };
     use futures_util::future::{AbortHandle, AbortRegistration, Abortable, Aborted};
@@ -549,6 +550,9 @@ mod browser {
             temperature: GRADING_TEMPERATURE,
             seed: GRADING_SEED,
             maximum_token_count,
+            thinking: ThinkingKind::Disabled,
+            thinking_budget_token_count: None,
+            thinking_effort: None,
         }
     }
 
