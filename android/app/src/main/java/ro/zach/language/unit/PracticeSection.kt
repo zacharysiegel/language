@@ -21,6 +21,7 @@ import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
+import ro.zach.language.core.openResponseExercises
 import ro.zach.language.core.passPercent
 import ro.zach.language.core.quickPracticeExerciseCount
 import ro.zach.language.core.quickPracticeExercises
@@ -33,6 +34,7 @@ import ro.zach.language.design.SquareTextButton
 import ro.zach.language.practice.ExerciseResult
 import ro.zach.language.practice.ExerciseSession
 import ro.zach.language.practice.ExerciseSessionExitKind
+import ro.zach.language.practice.OpenResponseSession
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 import kotlin.math.min
@@ -40,28 +42,66 @@ import kotlin.math.roundToInt
 
 private const val CHANGED_PRACTICE_NOTE: String = "The practice changed since you paused, so it starts over."
 
-/** A unit's quiz score, its quiz and its quick practice. */
+private enum class PracticeSessionKind {
+    Quiz,
+    QuickPractice,
+    OpenResponse;
+
+    fun title(): String {
+        return when (this) {
+            Quiz -> "Quiz"
+            QuickPractice -> "Practice"
+            OpenResponse -> "Open response"
+        }
+    }
+
+    /** `null` for a session that records nothing. */
+    fun practiceMode(): PracticeModeRecord? {
+        return when (this) {
+            Quiz -> PracticeModeRecord.FULL
+            QuickPractice -> PracticeModeRecord.QUICK
+            OpenResponse -> null
+        }
+    }
+}
+
+/** A unit's quiz score, its quiz, its quick practice and its open responses. */
 @Composable
 fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, modifier: Modifier = Modifier) {
     val progressStore: ProgressStore = LocalProgressStore.current
     val unitQuizExercises: List<ExerciseRecord> = remember(lesson) { quizExercises(lesson.exercises) }
-    var activeMode: PracticeModeRecord? by rememberSaveable { mutableStateOf(null) }
+    val unitOpenResponseExercises: List<ExerciseRecord.OpenResponse> = remember(lesson) {
+        openResponseExercises(lesson.exercises).filterIsInstance<ExerciseRecord.OpenResponse>()
+    }
+    var activeSessionKind: PracticeSessionKind? by rememberSaveable { mutableStateOf(null) }
     /* Indexes into the unit's quiz exercises, in the order the session asks them. */
     var sessionExerciseIndexes: List<Int> by rememberSaveable { mutableStateOf(emptyList()) }
     var answeredResults: List<ExerciseResult> by rememberSaveable { mutableStateOf(emptyList()) }
     var noticeMessage: String? by rememberSaveable { mutableStateOf(null) }
-    val open: (PracticeModeRecord, List<Int>, List<ExerciseResult>) -> Unit = { mode: PracticeModeRecord, exerciseIndexes: List<Int>, results: List<ExerciseResult> ->
+    val open: (PracticeSessionKind, List<Int>, List<ExerciseResult>) -> Unit = { kind: PracticeSessionKind, exerciseIndexes: List<Int>, results: List<ExerciseResult> ->
         sessionExerciseIndexes = exerciseIndexes
         answeredResults = results
         noticeMessage = null
-        activeMode = mode
+        activeSessionKind = kind
         progressStore.startUnit(courseId, unit.id)
     }
-    val mode: PracticeModeRecord? = activeMode
+    val sessionKind: PracticeSessionKind? = activeSessionKind
+    val mode: PracticeModeRecord? = sessionKind?.practiceMode()
 
-    if (mode != null) {
+    if (sessionKind == PracticeSessionKind.OpenResponse) {
+        OpenResponseSession(
+            title = sessionKind.title(),
+            exercises = unitOpenResponseExercises,
+            onExit = { activeSessionKind = null },
+            modifier = modifier,
+        )
+
+        return
+    }
+
+    if (sessionKind != null && mode != null) {
         ExerciseSession(
-            title = sessionTitle(mode),
+            title = sessionKind.title(),
             exercises = sessionExerciseIndexes.mapNotNull { exerciseIndex -> unitQuizExercises.getOrNull(exerciseIndex) },
             answeredResults = answeredResults,
             exitKind = exitKind(mode),
@@ -73,7 +113,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
                     noticeMessage = "${outcome.wordsAddedCount} word(s) from this unit were added to your review deck."
                 }
             },
-            onExit = { activeMode = null },
+            onExit = { activeSessionKind = null },
             modifier = modifier,
         )
 
@@ -99,19 +139,24 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
         PracticeStartButtons(
             pausedPracticeState = progressStore.pausedPracticeState(courseId, unit.id, unitQuizExercises),
             exerciseCount = unitQuizExercises.size,
+            openResponseTaskCount = unitOpenResponseExercises.size,
             onStartFull = {
                 val pausedPractice: PausedPracticeRecord? = progressStore.startFullPractice(courseId, unit.id, unitQuizExercises)
 
                 if (pausedPractice != null) {
-                    open(PracticeModeRecord.FULL, exerciseIndexes(pausedPractice), emptyList())
+                    open(PracticeSessionKind.Quiz, exerciseIndexes(pausedPractice), emptyList())
                 }
             },
             onResume = { pausedPractice: PausedPracticeRecord ->
                 val savedResults: List<ExerciseResult> = pausedPractice.results.map { savedResult -> ExerciseResult.fromSaved(savedResult) }
 
-                open(PracticeModeRecord.FULL, exerciseIndexes(pausedPractice), savedResults)
+                open(PracticeSessionKind.Quiz, exerciseIndexes(pausedPractice), savedResults)
             },
-            onStartQuick = { open(PracticeModeRecord.QUICK, quickPracticeExerciseIndexes(lesson.exercises, unitQuizExercises), emptyList()) },
+            onStartQuick = { open(PracticeSessionKind.QuickPractice, quickPracticeExerciseIndexes(lesson.exercises, unitQuizExercises), emptyList()) },
+            onStartOpenResponse = {
+                noticeMessage = null
+                activeSessionKind = PracticeSessionKind.OpenResponse
+            },
         )
     }
 }
@@ -120,9 +165,11 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
 private fun PracticeStartButtons(
     pausedPracticeState: PausedPracticeStateRecord,
     exerciseCount: Int,
+    openResponseTaskCount: Int,
     onStartFull: () -> Unit,
     onResume: (PausedPracticeRecord) -> Unit,
     onStartQuick: () -> Unit,
+    onStartOpenResponse: () -> Unit,
 ) {
     when (pausedPracticeState) {
         is PausedPracticeStateRecord.Resumable -> {
@@ -137,7 +184,7 @@ private fun PracticeStartButtons(
             SquareTextButton(text = "Start over", onClick = onStartFull, modifier = Modifier.testTag("start-over"))
         }
         PausedPracticeStateRecord.NotPaused, PausedPracticeStateRecord.ExercisesChanged -> SquareTextButton(
-            text = "Quiz ($exerciseCount exercises)",
+            text = quizLabel(exerciseCount),
             onClick = onStartFull,
             isPrimary = true,
             modifier = Modifier.testTag("quiz"),
@@ -149,6 +196,24 @@ private fun PracticeStartButtons(
         onClick = onStartQuick,
         modifier = Modifier.testTag("quick-practice"),
     )
+
+    if (openResponseTaskCount > 0) {
+        SquareTextButton(text = openResponseLabel(openResponseTaskCount), onClick = onStartOpenResponse, modifier = Modifier.testTag("open-response"))
+    }
+}
+
+private fun counted(count: Int, singularNoun: String, pluralNoun: String): String {
+    val noun: String = if (count == 1) singularNoun else pluralNoun
+
+    return "$count $noun"
+}
+
+internal fun quizLabel(exerciseCount: Int): String {
+    return "Quiz (${counted(exerciseCount, "exercise", "exercises")})"
+}
+
+internal fun openResponseLabel(taskCount: Int): String {
+    return "Open response (${counted(taskCount, "task", "tasks")})"
 }
 
 private enum class PausedPracticeDropOutcome {
@@ -213,11 +278,6 @@ private fun recordOutcome(progressStore: ProgressStore, courseId: String, unit: 
             vocabularyCount = unit.vocabulary.size,
         )
     }
-}
-
-private fun sessionTitle(mode: PracticeModeRecord): String = when (mode) {
-    PracticeModeRecord.FULL -> "Quiz"
-    PracticeModeRecord.QUICK -> "Practice"
 }
 
 private fun bestSummary(unitProgress: UnitProgressRecord): String {
