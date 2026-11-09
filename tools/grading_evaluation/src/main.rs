@@ -1,3 +1,4 @@
+mod cross_llama_runtime;
 mod decisor_client;
 mod evaluation_report;
 mod evaluation_run;
@@ -5,6 +6,7 @@ mod finding_scoring;
 mod finding_verification;
 mod grader_prompt;
 mod grading_case;
+mod grading_runtime;
 mod ollama_client;
 mod verification_report;
 
@@ -12,11 +14,13 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
-use clap::{Args, Parser, Subcommand};
+use clap::{Args, Parser, Subcommand, ValueEnum};
 use shared::AppError;
 use shared::filesystem;
+use shared::grading;
 use shared::grading::ErrorCategoryKind;
 
+use crate::cross_llama_runtime::{ThinkingEffortLevelKind, ThinkingSettings, ThinkingSwitchKind};
 use crate::decisor_client::DecisorClient;
 use crate::evaluation_report::{ModelSummary, ScoredRun};
 use crate::evaluation_run::{RunOptions, RunRecord};
@@ -30,6 +34,7 @@ const DEFAULT_RUNS_DIRECTORY: &str = "build/grading_evaluation";
 const DEFAULT_VERIFICATION_DIRECTORY: &str = "build/grading_evaluation_verification";
 const DEFAULT_DECISOR_URL: &str = "http://127.0.0.1:8500";
 const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
+const MODELS_DIRECTORY: &str = "models";
 const REPORT_FILE_NAME: &str = "report.md";
 const FAILURES_FILE_NAME: &str = "failures.md";
 const SAMPLE_FILE_NAME: &str = "review-sample.md";
@@ -47,7 +52,7 @@ struct CommandLine {
 enum CommandKind {
     /// Check the cases file and count its cases by kind, level and error category.
     CheckCases(CheckCasesArguments),
-    /// Grade every case with each model and prompt variant through Ollama, and record the raw replies.
+    /// Grade every case with each model and prompt variant, and record the raw replies.
     Run(RunArguments),
     /// Score the recorded runs and write the comparison, the failures and a sample for reading the explanations.
     Report(ReportArguments),
@@ -64,11 +69,37 @@ struct CheckCasesArguments {
     cases: Option<PathBuf>,
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, ValueEnum)]
+#[value(rename_all = "kebab-case")]
+enum RuntimeKind {
+    Ollama,
+    CrossLlama,
+}
+
 #[derive(Args)]
 struct RunArguments {
-    /// An Ollama model name such as `gemma3:4b`; repeat to compare several.
-    #[arg(long = "model", required = true)]
+    #[arg(long, value_enum, default_value = "ollama")]
+    runtime: RuntimeKind,
+
+    /// An Ollama model name such as `gemma3:4b`; repeat to compare several. For the Ollama runtime.
+    #[arg(long = "model")]
     models: Vec<String>,
+
+    /// The GGUF file; the grading model's file in `models/` when omitted. For the cross-llama runtime.
+    #[arg(long)]
+    model_file: Option<PathBuf>,
+
+    /// For the cross-llama runtime.
+    #[arg(long, value_enum, default_value = "off")]
+    thinking: ThinkingSwitchKind,
+
+    /// The most reasoning tokens; needs `--thinking on`. When omitted, the reasoning still stops at a fixed allowance, which the run records.
+    #[arg(long)]
+    thinking_budget: Option<usize>,
+
+    /// Needs `--thinking on` and a chat template that reads a reasoning effort.
+    #[arg(long, value_enum)]
+    thinking_effort: Option<ThinkingEffortLevelKind>,
 
     /// A prompt variant to grade with; repeat for several. Both when omitted.
     #[arg(long = "prompt-variant", value_enum)]
@@ -95,6 +126,11 @@ struct RunArguments {
 
     #[arg(long, default_value = DEFAULT_OLLAMA_URL)]
     ollama_url: String,
+}
+
+enum RuntimeChoice {
+    Ollama { models: Vec<String> },
+    CrossLlama { model_path: PathBuf, thinking_settings: ThinkingSettings },
 }
 
 #[derive(Args)]
@@ -215,6 +251,7 @@ fn run_check_cases(cases_path: &Path) -> Result<(), AppError> {
 }
 
 fn run_run(root: &Path, arguments: RunArguments) -> Result<(), AppError> {
+    let runtime_choice: RuntimeChoice = choose_runtime(root, &arguments)?;
     let cases_path: PathBuf = resolve(root, arguments.cases, DEFAULT_CASES_PATH);
     let output_directory: PathBuf = resolve(root, arguments.output, DEFAULT_RUNS_DIRECTORY);
     let mut cases: Vec<GradingCase> = grading_case::load_cases(&cases_path)?;
@@ -228,16 +265,24 @@ fn run_run(root: &Path, arguments: RunArguments) -> Result<(), AppError> {
     }
 
     let variants: Vec<PromptVariantKind> = chosen_variants(arguments.variants);
-    let connection: OllamaConnection = OllamaConnection::connect(&arguments.ollama_url)?;
     let options: RunOptions = RunOptions {
-        models: &arguments.models,
         variants: &variants,
         temperature: arguments.temperature,
         repeats: arguments.repeats.max(1),
         output_directory: &output_directory,
     };
 
-    let written_paths: Vec<PathBuf> = evaluation_run::run_evaluation(&connection, &cases, &options)?;
+    let written_paths: Vec<PathBuf> = match &runtime_choice {
+        RuntimeChoice::Ollama { models } => {
+            let connection: OllamaConnection = OllamaConnection::connect(&arguments.ollama_url)?;
+
+            evaluation_run::run_ollama_evaluation(&connection, models, &cases, &options)?
+        }
+        RuntimeChoice::CrossLlama {
+            model_path,
+            thinking_settings,
+        } => evaluation_run::run_cross_llama_evaluation(model_path, thinking_settings, &cases, &options)?,
+    };
 
     let mut summaries: Vec<ModelSummary> = Vec::new();
 
@@ -251,6 +296,52 @@ fn run_run(root: &Path, arguments: RunArguments) -> Result<(), AppError> {
     println!("{}", evaluation_report::render_report(&summaries));
 
     Ok(())
+}
+
+fn choose_runtime(root: &Path, arguments: &RunArguments) -> Result<RuntimeChoice, AppError> {
+    let thinking_settings: ThinkingSettings = ThinkingSettings {
+        thinking: arguments.thinking,
+        budget_token_count: arguments.thinking_budget,
+        effort: arguments.thinking_effort,
+    };
+    let thinking_needed_but_off: bool = thinking_settings.thinking == ThinkingSwitchKind::Off
+        && (thinking_settings.budget_token_count.is_some() || thinking_settings.effort.is_some());
+
+    if thinking_needed_but_off {
+        return Err(AppError::from("a thinking budget or effort needs --thinking on"));
+    }
+
+    match arguments.runtime {
+        RuntimeKind::Ollama => {
+            if arguments.models.is_empty() {
+                return Err(AppError::from("the Ollama runtime needs at least one --model"));
+            }
+
+            if arguments.model_file.is_some() || thinking_settings.thinking == ThinkingSwitchKind::On {
+                return Err(AppError::from(
+                    "--model-file and --thinking are for --runtime cross-llama; the Ollama runtime always has thinking off",
+                ));
+            }
+
+            Ok(RuntimeChoice::Ollama {
+                models: arguments.models.clone(),
+            })
+        }
+        RuntimeKind::CrossLlama => {
+            if !arguments.models.is_empty() {
+                return Err(AppError::from(
+                    "--model names an Ollama model; the cross-llama runtime takes --model-file",
+                ));
+            }
+
+            let default_model_path: PathBuf = root.join(MODELS_DIRECTORY).join(grading::GRADING_MODEL_FILE_NAME);
+
+            Ok(RuntimeChoice::CrossLlama {
+                model_path: arguments.model_file.clone().unwrap_or(default_model_path),
+                thinking_settings,
+            })
+        }
+    }
 }
 
 fn chosen_variants(named: Vec<PromptVariantKind>) -> Vec<PromptVariantKind> {
@@ -384,4 +475,45 @@ fn run_verify_report(root: &Path, arguments: VerifyReportArguments) -> Result<()
     println!("{report}");
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn choose_runtime_for(command_line_arguments: &[&str]) -> Result<RuntimeChoice, AppError> {
+        let command_line: CommandLine =
+            CommandLine::try_parse_from([&["grading_evaluation", "run"], command_line_arguments].concat())
+                .expect("the arguments parse");
+        let CommandKind::Run(arguments) = command_line.command else {
+            panic!("the command is run");
+        };
+
+        choose_runtime(Path::new("/workspace"), &arguments)
+    }
+
+    #[test]
+    fn choose_runtime_rejects_a_thinking_budget_with_thinking_off() {
+        let choice: Result<RuntimeChoice, AppError> =
+            choose_runtime_for(&["--runtime", "cross-llama", "--thinking-budget", "128"]);
+
+        assert!(choice.is_err());
+    }
+
+    #[test]
+    fn choose_runtime_rejects_thinking_on_for_the_ollama_runtime() {
+        let choice: Result<RuntimeChoice, AppError> = choose_runtime_for(&["--model", "gemma3:4b", "--thinking", "on"]);
+
+        assert!(choice.is_err());
+    }
+
+    #[test]
+    fn choose_runtime_defaults_cross_llama_to_the_grading_model_file() {
+        let choice: Result<RuntimeChoice, AppError> = choose_runtime_for(&["--runtime", "cross-llama"]);
+
+        let Ok(RuntimeChoice::CrossLlama { model_path, .. }) = choice else {
+            panic!("the cross-llama runtime is chosen");
+        };
+        assert_eq!(model_path, Path::new("/workspace/models").join(grading::GRADING_MODEL_FILE_NAME));
+    }
 }
