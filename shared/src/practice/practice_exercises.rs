@@ -22,7 +22,7 @@ pub fn quick_practice_exercises(unit_exercises: &[Exercise], random: impl FnMut(
 }
 
 /// The open responses of a unit, in the unit's order.
-pub fn writing_practice_exercises(unit_exercises: &[Exercise]) -> Vec<Exercise> {
+pub fn open_response_exercises(unit_exercises: &[Exercise]) -> Vec<Exercise> {
     unit_exercises
         .iter()
         .filter(|exercise| exercise.kind() == ExerciseKind::OpenResponse)
@@ -68,12 +68,12 @@ mod tests {
     }
 
     #[test]
-    fn writing_practice_exercises_holds_only_open_responses_in_the_unit_order() {
+    fn open_response_exercises_holds_only_open_responses_in_the_unit_order() {
         let expected_exercises: Vec<Exercise> = vec![
             course_test_fixtures::open_response("first"),
             course_test_fixtures::open_response("second"),
         ];
 
-        assert_eq!(writing_practice_exercises(&unit_exercises()), expected_exercises);
+        assert_eq!(open_response_exercises(&unit_exercises()), expected_exercises);
     }
 }
