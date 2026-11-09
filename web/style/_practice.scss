@@ -160,7 +160,8 @@ button.token {
     border-color: var(--color-accent-active);
 }
 
-.feedback > strong {
+.feedback > strong,
+.self-check-heading > strong {
     font-size: var(--type-size-label);
     letter-spacing: 0.1em;
     text-transform: uppercase;
@@ -171,6 +172,17 @@ button.token {
 }
 
 .explanation {
+    color: var(--color-ink-muted);
+}
+
+.self-check-heading {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+}
+
+.self-check-notice {
+    font-size: var(--type-size-caption);
     color: var(--color-ink-muted);
 }
 
