@@ -2,8 +2,7 @@ import SwiftUI
 
 /// Runs open responses one at a time with the self-check, keeping no score, then lists the learner's answers.
 struct OpenResponseSession: View {
-    static let title: String = "Open response"
-
+    let title: String
     let exercises: [ExerciseRecord]
     let onExit: () -> Void
 
@@ -25,7 +24,7 @@ struct OpenResponseSession: View {
     private func questionView(exercise: ExerciseRecord) -> some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
             SessionQuestionHeader(
-                title: Self.title,
+                title: title,
                 questionIndex: currentIndex,
                 questionCount: exercises.count,
                 exitKind: .quit,
@@ -52,7 +51,7 @@ struct OpenResponseSession: View {
 
     private func summaryView() -> some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
-            Text(Self.title)
+            Text(title)
                 .font(.titleText)
                 .accessibilityIdentifier("session-summary")
 
