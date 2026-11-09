@@ -12,10 +12,6 @@ pub struct SavedExerciseResult {
 }
 
 impl SavedExerciseResult {
-    pub fn is_correct(&self) -> bool {
-        self.status.is_correct()
-    }
-
     pub fn is_missed(&self) -> bool {
         self.status.is_missed()
     }
