@@ -112,6 +112,7 @@ fun ExerciseBody(exercise: ExerciseRecord, onSubmit: (ExerciseResult) -> Unit) {
         }
         is ExerciseRecord.OrderWords -> OrderWordsView(exercise = exercise, onSubmit = onSubmit)
         is ExerciseRecord.Match -> MatchView(prompt = exercise.prompt ?: DEFAULT_MATCH_PROMPT, pairs = exercise.pairs, onSubmit = onSubmit)
+        is ExerciseRecord.OpenResponse -> LanguageText(text = exercise.promptSource, style = LanguageType.bodyText)
     }
 }
 

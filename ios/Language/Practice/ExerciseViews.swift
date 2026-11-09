@@ -37,6 +37,8 @@ struct ExerciseBody: View {
             OrderWordsView(promptSource: promptSource, words: words, distractors: distractors, onSubmit: onSubmit)
         case .match(let prompt, let pairs, _):
             MatchView(prompt: prompt ?? "Match each phrase with its translation", pairs: pairs, onSubmit: onSubmit)
+        case .openResponse(let promptSource, _, _, _, _):
+            Text(promptSource).font(.bodyText).fixedSize(horizontal: false, vertical: true)
         }
     }
 }

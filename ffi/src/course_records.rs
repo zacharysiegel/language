@@ -2,8 +2,8 @@
 
 use shared::artifact::CourseIndexEntry;
 use shared::course::{
-    self, CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, ExerciseKind,
-    FillBlankExercise, GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
+    self, CourseLevel, CourseOutline, CultureNote, Dialogue, DialogueLine, DictationExercise, Exercise, FillBlankExercise,
+    GrammarNote, GrammarTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OpenResponseExercise,
     OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, UnitLesson, UnitOutline,
     VocabularyItem,
 };
@@ -259,7 +259,7 @@ impl From<&Reading> for ReadingRecord {
             id: reading.id.clone(),
             title: reading.title.clone(),
             paragraphs: reading.paragraphs.iter().map(PhrasePairRecord::from).collect(),
-            questions: native_exercise_records(&reading.questions),
+            questions: exercise_records_of(&reading.questions),
         }
     }
 }
@@ -310,12 +310,18 @@ pub enum ExerciseRecord {
         pairs: Vec<PhrasePairRecord>,
         explanation: Option<String>,
     },
+    OpenResponse {
+        prompt_source: String,
+        context_source: Option<String>,
+        example_answers: Vec<String>,
+        explanation: Option<String>,
+        clip_key: Option<String>,
+    },
 }
 
-impl ExerciseRecord {
-    /// `None` for an exercise the native apps do not offer.
-    fn of_native_exercise(exercise: &Exercise) -> Option<ExerciseRecord> {
-        let record: ExerciseRecord = match exercise {
+impl From<&Exercise> for ExerciseRecord {
+    fn from(exercise: &Exercise) -> ExerciseRecord {
+        match exercise {
             Exercise::MultipleChoice(exercise) => ExerciseRecord::MultipleChoice {
                 prompt: exercise.prompt.clone(),
                 choices: exercise.choices.clone(),
@@ -360,33 +366,23 @@ impl ExerciseRecord {
                 pairs: exercise.pairs.iter().map(PhrasePairRecord::from).collect(),
                 explanation: exercise.explanation.clone(),
             },
-            Exercise::OpenResponse(_) => return None,
-        };
-
-        Some(record)
+            Exercise::OpenResponse(exercise) => ExerciseRecord::OpenResponse {
+                prompt_source: exercise.prompt_source.clone(),
+                context_source: exercise.context_source.clone(),
+                example_answers: exercise.example_answers.clone(),
+                explanation: exercise.explanation.clone(),
+                clip_key: exercise.clip_key.clone(),
+            },
+        }
     }
 }
 
-/// Open responses are graded only in the web app.
-fn is_native_exercise(exercise: &Exercise) -> bool {
-    exercise.kind() != ExerciseKind::OpenResponse
+pub(crate) fn exercise_records_of(exercises: &[Exercise]) -> Vec<ExerciseRecord> {
+    exercises.iter().map(ExerciseRecord::from).collect()
 }
 
-fn native_exercise_records(exercises: &[Exercise]) -> Vec<ExerciseRecord> {
-    exercises.iter().filter_map(ExerciseRecord::of_native_exercise).collect()
-}
-
-/// The lesson without the exercises the native apps do not offer.
-pub fn native_lesson(lesson: UnitLesson) -> UnitLesson {
-    let mut native_lesson: UnitLesson = lesson;
-
-    native_lesson.exercises.retain(is_native_exercise);
-
-    for reading in &mut native_lesson.readings {
-        reading.questions.retain(is_native_exercise);
-    }
-
-    native_lesson
+pub(crate) fn exercises_of(exercise_records: &[ExerciseRecord]) -> Vec<Exercise> {
+    exercise_records.iter().map(Exercise::from).collect()
 }
 
 impl From<&ExerciseRecord> for Exercise {
@@ -438,6 +434,15 @@ impl From<&ExerciseRecord> for Exercise {
                 pairs: pairs.iter().map(PhrasePair::from).collect(),
                 explanation,
             }),
+            ExerciseRecord::OpenResponse { prompt_source, context_source, example_answers, explanation, clip_key } => {
+                Exercise::OpenResponse(OpenResponseExercise {
+                    prompt_source,
+                    context_source,
+                    example_answers,
+                    explanation,
+                    clip_key,
+                })
+            },
         }
     }
 }
@@ -458,7 +463,7 @@ impl From<&UnitLesson> for UnitLessonRecord {
             grammar: lesson.grammar.iter().map(GrammarNoteRecord::from).collect(),
             culture: (&lesson.culture).into(),
             readings: lesson.readings.iter().map(ReadingRecord::from).collect(),
-            exercises: native_exercise_records(&lesson.exercises),
+            exercises: exercise_records_of(&lesson.exercises),
         }
     }
 }
@@ -477,52 +482,19 @@ pub enum UnitTabRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shared::course::OpenResponseExercise;
-
-    fn choice() -> Exercise {
-        Exercise::MultipleChoice(MultipleChoiceExercise {
-            prompt: "Which is a greeting?".to_string(),
-            choices: vec!["Oi".to_string(), "Casa".to_string(), "Rua".to_string()],
-            answer_index: 0,
-            explanation: None,
-        })
-    }
-
-    fn open_response() -> Exercise {
-        Exercise::OpenResponse(OpenResponseExercise {
-            prompt_source: "Introduce yourself.".to_string(),
-            context_source: None,
-            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
-            explanation: None,
-            clip_key: Some("open-response-clip".to_string()),
-        })
-    }
-
-    fn exercise_kinds(exercises: &[Exercise]) -> Vec<ExerciseKind> {
-        exercises.iter().map(Exercise::kind).collect()
-    }
 
     #[test]
-    fn native_lesson_keeps_every_exercise_but_open_responses() {
-        let lesson: UnitLesson = UnitLesson {
-            dialogues: Vec::new(),
-            grammar: Vec::new(),
-            culture: CultureNote {
-                title: "Culture".to_string(),
-                text: "Text".to_string(),
-            },
-            readings: vec![Reading {
-                id: "r1".to_string(),
-                title: "Reading".to_string(),
-                paragraphs: Vec::new(),
-                questions: vec![open_response(), choice()],
-            }],
-            exercises: vec![choice(), open_response(), choice()],
-        };
+    fn exercise_record_carries_an_open_response_both_ways() {
+        let exercise: Exercise = Exercise::OpenResponse(OpenResponseExercise {
+            prompt_source: "Introduce yourself.".to_string(),
+            context_source: Some("You are Ana, from Recife.".to_string()),
+            example_answers: vec!["Oi, eu sou a Ana.".to_string(), "Olá, meu nome é Ana.".to_string()],
+            explanation: Some("Say your name and where you are from.".to_string()),
+            clip_key: Some("open-response-clip".to_string()),
+        });
 
-        let native: UnitLesson = native_lesson(lesson);
+        let round_trip: Exercise = Exercise::from(&ExerciseRecord::from(&exercise));
 
-        assert_eq!(exercise_kinds(&native.exercises), vec![ExerciseKind::MultipleChoice, ExerciseKind::MultipleChoice]);
-        assert_eq!(exercise_kinds(&native.readings[0].questions), vec![ExerciseKind::MultipleChoice]);
+        assert_eq!(round_trip, exercise);
     }
 }

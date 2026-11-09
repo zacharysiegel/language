@@ -3,7 +3,7 @@ use shared::pending_indication;
 use shared::practice::{self, AnswerStatus, SessionScore};
 use shared::review;
 
-use crate::course_records::ExerciseRecord;
+use crate::course_records::{self, ExerciseRecord};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum AnswerStatusRecord {
@@ -28,7 +28,7 @@ impl From<AnswerStatus> for AnswerStatusRecord {
             AnswerStatus::Correct => AnswerStatusRecord::Correct,
             AnswerStatus::AccentMistake => AnswerStatusRecord::AccentMistake,
             AnswerStatus::Wrong => AnswerStatusRecord::Wrong,
-            // Native practices hold no open response, the only unscored exercise.
+            // Only an open response is unscored, and the quiz and quick practice hold none.
             AnswerStatus::Unscored => AnswerStatusRecord::Wrong,
         }
     }
@@ -70,6 +70,21 @@ pub fn pass_percent() -> u32 {
 #[uniffi::export]
 pub fn quick_practice_exercise_count() -> u32 {
     practice::QUICK_PRACTICE_EXERCISE_COUNT as u32
+}
+
+#[uniffi::export]
+pub fn quiz_exercises(unit_exercises: Vec<ExerciseRecord>) -> Vec<ExerciseRecord> {
+    course_records::exercise_records_of(&practice::quiz_exercises(&course_records::exercises_of(&unit_exercises)))
+}
+
+#[uniffi::export]
+pub fn quick_practice_exercises(unit_exercises: Vec<ExerciseRecord>) -> Vec<ExerciseRecord> {
+    course_records::exercise_records_of(&practice::quick_practice_exercises(&course_records::exercises_of(&unit_exercises), fastrand::f64))
+}
+
+#[uniffi::export]
+pub fn open_response_exercises(unit_exercises: Vec<ExerciseRecord>) -> Vec<ExerciseRecord> {
+    course_records::exercise_records_of(&practice::open_response_exercises(&course_records::exercises_of(&unit_exercises)))
 }
 
 #[uniffi::export]
