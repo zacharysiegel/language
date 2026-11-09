@@ -41,7 +41,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - The quiz button counts scored exercises and open answers separately.
 - The grader's mistakes are shown, not saved.
 - Deviations, as built:
-  - The owner reversed the placement: open answers left the quiz and quick practice for a third option on the Practice tab, writing practice, shown only on a unit with open answers. It runs the unit's open answers in unit order through the same session view, keeps no score, records nothing (the unit is not marked started), and ends with the learner's answers and no pass mark.
+  - The owner reversed the placement. Writing practice: a third Practice-tab option on units with open answers, in unit order; no score, nothing recorded, ends with the learner's answers.
   - `shared::practice` builds the three lists: `quiz_exercises`, `quick_practice_exercises` and `writing_practice_exercises`.
   - Removed: `ExerciseKind::is_scored`, `PausedPractice::unscored_exercise_indices` (a saved one still parses; serde ignores the field), the two-count quiz label and the summary's note on open answers. `AnswerStatus::Unscored` stays as an open answer's result.
   - A paused quiz's fingerprint covers the quiz's exercises without open answers, so a quiz paused on a unit with open answers under the previous build is cleared with the existing note.
