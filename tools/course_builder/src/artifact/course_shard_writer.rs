@@ -382,7 +382,7 @@ impl<'transaction> ExerciseWriter<'transaction> {
             Exercise::ListeningChoice(listening) => self.insert_choices(exercise_id, &listening.choices),
             Exercise::FillBlank(fill_blank) => self.insert_answers(exercise_id, &fill_blank.answers),
             Exercise::TranslateToTarget(translate) => self.insert_answers(exercise_id, &translate.answers),
-            Exercise::OpenAnswer(open_answer) => self.insert_answers(exercise_id, &open_answer.example_answers),
+            Exercise::OpenResponse(open_response) => self.insert_answers(exercise_id, &open_response.example_answers),
             Exercise::OrderWords(order_words) => self.insert_words(exercise_id, &order_words.words, &order_words.distractors),
             Exercise::Match(matching) => self.insert_pairs(exercise_id, &matching.pairs),
             Exercise::Dictation(_) => Ok(()),
@@ -468,9 +468,9 @@ fn exercise_columns(exercise: &Exercise) -> ExerciseColumns<'_> {
             correct_choice_index: None,
             hint_source: None,
         },
-        Exercise::OpenAnswer(open_answer) => ExerciseColumns {
-            prompt: Some(&open_answer.prompt_source),
-            context_source: open_answer.context_source.as_deref(),
+        Exercise::OpenResponse(open_response) => ExerciseColumns {
+            prompt: Some(&open_response.prompt_source),
+            context_source: open_response.context_source.as_deref(),
             correct_choice_index: None,
             hint_source: None,
         },

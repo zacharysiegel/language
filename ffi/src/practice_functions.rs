@@ -28,7 +28,7 @@ impl From<AnswerStatus> for AnswerStatusRecord {
             AnswerStatus::Correct => AnswerStatusRecord::Correct,
             AnswerStatus::AccentMistake => AnswerStatusRecord::AccentMistake,
             AnswerStatus::Wrong => AnswerStatusRecord::Wrong,
-            // Native practices hold no open answer, the only unscored exercise.
+            // Native practices hold no open response, the only unscored exercise.
             AnswerStatus::Unscored => AnswerStatusRecord::Wrong,
         }
     }

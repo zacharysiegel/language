@@ -4,7 +4,7 @@ use shared::grading::{self, GraderPromptKind};
 use shared::practice::{self, PracticeModeKind, SessionScore};
 use shared::progress::{PausedPractice, PausedPracticeStateKind, PracticeOutcome, SavedExerciseResult};
 
-use crate::grading::OpenAnswerGradingContext;
+use crate::grading::OpenResponseGradingContext;
 use crate::platform;
 use crate::practice::{ExerciseSession, SessionExitKind, SessionScoringKind};
 use crate::progress_state::{ProgressStore, use_progress_store};
@@ -127,7 +127,7 @@ fn resume_label(paused_practice: &PausedPractice) -> String {
 
 #[component]
 pub fn PracticeSection(course_id: String, target_language: String, source_language: String, unit: Unit) -> impl IntoView {
-    provide_open_answer_grading(&target_language, &source_language, &unit);
+    provide_open_response_grading(&target_language, &source_language, &unit);
 
     let progress_store: ProgressStore = use_progress_store();
     let unit_id: String = unit.id.clone();
@@ -265,11 +265,11 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
     }
 }
 
-fn provide_open_answer_grading(target_language: &str, source_language: &str, unit: &Unit) {
+fn provide_open_response_grading(target_language: &str, source_language: &str, unit: &Unit) {
     let grader_prompt: Option<GraderPromptKind> = grading::find_grader_prompt(target_language, source_language);
 
     if let Some(grader_prompt) = grader_prompt {
-        provide_context(OpenAnswerGradingContext {
+        provide_context(OpenResponseGradingContext {
             grader_prompt,
             level: unit.level.clone(),
             target_language_name: course::language_name(target_language),
@@ -304,7 +304,7 @@ fn drop_paused_practice_of_changed_exercises(
 #[derive(Debug, Clone)]
 struct PracticeStartLabels {
     quiz: String,
-    /// `None` for a unit without open answers.
+    /// `None` for a unit without open responses.
     writing_practice: Option<String>,
 }
 

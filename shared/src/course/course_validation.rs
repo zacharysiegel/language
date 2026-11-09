@@ -3,7 +3,7 @@ use std::fmt;
 
 use crate::course::{
     CultureNote, Curriculum, CurriculumUnit, Dialogue, DictationExercise, Exercise, ExerciseKind, FillBlankExercise, GrammarNote,
-    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OpenAnswerExercise,
+    GrammarTable, GroupedTable, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise, OpenResponseExercise,
     OrderWordsExercise, PhrasePair, Reading, SpeakerGenderKind, TranslateToTargetExercise, Unit, VocabularyItem, grouped_table,
     prose, target_language_rules,
 };
@@ -295,7 +295,7 @@ fn check_match_side_length(collector: &mut IssueCollector, location: &str, side:
     }
 }
 
-fn check_open_answer(collector: &mut IssueCollector, location: &str, exercise: &OpenAnswerExercise) {
+fn check_open_response(collector: &mut IssueCollector, location: &str, exercise: &OpenResponseExercise) {
     collector.require_text(&format!("{location}.prompt_source"), "prompt_source", &exercise.prompt_source);
 
     if let Some(context_source) = &exercise.context_source {
@@ -315,7 +315,7 @@ fn check_open_answer(collector: &mut IssueCollector, location: &str, exercise: &
 
     if grader_prompt.is_none() {
         let message: String = format!(
-            "open_answer needs a grader prompt, and there is none for {} taught in {}",
+            "open_response needs a grader prompt, and there is none for {} taught in {}",
             collector.target_language, collector.source_language,
         );
 
@@ -353,9 +353,9 @@ fn check_exercise(collector: &mut IssueCollector, location: &str, exercise: &Exe
             collector.check_explanation(location, &exercise.explanation);
             check_match(collector, location, exercise);
         },
-        Exercise::OpenAnswer(exercise) => {
+        Exercise::OpenResponse(exercise) => {
             collector.check_explanation(location, &exercise.explanation);
-            check_open_answer(collector, location, exercise);
+            check_open_response(collector, location, exercise);
         },
     }
 }
@@ -625,12 +625,12 @@ fn check_exercises(collector: &mut IssueCollector, exercises: &[Exercise]) {
         check_exercise(collector, &format!("exercises[{exercise_index}]"), exercise);
     }
 
-    let counted_exercise_count: usize = exercises.iter().filter(|exercise| exercise.kind() != ExerciseKind::OpenAnswer).count();
+    let counted_exercise_count: usize = exercises.iter().filter(|exercise| exercise.kind() != ExerciseKind::OpenResponse).count();
 
     if counted_exercise_count < MINIMUM_EXERCISES {
         collector.error(
             "exercises",
-            format!("need at least {MINIMUM_EXERCISES} besides open_answer (found {counted_exercise_count})"),
+            format!("need at least {MINIMUM_EXERCISES} besides open_response (found {counted_exercise_count})"),
         );
     }
 
@@ -709,8 +709,8 @@ mod tests {
         }
     }
 
-    fn open_answer(example_answers: &[&str]) -> OpenAnswerExercise {
-        OpenAnswerExercise {
+    fn open_response(example_answers: &[&str]) -> OpenResponseExercise {
+        OpenResponseExercise {
             prompt_source: "Introduce yourself.".to_string(),
             context_source: None,
             example_answers: example_answers.iter().map(|example_answer| example_answer.to_string()).collect(),
@@ -792,35 +792,35 @@ mod tests {
     }
 
     #[test]
-    fn check_exercises_leaves_open_answers_out_of_the_exercise_minimum() {
+    fn check_exercises_leaves_open_responses_out_of_the_exercise_minimum() {
         let mut collector: IssueCollector = issue_collector("en");
 
-        check_exercises(&mut collector, &[Exercise::OpenAnswer(open_answer(&[EXAMPLE_ANSWER]))]);
+        check_exercises(&mut collector, &[Exercise::OpenResponse(open_response(&[EXAMPLE_ANSWER]))]);
 
-        let total_message: String = format!("need at least {MINIMUM_EXERCISES} besides open_answer (found 0)");
+        let total_message: String = format!("need at least {MINIMUM_EXERCISES} besides open_response (found 0)");
 
         assert!(error_messages(&collector).contains(&total_message));
     }
 
     #[test]
-    fn check_open_answer_rejects_a_course_whose_languages_have_no_grader_prompt() {
+    fn check_open_response_rejects_a_course_whose_languages_have_no_grader_prompt() {
         let mut graded_collector: IssueCollector = issue_collector("en");
         let mut ungraded_collector: IssueCollector = issue_collector("es");
 
-        check_open_answer(&mut graded_collector, "exercises[0]", &open_answer(&[EXAMPLE_ANSWER]));
-        check_open_answer(&mut ungraded_collector, "exercises[0]", &open_answer(&[EXAMPLE_ANSWER]));
+        check_open_response(&mut graded_collector, "exercises[0]", &open_response(&[EXAMPLE_ANSWER]));
+        check_open_response(&mut ungraded_collector, "exercises[0]", &open_response(&[EXAMPLE_ANSWER]));
 
         assert!(error_messages(&graded_collector).is_empty());
         assert_eq!(
             error_messages(&ungraded_collector),
-            vec!["open_answer needs a grader prompt, and there is none for pt-BR taught in es".to_string()],
+            vec!["open_response needs a grader prompt, and there is none for pt-BR taught in es".to_string()],
         );
     }
 
     #[test]
-    fn check_open_answer_requires_an_example_answer() {
+    fn check_open_response_requires_an_example_answer() {
         let mut collector: IssueCollector = issue_collector("en");
-        check_open_answer(&mut collector, "exercises[0]", &open_answer(&[]));
+        check_open_response(&mut collector, "exercises[0]", &open_response(&[]));
 
         assert_eq!(error_messages(&collector), vec!["example_answers must be a non-empty array".to_string()]);
     }

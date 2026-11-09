@@ -360,16 +360,16 @@ impl ExerciseRecord {
                 pairs: exercise.pairs.iter().map(PhrasePairRecord::from).collect(),
                 explanation: exercise.explanation.clone(),
             },
-            Exercise::OpenAnswer(_) => return None,
+            Exercise::OpenResponse(_) => return None,
         };
 
         Some(record)
     }
 }
 
-/// Open answers are graded only in the web app.
+/// Open responses are graded only in the web app.
 fn is_native_exercise(exercise: &Exercise) -> bool {
-    exercise.kind() != ExerciseKind::OpenAnswer
+    exercise.kind() != ExerciseKind::OpenResponse
 }
 
 fn native_exercise_records(exercises: &[Exercise]) -> Vec<ExerciseRecord> {
@@ -477,7 +477,7 @@ pub enum UnitTabRecord {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use shared::course::OpenAnswerExercise;
+    use shared::course::OpenResponseExercise;
 
     fn choice() -> Exercise {
         Exercise::MultipleChoice(MultipleChoiceExercise {
@@ -488,13 +488,13 @@ mod tests {
         })
     }
 
-    fn open_answer() -> Exercise {
-        Exercise::OpenAnswer(OpenAnswerExercise {
+    fn open_response() -> Exercise {
+        Exercise::OpenResponse(OpenResponseExercise {
             prompt_source: "Introduce yourself.".to_string(),
             context_source: None,
             example_answers: vec!["Oi, eu sou a Ana.".to_string()],
             explanation: None,
-            clip_key: Some("open-answer-clip".to_string()),
+            clip_key: Some("open-response-clip".to_string()),
         })
     }
 
@@ -503,7 +503,7 @@ mod tests {
     }
 
     #[test]
-    fn native_lesson_keeps_every_exercise_but_open_answers() {
+    fn native_lesson_keeps_every_exercise_but_open_responses() {
         let lesson: UnitLesson = UnitLesson {
             dialogues: Vec::new(),
             grammar: Vec::new(),
@@ -515,9 +515,9 @@ mod tests {
                 id: "r1".to_string(),
                 title: "Reading".to_string(),
                 paragraphs: Vec::new(),
-                questions: vec![open_answer(), choice()],
+                questions: vec![open_response(), choice()],
             }],
-            exercises: vec![choice(), open_answer(), choice()],
+            exercises: vec![choice(), open_response(), choice()],
         };
 
         let native: UnitLesson = native_lesson(lesson);
