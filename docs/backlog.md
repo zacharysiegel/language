@@ -5,7 +5,7 @@ Known gaps, recorded when found.
 ## Web app
 
 - Settings are controls in the navigation bar; the web app needs a settings page, as the iOS and Android apps have.
-- Open-response grading runs only in browsers that get wllama's default build (Chromium). In Safari's compatibility build, generation fails with "Length out of range of buffer" after the model loads.
+- Open-response grading runs only in browsers that get wllama's default build (Chromium). wllama's compatibility build (Safari) cannot read a GGUF file holding more than 4 GiB of tensor data, so it needs the split model, and its WebGPU queue times out after 30 s on a 512-token prompt batch, so it needs 128-token batches; with both it grades, but reads the prompt in about 50 s.
 
 ## Native macOS app
 
