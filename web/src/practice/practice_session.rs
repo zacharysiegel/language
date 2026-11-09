@@ -8,7 +8,7 @@ use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
 use crate::grading::{GradingStore, use_grading_store};
-use crate::practice::{self, OpenAnswerOutcomeKind};
+use crate::practice::{self, OpenResponseOutcomeKind};
 
 const ENTER_KEY: &str = "Enter";
 
@@ -233,7 +233,7 @@ fn question_view(
     } = session_progress;
     let instruction: &'static str = exercise.kind().instruction();
     let feedback_exercise: Exercise = exercise.clone();
-    let open_answer_outcome: RwSignal<Option<OpenAnswerOutcomeKind>> = RwSignal::new(None);
+    let open_response_outcome: RwSignal<Option<OpenResponseOutcomeKind>> = RwSignal::new(None);
 
     view! {
         <div class="session-header">
@@ -242,11 +242,11 @@ fn question_view(
         </div>
         <progress max=total_count value=index></progress>
         <div class="exercise-type">{instruction}</div>
-        {practice::exercise_body(exercise, on_submit, open_answer_outcome)}
+        {practice::exercise_body(exercise, on_submit, open_response_outcome)}
         {move || {
             current_result
                 .get()
-                .map(|result| feedback_view(feedback_exercise.clone(), result, open_answer_outcome.get_untracked(), advance))
+                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_outcome.get_untracked(), advance))
         }}
     }
 }
@@ -296,7 +296,7 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
-    open_answer_outcome: Option<OpenAnswerOutcomeKind>,
+    open_response_outcome: Option<OpenResponseOutcomeKind>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
     speak_after_answer(&exercise);
@@ -304,12 +304,12 @@ fn feedback_view(
     let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
     let (details, row_spoken_text): (AnyView, Option<String>) = match &exercise {
         // The feedback plays its clip beside the example answer the clip speaks.
-        Exercise::OpenAnswer(open_answer) => (
+        Exercise::OpenResponse(open_response) => (
             view! {
-                <practice::OpenAnswerFeedback
-                    exercise=open_answer.clone()
+                <practice::OpenResponseFeedback
+                    exercise=open_response.clone()
                     answer_text=result.answer_text.clone()
-                    outcome=open_answer_outcome
+                    outcome=open_response_outcome
                 />
             }
             .into_any(),

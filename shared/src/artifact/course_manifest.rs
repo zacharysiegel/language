@@ -8,7 +8,7 @@ use crate::artifact::manifest::{self, ManifestEntry};
 use crate::artifact::{repository_key, schema_version};
 use crate::course::course_identity;
 
-pub const COURSE_MANIFEST_SCHEMA_VERSION: u32 = 4;
+pub const COURSE_MANIFEST_SCHEMA_VERSION: u32 = 5;
 
 /// One publication of one course.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
