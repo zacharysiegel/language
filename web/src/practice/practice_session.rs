@@ -59,10 +59,10 @@ struct SessionProgress {
     exit_kind: SessionExitKind,
 }
 
-fn score_of(exercises: &[Exercise], results: &[SavedExerciseResult]) -> SessionScore {
+fn score_of(question_count: usize, results: &[SavedExerciseResult]) -> SessionScore {
     let statuses: Vec<AnswerStatus> = results.iter().map(|result| result.status).collect();
 
-    SessionScore::of_answers(exercises.len(), &statuses)
+    SessionScore::of_answers(question_count, &statuses)
 }
 
 #[component]
@@ -122,7 +122,7 @@ pub fn ExerciseSession(
             completion_reported.set(true);
 
             if let Some(on_complete) = on_complete {
-                on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
+                on_complete.run(score_of(active_exercises.get_untracked().len(), &results.get_untracked()));
             }
         }
     });
@@ -336,7 +336,7 @@ fn summary_view(
     retry_missed: impl Fn() + Copy + Send + Sync + 'static,
     on_exit: Callback<()>,
 ) -> impl IntoView {
-    let score: SessionScore = score_of(&exercises, &results);
+    let score: SessionScore = score_of(exercises.len(), &results);
     let missed_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
