@@ -4,7 +4,7 @@ use shared::grading::{self, GraderFinding, GraderResponse};
 use crate::grading::{self as web_grading, GraderStateKind, GradingStore, ModelDownloadProgress, use_grading_store};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-const SELF_CHECK_NOTICE: &str = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake.";
+const SELF_CHECK_NOTICE: &str = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake.";
 const NOT_GRADED_NOTICE: &str = "Automatic grading failed for this answer.";
 const IN_USE_IN_ANOTHER_PAGE_NOTICE: &str = "Automatic grading is in use in another tab or window, so this answer was not graded.";
 const DOWNLOAD_SETTING_LABEL: &str = "Download AI grading model";

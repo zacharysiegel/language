@@ -42,7 +42,7 @@ import ro.zach.language.design.panel
 
 private const val OPEN_RESPONSE_LINE_COUNT: Int = 4
 private const val SELF_CHECK_HEADING: String = "Compare with the examples"
-private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
+private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
 
 /** Open responses the learner checks against their example answers; it keeps no score and records nothing. */
 @Composable

@@ -150,7 +150,7 @@ struct OpenResponseQuestion: View {
 /// The feedback on an open response that no model graded: the learner's answer beside the example answers.
 struct OpenResponseSelfCheck: View {
     static let heading: String = "Compare with the examples"
-    static let notice: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
+    static let notice: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
 
     let answerText: String
     let exampleAnswers: [String]

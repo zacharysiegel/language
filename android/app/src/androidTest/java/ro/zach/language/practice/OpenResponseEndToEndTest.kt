@@ -33,7 +33,7 @@ import ro.zach.language.unit.UnitTabKind
 /* A unit with more than one open response, so the summary lists several answers. */
 private const val OPEN_RESPONSE_UNIT_ID: String = "a1-03-ser-estar-feelings"
 private const val UNIT_WITHOUT_OPEN_RESPONSES_ID: String = "a1-02-sounds-alphabet"
-private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
+private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
 private const val NO_QUIZ_TAKEN_SUMMARY: String = "You have not taken the quiz yet."
 private const val OPEN_RESPONSE_TIMEOUT_MILLISECONDS: Long = 5_000
 
