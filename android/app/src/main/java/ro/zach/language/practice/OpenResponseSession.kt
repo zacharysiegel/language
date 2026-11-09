@@ -22,6 +22,8 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.isTraversalGroup
+import androidx.compose.ui.semantics.semantics
 import ro.zach.language.audio.AudioClip
 import ro.zach.language.audio.AudioPlayer
 import ro.zach.language.audio.LocalAudioPlayer
@@ -40,7 +42,7 @@ import ro.zach.language.design.panel
 
 private const val OPEN_RESPONSE_LINE_COUNT: Int = 4
 private const val SELF_CHECK_HEADING: String = "Compare with the examples"
-private const val SELF_CHECK_NOTICE: String = "Automatic grading by an AI model is available on computers that can run it."
+private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
 
 /** Open responses the learner checks against their example answers; it keeps no score and records nothing. */
 @Composable
@@ -142,7 +144,7 @@ private fun SelfCheckFeedback(exercise: ExerciseRecord.OpenResponse, writtenAnsw
             .padding(LanguageSpacing.spaceSm + LanguageSpacing.spaceXs),
         verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
     ) {
-        LanguageText(text = SELF_CHECK_HEADING, style = LanguageType.titleText, modifier = Modifier.testTag("feedback-heading"))
+        SelfCheckHeading()
         MicroLabel(text = "Your answer")
         LanguageText(text = writtenAnswer, style = LanguageType.bodyText, modifier = Modifier.testTag("written-answer"))
         MicroLabel(text = "Example answers")
@@ -152,8 +154,15 @@ private fun SelfCheckFeedback(exercise: ExerciseRecord.OpenResponse, writtenAnsw
             LanguageText(text = explanation, style = LanguageType.captionText, color = LanguageColors.inkMuted)
         }
 
-        LanguageText(text = SELF_CHECK_NOTICE, style = LanguageType.captionText, color = LanguageColors.inkMuted, modifier = Modifier.testTag("self-check-notice"))
         SquareTextButton(text = "Continue", onClick = onContinue, isPrimary = true, modifier = Modifier.testTag("continue-exercise"))
+    }
+}
+
+@Composable
+private fun SelfCheckHeading() {
+    Column(modifier = Modifier.semantics { isTraversalGroup = true }, verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+        LanguageText(text = SELF_CHECK_HEADING, style = LanguageType.titleText, modifier = Modifier.testTag("feedback-heading"))
+        LanguageText(text = SELF_CHECK_NOTICE, style = LanguageType.captionText, color = LanguageColors.inkMuted, modifier = Modifier.testTag("self-check-notice"))
     }
 }
 
