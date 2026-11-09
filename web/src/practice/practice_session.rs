@@ -11,7 +11,6 @@ use crate::grading::{GradingStore, use_grading_store};
 use crate::practice::{self, OpenAnswerOutcomeKind};
 
 const ENTER_KEY: &str = "Enter";
-const UNSCORED_NOTE: &str = "Open answers do not count toward the score.";
 
 /* Kinds whose answer is a target-language sentence the learner did not just hear, so the sentence is played
    once the answer is checked. */
@@ -39,6 +38,14 @@ impl SessionExitKind {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SessionScoringKind {
+    #[default]
+    Scored,
+    /// The summary lists the answers without a score.
+    Unscored,
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum SessionRoundKind {
     First,
@@ -55,7 +62,7 @@ struct SessionProgress {
 fn score_of(exercises: &[Exercise], results: &[SavedExerciseResult]) -> SessionScore {
     let statuses: Vec<AnswerStatus> = results.iter().map(|result| result.status).collect();
 
-    SessionScore::of_answers(exercises, &statuses)
+    SessionScore::of_answers(exercises.len(), &statuses)
 }
 
 #[component]
@@ -69,7 +76,10 @@ pub fn ExerciseSession(
     #[prop(optional_no_strip)]
     on_answer: Option<Callback<SavedExerciseResult>>,
     #[prop(optional)] exit_kind: SessionExitKind,
-    on_complete: Callback<SessionScore>,
+    #[prop(optional)] scoring: SessionScoringKind,
+    /// Runs once the first round ends.
+    #[prop(optional_no_strip)]
+    on_complete: Option<Callback<SessionScore>>,
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let active_exercises: RwSignal<Arc<Vec<Exercise>>> = RwSignal::new(Arc::new(exercises));
@@ -110,7 +120,10 @@ pub fn ExerciseSession(
 
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
-            on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
+
+            if let Some(on_complete) = on_complete {
+                on_complete.run(score_of(&active_exercises.get_untracked(), &results.get_untracked()));
+            }
         }
     });
 
@@ -161,14 +174,19 @@ pub fn ExerciseSession(
                         on_exit,
                     )
                     .into_any(),
-                    None => summary_view(
-                        &session_title,
-                        exercises_in_session,
-                        results.get_untracked(),
-                        retry_missed,
-                        on_exit,
-                    )
-                    .into_any(),
+                    None => match scoring {
+                        SessionScoringKind::Scored => summary_view(
+                            &session_title,
+                            exercises_in_session,
+                            results.get_untracked(),
+                            retry_missed,
+                            on_exit,
+                        )
+                        .into_any(),
+                        SessionScoringKind::Unscored => {
+                            unscored_summary_view(&session_title, exercises_in_session, results.get_untracked(), on_exit).into_any()
+                        },
+                    },
                 }
             }}
         </section>
@@ -319,19 +337,11 @@ fn summary_view(
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let score: SessionScore = score_of(&exercises, &results);
-    let has_unscored: bool = exercises.iter().any(|exercise| !exercise.kind().is_scored());
     let missed_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
         .filter(|(result, _)| result.is_missed())
-        .map(|(result, exercise)| {
-            view! {
-                <li>
-                    <div>{exercise.prompt_text()}</div>
-                    <div class="answer">{result.answer_text.clone()}</div>
-                </li>
-            }
-        })
+        .map(|(result, exercise)| answer_item(exercise, result))
         .collect();
     let has_missed: bool = !missed_items.is_empty();
     let verdict: String = if score.passed() {
@@ -344,12 +354,37 @@ fn summary_view(
     view! {
         <h3>{format!("{title}: {} of {} correct ({}%)", score.correct_count, score.total_count, score.percent())}</h3>
         <p class=verdict_class>{verdict}</p>
-        {has_unscored.then(|| view! { <p class="muted">{UNSCORED_NOTE}</p> })}
         {has_missed.then(|| view! { <h4>"To review"</h4> })}
-        <ul class="missed">{missed_items}</ul>
+        <ul class="answer-list">{missed_items}</ul>
         <div class="row">
             {has_missed.then(|| view! { <button type="button" class="primary" on:click=move |_| retry_missed()>"Retry missed"</button> })}
             <button type="button" on:click=move |_| on_exit.run(())>"Done"</button>
+        </div>
+    }
+}
+
+fn answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoView + use<> {
+    view! {
+        <li>
+            <div>{exercise.prompt_text()}</div>
+            <div class="answer">{result.answer_text.clone()}</div>
+        </li>
+    }
+}
+
+fn unscored_summary_view(title: &str, exercises: Arc<Vec<Exercise>>, results: Vec<SavedExerciseResult>, on_exit: Callback<()>) -> impl IntoView {
+    let answer_items: Vec<_> = results
+        .iter()
+        .zip(exercises.iter())
+        .map(|(result, exercise)| answer_item(exercise, result))
+        .collect();
+
+    view! {
+        <h3>{title.to_string()}</h3>
+        <h4>"Your answers"</h4>
+        <ul class="answer-list">{answer_items}</ul>
+        <div class="row">
+            <button type="button" class="primary" on:click=move |_| on_exit.run(())>"Done"</button>
         </div>
     }
 }
