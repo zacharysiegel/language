@@ -69,6 +69,28 @@ pub fn ModelDownloadStatus() -> impl IntoView {
     }
 }
 
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SelfCheckNoticeContent {
+    DownloadProgress,
+    Text(String),
+}
+
+/// Only the unsupported state claims that the browser cannot grade.
+pub fn self_check_notice_content(grader_state: GraderStateKind, download_enabled: bool) -> SelfCheckNoticeContent {
+    match grader_state {
+        GraderStateKind::Downloading(_) => SelfCheckNoticeContent::DownloadProgress,
+        GraderStateKind::Unchecked | GraderStateKind::NotDownloaded if !download_enabled => SelfCheckNoticeContent::Text(download_turned_off_notice()),
+        GraderStateKind::Unsupported => SelfCheckNoticeContent::Text(SELF_CHECK_NOTICE.to_string()),
+        GraderStateKind::InUseInAnotherPage => SelfCheckNoticeContent::Text(IN_USE_IN_ANOTHER_PAGE_NOTICE.to_string()),
+        GraderStateKind::Unchecked
+        | GraderStateKind::NotDownloaded
+        | GraderStateKind::Downloaded
+        | GraderStateKind::Loading
+        | GraderStateKind::Ready
+        | GraderStateKind::Failed => SelfCheckNoticeContent::Text(NOT_GRADED_NOTICE.to_string()),
+    }
+}
+
 /// Why an answer was not graded, and what grading needs.
 #[component]
 pub fn SelfCheckNotice() -> impl IntoView {
@@ -77,17 +99,11 @@ pub fn SelfCheckNotice() -> impl IntoView {
 
     let notice = move || {
         let download_enabled: bool = progress_store.read(|progress| progress.settings.download_grading_model);
+        let notice_content: SelfCheckNoticeContent = self_check_notice_content(grading_store.state(), download_enabled);
 
-        match grading_store.state() {
-            GraderStateKind::Downloading(_) => view! { <ModelDownloadStatus /> }.into_any(),
-            GraderStateKind::Unchecked | GraderStateKind::NotDownloaded if !download_enabled => {
-                view! { <p>{download_turned_off_notice()}</p> }.into_any()
-            },
-            GraderStateKind::Downloaded | GraderStateKind::Loading | GraderStateKind::Ready => view! { <p>{NOT_GRADED_NOTICE}</p> }.into_any(),
-            GraderStateKind::InUseInAnotherPage => view! { <p>{IN_USE_IN_ANOTHER_PAGE_NOTICE}</p> }.into_any(),
-            GraderStateKind::Unchecked | GraderStateKind::Unsupported | GraderStateKind::NotDownloaded | GraderStateKind::Failed => {
-                view! { <p>{SELF_CHECK_NOTICE}</p> }.into_any()
-            },
+        match notice_content {
+            SelfCheckNoticeContent::DownloadProgress => view! { <ModelDownloadStatus /> }.into_any(),
+            SelfCheckNoticeContent::Text(notice_text) => view! { <p>{notice_text}</p> }.into_any(),
         }
     };
 
@@ -132,5 +148,28 @@ pub fn GraderFindings(response: GraderResponse, target_language_name: String) ->
             <dd>{yes_or_no(response.written_in_portuguese)}</dd>
         </dl>
         <ul class="grader-findings">{finding_items}</ul>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn self_check_notice_content_claims_an_unsupported_browser_only_for_the_unsupported_state() {
+        let failed_states: [GraderStateKind; 6] = [
+            GraderStateKind::Unchecked,
+            GraderStateKind::NotDownloaded,
+            GraderStateKind::Downloaded,
+            GraderStateKind::Loading,
+            GraderStateKind::Ready,
+            GraderStateKind::Failed,
+        ];
+
+        for failed_state in failed_states {
+            assert_eq!(self_check_notice_content(failed_state, true), SelfCheckNoticeContent::Text(NOT_GRADED_NOTICE.to_string()));
+        }
+
+        assert_eq!(self_check_notice_content(GraderStateKind::Unsupported, true), SelfCheckNoticeContent::Text(SELF_CHECK_NOTICE.to_string()));
     }
 }
