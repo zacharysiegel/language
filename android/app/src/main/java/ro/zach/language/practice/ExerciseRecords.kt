@@ -9,6 +9,7 @@ fun ExerciseRecord.clipKey(): String? {
         is ExerciseRecord.OrderWords -> clipKey
         is ExerciseRecord.ListeningChoice -> clipKey
         is ExerciseRecord.Dictation -> clipKey
+        is ExerciseRecord.OpenResponse -> clipKey
         is ExerciseRecord.MultipleChoice, is ExerciseRecord.Match -> null
     }
 }
@@ -22,6 +23,7 @@ fun ExerciseRecord.explanation(): String? {
         is ExerciseRecord.ListeningChoice -> explanation
         is ExerciseRecord.Dictation -> explanation
         is ExerciseRecord.Match -> explanation
+        is ExerciseRecord.OpenResponse -> explanation
     }
 }
 
@@ -29,6 +31,6 @@ fun ExerciseRecord.explanation(): String? {
 fun ExerciseRecord.speaksAfterAnswer(): Boolean {
     return when (this) {
         is ExerciseRecord.FillBlank, is ExerciseRecord.TranslateToTarget, is ExerciseRecord.OrderWords -> true
-        is ExerciseRecord.MultipleChoice, is ExerciseRecord.ListeningChoice, is ExerciseRecord.Dictation, is ExerciseRecord.Match -> false
+        is ExerciseRecord.MultipleChoice, is ExerciseRecord.ListeningChoice, is ExerciseRecord.Dictation, is ExerciseRecord.Match, is ExerciseRecord.OpenResponse -> false
     }
 }

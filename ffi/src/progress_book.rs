@@ -14,7 +14,7 @@ use shared::progress::{
 };
 use shared::review::{self, ReviewCard};
 
-use crate::course_records::ExerciseRecord;
+use crate::course_records::{self, ExerciseRecord};
 use crate::ffi_error::CoreError;
 use crate::practice_functions::AnswerStatusRecord;
 
@@ -363,7 +363,7 @@ impl ProgressBook {
 
     /// Replaces any paused practice of the unit.
     pub fn start_full_practice(&self, course_id: String, unit_id: String, exercises: Vec<ExerciseRecord>) -> Result<PausedPracticeRecord, CoreError> {
-        let exercises: Vec<Exercise> = exercises_of(&exercises);
+        let exercises: Vec<Exercise> = course_records::exercises_of(&exercises);
         let mut paused_practice: Option<PausedPractice> = None;
 
         self.change(|progress| paused_practice = Some(progress.course_progress_mut(&course_id).start_full_practice(&unit_id, &exercises)))?;
@@ -380,7 +380,7 @@ impl ProgressBook {
     }
 
     pub fn paused_practice_state(&self, course_id: String, unit_id: String, exercises: Vec<ExerciseRecord>) -> PausedPracticeStateRecord {
-        let exercises: Vec<Exercise> = exercises_of(&exercises);
+        let exercises: Vec<Exercise> = course_records::exercises_of(&exercises);
 
         self.lock().course_progress(&course_id).paused_practice_state(&unit_id, &exercises).into()
     }
@@ -522,10 +522,6 @@ fn save(path: &Path, text: &str) -> Result<(), AppError> {
 
 fn now_milliseconds() -> i64 {
     Utc::now().timestamp_millis()
-}
-
-fn exercises_of(exercise_records: &[ExerciseRecord]) -> Vec<Exercise> {
-    exercise_records.iter().map(Exercise::from).collect()
 }
 
 

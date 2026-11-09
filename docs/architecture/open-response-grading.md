@@ -12,6 +12,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - Reversed by the owner after deployment: open responses are a practice of their own (see Scoring).
 - Scoring: feedback only. An open response never counts toward a quiz's pass mark or score.
 - Grading runs only in the web app. The iOS and Android apps never see open-response exercises.
+  - Reversed by the owner after deployment: the iOS and Android apps offer the Open response practice with the self-check only.
 - Fallback, on a computer or browser that cannot run the model: self-check against the example answers, with a notice that automatic grading by an AI model is available on supported computers.
 - Model download: automatic in the background unless the learner turns it off in settings. The model is loaded into memory only when an open-response question appears, and unloaded when the practice session ends.
 - Every graded result is labelled as graded by an AI model.
@@ -31,6 +32,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - Shard: `prompt` holds `prompt_source`; a new nullable `context_source` column; example answers in `exercise_answer`.
 - Versions: `SCHEMA_VERSION` 2 to 3, `COURSE_MANIFEST_SCHEMA_VERSION` 3 to 4.
 - Native apps: the `ffi` crate leaves open responses out of `UnitLessonRecord` and native recording prefetch; `ExerciseRecord` gains no variant.
+  - Reversed with the decision above: `ExerciseRecord::OpenResponse`, lessons and prefetch keep open responses, and `ffi` exposes `quiz_exercises`, `quick_practice_exercises` and `open_response_exercises`.
 - The iOS and Android UI tests read a unit's exercises from its JSON without the open responses.
 - The test course gets one open-response exercise per unit.
 

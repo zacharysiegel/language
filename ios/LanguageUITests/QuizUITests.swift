@@ -11,7 +11,7 @@ final class QuizUITests: LanguageUITestCase {
     }
 
     func testAPausedQuizResumesAfterTheAppIsRelaunched() throws {
-        let exercises: [[String: Any]] = try Self.readExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
+        let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
 
         openThePracticeTab(Self.testCourseQuizUnitId)
         app.buttons["quiz"].tap()
@@ -40,7 +40,7 @@ final class QuizUITests: LanguageUITestCase {
     }
 
     func testStartOverReplacesThePausedQuiz() throws {
-        let exercises: [[String: Any]] = try Self.readExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
+        let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
 
         openThePracticeTab(Self.testCourseQuizUnitId)
         app.buttons["quiz"].tap()
@@ -55,7 +55,7 @@ final class QuizUITests: LanguageUITestCase {
     }
 
     func testQuickPracticeIsQuitAndLeavesThePausedQuiz() throws {
-        let exercises: [[String: Any]] = try Self.readExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
+        let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
 
         openThePracticeTab(Self.testCourseQuizUnitId)
         app.buttons["quiz"].tap()

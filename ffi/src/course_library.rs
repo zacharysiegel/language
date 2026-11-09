@@ -18,7 +18,7 @@ use shared::http::{DirectoryFetch, HttpFetch, ReqwestHttpFetch};
 use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 use shared::{AppError, AppErrorStatic};
 
-use crate::course_records::{self, CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord, UnitTabRecord};
+use crate::course_records::{CourseOutlineRecord, CourseSummaryRecord, UnitLessonRecord, UnitTabRecord};
 use crate::ffi_error::{CoreError, CoreFailureRecord};
 use crate::progress_book::{AudioEngineRecord, VoiceChoiceRecord};
 use crate::recording_cache::{ClipRecording, PrefetchCancellation, RecordingCache, RecordingPrefetchSummary};
@@ -718,10 +718,9 @@ impl CoursePublication {
 
         self.library.register_clip_audio(&contents.clip_audio, &self.audio_base_url);
 
-        let lesson: UnitLesson = course_records::native_lesson(contents.lesson);
-        let lesson_record: UnitLessonRecord = (&lesson).into();
+        let lesson_record: UnitLessonRecord = (&contents.lesson).into();
 
-        self.opened_lessons.insert(unit_id.to_string(), lesson);
+        self.opened_lessons.insert(unit_id.to_string(), contents.lesson);
 
         Ok(lesson_record)
     }
