@@ -143,28 +143,15 @@ struct ExerciseSession: View {
     }
 
     private func questionView(exercise: ExerciseRecord, total: Int) -> some View {
-        let shownExitKind: ExerciseSessionExitKind = isRetry ? .quit : exitKind
-
-        return VStack(alignment: .leading, spacing: .spaceMd) {
-            HStack {
-                Text("\(isRetry ? "\(title), retry of missed" : title): question \(currentIndex + 1) of \(total)")
-                    .font(.captionText)
-                    .foregroundStyle(Color.inkMuted)
-                    .accessibilityIdentifier("question-position")
-
-                Spacer()
-
-                Button(shownExitKind.label()) {
-                    audioPlayer.stop()
-                    onExit()
-                }
-                .font(.captionText)
-                .foregroundStyle(Color.accentLink)
-                .accessibilityIdentifier(shownExitKind.accessibilityIdentifier())
-            }
-
-            SquareProgressBar(value: currentIndex, total: total)
-            MicroLabel(text: exerciseInstruction(exercise: exercise))
+        VStack(alignment: .leading, spacing: .spaceMd) {
+            SessionQuestionHeader(
+                title: isRetry ? "\(title), retry of missed" : title,
+                questionIndex: currentIndex,
+                questionCount: total,
+                exitKind: isRetry ? .quit : exitKind,
+                instruction: exerciseInstruction(exercise: exercise),
+                onExit: onExit,
+            )
 
             ExerciseBody(exercise: exercise, onSubmit: submit)
                 .id("\(isRetry)-\(currentIndex)")
@@ -224,11 +211,7 @@ struct ExerciseSession: View {
                 MicroLabel(text: "To review")
 
                 ForEach(Array(missed.enumerated()), id: \.offset) { _, entry in
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(exercisePromptText(exercise: entry.0)).font(.bodyText)
-                        Text(entry.1.answerText).font(.captionText).foregroundStyle(Color.goodText)
-                    }
-                    .fixedSize(horizontal: false, vertical: true)
+                    AnswerListItem(promptText: exercisePromptText(exercise: entry.0), answerText: entry.1.answerText, answerColor: Color.goodText)
                 }
             }
 
@@ -307,5 +290,53 @@ struct ExerciseSession: View {
         currentResult = nil
         currentIndex = 0
         isRetry = true
+    }
+}
+
+struct SessionQuestionHeader: View {
+    let title: String
+    let questionIndex: Int
+    let questionCount: Int
+    let exitKind: ExerciseSessionExitKind
+    let instruction: String
+    let onExit: () -> Void
+
+    @Environment(AudioPlayer.self) private var audioPlayer
+
+    var body: some View {
+        HStack {
+            Text("\(title): question \(questionIndex + 1) of \(questionCount)")
+                .font(.captionText)
+                .foregroundStyle(Color.inkMuted)
+                .accessibilityIdentifier("question-position")
+
+            Spacer()
+
+            Button(exitKind.label()) {
+                audioPlayer.stop()
+                onExit()
+            }
+            .font(.captionText)
+            .foregroundStyle(Color.accentLink)
+            .accessibilityIdentifier(exitKind.accessibilityIdentifier())
+        }
+
+        SquareProgressBar(value: questionIndex, total: questionCount)
+        MicroLabel(text: instruction)
+    }
+}
+
+/// A question of a finished session and the answer listed under it.
+struct AnswerListItem: View {
+    let promptText: String
+    let answerText: String
+    let answerColor: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(promptText).font(.bodyText)
+            Text(answerText).font(.captionText).foregroundStyle(answerColor)
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
