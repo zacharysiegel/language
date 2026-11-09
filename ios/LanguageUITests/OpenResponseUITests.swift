@@ -3,7 +3,7 @@ import XCTest
 /// A unit's open responses on the Practice tab, on the test course, whose units each have one.
 final class OpenResponseUITests: LanguageUITestCase {
     static let selfCheckHeading: String = "Compare with the examples"
-    static let selfCheckNotice: String = "Automatic grading is not available on this device. In supported web browsers on desktop computers, an AI model checks your answer and points out each mistake."
+    static let selfCheckNotice: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
     /* The test course's unit whose open response gives the facts of a scene. */
     static let sceneUnitId: String = "a1-02-feelings"
     static let writtenAnswerLines: [String] = ["O Paulo e alto.", "Hoje ele esta cansado."]
