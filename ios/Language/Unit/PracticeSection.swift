@@ -1,5 +1,11 @@
 import SwiftUI
 
+/// A session open on the Practice tab.
+private enum PracticeSessionKind: Equatable {
+    case scored(PracticeModeRecord)
+    case openResponse
+}
+
 struct PracticeSection: View {
     static let changedPracticeNote: String = "The practice changed since you paused, so it starts over."
 
@@ -8,13 +14,14 @@ struct PracticeSection: View {
     let lesson: UnitLessonRecord
 
     @Environment(ProgressStore.self) private var progressStore
-    @State private var activeMode: PracticeModeRecord?
+    @State private var activeSession: PracticeSessionKind?
     @State private var sessionExercises: [ExerciseRecord] = []
     @State private var answeredResults: [ExerciseResult] = []
     @State private var noticeMessage: String?
 
     var body: some View {
-        if let mode = activeMode {
+        switch activeSession {
+        case .scored(let mode):
             ExerciseSession(
                 title: sessionTitle(mode: mode),
                 exercises: sessionExercises,
@@ -22,9 +29,11 @@ struct PracticeSection: View {
                 exitKind: exitKind(mode: mode),
                 onAnswer: { result in recordAnswer(mode: mode, result: result) },
                 onComplete: { score in record(mode: mode, score: score) },
-                onExit: { activeMode = nil },
+                onExit: { activeSession = nil },
             )
-        } else {
+        case .openResponse:
+            OpenResponseSession(exercises: unitOpenResponseExercises(), onExit: { activeSession = nil })
+        case nil:
             VStack(alignment: .leading, spacing: .spaceSm) {
                 Text(bestSummary()).font(.bodyText)
                 Text("Pass mark: \(passPercent())%.").font(.captionText).foregroundStyle(Color.inkMuted)
@@ -66,6 +75,20 @@ struct PracticeSection: View {
         Button("Quick practice (\(quickPracticeExerciseCount()) random exercises)") { start(.quick) }
             .buttonStyle(SquareButtonStyle())
             .accessibilityIdentifier("quick-practice")
+
+        let openResponseTaskCount: Int = unitOpenResponseExercises().count
+
+        if openResponseTaskCount > 0 {
+            Button(openResponseLabel(taskCount: openResponseTaskCount)) { startOpenResponse() }
+                .buttonStyle(SquareButtonStyle())
+                .accessibilityIdentifier("open-response")
+        }
+    }
+
+    private func openResponseLabel(taskCount: Int) -> String {
+        let noun: String = taskCount == 1 ? "task" : "tasks"
+
+        return "Open response (\(taskCount) \(noun))"
     }
 
     /* A practice left on its last feedback has every question answered and resumes at its summary. */
@@ -109,12 +132,21 @@ struct PracticeSection: View {
         sessionExercises = exercises
         self.answeredResults = answeredResults
         noticeMessage = nil
-        activeMode = mode
+        activeSession = .scored(mode)
         progressStore.startUnit(courseId: courseId, unitId: unit.id)
+    }
+
+    private func startOpenResponse() {
+        noticeMessage = nil
+        activeSession = .openResponse
     }
 
     private func unitQuizExercises() -> [ExerciseRecord] {
         quizExercises(unitExercises: lesson.exercises)
+    }
+
+    private func unitOpenResponseExercises() -> [ExerciseRecord] {
+        openResponseExercises(unitExercises: lesson.exercises)
     }
 
     private func exercisesInOrder(pausedPractice: PausedPracticeRecord) -> [ExerciseRecord] {
