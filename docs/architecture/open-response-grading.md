@@ -99,7 +99,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - Open-response view: a multi-line field with spell checking off and a Check button, which shows the pending state.
   - States: loading the model, grading, then feedback; cancelled when the session unmounts.
   - Feedback: an "AI model" tag; whether the answer addresses the task and is in the target language; each mistake's quote, replacement and explanation; the example answers.
-  - Self-check: the example answers, plus the notice; while the model is still downloading, the download's progress; with the setting off, that automatic grading needs the download turned on.
+  - Self-check: the example answers, with a notice under the heading saying why the answer was not graded; while the model is still downloading, the download's progress; with the setting off, that automatic grading needs the download turned on. The iOS and Android apps show the same notice as a browser that cannot run the model.
 - Deviations, as built:
   - `GraderStateKind` also has `Unchecked`, before the browser is checked, and `InUseInAnotherPage`.
   - An app-level Web Lock (`ifAvailable`) is held while a page loads or holds the model, so one copy is in memory; a page without it gets the self-check and tries again at its next open response.
