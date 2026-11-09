@@ -11,7 +11,6 @@ use crate::progress_state::{ProgressStore, use_progress_store};
 
 const EXERCISES_CHANGED_NOTE: &str = "The practice changed since you paused, so it starts over.";
 
-/// The kinds of session the Practice tab starts.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum PracticeSessionKind {
     Quiz,
@@ -75,10 +74,10 @@ enum ExercisesChangedNoteKind {
     Shown,
 }
 
-fn quick_session(quiz_exercises: &[Exercise]) -> ActiveSession {
+fn quick_session(unit_exercises: &[Exercise]) -> ActiveSession {
     ActiveSession {
         kind: PracticeSessionKind::QuickPractice,
-        exercises: practice::quick_practice_exercises(quiz_exercises, platform::random_unit),
+        exercises: practice::quick_practice_exercises(unit_exercises, platform::random_unit),
         answered_results: Vec::new(),
     }
 }
@@ -146,6 +145,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
     drop_paused_practice_of_changed_exercises(progress_store, &course_id, &unit_id, &quiz_exercises, exercises_changed_note);
 
     let start_session: Callback<PracticeStartKind> = {
+        let unit_exercises: Vec<Exercise> = unit.exercises.clone();
         let quiz_exercises: Vec<Exercise> = quiz_exercises.clone();
         let course_id: String = course_id.clone();
         let unit_id: String = unit_id.clone();
@@ -164,7 +164,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                 },
                 PracticeStartKind::Quick => {
                     progress_store.start_unit(&course_id, &unit_id);
-                    Some(quick_session(&quiz_exercises))
+                    Some(quick_session(&unit_exercises))
                 },
                 PracticeStartKind::Writing => Some(writing_session(&writing_exercises)),
             };
