@@ -2,6 +2,16 @@ use shared::grading::{self, GraderFinding, GraderResponse};
 
 const BYTES_PER_GIGABYTE: f64 = 1_000_000_000.0;
 const PERMILLE: u64 = 1000;
+// Near the upper end of the reply lengths the grading evaluation measured for the grader.
+const TYPICAL_GRADER_REPLY_TOKEN_COUNT: u64 = 80;
+pub const GRADING_PROGRESS_MAXIMUM_PERMILLE: u64 = GradingStepKind::ALL.len() as u64 * PERMILLE;
+
+/// `part` as a proportion of `whole` in permille, at most the whole.
+fn permille_of(part: u64, whole: u64) -> u64 {
+    let whole: u64 = whole.max(1);
+
+    part.min(whole) * PERMILLE / whole
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct ModelDownloadProgress {
@@ -21,9 +31,7 @@ impl ModelDownloadProgress {
     }
 
     pub fn downloaded_permille(&self) -> u64 {
-        let total_byte_count: u64 = self.total_or_expected_byte_count();
-
-        (self.downloaded_byte_count.min(total_byte_count) * PERMILLE / total_byte_count).min(PERMILLE)
+        permille_of(self.downloaded_byte_count, self.total_or_expected_byte_count())
     }
 
     pub fn description(&self) -> String {
@@ -49,6 +57,86 @@ pub enum GraderStateKind {
     Ready,
     /// The model failed to load in this browser.
     Failed,
+}
+
+/// The grader's latest report on the generation it runs.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GraderGenerationProgressKind {
+    ReadingPrompt {
+        /// Includes the tokens reused from the cache.
+        read_token_count: u64,
+        prompt_token_count: u64,
+    },
+    WritingReply {
+        generated_token_count: u64,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum GradingStepKind {
+    LoadingModel,
+    ReadingAnswer,
+    WritingFeedback,
+}
+
+impl GradingStepKind {
+    pub const ALL: [GradingStepKind; 3] = [
+        GradingStepKind::LoadingModel,
+        GradingStepKind::ReadingAnswer,
+        GradingStepKind::WritingFeedback,
+    ];
+
+    /// Counted from 1.
+    pub fn number(self) -> u64 {
+        match self {
+            GradingStepKind::LoadingModel => 1,
+            GradingStepKind::ReadingAnswer => 2,
+            GradingStepKind::WritingFeedback => 3,
+        }
+    }
+}
+
+/// How far the grading of an answer has come.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GradingProgress {
+    pub step: GradingStepKind,
+    /// The current step's progress; the steps before it are complete.
+    pub step_permille: u64,
+}
+
+impl GradingProgress {
+    /// Each step is an equal share of [`GRADING_PROGRESS_MAXIMUM_PERMILLE`].
+    pub fn overall_permille(&self) -> u64 {
+        (self.step.number() - 1) * PERMILLE + self.step_permille
+    }
+}
+
+pub fn grading_progress(grader_state: GraderStateKind, generation_progress: Option<GraderGenerationProgressKind>) -> GradingProgress {
+    if grader_state != GraderStateKind::Ready {
+        // wllama reports no progress while loading, so the step has no fill.
+        return GradingProgress {
+            step: GradingStepKind::LoadingModel,
+            step_permille: 0,
+        };
+    }
+
+    match generation_progress {
+        Some(GraderGenerationProgressKind::ReadingPrompt {
+            read_token_count,
+            prompt_token_count,
+        }) => GradingProgress {
+            step: GradingStepKind::ReadingAnswer,
+            step_permille: permille_of(read_token_count, prompt_token_count),
+        },
+        Some(GraderGenerationProgressKind::WritingReply { generated_token_count }) => GradingProgress {
+            step: GradingStepKind::WritingFeedback,
+            step_permille: permille_of(generated_token_count, TYPICAL_GRADER_REPLY_TOKEN_COUNT),
+        },
+        None => GradingProgress {
+            step: GradingStepKind::ReadingAnswer,
+            step_permille: 0,
+        },
+    }
 }
 
 /// What the browser reports about itself and its storage.
@@ -154,5 +242,57 @@ mod tests {
 
         assert_eq!(progress.description(), "1.3 of 7.0 GB");
         assert_eq!(progress.downloaded_permille(), 180);
+    }
+
+    #[test]
+    fn grading_progress_shows_the_load_as_an_unfilled_first_step_whatever_the_generation_reports() {
+        let reading: GraderGenerationProgressKind = GraderGenerationProgressKind::ReadingPrompt {
+            read_token_count: 500,
+            prompt_token_count: 1000,
+        };
+        let loading_progress: GradingProgress = grading_progress(GraderStateKind::Loading, Some(reading));
+
+        assert_eq!(loading_progress.step, GradingStepKind::LoadingModel);
+        assert_eq!(loading_progress.overall_permille(), 0);
+    }
+
+    #[test]
+    fn grading_progress_fills_the_second_step_by_the_prompt_tokens_read() {
+        let reading: GraderGenerationProgressKind = GraderGenerationProgressKind::ReadingPrompt {
+            read_token_count: 250,
+            prompt_token_count: 1000,
+        };
+        let reading_progress: GradingProgress = grading_progress(GraderStateKind::Ready, Some(reading));
+
+        assert_eq!(reading_progress.step, GradingStepKind::ReadingAnswer);
+        assert_eq!(reading_progress.step_permille, 250);
+        assert_eq!(reading_progress.overall_permille(), 1250);
+    }
+
+    #[test]
+    fn grading_progress_starts_the_second_step_before_the_generation_first_reports() {
+        assert_eq!(
+            grading_progress(GraderStateKind::Ready, None),
+            GradingProgress {
+                step: GradingStepKind::ReadingAnswer,
+                step_permille: 0,
+            },
+        );
+    }
+
+    #[test]
+    fn grading_progress_fills_the_third_step_against_a_typical_reply_and_stops_at_full() {
+        let half_typical_reply: GraderGenerationProgressKind = GraderGenerationProgressKind::WritingReply {
+            generated_token_count: TYPICAL_GRADER_REPLY_TOKEN_COUNT / 2,
+        };
+        let longer_than_typical_reply: GraderGenerationProgressKind = GraderGenerationProgressKind::WritingReply {
+            generated_token_count: TYPICAL_GRADER_REPLY_TOKEN_COUNT * 2,
+        };
+        let half_progress: GradingProgress = grading_progress(GraderStateKind::Ready, Some(half_typical_reply));
+        let longer_progress: GradingProgress = grading_progress(GraderStateKind::Ready, Some(longer_than_typical_reply));
+
+        assert_eq!(half_progress.step, GradingStepKind::WritingFeedback);
+        assert_eq!(half_progress.step_permille, 500);
+        assert_eq!(longer_progress.overall_permille(), GRADING_PROGRESS_MAXIMUM_PERMILLE);
     }
 }
