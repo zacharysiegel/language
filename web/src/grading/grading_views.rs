@@ -1,7 +1,10 @@
 use leptos::prelude::*;
 use shared::grading::{self, GraderFinding, GraderResponse};
 
-use crate::grading::{self as web_grading, GraderStateKind, GradingStore, ModelDownloadProgress, use_grading_store};
+use crate::grading::{
+    self as web_grading, GraderStateKind, GradingProgress, GradingStepKind, GradingStore, ModelDownloadProgress, use_grading_store,
+};
+use crate::pending_indication;
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 const SELF_CHECK_NOTICE: &str = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake.";
@@ -10,6 +13,7 @@ const IN_USE_IN_ANOTHER_PAGE_NOTICE: &str = "Automatic grading is in use in anot
 const DOWNLOAD_SETTING_LABEL: &str = "Download AI grading model";
 const DOWNLOAD_PROGRESS_LABEL: &str = "AI grading model download";
 const AI_MODEL_TAG: &str = "AI model";
+const GRADING_PROGRESS_LABEL: &str = "Automatic grading progress";
 
 fn download_progress_text(progress: &ModelDownloadProgress) -> String {
     format!("Downloading the AI model for automatic grading: {}", progress.description())
@@ -17,6 +21,18 @@ fn download_progress_text(progress: &ModelDownloadProgress) -> String {
 
 fn download_turned_off_notice() -> String {
     format!("Automatic grading is off. To use it, turn on \"{DOWNLOAD_SETTING_LABEL}\" in the settings.")
+}
+
+fn grading_step_label(step: GradingStepKind) -> &'static str {
+    match step {
+        GradingStepKind::LoadingModel => "Loading the AI model",
+        GradingStepKind::ReadingAnswer => "Reading your answer",
+        GradingStepKind::WritingFeedback => "Writing feedback",
+    }
+}
+
+fn grading_status_text(step: GradingStepKind) -> String {
+    format!("Step {} of {}: {}", step.number(), GradingStepKind::ALL.len(), grading_step_label(step))
 }
 
 fn yes_or_no(value: bool) -> &'static str {
@@ -66,6 +82,39 @@ pub fn ModelDownloadStatus() -> impl IntoView {
                 <progress max=1000 value=progress.downloaded_permille() aria-label=DOWNLOAD_PROGRESS_LABEL></progress>
             </div>
         })
+    }
+}
+
+/// The grading of an answer under way, shown once the pending indication delay has passed.
+#[component]
+pub fn GradingProgressStatus() -> impl IntoView {
+    let grading_store: GradingStore = use_grading_store();
+    let delay_passed: RwSignal<bool> = RwSignal::new(false);
+    let progress: Memo<GradingProgress> =
+        Memo::new(move |_| web_grading::grading_progress(grading_store.state(), grading_store.generation_progress()));
+    let step: Memo<GradingStepKind> = Memo::new(move |_| progress.get().step);
+    let shown_step = move || delay_passed.get().then(|| step.get());
+
+    Effect::new(move |_| {
+        set_timeout(move || delay_passed.set(true), pending_indication::pending_indication_delay());
+    });
+
+    // The status line is in the page from the start, so a screen reader announces each step written into it.
+    view! {
+        <div class="grading-progress">
+            <p class="muted" role="status" aria-live="polite">{move || shown_step().map(grading_status_text)}</p>
+            {move || {
+                delay_passed.get().then(|| {
+                    view! {
+                        <progress
+                            max=web_grading::GRADING_PROGRESS_MAXIMUM_PERMILLE
+                            value=move || progress.get().overall_permille()
+                            aria-label=GRADING_PROGRESS_LABEL
+                        ></progress>
+                    }
+                })
+            }}
+        </div>
     }
 }
 

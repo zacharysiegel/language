@@ -246,7 +246,7 @@ fn question_view(
         {move || {
             current_result
                 .get()
-                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_outcome.get_untracked(), advance))
+                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_outcome, advance))
         }}
     }
 }
@@ -296,7 +296,7 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
-    open_response_outcome: Option<OpenResponseOutcomeKind>,
+    open_response_outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
     speak_after_answer(&exercise);
