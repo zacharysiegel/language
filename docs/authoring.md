@@ -35,6 +35,9 @@ These rules come from the course owner's feedback on the content. They apply to 
    - A gloss pair keeps one language per side: `sentence: 'a frase'`, not `sentence: a 'frase' in Portuguese`.
    - A sentence that defines a target word puts it where no source-language article is needed: `'A feira' is an open-air street market` or `The word for an open-air street market is 'a feira'`, not `An open-air street market is a 'feira'`.
    - This covers words, phrases and forms. Letters, sound spellings and endings are named by their spelling (`the 'ch' is [ʃ]`, `the '-o' of 'isso'`).
+7. Every text in either language is grammatically correct, complete and professional, as a carefully edited textbook would print it.
+   - A sentence names its subject; no noun is left for the reader to supply (`The six most common prepositions are:`, not `The six commonest are:`).
+   - Standard modern forms only: no archaic, regional or informal forms in source-language text (`most common`, not `commonest`), and no slang, abbreviations or chat register.
 
 ## Text rules
 
