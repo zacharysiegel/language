@@ -1,18 +1,32 @@
 use leptos::prelude::*;
 use shared::grading::GraderPromptKind;
+use shared::progress::{CourseProgress, OpenResponseTask, SavedOpenResponse};
 
-use crate::grading::{GraderGenerationProgressKind, GraderStateKind};
+use crate::grading::{
+    GraderGenerationProgressKind, GraderStateKind, GradingPriorityKind, GradingQueue, GradingQueueStepKind, OpenResponseSessionPresenceKind,
+    QueuedGrading, TaskGradingStatusKind,
+};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
-/// How the grader reads a practice session's open responses.
+/// How the grader reads a course's open responses.
 #[derive(Debug, Clone)]
 pub struct OpenResponseGradingContext {
     pub grader_prompt: GraderPromptKind,
-    pub level: String,
-    pub target_language_name: String,
 }
 
-#[derive(Debug, Clone)]
+impl OpenResponseGradingContext {
+    pub fn submission(&self, task: &OpenResponseTask, answer: &str) -> OpenResponseSubmission {
+        OpenResponseSubmission {
+            grader_prompt: self.grader_prompt,
+            level: task.level.clone(),
+            prompt_source: task.prompt_source.clone(),
+            context_source: task.context_source.clone(),
+            answer: answer.to_string(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct OpenResponseSubmission {
     pub grader_prompt: GraderPromptKind,
     pub level: String,
@@ -28,12 +42,19 @@ pub enum GradingFailureKind {
     Failed,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct OpenResponseSessionId(u64);
+
 /// The grading model's state in this page, which outlives every route.
 #[derive(Clone, Copy)]
 pub struct GradingStore {
     state: RwSignal<GraderStateKind>,
     /// Cleared when a grading starts and when it ends.
     generation_progress: RwSignal<Option<GraderGenerationProgressKind>>,
+    queue: RwSignal<GradingQueue>,
+    open_session_ids: RwSignal<Vec<OpenResponseSessionId>>,
+    next_session_number: StoredValue<u64>,
+    progress_store: ProgressStore,
 }
 
 impl GradingStore {
@@ -48,14 +69,91 @@ impl GradingStore {
     pub fn generation_progress(self) -> Option<GraderGenerationProgressKind> {
         self.generation_progress.get()
     }
+
+    /// Keeps the model in memory until every session begun is ended.
+    pub fn begin_open_response_session(self) -> OpenResponseSessionId {
+        let session_number: u64 = self.next_session_number.get_value();
+        let session_id: OpenResponseSessionId = OpenResponseSessionId(session_number);
+
+        self.next_session_number.set_value(session_number + 1);
+        self.open_session_ids.update(|open_session_ids| open_session_ids.push(session_id));
+
+        session_id
+    }
+
+    /// Does nothing for a session already ended.
+    pub fn end_open_response_session(self, session_id: OpenResponseSessionId) {
+        let is_open: bool = self.open_session_ids.with_untracked(|open_session_ids| open_session_ids.contains(&session_id));
+
+        if is_open {
+            self.open_session_ids.update(|open_session_ids| open_session_ids.retain(|open_session_id| *open_session_id != session_id));
+        }
+    }
+
+    pub fn queue_grading(self, grading: QueuedGrading, priority: GradingPriorityKind) {
+        self.queue.update(|queue| queue.enqueue(grading, priority));
+    }
+
+    /// Queues the course's saved answers that have no grade.
+    pub fn queue_saved_ungraded_answers(self, course_id: &str, grading_context: &OpenResponseGradingContext) {
+        let ungraded_open_responses: Vec<(String, SavedOpenResponse)> = self.progress_store.read_untracked(|progress| {
+            progress
+                .courses
+                .get(course_id)
+                .map(CourseProgress::ungraded_open_responses)
+                .unwrap_or_default()
+        });
+
+        for (task_key, saved_open_response) in ungraded_open_responses {
+            let grading: QueuedGrading = QueuedGrading {
+                course_id: course_id.to_string(),
+                task_key,
+                answered_milliseconds: saved_open_response.answered_milliseconds,
+                submission: grading_context.submission(&saved_open_response.task, &saved_open_response.answer_text),
+            };
+
+            self.queue_grading(grading, GradingPriorityKind::Saved);
+        }
+    }
+
+    pub fn task_grading_status(self, course_id: &str, task_key: &str, answered_milliseconds: i64) -> TaskGradingStatusKind {
+        let grader_state: GraderStateKind = self.state.get();
+
+        self.queue.with(|queue| queue.task_status(course_id, task_key, answered_milliseconds, grader_state))
+    }
+
+    fn advance_queue(self) {
+        let grader_state: GraderStateKind = self.state.get();
+        let session_presence: OpenResponseSessionPresenceKind = if self.open_session_ids.with(Vec::is_empty) {
+            OpenResponseSessionPresenceKind::NoneOpen
+        } else {
+            OpenResponseSessionPresenceKind::Open
+        };
+        let step: GradingQueueStepKind = self.queue.with(|queue| queue.next_step(grader_state, session_presence));
+
+        match step {
+            GradingQueueStepKind::Nothing => {},
+            GradingQueueStepKind::LoadModel => self.load_model(),
+            GradingQueueStepKind::StartGeneration => self.start_next_generation(),
+            GradingQueueStepKind::AbandonWaiting => {
+                log::info!("leaving the waiting open responses ungraded; [grader_state={grader_state:?}]");
+                self.queue.update(GradingQueue::abandon_waiting);
+            },
+            GradingQueueStepKind::UnloadModel => self.unload(),
+        }
+    }
 }
 
 pub fn provide_grading_store() {
+    let progress_store: ProgressStore = use_progress_store();
     let grading_store: GradingStore = GradingStore {
         state: RwSignal::new(GraderStateKind::Unchecked),
         generation_progress: RwSignal::new(None),
+        queue: RwSignal::new(GradingQueue::default()),
+        open_session_ids: RwSignal::new(Vec::new()),
+        next_session_number: StoredValue::new(0),
+        progress_store,
     };
-    let progress_store: ProgressStore = use_progress_store();
 
     Effect::new(move |_| {
         let download_enabled: bool = progress_store.read(|progress| progress.settings.download_grading_model);
@@ -64,6 +162,8 @@ pub fn provide_grading_store() {
             grading_store.stop_download();
         }
     });
+
+    Effect::new(move |_| grading_store.advance_queue());
 
     provide_context(grading_store);
 }
@@ -99,6 +199,7 @@ mod browser {
     use shared::AppErrorStatic;
     use shared::artifact::fetch;
     use shared::grading::{self, ChatRoleKind, GradedAnswer, GraderResponse};
+    use shared::progress::SavedOpenResponseGrade;
     use wasm_bindgen_futures::JsFuture;
 
     use super::*;
@@ -203,10 +304,40 @@ mod browser {
             });
         }
 
-        pub async fn grade(self, submission: OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
+        pub(super) fn start_next_generation(self) {
+            let next_grading: Option<QueuedGrading> = self.queue.try_update(GradingQueue::take_next).flatten();
+
+            let Some(next_grading) = next_grading
+            else {
+                return;
+            };
+
+            spawn_local(async move {
+                let graded: Result<GraderResponse, GradingFailureKind> = self.grade(&next_grading.submission).await;
+
+                match graded {
+                    Ok(response) => self.save_grade(&next_grading, &response),
+                    Err(failure) => log::info!("left an open response ungraded; [failure={failure:?} task_key={}]", next_grading.task_key),
+                }
+
+                self.queue.update(GradingQueue::finish_running);
+            });
+        }
+
+        fn save_grade(self, grading: &QueuedGrading, response: &GraderResponse) {
+            let grade: SavedOpenResponseGrade = SavedOpenResponseGrade::of_response(grading.submission.grader_prompt, response);
+
+            self.progress_store.update(|progress| {
+                progress
+                    .course_progress_mut(&grading.course_id)
+                    .record_open_response_grade(&grading.task_key, grading.answered_milliseconds, grade)
+            });
+        }
+
+        async fn grade(self, submission: &OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
             let model: Rc<Model> = loaded_model().ok_or(GradingFailureKind::ModelNotLoaded)?;
             let response_schema: serde_json::Value = submission.grader_prompt.response_schema();
-            let request: GenerationRequest = create_generation_request(&submission, Some(response_schema), MAXIMUM_REPLY_TOKEN_COUNT);
+            let request: GenerationRequest = create_generation_request(submission, Some(response_schema), MAXIMUM_REPLY_TOKEN_COUNT);
 
             self.generation_progress.set(None);
 
@@ -244,13 +375,6 @@ mod browser {
                     log::warn!("the grader's reply is not a grading; [error={error}]");
                     Err(GradingFailureKind::Failed)
                 },
-            }
-        }
-
-        /// Stops the generation under way and any waiting for it.
-        pub fn cancel_generation(self) {
-            if let Some(model) = loaded_model() {
-                model.cancel();
             }
         }
 
@@ -618,8 +742,6 @@ mod browser {
 
 #[cfg(not(feature = "hydrate"))] // has no browser to run the model in
 mod server {
-    use shared::grading::GraderResponse;
-
     use super::*;
 
     impl GradingStore {
@@ -631,11 +753,7 @@ mod server {
 
         pub fn warm_up(self, _submission: OpenResponseSubmission) {}
 
-        pub fn cancel_generation(self) {}
-
-        pub async fn grade(self, _submission: OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
-            Err(GradingFailureKind::ModelNotLoaded)
-        }
+        pub(super) fn start_next_generation(self) {}
 
         pub fn unload(self) {}
     }

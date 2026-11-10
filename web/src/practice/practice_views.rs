@@ -8,18 +8,19 @@ use shared::course::{
     DictationExercise, Exercise, FillBlankExercise, ListeningChoiceExercise, MatchExercise, MultipleChoiceExercise,
     OpenResponseExercise, OrderWordsExercise, TranslateToTargetExercise,
 };
-use leptos::task::spawn_local;
-use shared::grading::GraderResponse;
 use shared::practice::{AnswerStatus, check_typed_answer, shuffled, shuffled_avoiding_identity};
-use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
+use shared::progress::{OpenResponseTask, SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, PlaybackTarget, audio_clip, indicated_pending, use_playback_store};
 use crate::grading::{
-    self, GradedFeedbackHeading, GraderFindings, GraderStateKind, GradingFailureKind, GradingProgressStatus, GradingStore,
-    ModelDownloadStatus, OpenResponseGradingContext, OpenResponseSubmission, SelfCheckNotice, use_grading_store,
+    self, GRADING_PENDING_NOTICE, GradedFeedbackHeading, GraderFindings, GraderStateKind, GradingPriorityKind, GradingProgressStatus, GradingStore,
+    ModelDownloadStatus, OpenResponseGradingContext, OpenResponseSubmission, QueuedGrading, SelfCheckNotice, use_grading_store,
 };
 use crate::pending_indication::PendingIcon;
 use crate::platform::{self, AudioClip};
+use crate::practice::open_response_answers;
+use crate::practice::{AnswerGradeKind, OpenResponseUnitContext, SavedOpenResponseAnswer, use_open_response_unit_context};
+use crate::progress_state::{ProgressStore, use_progress_store};
 
 const WRONG_FLASH_MILLISECONDS: u64 = 500;
 const OPEN_RESPONSE_ROWS: u32 = 4;
@@ -37,7 +38,7 @@ fn choice_result(chosen_correctly: bool, answer_text: &str) -> SavedExerciseResu
 pub fn exercise_body(
     exercise: Exercise,
     on_submit: Callback<SavedExerciseResult>,
-    open_response_outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
+    open_response_answered_milliseconds: RwSignal<Option<i64>>,
 ) -> AnyView {
     match exercise {
         Exercise::MultipleChoice(exercise) => view! { <MultipleChoiceView exercise on_submit /> }.into_any(),
@@ -47,7 +48,7 @@ pub fn exercise_body(
         Exercise::ListeningChoice(exercise) => view! { <ListeningChoiceView exercise on_submit /> }.into_any(),
         Exercise::Dictation(exercise) => view! { <DictationView exercise on_submit /> }.into_any(),
         Exercise::Match(exercise) => view! { <MatchView exercise on_submit /> }.into_any(),
-        Exercise::OpenResponse(exercise) => view! { <OpenResponseView exercise on_submit outcome=open_response_outcome /> }.into_any(),
+        Exercise::OpenResponse(exercise) => view! { <OpenResponseView exercise on_submit answered_milliseconds=open_response_answered_milliseconds /> }.into_any(),
     }
 }
 
@@ -445,101 +446,17 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) 
     }
 }
 
-/// How an open response's feedback is shown.
-#[derive(Debug, Clone, PartialEq)]
-pub enum OpenResponseOutcomeKind {
-    /// The learner compares the answer with the example answers while the model grades it.
-    Grading,
-    Graded(GraderResponse),
-    /// No model graded the answer, so the learner compares it with the example answers.
-    SelfCheck,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum OpenResponsePhaseKind {
-    Writing,
-    /// Checked while the model was still loading.
-    WaitingForModel,
-    Grading,
-    Answered,
-}
-
-/// Submits an open response and shows its outcome, unless the session has gone before the grade arrives.
-#[derive(Clone, Copy)]
-struct OpenResponseCompletion {
-    phase: RwSignal<OpenResponsePhaseKind>,
-    outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
-    on_submit: Callback<SavedExerciseResult>,
-}
-
-impl OpenResponseCompletion {
-    fn submit(self, answer_text: String) {
-        self.on_submit.run(SavedExerciseResult {
-            status: AnswerStatus::Unscored,
-            answer_text,
-        });
-    }
-
-    fn submit_for_self_check(self, answer_text: String) {
-        self.show_outcome(OpenResponseOutcomeKind::SelfCheck);
-        self.submit(answer_text);
-    }
-
-    fn submit_for_grading(self, pending_phase: OpenResponsePhaseKind, answer_text: String) {
-        self.outcome.set(Some(OpenResponseOutcomeKind::Grading));
-        self.phase.set(pending_phase);
-        self.submit(answer_text);
-    }
-
-    fn show_outcome(self, outcome: OpenResponseOutcomeKind) {
-        if self.phase.is_disposed() {
-            return;
-        }
-
-        self.outcome.set(Some(outcome));
-        self.phase.set(OpenResponsePhaseKind::Answered);
-    }
-
-    fn grade(self, grading_store: GradingStore, submission: OpenResponseSubmission) {
-        self.phase.set(OpenResponsePhaseKind::Grading);
-
-        spawn_local(async move {
-            let graded: Result<GraderResponse, GradingFailureKind> = grading_store.grade(submission).await;
-
-            let outcome: OpenResponseOutcomeKind = match graded {
-                Ok(response) => OpenResponseOutcomeKind::Graded(response),
-                Err(failure) => {
-                    log::info!("showing the self-check for an answer the model did not grade; [failure={failure:?}]");
-                    OpenResponseOutcomeKind::SelfCheck
-                },
-            };
-
-            self.show_outcome(outcome);
-        });
-    }
-}
-
-fn create_submission(grading_context: &OpenResponseGradingContext, exercise: &OpenResponseExercise, answer: &str) -> OpenResponseSubmission {
-    OpenResponseSubmission {
-        grader_prompt: grading_context.grader_prompt,
-        level: grading_context.level.clone(),
-        prompt_source: exercise.prompt_source.clone(),
-        context_source: exercise.context_source.clone(),
-        answer: answer.to_string(),
-    }
-}
-
 /// Loads a downloaded model once while the question is open, then reads the grader's prompt into its cache once.
 fn prepare_model_while_writing(
     grading_store: GradingStore,
-    phase: RwSignal<OpenResponsePhaseKind>,
+    answered_milliseconds: RwSignal<Option<i64>>,
     warm_up_submission: OpenResponseSubmission,
 ) {
     let load_requested: StoredValue<bool> = StoredValue::new(false);
     let warmed_up: StoredValue<bool> = StoredValue::new(false);
 
     Effect::new(move |_| {
-        if phase.get() != OpenResponsePhaseKind::Writing {
+        if answered_milliseconds.get().is_some() {
             return;
         }
 
@@ -557,52 +474,52 @@ fn prepare_model_while_writing(
     });
 }
 
-/// Grades an answer checked during the model's load once the load ends, or falls back to the self-check.
-fn grade_once_loaded(
+/// Saves the answer as the task's latest and queues its grading where this page can grade.
+fn save_open_response(
+    progress_store: ProgressStore,
     grading_store: GradingStore,
-    completion: OpenResponseCompletion,
-    waiting_submission: StoredValue<Option<OpenResponseSubmission>>,
-) {
-    Effect::new(move |_| {
-        if completion.phase.get() != OpenResponsePhaseKind::WaitingForModel {
-            return;
-        }
+    unit_context: &OpenResponseUnitContext,
+    grading_context: Option<&OpenResponseGradingContext>,
+    exercise: &OpenResponseExercise,
+    answer_text: &str,
+) -> i64 {
+    let answered_milliseconds: i64 = platform::now_milliseconds();
+    let task_key: String = unit_context.task_key(exercise);
+    let task: OpenResponseTask = unit_context.task(exercise);
 
-        let grader_state: GraderStateKind = grading_store.state();
+    progress_store.save_open_response_answer(&unit_context.course_id, &task_key, task.clone(), answer_text, answered_milliseconds);
 
-        if grader_state == GraderStateKind::Loading {
-            return;
-        }
+    let gradable: bool = grading_store.state_untracked().can_grade();
 
-        let Some(submission) = waiting_submission.get_value()
-        else {
-            return;
+    if let Some(grading_context) = grading_context
+        && gradable
+    {
+        let grading: QueuedGrading = QueuedGrading {
+            course_id: unit_context.course_id.clone(),
+            task_key,
+            answered_milliseconds,
+            submission: grading_context.submission(&task, answer_text),
         };
 
-        match grader_state {
-            GraderStateKind::Ready => completion.grade(grading_store, submission),
-            _ => completion.show_outcome(OpenResponseOutcomeKind::SelfCheck),
-        }
-    });
+        grading_store.queue_grading(grading, GradingPriorityKind::JustChecked);
+    }
+
+    answered_milliseconds
 }
 
 #[component]
 fn OpenResponseView(
     exercise: OpenResponseExercise,
     on_submit: Callback<SavedExerciseResult>,
-    outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
+    answered_milliseconds: RwSignal<Option<i64>>,
 ) -> impl IntoView {
     let written: RwSignal<String> = RwSignal::new(String::new());
-    let phase: RwSignal<OpenResponsePhaseKind> = RwSignal::new(OpenResponsePhaseKind::Writing);
     let textarea_ref: NodeRef<html::Textarea> = NodeRef::new();
     let grading_store: GradingStore = use_grading_store();
+    let progress_store: ProgressStore = use_progress_store();
+    let unit_context: OpenResponseUnitContext = use_open_response_unit_context();
     let grading_context: Option<OpenResponseGradingContext> = use_context::<OpenResponseGradingContext>();
-    let completion: OpenResponseCompletion = OpenResponseCompletion {
-        phase,
-        outcome,
-        on_submit,
-    };
-    let waiting_submission: StoredValue<Option<OpenResponseSubmission>> = StoredValue::new(None);
+    let is_writing = move || answered_milliseconds.get().is_none();
 
     Effect::new(move |_| {
         if let Some(textarea) = textarea_ref.get() {
@@ -611,37 +528,36 @@ fn OpenResponseView(
     });
 
     if let Some(grading_context) = &grading_context {
-        prepare_model_while_writing(grading_store, phase, create_submission(grading_context, &exercise, ""));
-        grade_once_loaded(grading_store, completion, waiting_submission);
-        // A grade still under way when the question closes is never shown.
-        on_cleanup(move || grading_store.cancel_generation());
+        let warm_up_submission: OpenResponseSubmission = grading_context.submission(&unit_context.task(&exercise), "");
+
+        prepare_model_while_writing(grading_store, answered_milliseconds, warm_up_submission);
     }
 
     let graded_course: bool = grading_context.is_some();
-    let submitted_exercise: OpenResponseExercise = exercise.clone();
+    let saved_exercise: OpenResponseExercise = exercise.clone();
     let check = move || {
         let answer_text: String = written.get_untracked().trim().to_string();
 
-        if phase.get_untracked() != OpenResponsePhaseKind::Writing || answer_text.is_empty() {
+        if answered_milliseconds.get_untracked().is_some() || answer_text.is_empty() {
             return;
         }
 
-        let submission: Option<OpenResponseSubmission> = grading_context
-            .as_ref()
-            .map(|grading_context| create_submission(grading_context, &submitted_exercise, &answer_text));
+        let saved_milliseconds: i64 = save_open_response(
+            progress_store,
+            grading_store,
+            &unit_context,
+            grading_context.as_ref(),
+            &saved_exercise,
+            &answer_text,
+        );
 
-        match (submission, grading_store.state_untracked()) {
-            (Some(submission), GraderStateKind::Ready) => {
-                completion.submit_for_grading(OpenResponsePhaseKind::Grading, answer_text);
-                completion.grade(grading_store, submission);
-            },
-            (Some(submission), GraderStateKind::Loading) => {
-                waiting_submission.set_value(Some(submission));
-                completion.submit_for_grading(OpenResponsePhaseKind::WaitingForModel, answer_text);
-            },
-            _ => completion.submit_for_self_check(answer_text),
-        }
+        answered_milliseconds.set(Some(saved_milliseconds));
+        on_submit.run(SavedExerciseResult {
+            status: AnswerStatus::Unscored,
+            answer_text,
+        });
     };
+    let saved_answer_exercise: OpenResponseExercise = exercise.clone();
 
     // A form submits on Enter only from a single-line field, so Enter in the textarea starts a new line.
     view! {
@@ -660,17 +576,16 @@ fn OpenResponseView(
                 spellcheck="false"
                 prop:value=move || written.get()
                 on:input:target=move |event| written.set(event.target().value())
-                disabled=move || phase.get() != OpenResponsePhaseKind::Writing
+                disabled=move || !is_writing()
             ></textarea>
-            <button type="submit" class="primary" disabled=move || phase.get() != OpenResponsePhaseKind::Writing>
+            <button type="submit" class="primary" disabled=move || !is_writing()>
                 "Check"
             </button>
-            {move || {
-                let shows_download_status: bool = graded_course && phase.get() != OpenResponsePhaseKind::Answered;
-
-                shows_download_status.then(|| view! { <ModelDownloadStatus /> })
-            }}
+            {move || (graded_course && is_writing()).then(|| view! { <ModelDownloadStatus /> })}
         </form>
+        <Show when=is_writing>
+            <SavedOpenResponseAnswer exercise=saved_answer_exercise.clone() />
+        </Show>
     }
 }
 
@@ -702,52 +617,43 @@ fn ExampleAnswers(exercise: OpenResponseExercise) -> impl IntoView {
     }
 }
 
-fn open_response_feedback_heading(outcome: Option<OpenResponseOutcomeKind>) -> AnyView {
-    match outcome {
-        Some(OpenResponseOutcomeKind::Graded(response)) => {
-            view! { <GradedFeedbackHeading heading=grading::mistake_count_heading(&response.findings) /> }.into_any()
+fn open_response_feedback_heading(grade: AnswerGradeKind) -> AnyView {
+    let self_check_notice: AnyView = match grade {
+        AnswerGradeKind::Graded(grade) => {
+            return view! { <GradedFeedbackHeading heading=grading::mistake_count_heading(&grade.findings) /> }.into_any();
         },
-        Some(OpenResponseOutcomeKind::Grading) => view! {
-            <div class="self-check-heading">
-                <strong>{SELF_CHECK_HEADING}</strong>
-                <div class="self-check-notice">
-                    <GradingProgressStatus />
-                </div>
-            </div>
-        }
-        .into_any(),
-        Some(OpenResponseOutcomeKind::SelfCheck) | None => view! {
-            <div class="self-check-heading">
-                <strong>{SELF_CHECK_HEADING}</strong>
-                <SelfCheckNotice />
-            </div>
-        }
-        .into_any(),
+        AnswerGradeKind::InProgress => view! { <div class="self-check-notice"><GradingProgressStatus /></div> }.into_any(),
+        AnswerGradeKind::Pending => view! { <div class="self-check-notice"><p>{GRADING_PENDING_NOTICE}</p></div> }.into_any(),
+        AnswerGradeKind::Ungraded => view! { <SelfCheckNotice /> }.into_any(),
+    };
+
+    view! {
+        <div class="self-check-heading">
+            <strong>{SELF_CHECK_HEADING}</strong>
+            {self_check_notice}
+        </div>
     }
+    .into_any()
 }
 
 /// The feedback on an open response: the grader's findings, or the example answers to compare with.
 #[component]
-pub fn OpenResponseFeedback(
-    exercise: OpenResponseExercise,
-    answer_text: String,
-    outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
-) -> impl IntoView {
-    let target_language_name: String = use_context::<OpenResponseGradingContext>()
-        .map(|grading_context| grading_context.target_language_name)
-        .unwrap_or_default();
+pub fn OpenResponseFeedback(exercise: OpenResponseExercise, answer_text: String, answered_milliseconds: i64) -> impl IntoView {
+    let unit_context: OpenResponseUnitContext = use_open_response_unit_context();
+    let grade: Memo<AnswerGradeKind> = open_response_answers::tracked_answer_grade(unit_context.course_id.clone(), unit_context.task_key(&exercise), answered_milliseconds);
+    let target_language_name: String = unit_context.target_language_name.clone();
     let grader_findings = move || {
-        let Some(OpenResponseOutcomeKind::Graded(response)) = outcome.get()
+        let AnswerGradeKind::Graded(grade) = grade.get()
         else {
             return None;
         };
 
-        Some(view! { <GraderFindings response target_language_name=target_language_name.clone() /> })
+        Some(view! { <GraderFindings grade target_language_name=target_language_name.clone() /> })
     };
 
-    // Only the heading and the findings follow the outcome, so the example answers stay in place when the grade arrives.
+    // Only the heading and the findings follow the grade, so the example answers stay in place when it arrives.
     view! {
-        {move || open_response_feedback_heading(outcome.get())}
+        {move || open_response_feedback_heading(grade.get())}
         <div class="field-label">"Your answer"</div>
         <p class="written-answer">{answer_text}</p>
         {grader_findings}
