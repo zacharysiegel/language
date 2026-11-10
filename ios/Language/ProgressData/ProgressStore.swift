@@ -37,9 +37,14 @@ final class ProgressStore {
         return book.unitProgress(courseId: courseId, unitId: unitId)
     }
 
-    func completedUnitCount(courseId: String) -> Int {
+    func levelCompletions(outline: CourseOutlineRecord) -> [LevelCompletionRecord] {
         _ = changeCount
-        return Int(book.completedUnitCount(courseId: courseId))
+        return book.levelCompletions(outline: outline)
+    }
+
+    func quizResults(outline: CourseOutlineRecord) -> [QuizResultRecord] {
+        _ = changeCount
+        return book.quizResults(outline: outline)
     }
 
     func dueCardCount(courseId: String) -> Int {

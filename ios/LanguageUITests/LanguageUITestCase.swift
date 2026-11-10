@@ -403,11 +403,11 @@ class LanguageUITestCase: XCTestCase {
         return try XCTUnwrap(vocabulary.first?["target"] as? String)
     }
 
-    static func readCurriculumUnits() throws -> [[String: Any]] {
-        try readCurriculum()["units"] as? [[String: Any]] ?? []
+    static func readCurriculumUnits(courseId: String = LanguageUITestCase.courseId) throws -> [[String: Any]] {
+        try readCurriculum(courseId: courseId)["units"] as? [[String: Any]] ?? []
     }
 
-    static func readCurriculum() throws -> [String: Any] {
+    static func readCurriculum(courseId: String = LanguageUITestCase.courseId) throws -> [String: Any] {
         let path: URL = repositoryRoot.appendingPathComponent("data/courses/\(courseId)/curriculum.json")
         let data: Data = try Data(contentsOf: path)
 

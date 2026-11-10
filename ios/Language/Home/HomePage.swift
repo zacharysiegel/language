@@ -27,20 +27,12 @@ struct HomePage: View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             PageHeader(caption: "\(outline.units.count) units", title: outline.title)
 
-            HStack {
-                Text("\(progressStore.completedUnitCount(courseId: outline.id)) / \(outline.units.count) units completed")
-                    .font(.dataText)
-                    .foregroundStyle(Color.inkMuted)
-
-                Spacer()
-
-                if let nextUnit = nextIncompleteUnit(outline) {
-                    NavigationLink(value: UnitDestination(courseId: outline.id, unitId: nextUnit.id, tab: .overview)) {
-                        Text("Continue")
-                    }
-                    .buttonStyle(SquareButtonStyle(isPrimary: true))
-                    .accessibilityIdentifier("continue")
+            if let nextUnit = nextIncompleteUnit(outline) {
+                NavigationLink(value: UnitDestination(courseId: outline.id, unitId: nextUnit.id, tab: .overview)) {
+                    Text("Continue")
                 }
+                .buttonStyle(SquareButtonStyle(isPrimary: true))
+                .accessibilityIdentifier("continue")
             }
         }
     }

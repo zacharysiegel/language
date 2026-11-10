@@ -8,8 +8,8 @@ struct ProgressPage: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: .spaceLg) {
-                summary(outline)
-                unitsSection(outline)
+                levelsSection()
+                quizResultsSection()
                 deckSection()
                 ProgressTransfer()
             }
@@ -20,37 +20,82 @@ struct ProgressPage: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
-    private func summary(_ outline: CourseOutlineRecord) -> some View {
-        VStack(alignment: .leading, spacing: .spaceXs) {
-            PageHeader(caption: nil, title: "Progress")
-            Text("\(progressStore.completedUnitCount(courseId: outline.id)) / \(outline.units.count) units completed").font(.dataText).foregroundStyle(Color.inkMuted)
-        }
+    private func sectionTitle(_ text: String) -> some View {
+        Text(text).font(.titleText).padding(.bottom, .spaceSm)
     }
 
-    private func unitsSection(_ outline: CourseOutlineRecord) -> some View {
+    private func levelsSection() -> some View {
         VStack(alignment: .leading, spacing: 0) {
-            Text("Units").font(.titleText).padding(.bottom, .spaceSm)
+            sectionTitle("Levels")
             HairlineRule()
 
-            ForEach(outline.units, id: \.id) { unit in
-                NavigationLink(value: UnitDestination(courseId: outline.id, unitId: unit.id, tab: .overview)) {
-                    HStack {
-                        Text("\(unit.levelCode) \(unit.order): \(unit.title)")
-                            .font(.bodyText)
-                            .foregroundStyle(Color.accentLink)
-                            .multilineTextAlignment(.leading)
-
-                        Spacer()
-
-                        UnitStatusTag(status: progressStore.unitProgress(courseId: outline.id, unitId: unit.id).status)
-                    }
-                    .padding(.vertical, .spaceSm)
+            ForEach(progressStore.levelCompletions(outline: outline), id: \.levelCode) { levelCompletion in
+                VStack(alignment: .leading, spacing: .spaceXs) {
+                    Text("\(levelCompletion.levelCode) · \(levelCompletion.levelTitle)").font(.bodyText)
+                    Text("\(levelCompletion.completedUnitCount) of \(levelCompletion.unitCount) units completed")
+                        .font(.dataText)
+                        .foregroundStyle(Color.inkMuted)
                 }
-                .buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.vertical, .spaceSm)
+                .accessibilityElement(children: .combine)
+                .accessibilityIdentifier("level-completion-\(levelCompletion.levelCode)")
 
                 HairlineRule()
             }
         }
+    }
+
+    private func quizResultsSection() -> some View {
+        let quizResults: [QuizResultRecord] = progressStore.quizResults(outline: outline)
+
+        return VStack(alignment: .leading, spacing: 0) {
+            sectionTitle("Quiz results")
+            HairlineRule()
+
+            if quizResults.isEmpty {
+                Text("You have not taken a quiz yet.")
+                    .font(.bodyText)
+                    .foregroundStyle(Color.inkMuted)
+                    .padding(.vertical, .spaceSm)
+                    .accessibilityIdentifier("quiz-results-empty")
+
+                HairlineRule()
+            }
+
+            ForEach(quizResults, id: \.unitId) { quizResult in
+                NavigationLink(value: UnitDestination(courseId: outline.id, unitId: quizResult.unitId, tab: .overview)) {
+                    quizResultRow(quizResult)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("quiz-result-\(quizResult.unitId)")
+
+                HairlineRule()
+            }
+        }
+    }
+
+    private func quizResultRow(_ quizResult: QuizResultRecord) -> some View {
+        HStack(spacing: .spaceSm) {
+            VStack(alignment: .leading, spacing: .spaceXs) {
+                Text(quizResult.unitTitle)
+                    .font(.bodyText)
+                    .foregroundStyle(Color.accentLink)
+                    .multilineTextAlignment(.leading)
+
+                Text("Best score: \(quizResult.bestScorePercent)% over \(quizResult.attemptCount) attempt(s)")
+                    .font(.dataText)
+                    .foregroundStyle(Color.inkMuted)
+            }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 11))
+                .foregroundStyle(Color.rule)
+        }
+        .padding(.vertical, .spaceSm)
+        .contentShape(Rectangle())
     }
 
     private func deckSection() -> some View {
@@ -58,7 +103,7 @@ struct ProgressPage: View {
         let counts: [Int] = progressStore.countByBox(courseId: outline.id)
 
         return VStack(alignment: .leading, spacing: 0) {
-            Text("Review deck").font(.titleText).padding(.bottom, .spaceSm)
+            sectionTitle("Review deck")
             HairlineRule()
 
             ForEach(Array(zip(intervals, counts).enumerated()), id: \.offset) { _, entry in
