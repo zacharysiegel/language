@@ -208,20 +208,8 @@ ul.answer-list .answer {
     color: var(--color-accent-active);
 }
 
-// Pending, the Check button keeps the red of the one control that asks to be pressed next.
-button.check {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--space-xs);
-}
-
-button.check.pending,
-button.check.pending:disabled {
-    border-color: var(--color-accent-active);
-    color: var(--color-accent-active);
-}
-
-.model-download {
+.model-download,
+.grading-progress {
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
