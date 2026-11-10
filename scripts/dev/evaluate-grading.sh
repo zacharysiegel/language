@@ -85,6 +85,8 @@ function run_thinking_comparison {
     run_cross_llama_on_both_case_sets --thinking off "$@"
     run_cross_llama_on_both_case_sets --thinking on "$@"
     run_cross_llama_on_both_case_sets --thinking on --thinking-budget 128 "$@"
+    run_cross_llama_on_both_case_sets --thinking on --thinking-budget 256 "$@"
+    run_cross_llama_on_both_case_sets --thinking on --thinking-budget 512 "$@"
     cargo run --release --package grading_evaluation -- report --runs "${THINKING_RUNS_DIRECTORY}"
     cargo run --release --package grading_evaluation -- report --runs "${THINKING_HOLDOUT_RUNS_DIRECTORY}" --cases "${HOLDOUT_CASES_PATH}"
 }
