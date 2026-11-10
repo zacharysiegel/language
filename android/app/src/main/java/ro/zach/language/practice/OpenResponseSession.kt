@@ -24,13 +24,20 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.isTraversalGroup
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import ro.zach.language.audio.AudioClip
 import ro.zach.language.audio.AudioPlayer
 import ro.zach.language.audio.LocalAudioPlayer
 import ro.zach.language.audio.PlayButton
 import ro.zach.language.core.ExerciseRecord
+import ro.zach.language.core.SavedOpenResponseGradeRecord
+import ro.zach.language.core.SavedOpenResponseRecord
+import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.exerciseInstruction
 import ro.zach.language.core.exercisePromptText
+import ro.zach.language.coursedata.CourseStore
+import ro.zach.language.coursedata.LocalCourseStore
 import ro.zach.language.design.LanguageColors
 import ro.zach.language.design.LanguageSpacing
 import ro.zach.language.design.LanguageText
@@ -38,20 +45,34 @@ import ro.zach.language.design.LanguageType
 import ro.zach.language.design.MicroLabel
 import ro.zach.language.design.SquareTextButton
 import ro.zach.language.design.SquareTextField
+import ro.zach.language.design.Tag
 import ro.zach.language.design.panel
+import ro.zach.language.progressdata.LocalProgressStore
+import ro.zach.language.progressdata.ProgressStore
 
 private const val OPEN_RESPONSE_LINE_COUNT: Int = 4
 private const val SELF_CHECK_HEADING: String = "Compare with the examples"
 private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
+private const val AI_MODEL_TAG: String = "AI model"
 
-/** Open responses the learner checks against their example answers; it keeps no score and records nothing. */
+/** Open responses the learner checks against their example answers; it keeps no score and saves each answer as its task's latest. */
 @Composable
-fun OpenResponseSession(title: String, exercises: List<ExerciseRecord.OpenResponse>, onExit: () -> Unit, modifier: Modifier = Modifier) {
+fun OpenResponseSession(
+    title: String,
+    courseId: String,
+    unit: UnitOutlineRecord,
+    exercises: List<ExerciseRecord.OpenResponse>,
+    onExit: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     /* The answers written so far, in the order the exercises are asked. */
     var writtenAnswers: List<String> by rememberSaveable { mutableStateOf(emptyList()) }
     var currentPosition: Int by rememberSaveable { mutableIntStateOf(0) }
     val currentExercise: ExerciseRecord.OpenResponse? = exercises.getOrNull(currentPosition)
     val audioPlayer: AudioPlayer = LocalAudioPlayer.current
+    val progressStore: ProgressStore = LocalProgressStore.current
+    val courseStore: CourseStore = LocalCourseStore.current
+    val targetLanguageName: String = courseStore.outline(courseId)?.targetLanguageName.orEmpty()
     val exit: () -> Unit = {
         audioPlayer.stop()
         onExit()
@@ -71,10 +92,17 @@ fun OpenResponseSession(title: String, exercises: List<ExerciseRecord.OpenRespon
                         isAnswered = writtenAnswer != null,
                         onCheck = { answerText: String ->
                             if (writtenAnswers.size == currentPosition) {
+                                progressStore.saveOpenResponseAnswer(courseId, unit, currentExercise, answerText)
                                 writtenAnswers = writtenAnswers + answerText
                             }
                         },
                     )
+                }
+
+                val savedOpenResponse: SavedOpenResponseRecord? = progressStore.savedOpenResponse(courseId, unit.id, currentExercise)
+
+                if (writtenAnswer == null && savedOpenResponse != null) {
+                    SavedOpenResponseAnswer(savedOpenResponse = savedOpenResponse, targetLanguageName = targetLanguageName)
                 }
 
                 if (writtenAnswer != null) {
@@ -163,6 +191,66 @@ private fun SelfCheckHeading() {
     Column(modifier = Modifier.semantics { isTraversalGroup = true }, verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
         LanguageText(text = SELF_CHECK_HEADING, style = LanguageType.titleText, modifier = Modifier.testTag("feedback-heading"))
         LanguageText(text = SELF_CHECK_NOTICE, style = LanguageType.captionText, color = LanguageColors.inkMuted, modifier = Modifier.testTag("self-check-notice"))
+    }
+}
+
+/** The learner's saved answer to the task, shown while they write a new one, with any grade an AI model gave it. */
+@Composable
+private fun SavedOpenResponseAnswer(savedOpenResponse: SavedOpenResponseRecord, targetLanguageName: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .border(LanguageSpacing.hairline, LanguageColors.rule)
+            .padding(LanguageSpacing.spaceSm + LanguageSpacing.spaceXs),
+        verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
+    ) {
+        MicroLabel(text = "Your last answer")
+        LanguageText(text = savedOpenResponse.answerText, style = LanguageType.bodyText, modifier = Modifier.testTag("saved-answer"))
+
+        savedOpenResponse.grade?.let { grade: SavedOpenResponseGradeRecord ->
+            SavedOpenResponseGrade(grade = grade, targetLanguageName = targetLanguageName)
+        }
+    }
+}
+
+@Composable
+private fun SavedOpenResponseGrade(grade: SavedOpenResponseGradeRecord, targetLanguageName: String) {
+    Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
+        Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
+            MicroLabel(text = mistakeCountHeading(grade.findings.size), modifier = Modifier.testTag("saved-grade-heading"))
+            Tag(text = AI_MODEL_TAG)
+        }
+
+        GradeCheck(label = "Addresses the task", value = grade.answersTheQuestion)
+        GradeCheck(label = "Written in $targetLanguageName", value = grade.writtenInTargetLanguage)
+
+        for (finding in grade.findings) {
+            Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
+                    LanguageText(text = finding.quote, style = LanguageType.bodyText.copy(textDecoration = TextDecoration.LineThrough), color = LanguageColors.accentActive)
+                    LanguageText(text = "→", style = LanguageType.bodyText)
+                    LanguageText(text = finding.correction, style = LanguageType.bodyText.copy(fontWeight = FontWeight.SemiBold))
+                }
+
+                LanguageText(text = finding.explanation, style = LanguageType.captionText, color = LanguageColors.inkMuted)
+            }
+        }
+    }
+}
+
+@Composable
+private fun GradeCheck(label: String, value: Boolean) {
+    Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd), verticalAlignment = Alignment.CenterVertically) {
+        MicroLabel(text = label)
+        LanguageText(text = if (value) "Yes" else "No", style = LanguageType.bodyText)
+    }
+}
+
+private fun mistakeCountHeading(findingCount: Int): String {
+    return when (findingCount) {
+        0 -> "No mistakes found"
+        1 -> "1 mistake found"
+        else -> "$findingCount mistakes found"
     }
 }
 

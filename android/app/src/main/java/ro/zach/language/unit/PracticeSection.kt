@@ -91,6 +91,8 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
     if (sessionKind == PracticeSessionKind.OpenResponse) {
         OpenResponseSession(
             title = sessionKind.title(),
+            courseId = courseId,
+            unit = unit,
             exercises = unitOpenResponseExercises,
             onExit = { activeSessionKind = null },
             modifier = modifier,
