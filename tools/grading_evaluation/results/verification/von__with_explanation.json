@@ -1,0 +1,3504 @@
+{
+  "decider_label": "von",
+  "decider_backend": "von",
+  "decider_model": "von-1.2.0",
+  "input_kind": "with_explanation",
+  "runs": [
+    {
+      "model": "qwen3.5:latest",
+      "prompt_variant": "few_shot",
+      "cases": [
+        {
+          "case_id": "a1-control-beach-clothes",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6317
+            }
+          ]
+        },
+        {
+          "case_id": "a1-control-coffee",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-colloquial-feeling",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4298
+            }
+          ]
+        },
+        {
+          "case_id": "a1-control-daily-routine",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-order-meal",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6424
+            }
+          ]
+        },
+        {
+          "case_id": "a1-control-family",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-reflexive-name",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-feijao",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-accents",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6132
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-trousers",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3742
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-article-gender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6424
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-plural-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6384
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-location-now",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5379
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-nationality",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5706
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-tired",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5928
+            }
+          ]
+        },
+        {
+          "case_id": "a1-article-contraction-em-o",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6032
+            }
+          ]
+        },
+        {
+          "case_id": "a1-preposition-missing-em",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6354
+            }
+          ]
+        },
+        {
+          "case_id": "a1-verb-form-jantar",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-name",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-friend",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-word-choice-beans",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4727
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3915
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adverb",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-content-jacket-colour",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6486
+            }
+          ]
+        },
+        {
+          "case_id": "a1-off-topic-football",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6131
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.4883
+            }
+          ]
+        },
+        {
+          "case_id": "a1-english-lunch",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-spelling-portugues",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6003
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-agua",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4201
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6428
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5967
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6096
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-irregular-fazer",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.515
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-regular-past",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6345
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-imperfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6415
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-subject-agreement",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.621
+            }
+          ]
+        },
+        {
+          "case_id": "a2-serestar-tired-day",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5488
+            }
+          ]
+        },
+        {
+          "case_id": "a2-agreement-two-errors",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5789
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5984
+            }
+          ]
+        },
+        {
+          "case_id": "a2-preposition-por-para",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6685
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-atender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.62
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-lavar-dentes",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-pronoun-reciprocal",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6164
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-gerund",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3593
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-bus",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6026
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-breakfast",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5129
+            }
+          ]
+        },
+        {
+          "case_id": "a2-content-weather",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3638
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-trip",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-weekend-plans",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-comparison",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-directions",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-a-gente",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6439
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-object-pronoun",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-free-time",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-off-topic-meal",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.3513
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.3803
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.3187
+            }
+          ]
+        },
+        {
+          "case_id": "a2-english-day",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-verb-form-subjunctive-present",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4056
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-future-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4702
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-imperfect-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5744
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-present-perfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3145
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "b1-agreement-passive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6608
+            }
+          ]
+        },
+        {
+          "case_id": "b1-content-date",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4451
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-future-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-conditional",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-personal-infinitive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5719
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-opinion",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-formal-email",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-verb-form-pluperfect-participle",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6252
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-subjunctive-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6584
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.631
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6198
+            }
+          ]
+        },
+        {
+          "case_id": "b2-preposition-sobre-do",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6016
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-reported-speech",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-idiom",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.3526
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-formal-complaint",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-pronoun-placement",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4912
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "gemma3:12b",
+      "prompt_variant": "few_shot",
+      "cases": [
+        {
+          "case_id": "a1-control-beach-clothes",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-coffee",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-colloquial-feeling",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-daily-routine",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-order-meal",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-family",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-reflexive-name",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-feijao",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-accents",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.659
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-trousers",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-agreement-article-gender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-plural-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6212
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-location-now",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6577
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-nationality",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6252
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-tired",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5496
+            }
+          ]
+        },
+        {
+          "case_id": "a1-article-contraction-em-o",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6518
+            }
+          ]
+        },
+        {
+          "case_id": "a1-preposition-missing-em",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.629
+            }
+          ]
+        },
+        {
+          "case_id": "a1-verb-form-jantar",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6028
+            }
+          ]
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-name",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-friend",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-word-choice-beans",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-word-order-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.459
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adverb",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3284
+            }
+          ]
+        },
+        {
+          "case_id": "a1-content-jacket-colour",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6459
+            }
+          ]
+        },
+        {
+          "case_id": "a1-off-topic-football",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-english-lunch",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-spelling-portugues",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6286
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-agua",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.417
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6206
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6118
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6501
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-irregular-fazer",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6419
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-regular-past",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6123
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-imperfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6368
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-subject-agreement",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6232
+            }
+          ]
+        },
+        {
+          "case_id": "a2-serestar-tired-day",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6386
+            }
+          ]
+        },
+        {
+          "case_id": "a2-agreement-two-errors",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4842
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6263
+            }
+          ]
+        },
+        {
+          "case_id": "a2-preposition-por-para",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6201
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-atender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5837
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-lavar-dentes",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-pronoun-reciprocal",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5385
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-gerund",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4132
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-bus",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5651
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-breakfast",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3634
+            }
+          ]
+        },
+        {
+          "case_id": "a2-content-weather",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4748
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-trip",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-weekend-plans",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-comparison",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-directions",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-a-gente",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-object-pronoun",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.3687
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-free-time",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-off-topic-meal",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-english-day",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-verb-form-subjunctive-present",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5173
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-future-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4234
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-imperfect-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6289
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-present-perfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.35
+            }
+          ]
+        },
+        {
+          "case_id": "b1-agreement-passive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6601
+            }
+          ]
+        },
+        {
+          "case_id": "b1-content-date",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5152
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-future-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-conditional",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-personal-infinitive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-opinion",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-formal-email",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-verb-form-pluperfect-participle",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.63
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-subjunctive-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5796
+            }
+          ]
+        },
+        {
+          "case_id": "b2-preposition-sobre-do",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6148
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-reported-speech",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-idiom",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-formal-complaint",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-pronoun-placement",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        }
+      ]
+    },
+    {
+      "model": "qwen3:8b",
+      "prompt_variant": "few_shot",
+      "cases": [
+        {
+          "case_id": "a1-control-beach-clothes",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-coffee",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-colloquial-feeling",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6122
+            }
+          ]
+        },
+        {
+          "case_id": "a1-control-daily-routine",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-order-meal",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-family",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-reflexive-name",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-feijao",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.62
+            }
+          ]
+        },
+        {
+          "case_id": "a1-spelling-accents",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5609
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-trousers",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3713
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-article-gender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-plural-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6384
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-location-now",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3768
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-nationality",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5576
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-tired",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6363
+            }
+          ]
+        },
+        {
+          "case_id": "a1-article-contraction-em-o",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3703
+            }
+          ]
+        },
+        {
+          "case_id": "a1-preposition-missing-em",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5339
+            }
+          ]
+        },
+        {
+          "case_id": "a1-verb-form-jantar",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.605
+            }
+          ]
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-name",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6122
+            }
+          ]
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-friend",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-choice-beans",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6337
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adverb",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-content-jacket-colour",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3653
+            }
+          ]
+        },
+        {
+          "case_id": "a1-off-topic-football",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.614
+            }
+          ]
+        },
+        {
+          "case_id": "a1-english-lunch",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-spelling-portugues",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6148
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-agua",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4477
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6366
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5824
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5674
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-irregular-fazer",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6398
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-regular-past",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6444
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-imperfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6353
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-subject-agreement",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5991
+            }
+          ]
+        },
+        {
+          "case_id": "a2-serestar-tired-day",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5306
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.4026
+            }
+          ]
+        },
+        {
+          "case_id": "a2-agreement-two-errors",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6139
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6251
+            }
+          ]
+        },
+        {
+          "case_id": "a2-preposition-por-para",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.601
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-atender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5913
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-lavar-dentes",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-pronoun-reciprocal",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4226
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-gerund",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-not-brazilian-bus",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5967
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-breakfast",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-content-weather",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3564
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-trip",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-weekend-plans",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-comparison",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-directions",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-a-gente",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-object-pronoun",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-free-time",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-off-topic-meal",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4259
+            }
+          ]
+        },
+        {
+          "case_id": "a2-english-day",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-verb-form-subjunctive-present",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5523
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-future-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6198
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-imperfect-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6029
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-present-perfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3455
+            }
+          ]
+        },
+        {
+          "case_id": "b1-agreement-passive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6608
+            }
+          ]
+        },
+        {
+          "case_id": "b1-content-date",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4455
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5649
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-future-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-conditional",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-personal-infinitive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5363
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-opinion",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-formal-email",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6162
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-pluperfect-participle",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.625
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-subjunctive-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.66
+            }
+          ]
+        },
+        {
+          "case_id": "b2-preposition-sobre-do",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.402
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-reported-speech",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4053
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-idiom",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "hallucinated_quote",
+              "probability": 0.5587
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-formal-complaint",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4996
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-pronoun-placement",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        }
+      ]
+    },
+    {
+      "model": "qwen3.5:latest",
+      "prompt_variant": "plain",
+      "cases": [
+        {
+          "case_id": "a1-control-beach-clothes",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-coffee",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-colloquial-feeling",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6115
+            }
+          ]
+        },
+        {
+          "case_id": "a1-control-daily-routine",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-order-meal",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-family",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-reflexive-name",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-feijao",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-accents",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.6521
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6176
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-trousers",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3776
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-article-gender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5155
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-plural-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6284
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-location-now",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6018
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-nationality",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4426
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-tired",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6226
+            }
+          ]
+        },
+        {
+          "case_id": "a1-article-contraction-em-o",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5891
+            }
+          ]
+        },
+        {
+          "case_id": "a1-preposition-missing-em",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5892
+            }
+          ]
+        },
+        {
+          "case_id": "a1-verb-form-jantar",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-name",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-friend",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a1-word-choice-beans",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6314
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adverb",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6397
+            }
+          ]
+        },
+        {
+          "case_id": "a1-content-jacket-colour",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6459
+            }
+          ]
+        },
+        {
+          "case_id": "a1-off-topic-football",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.602
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.3657
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.3266
+            }
+          ]
+        },
+        {
+          "case_id": "a1-english-lunch",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-spelling-portugues",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.617
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-agua",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.401
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6339
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5992
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-irregular-fazer",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6316
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-regular-past",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-verb-form-imperfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6249
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-subject-agreement",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.656
+            }
+          ]
+        },
+        {
+          "case_id": "a2-serestar-tired-day",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5978
+            }
+          ]
+        },
+        {
+          "case_id": "a2-agreement-two-errors",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.598
+            }
+          ]
+        },
+        {
+          "case_id": "a2-preposition-por-para",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-word-choice-atender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3191
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-lavar-dentes",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-pronoun-reciprocal",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6107
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-gerund",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4167
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-bus",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3776
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-breakfast",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-content-weather",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3859
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-trip",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-weekend-plans",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-comparison",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-directions",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-a-gente",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-object-pronoun",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-free-time",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-off-topic-meal",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.3851
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.4348
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.4092
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.3786
+            }
+          ]
+        },
+        {
+          "case_id": "a2-english-day",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-verb-form-subjunctive-present",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3924
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-future-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5594
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-imperfect-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5806
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-present-perfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.556
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "b1-agreement-passive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6542
+            }
+          ]
+        },
+        {
+          "case_id": "b1-content-date",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4955
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-future-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-conditional",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-personal-infinitive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5687
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-opinion",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-formal-email",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-verb-form-pluperfect-participle",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "hallucinated_quote",
+              "probability": 0.6213
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-subjunctive-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6114
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6299
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5784
+            }
+          ]
+        },
+        {
+          "case_id": "b2-preposition-sobre-do",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5761
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-reported-speech",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-idiom",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-formal-complaint",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-control-pronoun-placement",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5372
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.404
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "model": "qwen3:8b",
+      "prompt_variant": "plain",
+      "cases": [
+        {
+          "case_id": "a1-control-beach-clothes",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-coffee",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-colloquial-feeling",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-daily-routine",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-order-meal",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-family",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-control-reflexive-name",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a1-spelling-feijao",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6162
+            }
+          ]
+        },
+        {
+          "case_id": "a1-spelling-accents",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6434
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.6652
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-trousers",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3624
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-article-gender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-agreement-plural-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6297
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-location-now",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6197
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-nationality",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3954
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-serestar-tired",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4556
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-article-contraction-em-o",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3558
+            }
+          ]
+        },
+        {
+          "case_id": "a1-preposition-missing-em",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5745
+            }
+          ]
+        },
+        {
+          "case_id": "a1-verb-form-jantar",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5593
+            }
+          ]
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-name",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.64
+            }
+          ]
+        },
+        {
+          "case_id": "a1-pronoun-reflexive-friend",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6118
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-choice-beans",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4681
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adjective",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-word-order-adverb",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a1-content-jacket-colour",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5958
+            }
+          ]
+        },
+        {
+          "case_id": "a1-off-topic-football",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.4082
+            }
+          ]
+        },
+        {
+          "case_id": "a1-english-lunch",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-spelling-portugues",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5966
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-agua",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3876
+            }
+          ]
+        },
+        {
+          "case_id": "a2-spelling-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6263
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.559
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5787
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-irregular-fazer",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6206
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-regular-past",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.628
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-imperfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6479
+            },
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-verb-form-subject-agreement",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6519
+            }
+          ]
+        },
+        {
+          "case_id": "a2-serestar-tired-day",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5861
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.5718
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.4439
+            }
+          ]
+        },
+        {
+          "case_id": "a2-agreement-two-errors",
+          "is_control": false,
+          "reference_mistake_count": 2,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4656
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.594
+            }
+          ]
+        },
+        {
+          "case_id": "a2-preposition-por-para",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5688
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-atender",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4004
+            }
+          ]
+        },
+        {
+          "case_id": "a2-word-choice-lavar-dentes",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-pronoun-reciprocal",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "changes_nothing",
+              "probability": null
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.3761
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-gerund",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": []
+        },
+        {
+          "case_id": "a2-not-brazilian-bus",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6421
+            }
+          ]
+        },
+        {
+          "case_id": "a2-not-brazilian-breakfast",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5223
+            }
+          ]
+        },
+        {
+          "case_id": "a2-content-weather",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.3327
+            },
+            {
+              "outcome": "duplicate",
+              "probability": null
+            }
+          ]
+        },
+        {
+          "case_id": "a2-control-trip",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-weekend-plans",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-comparison",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-directions",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-a-gente",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-object-pronoun",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-control-free-time",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-off-topic-meal",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "a2-english-day",
+          "is_control": false,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-verb-form-subjunctive-present",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5435
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-future-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.5585
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-imperfect-subjunctive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6201
+            }
+          ]
+        },
+        {
+          "case_id": "b1-verb-form-present-perfect",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6239
+            }
+          ]
+        },
+        {
+          "case_id": "b1-agreement-passive",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6318
+            }
+          ]
+        },
+        {
+          "case_id": "b1-content-date",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.4955
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-future-subjunctive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-conditional",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-personal-infinitive",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.5598
+            }
+          ]
+        },
+        {
+          "case_id": "b1-control-opinion",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b1-control-formal-email",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        },
+        {
+          "case_id": "b2-verb-form-pluperfect-participle",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6365
+            }
+          ]
+        },
+        {
+          "case_id": "b2-verb-form-subjunctive-three-errors",
+          "is_control": false,
+          "reference_mistake_count": 3,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6584
+            },
+            {
+              "outcome": "matched",
+              "probability": 0.5982
+            }
+          ]
+        },
+        {
+          "case_id": "b2-preposition-sobre-do",
+          "is_control": false,
+          "reference_mistake_count": 1,
+          "findings": [
+            {
+              "outcome": "matched",
+              "probability": 0.6087
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.6537
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-reported-speech",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.3969
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.6273
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-idiom",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.556
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.6196
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-formal-complaint",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": [
+            {
+              "outcome": "false_positive",
+              "probability": 0.561
+            },
+            {
+              "outcome": "false_positive",
+              "probability": 0.6163
+            }
+          ]
+        },
+        {
+          "case_id": "b2-control-pronoun-placement",
+          "is_control": true,
+          "reference_mistake_count": 0,
+          "findings": []
+        }
+      ]
+    }
+  ]
+}

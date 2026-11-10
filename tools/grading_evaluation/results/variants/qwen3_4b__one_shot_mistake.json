@@ -1,0 +1,1611 @@
+{
+  "model": "qwen3:4b",
+  "prompt_variant": "one_shot_mistake",
+  "temperature": 0.0,
+  "repeats": 1,
+  "started_at": "2026-11-02T02:33:07.073191+00:00",
+  "model_description": {
+    "family": "qwen3",
+    "parameter_size": "4.0B",
+    "quantization_level": "Q4_K_M",
+    "size_bytes": 2497293931
+  },
+  "case_calls": [
+    {
+      "case_id": "a1-control-beach-clothes",
+      "case_fingerprint": "b80938ba1cc23b7d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"maiô\",\n      \"explanation\": \"In Brazilian Portuguese, 'swimsuit' is 'banho' or 'roupa de banho', not 'maiô'.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"banho\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1476296958,
+        "load_duration_nanoseconds": 1414500,
+        "prompt_token_count": 616,
+        "response_token_count": 92,
+        "response_duration_nanoseconds": 1314107000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-coffee",
+      "case_fingerprint": "ffd8d7028fb044bb",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 363986625,
+        "load_duration_nanoseconds": 1507958,
+        "prompt_token_count": 575,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 293198000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-colloquial-feeling",
+      "case_fingerprint": "260bd3b0780fda36",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Tô\",\n      \"explanation\": \"This is a spoken form that is acceptable in Brazilian Portuguese for 'I am' in informal contexts.\",\n      \"kind\": \"not_brazilian\",\n      \"replacement\": \"Estou\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1105233084,
+        "load_duration_nanoseconds": 1420209,
+        "prompt_token_count": 581,
+        "response_token_count": 86,
+        "response_duration_nanoseconds": 1021719000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-daily-routine",
+      "case_fingerprint": "381125e3a285547f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 451425875,
+        "load_duration_nanoseconds": 1492791,
+        "prompt_token_count": 585,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 364024000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-order-meal",
+      "case_fingerprint": "e18695f4a097d9b9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 339065333,
+        "load_duration_nanoseconds": 1518458,
+        "prompt_token_count": 590,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 252047000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-family",
+      "case_fingerprint": "05ae361026f4ca28",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 520171750,
+        "load_duration_nanoseconds": 1417709,
+        "prompt_token_count": 590,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 430242000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-reflexive-name",
+      "case_fingerprint": "8833268af9a9e595",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 386569750,
+        "load_duration_nanoseconds": 1488375,
+        "prompt_token_count": 580,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 317580000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-spelling-feijao",
+      "case_fingerprint": "b0f4c21d1cbc6f88",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fejão\",\n      \"explanation\": \"The word 'fejão' is misspelled; it should be 'feijão' with an accent on the 'e'.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"feijão\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1421123208,
+        "load_duration_nanoseconds": 1586208,
+        "prompt_token_count": 581,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 1352114000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-spelling-accents",
+      "case_fingerprint": "57ecadc11c3bbf0b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"De manha\",\n      \"explanation\": \"The correct preposition for 'in the morning' is 'de manhã' with an accent on the 'a' and a space before 'eu'.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"de manhã\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1095483625,
+        "load_duration_nanoseconds": 2194750,
+        "prompt_token_count": 581,
+        "response_token_count": 96,
+        "response_duration_nanoseconds": 1025900000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-trousers",
+      "case_fingerprint": "832dacd5a07c2ade",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"calça\",\n      \"explanation\": \"The plural form of 'calça' is 'calças', but here it's used in the context of 'uma calça' (singular) for trousers.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"calças\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1284952000,
+        "load_duration_nanoseconds": 1565917,
+        "prompt_token_count": 598,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 1193701000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-article-gender",
+      "case_fingerprint": "af584daf3f4a573c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"escritório\",\n      \"explanation\": \"In Brazilian Portuguese, the correct term for 'office' is 'escritório' (with a circumflex accent on the o).\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"escritório\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1267595834,
+        "load_duration_nanoseconds": 1617959,
+        "prompt_token_count": 576,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 1194703000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-plural-adjective",
+      "case_fingerprint": "2b7e6253f900c8ed",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"simpático\",\n      \"explanation\": \"Adjectives in Portuguese need to agree with the number of the noun they describe. Here, 'irmãos' is plural, so the adjective should be plural too.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"simpáticos\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1374742208,
+        "load_duration_nanoseconds": 1528625,
+        "prompt_token_count": 581,
+        "response_token_count": 99,
+        "response_duration_nanoseconds": 1285742000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-location-now",
+      "case_fingerprint": "861bc66a3c0332d4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"sou\",\n      \"explanation\": \"The verb 'to be' in present tense for 'eu' should be 'estou', not 'sou'.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"estou\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 938966083,
+        "load_duration_nanoseconds": 1596458,
+        "prompt_token_count": 578,
+        "response_token_count": 89,
+        "response_duration_nanoseconds": 869206000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-nationality",
+      "case_fingerprint": "19bd6d9dffe54cc6",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"brasiliero\",\n      \"explanation\": \"The word needs to be 'brasileiro' with an accent on the e.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"brasileiro\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1194423792,
+        "load_duration_nanoseconds": 1373458,
+        "prompt_token_count": 588,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 1102263000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-tired",
+      "case_fingerprint": "aab5410b0fd18314",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"sou\",\n      \"explanation\": \"The verb 'to be' should be in the present tense for the state of feeling, not the present perfect tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"estou\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1176072459,
+        "load_duration_nanoseconds": 1541750,
+        "prompt_token_count": 599,
+        "response_token_count": 88,
+        "response_duration_nanoseconds": 1086254000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-article-contraction-em-o",
+      "case_fingerprint": "43e7bd8cdb2f7722",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"em o\",\n      \"explanation\": \"The contraction 'no' is missing, so it should be 'no Brasil' instead of 'em o Brasil'.\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"no\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1237700541,
+        "load_duration_nanoseconds": 1447375,
+        "prompt_token_count": 578,
+        "response_token_count": 88,
+        "response_duration_nanoseconds": 1168349000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-preposition-missing-em",
+      "case_fingerprint": "803acab0f7313775",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Canadá\",\n      \"explanation\": \"In Brazilian Portuguese, the country names are not capitalized unless they start a sentence or are part of a proper noun.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"canadá\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1056120000,
+        "load_duration_nanoseconds": 1551666,
+        "prompt_token_count": 578,
+        "response_token_count": 89,
+        "response_duration_nanoseconds": 987754000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-verb-form-jantar",
+      "case_fingerprint": "60fb10da9ba6e8c2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"jantar\",\n      \"explanation\": \"The verb 'to eat dinner' is 'comer' in Portuguese, not 'jantar'.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"comer\"\n    },\n    {\n      \"error_text\": \"televisão\",\n      \"explanation\": \"The correct word for 'television' in Portuguese is 'televisão' (with a tilde), but the answer has it without the tilde.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"televisão\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 2130639459,
+        "load_duration_nanoseconds": 1680417,
+        "prompt_token_count": 582,
+        "response_token_count": 151,
+        "response_duration_nanoseconds": 2042842000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-reflexive-name",
+      "case_fingerprint": "a5a3b2e7ceac7701",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"chamo\",\n      \"explanation\": \"The verb 'chamar' is used in the present tense for 'I call' but here it should be the present continuous for 'I am called' as the name is given.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"chamado\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1281764959,
+        "load_duration_nanoseconds": 1495709,
+        "prompt_token_count": 578,
+        "response_token_count": 102,
+        "response_duration_nanoseconds": 1217607000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-reflexive-friend",
+      "case_fingerprint": "cf60246f27de20f7",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"amiga\",\n      \"explanation\": \"The question asks for your friend's name, but the answer refers to a female friend.\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"amigo\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1415292667,
+        "load_duration_nanoseconds": 1521709,
+        "prompt_token_count": 583,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 1344295000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-choice-beans",
+      "case_fingerprint": "9d818c5d71a2fc73",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"No\",\n      \"explanation\": \"The word 'no' is incorrect here; it should be 'No' as in 'At lunch' but in Portuguese, the correct phrase is 'No almoço' meaning 'At lunch' but the word 'no' is a contraction of 'n' (preposition) and 'o' (article). However, in this context, the phrase 'No almoço' is correct. Wait, let me think again. In Portuguese, 'no' is a contraction of 'em' + 'o' for 'in the', but in this context, the phrase 'No almoço' is correct. Actually, the problem might be that the word 'No' is capitalized incorrectly. But in Portuguese, the first word of a sentence is capitalized, so 'No' is correct. Wait, the answer is: 'No almoço eu como arroz, beans e frango.' The word 'No' is capitalized, which is correct for the start of the sentence. But the problem might be that 'No' is a contraction of 'em' + 'o', but in this context, it's correct. Let me check the rules. The rules say: 'Do not report style, correct but unusual wording, or punctuation.' So maybe there's no mistake here? Wait, the task is: 'What do you eat for lunch?' The answer is: 'No almoço eu como arroz, beans e fr. Wait, the answer has 'beans' which is English. The task says: Level: A1. In A1, learners might use English words. But the rules say: 'Do not report style, correct but unusual wording, or punctuation.' So maybe the mistake is that 'beans' is in English, but the task is in English, so the answer should be in Portuguese. Wait, the answer has 'beans' which is English, so that's a word choice mistake. But the rules say: 'word_choice: a wrong word for the meaning, a false friend, or a word from another language'. So 'beans' is a word from English, so it's a word choice mistake. But the answer has 'beans' which is English, so it's a wrong word for the meaning. Let me see the rules again. The task is in English, but the answer is in Portuguese. The answer has 'beans' which is English, so it's a word from another language. So the error_text is 'beans'. But the answer says: 'No almoço eu como arroz, beans e frango.' So the word 'beans' is in English. The correct Portuguese word for beans is 'feijão'. So the mistake is 'beans' is a wrong word for the meaning. So the error_text is 'beans', explanation: \",\n\n  \"kind\": \"word_choice\",\n  \"replacement\": \"feijão\"\n    }\n  ]\n  }",
+        "total_duration_nanoseconds": 9124055584,
+        "load_duration_nanoseconds": 1523667,
+        "prompt_token_count": 583,
+        "response_token_count": 639,
+        "response_duration_nanoseconds": 9042769000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-order-adjective",
+      "case_fingerprint": "7bc79d6e1f047d20",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"vermelha\",\n      \"explanation\": \"The adjective should agree with the noun 'camisa' (feminine) and be in the correct form for the context.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"vermelha\"\n    },\n    {\n      \"error_text\": \"calça\",\n      \"explanation\": \"The word 'calça' is singular, but the scene facts say Rafael wears black trousers (plural).\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"calças\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1893326042,
+        "load_duration_nanoseconds": 1591583,
+        "prompt_token_count": 597,
+        "response_token_count": 149,
+        "response_duration_nanoseconds": 1775658000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-order-adverb",
+      "case_fingerprint": "685bb491a060b621",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"muito\",\n      \"explanation\": \"The adverb 'muito' should not be used here; it's incorrect to say 'gosto de café muito' in this context.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"café\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1155288500,
+        "load_duration_nanoseconds": 1525708,
+        "prompt_token_count": 576,
+        "response_token_count": 93,
+        "response_duration_nanoseconds": 1090216000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-content-jacket-colour",
+      "case_fingerprint": "43e5838b848b0569",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"jaqueta\",\n      \"explanation\": \"The color should be 'green' (verde), not 'blue' (azul).\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"verde\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1093655042,
+        "load_duration_nanoseconds": 1560417,
+        "prompt_token_count": 603,
+        "response_token_count": 86,
+        "response_duration_nanoseconds": 1008657000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-off-topic-football",
+      "case_fingerprint": "ee316bb450e82a37",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": false,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"gosto\",\n      \"explanation\": \"The verb 'gosto' is present tense, but the question asks for past tense (what did you eat).\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"comi\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1104864584,
+        "load_duration_nanoseconds": 1655917,
+        "prompt_token_count": 586,
+        "response_token_count": 88,
+        "response_duration_nanoseconds": 1012084000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-english-lunch",
+      "case_fingerprint": "e18b2e5940b20701",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": false,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 387666750,
+        "load_duration_nanoseconds": 1453333,
+        "prompt_token_count": 577,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 315761000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-portugues",
+      "case_fingerprint": "317e6777630a950e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"trabalhei\",\n      \"explanation\": \"The past tense of 'trabalhar' should be 'trabalhei' for the preterite tense, but in Brazilian Portuguese, the preterite is often used with 'fazer' for actions that happened in the past, so 'trabalhei' is correct for the preterite tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"trabalhei\"\n    },\n    {\n      \"error_text\": \"estudei\",\n      \"explanation\": \"The past tense of 'estudar' should be 'estudei' for the preterite tense, but in Brazilian Portuguese, the preterite is often used with 'fazer' for actions that happened in the past, so 'estudei' is correct for the preterite tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"estudei\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 2981207167,
+        "load_duration_nanoseconds": 1505333,
+        "prompt_token_count": 586,
+        "response_token_count": 231,
+        "response_duration_nanoseconds": 2899755000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-agua",
+      "case_fingerprint": "7187e9494a845ccc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"agua\",\n      \"explanation\": \"The word 'água' needs an accent on the a.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"água\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 932171250,
+        "load_duration_nanoseconds": 1481875,
+        "prompt_token_count": 611,
+        "response_token_count": 76,
+        "response_duration_nanoseconds": 841757000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-three-errors",
+      "case_fingerprint": "c3aaaf37a047659c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"cafe\",\n      \"explanation\": \"In Brazilian Portuguese, coffee is 'café' with an accent.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"café\"\n    },\n    {\n      \"error_text\": \"onibus\",\n      \"explanation\": \"The correct spelling is 'ônibus' with an accent and a tilde.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"ônibus\"\n    },\n    {\n      \"error_text\": \"cheguei\",\n      \"explanation\": \"The verb 'cheguei' is in the past tense, but the correct form for 'I arrived' in the past tense is 'cheguei' (with a 'u' instead of 'e').\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"cheguei\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 2860042750,
+        "load_duration_nanoseconds": 1654000,
+        "prompt_token_count": 599,
+        "response_token_count": 213,
+        "response_duration_nanoseconds": 2767838000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-irregular-fazer",
+      "case_fingerprint": "66c87c915836cff3",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fazi\",\n      \"explanation\": \"The verb 'fazer' is conjugated incorrectly; it should be 'fiz' for the past tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"fiz\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1393606708,
+        "load_duration_nanoseconds": 1536333,
+        "prompt_token_count": 589,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 1314793000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-regular-past",
+      "case_fingerprint": "8ea6cc8d6169721d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"visitei\",\n      \"explanation\": \"The past tense of visitar is 'visitei' but in Brazilian Portuguese, the correct past tense for 'to visit' is 'vi' (pretérito perfeito), not 'visitei' (pretérito perfeito composto).\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"vi\"\n    },\n    {\n      \"error_text\": \"almoçamos\",\n      \"explanation\": \"The verb 'almoçar' is in the first person plural, but the subject is 'nós' (we), so it should be 'almoçamos' (correct).\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"almoçamos\"\n    },\n    {\n      \"error_text\": \"volti\",\n      \"explanation\": \"The verb 'voltar' in the past tense should be 'voltei' (pretérito perfeito), not 'volti' (a misspelling).\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"voltei\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 3607269833,
+        "load_duration_nanoseconds": 1505458,
+        "prompt_token_count": 598,
+        "response_token_count": 269,
+        "response_duration_nanoseconds": 3518724000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-imperfect",
+      "case_fingerprint": "9375231205100e5e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"moro\",\n      \"explanation\": \"The verb 'moro' is present tense, but the sentence refers to past childhood. It should be past tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"morava\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1445348959,
+        "load_duration_nanoseconds": 1525542,
+        "prompt_token_count": 585,
+        "response_token_count": 88,
+        "response_duration_nanoseconds": 1358644000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-subject-agreement",
+      "case_fingerprint": "6acec96d9ccdaeaf",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"almoçaram\",\n      \"explanation\": \"The past tense of 'almoçar' for 'minha família' (third person plural) should be 'almoçaram' but in Brazilian Portuguese, the past tense for 'familia' is usually 'almoçou' (third person singular) because 'familia' is treated as a singular noun.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"almoçou\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1657050875,
+        "load_duration_nanoseconds": 1507000,
+        "prompt_token_count": 585,
+        "response_token_count": 137,
+        "response_duration_nanoseconds": 1572435000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-serestar-tired-day",
+      "case_fingerprint": "304727f565913027",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fiquei\",\n      \"explanation\": \"The verb 'fiquei' is in the past perfect tense, but the scene facts say you slept all day, so it should be in the past simple tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"fiquei\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1348556000,
+        "load_duration_nanoseconds": 1768166,
+        "prompt_token_count": 612,
+        "response_token_count": 100,
+        "response_duration_nanoseconds": 1255141000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-agreement-two-errors",
+      "case_fingerprint": "4ed21e94678d6e8d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"engraçado\",\n      \"explanation\": \"The adjective must agree with the feminine subject 'amiga' (it should be feminine).\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"engraçada\"\n    },\n    {\n      \"error_text\": \"cabelos\",\n      \"explanation\": \"The plural form is incorrect; it should be singular for 'cabelo' (the hair is singular in Portuguese).\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"cabelo\"\n    },\n    {\n      \"error_text\": \"pretos\",\n      \"explanation\": \"The adjective must agree with the singular noun 'cabelo' (it should be singular).\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"preto\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 2604599958,
+        "load_duration_nanoseconds": 1532125,
+        "prompt_token_count": 612,
+        "response_token_count": 205,
+        "response_duration_nanoseconds": 2510947000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-preposition-por-para",
+      "case_fingerprint": "21d43ac77ded00f5",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"passar\",\n      \"explanation\": \"The verb 'passar' means 'to pass' in the sense of 'to pass a test', but in this context, the correct verb is 'fazer' (to take) for exams.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"fazer\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1423585041,
+        "load_duration_nanoseconds": 1511583,
+        "prompt_token_count": 585,
+        "response_token_count": 105,
+        "response_duration_nanoseconds": 1336070000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-word-choice-atender",
+      "case_fingerprint": "327c78c859b67d88",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"atendi\",\n      \"explanation\": \"The verb 'atender' is used in the past tense but the correct past tense for 'to attend' in this context is 'assistir' or 'ver' (to watch).\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"assisti\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1282463000,
+        "load_duration_nanoseconds": 1457042,
+        "prompt_token_count": 583,
+        "response_token_count": 103,
+        "response_duration_nanoseconds": 1195340000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-word-choice-lavar-dentes",
+      "case_fingerprint": "3742ceffe9b83c51",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 331423125,
+        "load_duration_nanoseconds": 1486791,
+        "prompt_token_count": 587,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 240715000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-pronoun-reciprocal",
+      "case_fingerprint": "f6b33c2c8429a309",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"nós\",\n      \"explanation\": \"The pronoun 'nós' is incorrect here; the correct pronoun is 'eles' for neighbors.\",\n      \"kind\": \"pronoun\",\n      \"replacement\": \"eles\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1234123208,
+        "load_duration_nanoseconds": 1456542,
+        "prompt_token_count": 588,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 1139010000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-gerund",
+      "case_fingerprint": "bb10a0fb2a654c10",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"a comer\",\n      \"explanation\": \"The verb 'comer' should be in the infinitive form for the present continuous tense in Portuguese.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"comer\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1161660584,
+        "load_duration_nanoseconds": 1468625,
+        "prompt_token_count": 581,
+        "response_token_count": 85,
+        "response_duration_nanoseconds": 1073653000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-bus",
+      "case_fingerprint": "b62cec85a2331cd1",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"autocarro\",\n      \"explanation\": \"In Brazilian Portuguese, 'autocarro' is not used; the correct term is 'ônibus'.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"ônibus\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1174962084,
+        "load_duration_nanoseconds": 1571209,
+        "prompt_token_count": 581,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 1087585000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-breakfast",
+      "case_fingerprint": "66033aa135918541",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 374392875,
+        "load_duration_nanoseconds": 1521292,
+        "prompt_token_count": 585,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 287938000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-content-weather",
+      "case_fingerprint": "e6554fc8ab090f6f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fazendo\",\n      \"explanation\": \"The weather is rainy and cold, but the answer says it's sunny and hot.\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 921091959,
+        "load_duration_nanoseconds": 1445292,
+        "prompt_token_count": 588,
+        "response_token_count": 80,
+        "response_duration_nanoseconds": 839337000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-trip",
+      "case_fingerprint": "a7cd9c8986687c81",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 544378958,
+        "load_duration_nanoseconds": 1508041,
+        "prompt_token_count": 608,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 450013000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-weekend-plans",
+      "case_fingerprint": "749f9c976322b627",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 515000042,
+        "load_duration_nanoseconds": 1567917,
+        "prompt_token_count": 587,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 427139000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-comparison",
+      "case_fingerprint": "8401394391c8dedc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 489884209,
+        "load_duration_nanoseconds": 1477084,
+        "prompt_token_count": 605,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 403350000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-directions",
+      "case_fingerprint": "64adcfe2fd1a1709",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"no banco\",\n      \"explanation\": \"The preposition 'no' is incorrect; it should be 'na' for 'bank' (feminine).\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"na banco\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 932556834,
+        "load_duration_nanoseconds": 1504250,
+        "prompt_token_count": 612,
+        "response_token_count": 90,
+        "response_duration_nanoseconds": 847545000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-a-gente",
+      "case_fingerprint": "52b055ef40e65f65",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"num\",\n      \"explanation\": \"The contraction 'no' is used for 'no' in Portuguese, not 'num'.\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"no\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1506660500,
+        "load_duration_nanoseconds": 1488375,
+        "prompt_token_count": 590,
+        "response_token_count": 82,
+        "response_duration_nanoseconds": 1414498000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-object-pronoun",
+      "case_fingerprint": "f9ff5ec6ad677655",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 472083584,
+        "load_duration_nanoseconds": 1537959,
+        "prompt_token_count": 582,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 404445000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-free-time",
+      "case_fingerprint": "a5bbbd7a130ebfff",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 301189375,
+        "load_duration_nanoseconds": 1478083,
+        "prompt_token_count": 595,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 225222000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-off-topic-meal",
+      "case_fingerprint": "70125b3c96a675ab",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 303640583,
+        "load_duration_nanoseconds": 1438750,
+        "prompt_token_count": 601,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 225763000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-english-day",
+      "case_fingerprint": "f855eb09521641da",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": false,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 289205583,
+        "load_duration_nanoseconds": 1455583,
+        "prompt_token_count": 576,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 228187000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-subjunctive-present",
+      "case_fingerprint": "0b53cb9aa36cdc6b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"são\",\n      \"explanation\": \"The verb 'ser' should be in the subjunctive mood after 'espero que'.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"sejam\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1147531708,
+        "load_duration_nanoseconds": 1523875,
+        "prompt_token_count": 589,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 1065284000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-future-subjunctive",
+      "case_fingerprint": "f3b6266ec2c6ffe9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"ter\",\n      \"explanation\": \"The verb 'ter' should be in the future tense for the conditional clause.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"tiver\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1107271959,
+        "load_duration_nanoseconds": 1434500,
+        "prompt_token_count": 593,
+        "response_token_count": 79,
+        "response_duration_nanoseconds": 1015887000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-imperfect-subjunctive",
+      "case_fingerprint": "13fda4320e0f8a04",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"ganhava\",\n      \"explanation\": \"The verb should be in the present tense for the conditional mood, not past tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"ganhasse\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1151306875,
+        "load_duration_nanoseconds": 1478625,
+        "prompt_token_count": 593,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 1063392000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-present-perfect",
+      "case_fingerprint": "8301cd5d317d5620",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"moro\",\n      \"explanation\": \"The present perfect tense is needed for 'how long have you lived here', but 'moro' is present simple.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"tenho morado\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1121225959,
+        "load_duration_nanoseconds": 1454917,
+        "prompt_token_count": 590,
+        "response_token_count": 90,
+        "response_duration_nanoseconds": 1033853000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-agreement-passive",
+      "case_fingerprint": "fcbad2aabedadb52",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"restaurado\",\n      \"explanation\": \"The verb 'restaurar' is in the past participle, but it should be in the past perfect tense for the second action.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"reformado\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1526170333,
+        "load_duration_nanoseconds": 1974458,
+        "prompt_token_count": 613,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 1410577000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-content-date",
+      "case_fingerprint": "347646a78c27eaa4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"1850\",\n      \"explanation\": \"The year should be 1750 according to the scene facts.\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"1750\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 838788042,
+        "load_duration_nanoseconds": 1551417,
+        "prompt_token_count": 612,
+        "response_token_count": 84,
+        "response_duration_nanoseconds": 777215000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-subjunctive",
+      "case_fingerprint": "b5d3dad33a1fbeb2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Espero\",\n      \"explanation\": \"The verb 'esperar' is used in the present tense, but the context requires a future tense for an invitation.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"Espero que você possa vir à festa e que traga seus amigos.\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1484398916,
+        "load_duration_nanoseconds": 1527666,
+        "prompt_token_count": 586,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 1393904000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-future-subjunctive",
+      "case_fingerprint": "1bf6bd6025a7670a",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"emprego\",\n      \"explanation\": \"In Brazilian Portuguese, the word for 'job' is 'emprego' but it's more common to use 'trabalho' in this context.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"trabalho\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1285057875,
+        "load_duration_nanoseconds": 1484667,
+        "prompt_token_count": 587,
+        "response_token_count": 96,
+        "response_duration_nanoseconds": 1197248000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-conditional",
+      "case_fingerprint": "d04ea693156fe65e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"ganhasse\",\n      \"explanation\": \"The conditional tense should be 'ganhar' for the first person singular, but the verb form is incorrect for the conditional tense.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"ganhasse\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1542999167,
+        "load_duration_nanoseconds": 1510959,
+        "prompt_token_count": 593,
+        "response_token_count": 92,
+        "response_duration_nanoseconds": 1451379000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-personal-infinitive",
+      "case_fingerprint": "dd01a26729fba50c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"para nós podermos\",\n      \"explanation\": \"The phrase 'para nós podermos' is incorrect; it should be 'para que nós possamos' for the subjunctive mood after 'para que'.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"para que nós possamos\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1131006458,
+        "load_duration_nanoseconds": 1531791,
+        "prompt_token_count": 585,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 1054138999
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-opinion",
+      "case_fingerprint": "68af50a98b31c295",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 530002708,
+        "load_duration_nanoseconds": 1530000,
+        "prompt_token_count": 597,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 436400000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-formal-email",
+      "case_fingerprint": "8df41e3b9a21696f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"folga\",\n      \"explanation\": \"In Brazilian Portuguese, 'folga' means 'time off' but in this context, 'dia de folga' is not the correct phrase for 'day off'. The correct phrase is 'dia de folga' or 'férias' for vacation, but 'folga' alone is not used for a day off.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"férias\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1823100917,
+        "load_duration_nanoseconds": 1491917,
+        "prompt_token_count": 603,
+        "response_token_count": 132,
+        "response_duration_nanoseconds": 1734765000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-verb-form-pluperfect-participle",
+      "case_fingerprint": "ad3f6a38517d1b7f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"tinha começou\",\n      \"explanation\": \"The verb 'começar' should be in the past perfect tense, but the correct form is 'tinha começado'.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"tinha começado\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1442727750,
+        "load_duration_nanoseconds": 1560625,
+        "prompt_token_count": 598,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 1355646000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-verb-form-subjunctive-three-errors",
+      "case_fingerprint": "3c6bb149853ceb29",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 416202750,
+        "load_duration_nanoseconds": 1519125,
+        "prompt_token_count": 603,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 331122000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-preposition-sobre-do",
+      "case_fingerprint": "44272a9fae086dcc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"reclamar sobre do\",\n      \"explanation\": \"The phrase 'reclamar sobre' does not take 'do' as a preposition; it should be 'reclamar sobre o atraso' or 'reclamar do atraso'.\",\n      \"kind\": \"word_order\",\n      \"replacement\": \"reclamar do\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1720528750,
+        "load_duration_nanoseconds": 1436208,
+        "prompt_token_count": 612,
+        "response_token_count": 112,
+        "response_duration_nanoseconds": 1635716000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-reported-speech",
+      "case_fingerprint": "324f9b6267f484e2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"viajaria\",\n      \"explanation\": \"The verb should be in the present perfect tense (pretérito perfeito) for the past action, but the correct form for 'I will travel' in the past is 'viajarei' (future) or 'viajou' (past) depending on context.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"viajarei\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1689726875,
+        "load_duration_nanoseconds": 1410791,
+        "prompt_token_count": 608,
+        "response_token_count": 124,
+        "response_duration_nanoseconds": 1604089000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-idiom",
+      "case_fingerprint": "e0e150075faf026c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"incêndios\",\n      \"explanation\": \"The word 'incêndio' is singular in the context of the sentence, but the verb 'apagar' requires a plural form for multiple fires.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"incêndios\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1466862375,
+        "load_duration_nanoseconds": 1548292,
+        "prompt_token_count": 603,
+        "response_token_count": 100,
+        "response_duration_nanoseconds": 1379603000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-formal-complaint",
+      "case_fingerprint": "57f1b0e5b186112a",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 338472791,
+        "load_duration_nanoseconds": 1549875,
+        "prompt_token_count": 624,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 234444000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-pronoun-placement",
+      "case_fingerprint": "6135ff130d98adaa",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 510486792,
+        "load_duration_nanoseconds": 1478209,
+        "prompt_token_count": 588,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 424587000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-reflexive-worry",
+      "case_fingerprint": "505be6ce3aab678b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"preocupo\",\n      \"explanation\": \"The verb 'preocupar' is conjugated incorrectly; it should be 'preocupo' for first person singular.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"preocupo\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1038864792,
+        "load_duration_nanoseconds": 2052917,
+        "prompt_token_count": 580,
+        "response_token_count": 91,
+        "response_duration_nanoseconds": 970753000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-pronoun-reflexive-party",
+      "case_fingerprint": "fcf3ec16280f9482",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 511532625,
+        "load_duration_nanoseconds": 1550833,
+        "prompt_token_count": 580,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 438879000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-possessive-pet",
+      "case_fingerprint": "1b82c9146836f34e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Mim\",\n      \"explanation\": \"The correct possessive pronoun is 'meu' for 'my' in Portuguese.\",\n      \"kind\": \"pronoun\",\n      \"replacement\": \"meu\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1071303625,
+        "load_duration_nanoseconds": 1498667,
+        "prompt_token_count": 581,
+        "response_token_count": 82,
+        "response_duration_nanoseconds": 984885000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-pronoun-clitic-gender",
+      "case_fingerprint": "35b9061e16c93858",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"convidei-o\",\n      \"explanation\": \"The pronoun 'o' is incorrect; it should be 'a' for feminine names.\",\n      \"kind\": \"pronoun\",\n      \"replacement\": \"convidei-a\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1125111792,
+        "load_duration_nanoseconds": 1519375,
+        "prompt_token_count": 589,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 1042890000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-short-spelling-chocolate",
+      "case_fingerprint": "ab18e5c6e04cc52e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"chocolat\",\n      \"explanation\": \"The word 'chocolate' in Portuguese is spelled with a 'c' and an 'e' after the 'o', not 'chocolat'.\",\n      \"kind\": \"spelling\",\n      \"replacement\": \"chocolate\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1187381541,
+        "load_duration_nanoseconds": 1454166,
+        "prompt_token_count": 574,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 1117367000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-short-verb-morar",
+      "case_fingerprint": "2f52901a60d755e3",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 516053750,
+        "load_duration_nanoseconds": 1542584,
+        "prompt_token_count": 574,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 443301000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-short-agreement-house",
+      "case_fingerprint": "5bab8c0a779dd3ce",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"bonito\",\n      \"explanation\": \"The adjective must agree with the noun 'casa' which is feminine.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"bonita\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 900459167,
+        "load_duration_nanoseconds": 1571542,
+        "prompt_token_count": 575,
+        "response_token_count": 79,
+        "response_duration_nanoseconds": 830514000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-short-agreement-books",
+      "case_fingerprint": "22317f41cdc4e449",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"livros\",\n      \"explanation\": \"The plural form of 'livro' is 'livros' but the verb 'tem' requires a singular noun here.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"livro\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1094005250,
+        "load_duration_nanoseconds": 2129083,
+        "prompt_token_count": 577,
+        "response_token_count": 89,
+        "response_duration_nanoseconds": 1022132000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-choice-age",
+      "case_fingerprint": "0f361c2ada012a6b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"velho\",\n      \"explanation\": \"In Brazilian Portuguese, 'velho' is used for 'old' but the correct phrase for age is 'anos' without an adjective.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"anos\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1332024125,
+        "load_duration_nanoseconds": 1518375,
+        "prompt_token_count": 575,
+        "response_token_count": 91,
+        "response_duration_nanoseconds": 1259090000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-word-choice-fazer-erro",
+      "case_fingerprint": "d7c8f39ba0714fb5",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fiz\",\n      \"explanation\": \"The verb 'fazer' in past tense for 'eu' should be 'fiz' but in the context of a test, it's more natural to say 'tive' (I had) or 'fiz' is correct for 'I made' but in this context it's a bit odd. However, for A2 level, 'fiz' is acceptable. Wait, the task is 'What happened on your test?' and the answer says 'I made an error in the math test'. So 'fiz' is correct for 'I made'. But let's check the verb tense. In Portuguese, for past events, we use pretérito perfeito for simple past. 'Fiz' is correct for 'I made'. However, the task is 'What happened on your test?' which is asking for an event that happened on the test. The answer says 'I made an error in the math test'. So 'fiz' is correct. But wait, the verb 'fazer' in past tense for 'eu' is 'fiz', so it's correct. Maybe there's no mistake here? Let me think again. The task is 'What happened on your test?' and the answer is 'Yesterday I made an error in the math test'. So the verb 'fiz' is correct. However, in Brazilian Portuguese, for tests, it's common to say 'tive' (I had) for 'I had a problem on the test'. But 'fiz' is also acceptable. For A2 level, 'fiz' is correct. So maybe no mistake? But the user said to report only real mistakes. Let me check the answer again. The answer is: 'Ontem eu fiz um erro na prova de matemática.' The verb 'fiz' is correct for 'I made'. So no mistake here? Wait, the task is 'What happened on your test?' and the: 'I made an error on the test'. So the answer is correct. But the user might be expecting a mistake. Let me see if there's any mistake. Another thing: in Brazilian Portuguese, for tests, we say 'prova' or 'exame'? 'Prova' is more common for school tests. So 'prova de matemática' is correct. The verb 'fiz' is correct. So no mistake? But the previous example had a spelling mistake. Let me check the rules again. The rules say: Do not report style, correct but unusual wording, or punctuation. So if there's no mistake, then no mistakes. But the user might have intended a mistake. Wait, the verb 'fazer' in past tense for 'eu' is 'fiz', so it's correct. So no mistake here. But let's see the answer: 'Ontem eu fiz um erro na prova de matemática.' The verb 'fiz' is correct. So the answer has no mistakes. So the mistakes list should be empty. But the user might have made a mistake in the verb tense? Wait, in Portuguese, for past events, we use pretérito perfeito for simple past. 'Fiz' is correct. So no mistake. So the answer is correct. Therefore, the mistakes list is empty. But the user said to report only real mistakes. So I think there are no mistakes here. However, let's double-check. The task is 'What happened on your test?' and the answer says 'Yesterday I made an error in the math test'. So the answer is correct. So no mistakes. So the response should be: {\",\"kind\": \"spelling\", \"replacement\": \"sanduíche\"} ]}",
+        "total_duration_nanoseconds": 11414353625,
+        "load_duration_nanoseconds": 1497167,
+        "prompt_token_count": 581,
+        "response_token_count": 800,
+        "response_duration_nanoseconds": 11328073000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-article-contraction-a-o",
+      "case_fingerprint": "a9ef232ec360f66d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"a\",\n      \"explanation\": \"The preposition 'a' is incorrect; it should be 'no' for 'at the cinema'.\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"no\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 819817666,
+        "load_duration_nanoseconds": 1721083,
+        "prompt_token_count": 582,
+        "response_token_count": 85,
+        "response_duration_nanoseconds": 705775000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-article-contraction-de-o",
+      "case_fingerprint": "dfeedf8abd357967",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"o\",\n      \"explanation\": \"The article 'o' is unnecessary here; the correct phrase is 'meu pai' without an article.\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"meu\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1496385958,
+        "load_duration_nanoseconds": 1433500,
+        "prompt_token_count": 576,
+        "response_token_count": 86,
+        "response_duration_nanoseconds": 1419705000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-preposition-gostar-de",
+      "case_fingerprint": "84dae8a3f39c50e6",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"gosto\",\n      \"explanation\": \"The verb 'gosto' should be followed by 'de' to indicate the object.\",\n      \"kind\": \"word_order\",\n      \"replacement\": \"gosto de\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 866237667,
+        "load_duration_nanoseconds": 1773834,
+        "prompt_token_count": 580,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 796461000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-serestar-sick",
+      "case_fingerprint": "7ca0fe9da085197f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"doente\",\n      \"explanation\": \"In Brazilian Portuguese, 'doente' is not commonly used; 'doente' is more European Portuguese. The correct term for 'sick' in Brazilian Portuguese is 'doente' but it's less common. However, in A2 level, 'doente' is acceptable. Wait, let me check again.\",\n      \"kind\": \"not_brazilian\",\n      \"replacement\": \"doente\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1653638166,
+        "load_duration_nanoseconds": 1511833,
+        "prompt_token_count": 581,
+        "response_token_count": 131,
+        "response_duration_nanoseconds": 1558015000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-para-que",
+      "case_fingerprint": "39cbec64e3047a47",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"passo\",\n      \"explanation\": \"The verb 'passar' in the present tense for 'eu' should be 'paso' in Brazilian Portuguese, but in this context, the correct form is 'passo' (the verb 'passar' is conjugated as 'passo' for 'eu' in Brazilian Portuguese).\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"passo\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1748201000,
+        "load_duration_nanoseconds": 1510125,
+        "prompt_token_count": 584,
+        "response_token_count": 125,
+        "response_duration_nanoseconds": 1654859000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-habitual-past",
+      "case_fingerprint": "a70dafe043dc78f9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"fui\",\n      \"explanation\": \"The past tense of 'ser' is 'fui' but here it should be the past tense of 'ir' (to go).\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"fui\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1157153250,
+        "load_duration_nanoseconds": 1544333,
+        "prompt_token_count": 586,
+        "response_token_count": 93,
+        "response_duration_nanoseconds": 1070422000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-agreement-news",
+      "case_fingerprint": "1d2e20125cf74f2e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"preocupante\",\n      \"explanation\": \"The adjective should be plural to match the plural subject 'notícias'.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"preocupantes\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 958563625,
+        "load_duration_nanoseconds": 1839667,
+        "prompt_token_count": 577,
+        "response_token_count": 82,
+        "response_duration_nanoseconds": 886552000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-phone",
+      "case_fingerprint": "02edfbe70c6535f2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 539181625,
+        "load_duration_nanoseconds": 1531292,
+        "prompt_token_count": 581,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 444784000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-order-article-noun",
+      "case_fingerprint": "867a319b1d37ee61",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"uma pequena\",\n      \"explanation\": \"The phrase 'uma pequena' is incomplete; it should be 'uma pequena casa' to mean 'a small house'.\",\n      \"kind\": \"word_choice\",\n      \"replacement\": \"uma pequena casa\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1095974125,
+        "load_duration_nanoseconds": 1461125,
+        "prompt_token_count": 580,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 1025675999
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-short-siblings",
+      "case_fingerprint": "89380125c4bd9b5e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 463525375,
+        "load_duration_nanoseconds": 1535709,
+        "prompt_token_count": 575,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 391456000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-accents-present",
+      "case_fingerprint": "14ca30108c535eb7",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 310490542,
+        "load_duration_nanoseconds": 1462292,
+        "prompt_token_count": 586,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 229838000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-where-live",
+      "case_fingerprint": "69df14c114417bfd",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 294044917,
+        "load_duration_nanoseconds": 1486708,
+        "prompt_token_count": 579,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 229747000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-colloquial-pra",
+      "case_fingerprint": "1925efb08014de3f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"pra\",\n      \"explanation\": \"In Brazilian Portuguese, 'pra' is informal and not used in formal writing. The task is for a learner at A1 level, but the answer uses 'pra' which is acceptable in spoken language. However, the rule says: 'Spoken Brazilian forms are correct; do not report them: tô, a gente, pra, né, você for 'you'.'\",\n      \"kind\": \"not_brazilian\",\n      \"replacement\": \"para\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1935178459,
+        "load_duration_nanoseconds": 1535042,
+        "prompt_token_count": 578,
+        "response_token_count": 139,
+        "response_duration_nanoseconds": 1868758000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-plural-bag",
+      "case_fingerprint": "6fa4ec92ef26097e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Na minha bolsa\",\n      \"explanation\": \"The preposition 'na' is incorrect; it should be 'na minha bolsa' without the preposition 'na' because 'bolsa' is the direct object.\",\n      \"kind\": \"article_preposition\",\n      \"replacement\": \"minha bolsa\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1423809167,
+        "load_duration_nanoseconds": 1485792,
+        "prompt_token_count": 590,
+        "response_token_count": 105,
+        "response_duration_nanoseconds": 1337360000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-dress-boots",
+      "case_fingerprint": "1a960bebfa6bf6bc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"A\",\n      \"explanation\": \"The article 'a' is incorrect; it should be 'ela' for the subject.\",\n      \"kind\": \"pronoun\",\n      \"replacement\": \"ela\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 855006875,
+        "load_duration_nanoseconds": 1598833,
+        "prompt_token_count": 600,
+        "response_token_count": 80,
+        "response_duration_nanoseconds": 765145000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-preterite-sunday",
+      "case_fingerprint": "5fed746b57453f0f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 540069000,
+        "load_duration_nanoseconds": 1499541,
+        "prompt_token_count": 590,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 445633000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-imperfect-grandmother",
+      "case_fingerprint": "72e3a39f8f77da65",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 526367125,
+        "load_duration_nanoseconds": 1453667,
+        "prompt_token_count": 591,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 438771000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-reflexive-party",
+      "case_fingerprint": "51fc6d5af2b8eb58",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 398089541,
+        "load_duration_nanoseconds": 1537500,
+        "prompt_token_count": 581,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 313934000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-pet",
+      "case_fingerprint": "0f7b737e2038903d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 323853958,
+        "load_duration_nanoseconds": 1479583,
+        "prompt_token_count": 588,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 239237000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-sick",
+      "case_fingerprint": "f68b54d2a9f88810",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 508452000,
+        "load_duration_nanoseconds": 1552208,
+        "prompt_token_count": 581,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 421374000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-family-meal",
+      "case_fingerprint": "d21583070406cfdc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"frango grelhado\",\n      \"explanation\": \"The phrase 'frango grelhado' should be written with the adjective agreeing in gender and number with the noun 'frango'.\",\n      \"kind\": \"agreement\",\n      \"replacement\": \"frango grelhado\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1631078375,
+        "load_duration_nanoseconds": 1509000,
+        "prompt_token_count": 617,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 1525769000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-phone",
+      "case_fingerprint": "ec5d80891c08da1e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 335636833,
+        "load_duration_nanoseconds": 1504625,
+        "prompt_token_count": 578,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 268572000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-cinema-contraction",
+      "case_fingerprint": "70ceca55043a7a49",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 326685958,
+        "load_duration_nanoseconds": 1479250,
+        "prompt_token_count": 581,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 259608999
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-para-que",
+      "case_fingerprint": "aa04e30089688794",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Estudo\",\n      \"explanation\": \"The verb should be in the present tense for the question 'Why do you study every day?'\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"Estudo\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1063851375,
+        "load_duration_nanoseconds": 1541625,
+        "prompt_token_count": 582,
+        "response_token_count": 84,
+        "response_duration_nanoseconds": 978790000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-habitual-past",
+      "case_fingerprint": "fc3be57d50621f12",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 533199292,
+        "load_duration_nanoseconds": 1828333,
+        "prompt_token_count": 585,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 443364000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-gostar-de",
+      "case_fingerprint": "fb4740e2bf405762",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 505216417,
+        "load_duration_nanoseconds": 1463750,
+        "prompt_token_count": 586,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 419386000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-weather-hot",
+      "case_fingerprint": "9290a59fdd317e2c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 504219458,
+        "load_duration_nanoseconds": 1470291,
+        "prompt_token_count": 590,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 420285000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-arrived-home",
+      "case_fingerprint": "9e7367066daa78d3",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 306569208,
+        "load_duration_nanoseconds": 1484917,
+        "prompt_token_count": 582,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 223326000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-news",
+      "case_fingerprint": "4056e01a6249c534",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 306378917,
+        "load_duration_nanoseconds": 2142042,
+        "prompt_token_count": 589,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 227939000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-clitic-gender",
+      "case_fingerprint": "3a8d09f239b5457e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"convidei-a\",\n      \"explanation\": \"The verb 'convidar' should be in the past perfect tense (convidado) for the correct past perfect tense construction.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"convidado-a\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1388861875,
+        "load_duration_nanoseconds": 1450708,
+        "prompt_token_count": 588,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 1299280000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-off-topic-rain",
+      "case_fingerprint": "2bd7ff4ebefe8ccb",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": false,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Hoje está chovendo muito e eu estou em casa.\",\n      \"explanation\": \"The answer does not answer the question 'What is your name?'\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"João\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1249367959,
+        "load_duration_nanoseconds": 1821125,
+        "prompt_token_count": 581,
+        "response_token_count": 90,
+        "response_duration_nanoseconds": 1160592000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-off-topic-bicycle",
+      "case_fingerprint": "43d5a79995c26cc2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": false,\n  \"language_is_portuguese\": true,\n  \"mistakes\": [\n    {\n      \"error_text\": \"Eu comprei\",\n      \"explanation\": \"The question is about what you think about working from home, but the answer talks about buying a bicycle.\",\n      \"kind\": \"content_mismatch\",\n      \"replacement\": \"Nada\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 1228149125,
+        "load_duration_nanoseconds": 1596750,
+        "prompt_token_count": 582,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 1141295000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-english-coffee",
+      "case_fingerprint": "13674ac2def95e44",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": false,\n  \"mistakes\": []\n}",
+        "total_duration_nanoseconds": 289367667,
+        "load_duration_nanoseconds": 1449750,
+        "prompt_token_count": 575,
+        "response_token_count": 27,
+        "response_duration_nanoseconds": 227092000
+      },
+      "error": null
+    }
+  ]
+}
