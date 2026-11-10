@@ -328,13 +328,13 @@ From `CourseUITests.swift`, one Android test per iOS test, in the feature packag
 - `adb pull` of the screenshots to `/tmp/language-android-screenshots`, printing the path.
 - Like the iOS suite it passes with or without `./scripts/dev/serve.sh` running; with it, the local test courses appear and the course list opens first.
 
-`scripts/android/run-android.sh`: environment, `adb reverse` for both ports, `./gradlew installDebug`, `adb shell am start -n ro.zach.language/.app.MainActivity`.
+`scripts/android/run-debug-on-device.sh`: environment, `adb reverse` for both ports, `./gradlew installDebug`, `adb shell am start -n ro.zach.language/.app.MainActivity`.
 
 ## Running on the Samsung S25
 
 - On the phone: Settings, About phone, Software information, tap Build number seven times; then Developer options, USB debugging on.
 - Connect over USB, accept the computer's key on the phone; `~/Library/Android/sdk/platform-tools/adb devices` lists it as `device`.
-- Debug build against the Mac's servers: `./scripts/android/run-android.sh` (it sets up `adb reverse`, which lasts until the phone disconnects).
+- Debug build against the Mac's servers: `./scripts/android/run-debug-on-device.sh` (it sets up `adb reverse`, which lasts until the phone disconnects).
 - Against the deployed site: a signed release build, `cd android && ./gradlew installRelease`.
 - Wireless debugging (Developer options, Wireless debugging, `adb pair <address>`) works the same once paired, `adb reverse` included.
 - With the emulator and the phone both attached, `ANDROID_SERIAL=<serial>` picks one.
@@ -352,7 +352,7 @@ In dependency order. Steps 1 to 3 are sequential; the four tracks of step 4 run 
    - Files: `Cargo.toml`, `shared/Cargo.toml`, `shared/src/http/reqwest_fetch.rs`, `ffi/Cargo.toml`, `ffi/uniffi.toml`, `ffi/src/core_logging.rs`, `ffi/src/lib.rs`, `tools/uniffi_bindgen_kotlin/` (new), `scripts/android/android-environment.sh`, `scripts/android/build-android-core.sh`, `.gitignore`.
    - Checks: `cargo test`, the iOS and wasm checks above, `./scripts/ios/build-ios-core.sh`, `./scripts/android/build-android-core.sh` producing the `.so` and `language_core.kt` with `failureMessage`.
 2. Gradle foundation and app shell
-   - Files: everything under `android/` except the track-owned files below; `app/`, `coursedata/`, `progressdata/`, `diagnostics/`, `design/` (tokens, controls, pending indication, floating tip, index rail and tracker), `courses/CoursesPage.kt`, `home/HomePage.kt`, `unit/UnitPage.kt`, `unit/UnitStatusPanel.kt`; `testsupport/`; `coursedata/CoreIntegrationTest.kt`, `progressdata/ProgressStoreReviewClockTest.kt`, `design/IndexRailTrackerTest.kt`, `unit/UnitPageEndToEndTest.kt`, `app/RootScreenEndToEndTest.kt` (the navigation test; the settings assertions join in track D); `scripts/android/test-android.sh`, `scripts/android/run-android.sh`.
+   - Files: everything under `android/` except the track-owned files below; `app/`, `coursedata/`, `progressdata/`, `diagnostics/`, `design/` (tokens, controls, pending indication, floating tip, index rail and tracker), `courses/CoursesPage.kt`, `home/HomePage.kt`, `unit/UnitPage.kt`, `unit/UnitStatusPanel.kt`; `testsupport/`; `coursedata/CoreIntegrationTest.kt`, `progressdata/ProgressStoreReviewClockTest.kt`, `design/IndexRailTrackerTest.kt`, `unit/UnitPageEndToEndTest.kt`, `app/RootScreenEndToEndTest.kt` (the navigation test; the settings assertions join in track D); `scripts/android/test-android.sh`, `scripts/android/run-debug-on-device.sh`.
    - Track-owned composables exist from this step with their final signatures and a `PageHeader` body, so every track compiles on its own: `OverviewSection`, `GrammarSection`, `DialoguesSection`, `ReadingsSection`, `VocabularySection` (`unit/LessonSections.kt`), `PracticeSection`, `ExerciseSession`, `ReviewPage`, `GlossaryPage`, `ProgressPage`, `SettingsSheet`. Each track replaces its bodies.
    - Checks: `./gradlew assembleDebug testDebugUnitTest`, and the instrumented suite when a device is attached.
 3. Audio

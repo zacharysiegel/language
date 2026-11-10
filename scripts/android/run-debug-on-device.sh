@@ -4,7 +4,7 @@
 # ANDROID_SERIAL picks a device when several are attached.
 #
 # Usage:
-#   ./scripts/android/run-android.sh
+#   ./scripts/android/run-debug-on-device.sh
 
 set -euo pipefail
 
