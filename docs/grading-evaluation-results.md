@@ -111,8 +111,9 @@ Each cell lists precision / recall / false positive rate / correction agreement 
 - Thinking missed `fejão` and `nós ajudamos` in every configuration, its reasoning judging both correct; budget 128 added a false alarm (`cabelos` → cabelo).
 - Unseen cases: 14 corrections agree in every configuration, so agreement falls below 60% as matches rise; the newly found mistakes carry corrections outside the accepted ones.
 - The one flagged correct unseen answer (`morávamos` → morava) is flagged in every configuration.
+- Budget 512's latency was measured while another process used the machine: 19 of its calls ran at 9.5 to 22 tokens per second against about 45 elsewhere. At the normal rate its p95 is about 14.1 s tuned and 15.5 s unseen.
 
-Recommendation: grade with thinking off. It is the only configuration that meets the bar on both sets, at about 3 s per answer in the browser. A budget of 256 is the best thinking configuration, adding 4 of 68 and 3 of 26 mistakes found at no cost in precision, but it fails correction agreement on unseen cases and its native p95 of 7.4 s becomes about 15 s in the browser, which runs about twice native, at the latency limit.
+Recommendation: grade with thinking off. It is the only configuration that meets the bar on both sets. A budget of 256 is the best thinking configuration, adding 4 of 68 and 3 of 26 mistakes found at no cost in precision, but it fails correction agreement on unseen cases (56% against 60%) and multiplies native p95 latency by about four (7.4 s against 1.9 s); its browser latency was not measured.
 
 ## Limits
 
