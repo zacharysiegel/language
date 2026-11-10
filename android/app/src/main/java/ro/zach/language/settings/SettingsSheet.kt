@@ -160,7 +160,7 @@ private fun CourseContentSection(courseId: String) {
 }
 
 private fun publicationSourceText(publication: CoursePublication): String {
-    return if (publication.isEmbedded()) "The copy included in the app" else "Downloaded from ${publication.repositoryBaseUrl()}"
+    return if (publication.isEmbedded()) "Embedded" else "Downloaded from ${publication.repositoryBaseUrl()}"
 }
 
 @Composable

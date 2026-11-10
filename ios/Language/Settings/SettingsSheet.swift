@@ -85,7 +85,7 @@ struct SettingsSheet: View {
                     Text("Published as \(publication.publicationLabel())")
                         .font(.dataText)
                         .accessibilityIdentifier("publication-label")
-                    Text(publication.isEmbedded() ? "The copy included in the app" : "Downloaded from \(publication.repositoryBaseUrl())")
+                    Text(publication.isEmbedded() ? "Embedded" : "Downloaded from \(publication.repositoryBaseUrl())")
                         .font(.captionText)
                         .foregroundStyle(Color.inkMuted)
                 }

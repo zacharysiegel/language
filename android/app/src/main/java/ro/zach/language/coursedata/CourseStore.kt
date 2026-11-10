@@ -205,7 +205,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         return updateMessages[courseId]
     }
 
-    /** Shows the cached course index at once, else the one included in the app, then reads the repository's. */
+    /** Shows the cached course index at once, else the embedded one, then reads the repository's. */
     suspend fun start() {
         val library: CourseLibrary = library
             ?: return
@@ -256,7 +256,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
     }
 
     /**
-     * Once per launch: shows at once the cached publication or the one included in the app, as the core picks, then the
+     * Once per launch: shows at once the cached publication or the embedded one, as the core picks, then the
      * publication the course's latest pointer names once the repository's course index has been read.
      */
     fun ensurePublicationLoaded(courseId: String) {
@@ -352,7 +352,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            CoreErrorReport.record(error, "installing the course content included in the app")
+            CoreErrorReport.record(error, "installing the embedded course content")
         }
     }
 
@@ -369,7 +369,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            embeddedIndexFailure = CoreErrorReport.record(error, "opening the course index included in the app")
+            embeddedIndexFailure = CoreErrorReport.record(error, "opening the embedded course index")
         }
     }
 
@@ -395,7 +395,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
             val embeddedFailure: String? = embeddedIndexFailure
 
             indexState = CourseIndexLoadState.Failed(
-                if (embeddedFailure == null) message else "$message (the copy included in the app: $embeddedFailure)",
+                if (embeddedFailure == null) message else "$message (embedded course content: $embeddedFailure)",
             )
         }
     }
@@ -439,7 +439,7 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         val embeddedFailure: CoreFailureRecord? = local.embeddedFailure
 
         if (embeddedFailure != null) {
-            CoreErrorReport.record(CoreException.Failure(embeddedFailure.message, embeddedFailure.backtrace), "opening the copy of $courseId included in the app")
+            CoreErrorReport.record(CoreException.Failure(embeddedFailure.message, embeddedFailure.backtrace), "opening the embedded publication of $courseId")
         }
 
         val publication: CoursePublication? = local.publication

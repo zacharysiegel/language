@@ -53,7 +53,7 @@ class SettingsEndToEndTest {
     fun updateCheck_showsItsPendingStateWhileTheRepositoryCannotBeReached() {
         driver.relaunchWithUnreachableRepository()
         openTheSettings()
-        composeRule.waitUntil(SETTINGS_OPEN_TIMEOUT_MILLISECONDS) { hasText("The copy included in the app") }
+        composeRule.waitUntil(SETTINGS_OPEN_TIMEOUT_MILLISECONDS) { hasText("Embedded") }
 
         checkForUpdatedContent()
         composeRule.waitUntil(PENDING_SHOWN_TIMEOUT_MILLISECONDS) { hasText(UPDATE_CHECKING_MESSAGE) }

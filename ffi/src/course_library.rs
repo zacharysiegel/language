@@ -52,7 +52,7 @@ pub struct CoreConfiguration {
 pub struct LocalCoursePublication {
     /// `None` when neither the cached nor the embedded publication could be opened.
     pub publication: Option<Arc<CoursePublication>>,
-    /// Set when the bundle included in the app could not be read for the course.
+    /// Set when the embedded bundle could not be read for the course.
     pub embedded_failure: Option<CoreFailureRecord>,
 }
 
@@ -102,7 +102,7 @@ impl CourseLibrary {
         Ok(self.open_latest_course_index(&self.http_fetch).await?)
     }
 
-    /// The course index of the bundle included in the app.
+    /// The course index of the embedded bundle.
     pub async fn load_embedded_course_index(&self) -> Result<Arc<PublishedCourseIndex>, CoreError> {
         Ok(self.open_embedded_course_index().await?)
     }
@@ -119,8 +119,8 @@ impl CourseLibrary {
         })
     }
 
-    /// The publication of `course_id` to show before a repository answers, of the cached one and the one in the bundle
-    /// included in the app as `artifact::choose_local_publication` picks.
+    /// The publication of `course_id` to show before a repository answers, of the cached one and the one in the embedded
+    /// bundle as `artifact::choose_local_publication` picks.
     pub async fn load_local_course_publication(self: Arc<Self>, course_id: String) -> LocalCoursePublication {
         let cached: Option<Arc<CoursePublication>> = self.clone().load_cached_course_publication(course_id.clone()).await;
         let embedded: EmbeddedPublicationOpenKind = self.open_listed_embedded_course_publication(&course_id).await;
@@ -150,7 +150,7 @@ impl CourseLibrary {
     }
 
     /// The publication `course_id`'s latest pointer names, read under the repository `course_index` came from; remembered,
-    /// and the shard cache trimmed to every remembered publication. Fails for an index from the bundle included in the app.
+    /// and the shard cache trimmed to every remembered publication. Fails for an index from the embedded bundle.
     pub async fn load_latest_course_publication(
         self: Arc<Self>,
         course_index: Arc<PublishedCourseIndex>,
@@ -159,7 +159,7 @@ impl CourseLibrary {
         Ok(self.open_latest_course_publication(&self.http_fetch, &course_index, &course_id).await?)
     }
 
-    /// The publication of `course_id` in the bundle included in the app; its recordings come from the static repository.
+    /// The publication of `course_id` in the embedded bundle; its recordings come from the static repository.
     pub async fn load_embedded_course_publication(self: Arc<Self>, course_id: String) -> Result<Arc<CoursePublication>, CoreError> {
         Ok(self.open_embedded_course_publication(&course_id).await?)
     }
@@ -566,7 +566,7 @@ pub(crate) fn create_directory(path: &Path) -> Result<(), AppErrorStatic> {
     fs::create_dir_all(path).map_err(|error| AppErrorStatic::from(format!("creating a cache directory failed; [path={} error={error}]", path.display())))
 }
 
-/// A course index, read from a repository, from this device's cache of one, or from the bundle included in the app.
+/// A course index, read from a repository, from this device's cache of one, or from the embedded bundle.
 #[derive(uniffi::Object)]
 pub struct PublishedCourseIndex {
     source: CourseIndexSource,
@@ -588,8 +588,8 @@ impl PublishedCourseIndex {
     }
 }
 
-/// One publication of one course, opened from a repository, from this device's cache of one, or from the bundle
-/// included in the app.
+/// One publication of one course, opened from a repository, from this device's cache of one, or from the embedded
+/// bundle.
 #[derive(uniffi::Object)]
 pub struct CoursePublication {
     library: Arc<CourseLibrary>,

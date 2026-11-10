@@ -13,7 +13,7 @@ private const val INSTALLED_MARKER_FILE_NAME: String = "embedded_bundle.installe
 private const val INSTALLING_DIRECTORY_NAME: String = "embedded_bundle.installing"
 
 /**
- * Copies the course content included in the app out of its assets into a directory of plain files, once per install
+ * Copies the embedded course content out of its assets into a directory of plain files, once per install
  * of the app, since the core reads it by path.
  */
 class EmbeddedBundleInstaller(private val context: Context) {
