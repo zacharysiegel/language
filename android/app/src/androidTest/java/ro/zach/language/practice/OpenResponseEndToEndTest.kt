@@ -74,7 +74,7 @@ class OpenResponseEndToEndTest {
     }
 
     @Test
-    fun openResponses_showTheExampleAnswersAfterCheckThenListYourAnswersAndRecordNothing() {
+    fun openResponses_showTheExampleAnswersAfterCheckThenListYourAnswersAndLeaveTheQuizUntaken() {
         val writtenAnswers: List<String> = (1..openResponseExercises.length()).map { taskNumber -> "Resposta $taskNumber.\nEu estou cansado hoje." }
 
         openThePracticeTab(OPEN_RESPONSE_UNIT_ID)
@@ -108,6 +108,28 @@ class OpenResponseEndToEndTest {
         driver.waitForTag("open-response", OPEN_RESPONSE_TIMEOUT_MILLISECONDS)
         assertTrue(isTextShown(NO_QUIZ_TAKEN_SUMMARY))
         assertFalse(driver.hasNode("resume-quiz"))
+    }
+
+    @Test
+    fun openResponse_showsItsSavedAnswerAfterTheAppStartsAgain() {
+        val exercise: JSONObject = openResponseExercises.getJSONObject(0)
+        val writtenAnswer: String = "Eu estou cansado hoje."
+
+        openThePracticeTab(OPEN_RESPONSE_UNIT_ID)
+        tap("open-response")
+        assertTheTaskIsShown(exercise)
+        assertFalse(driver.hasNode("saved-answer"))
+        writeAndCheck(writtenAnswer)
+        tap("quit")
+
+        driver.relaunchKeepingProgress()
+        openThePracticeTab(OPEN_RESPONSE_UNIT_ID)
+        tap("open-response")
+        assertTheTaskIsShown(exercise)
+        driver.waitForTag("saved-answer", OPEN_RESPONSE_TIMEOUT_MILLISECONDS)
+        composeRule.onNodeWithTag("saved-answer").assertTextEquals(writtenAnswer)
+        assertFalse(driver.hasNode("saved-grade-heading"))
+        driver.saveScreenshot("27-open-response-saved-answer")
     }
 
     private fun openThePracticeTab(unitId: String) {
