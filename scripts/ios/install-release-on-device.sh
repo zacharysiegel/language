@@ -4,10 +4,10 @@
 # launches it. A free developer account's provisioning profile lapses after 7 days; running this renews it.
 #
 # Usage:
-#   ./scripts/ios/install-on-device.sh [--device <name or identifier>] [--no-launch]
+#   ./scripts/ios/install-release-on-device.sh [--device <name or identifier>] [--no-launch]
 # e.g.
-#   ./scripts/ios/install-on-device.sh
-#   ./scripts/ios/install-on-device.sh --device "Zachary iPhone 17"
+#   ./scripts/ios/install-release-on-device.sh
+#   ./scripts/ios/install-release-on-device.sh --device "Zachary iPhone 17"
 #
 # Without --device, the one paired iPhone is used; with several, the script lists them and stops. The phone must be
 # unlocked, and on the same network or connected by cable.
