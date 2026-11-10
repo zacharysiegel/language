@@ -1,6 +1,6 @@
 # Grading evaluation results
 
-Results of measuring small local language models on grading a learner's short written answer in Portuguese, by pointing at specific mistakes. The method, cases, scoring and bar are in `grading-evaluation.md`. Runs took place from 2026-10-29 to 2026-11-02 on one Apple M4 Max with 48 GB, through Ollama.
+Results of measuring small local language models on grading a learner's short written answer in Portuguese, by pointing at specific mistakes. The method, cases, scoring and bar are in `grading-evaluation.md`. Runs took place from 2026-10-29 to 2026-11-09 on one Apple M4 Max with 48 GB, through Ollama and, for thinking, cross-llama.
 
 ## Decision
 
@@ -90,6 +90,30 @@ Each cell lists precision / recall / false positive rate / correction agreement 
 - AUROC 0.863 against 0.858 for stock Kev (95% interval of the gain −0.066 to +0.096): no real improvement in separating real from false findings.
 - Calibration improved, mostly by learning how often findings are real.
 - Too few false findings (16 held out) to show a gain; Kev also runs only through Python, so it cannot ship in the browser.
+
+## Thinking (2026-11-09)
+
+`gemma-4-12b-it-qat-q4_0.gguf` (the weights of `gemma4:12b-it-qat`) with `few_shot_six`, through cross-llama 0.3, with thinking off, on without a budget, and on with reasoning budgets of 128, 256 and 512 tokens. Every reply was valid and quoted only text from the answer.
+
+Each cell lists precision / recall / false positive rate / correction agreement / p95 latency.
+
+| Thinking         | Tuned (114 cases)       | Unseen (52 cases)       | Mean reasoning tokens | Meets bar  |
+| ---------------- | ----------------------- | ----------------------- | --------------------- | ---------- |
+| off              | 100%/90%/0%/70%/1.9 s   | 96%/85%/5%/64%/1.9 s    | none                  | both sets  |
+| on, no budget    | 100%/93%/0%/70%/198.0 s | 96%/96%/5%/56%/178.2 s  | 1491 / 927            | neither    |
+| on, budget 128   | 98%/93%/0%/70%/5.9 s    | 96%/92%/5%/58%/4.9 s    | 128 / 128             | tuned only |
+| on, budget 256   | 100%/96%/0%/68%/7.4 s   | 96%/96%/5%/56%/7.1 s    | 226 / 220             | tuned only |
+| on, budget 512   | 100%/96%/0%/68%/14.9 s  | 96%/96%/5%/56%/20.7 s   | 321 / 301             | tuned only |
+
+- Thinking off reproduces the Ollama run: the same reply on 165 of 166 cases (the other differs only in an explanation's wording) and the same scores, at a p95 of 1.9 s against 3.7 s through Ollama.
+- Without a budget, the reasoning reached its 8192-token allowance on 16 tuned and 4 unseen cases, about 200 s each.
+- Thinking found 2 to 4 more mistakes per set (61 to 65 of 68 tuned, 22 to 25 of 26 unseen), among them `chocolat`, the English `beans`, `por` for para, `pôs` for pus and `Eu machuquei`.
+- Thinking missed `fejão` and `nós ajudamos` in every configuration, its reasoning judging both correct; budget 128 added a false alarm (`cabelos` → cabelo).
+- Unseen cases: 14 corrections agree in every configuration, so agreement falls below 60% as matches rise; the newly found mistakes carry corrections outside the accepted ones.
+- The one flagged correct unseen answer (`morávamos` → morava) is flagged in every configuration.
+- Budget 512's latency was measured while another process used the machine: 19 of its calls ran at 9.5 to 22 tokens per second against about 45 elsewhere. At the normal rate its p95 is about 14.1 s tuned and 15.5 s unseen.
+
+Recommendation: grade with thinking off. It is the only configuration that meets the bar on both sets. A budget of 256 is the best thinking configuration, adding 4 of 68 and 3 of 26 mistakes found at no cost in precision, but it fails correction agreement on unseen cases (56% against 60%) and multiplies native p95 latency by about four (7.4 s against 1.9 s); its browser latency was not measured.
 
 ## Limits
 

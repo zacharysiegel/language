@@ -4,6 +4,7 @@ use shared::grading::{ErrorCategoryKind, GraderResponse, grader_response};
 
 use crate::evaluation_run::RunRecord;
 use crate::finding_scoring::{self, CaseScore};
+use crate::grading_runtime::ThinkingReply;
 use crate::grading_case::{GradingCase, GradingCaseKind};
 
 const MAXIMUM_CONTROL_FALSE_ALARM_RATE: f64 = 0.10;
@@ -17,6 +18,7 @@ pub struct ScoredCall {
     pub case_id: String,
     pub repeat: u32,
     pub response: Option<GraderResponse>,
+    pub thinking: Option<ThinkingReply>,
     pub score: CaseScore,
 }
 
@@ -28,6 +30,8 @@ pub struct ScoredRun {
     pub repeats: u32,
     pub scored_calls: Vec<ScoredCall>,
     pub latencies_seconds: Vec<f64>,
+    pub reasoning_token_counts: Vec<u64>,
+    pub reasoning_latencies_seconds: Vec<f64>,
     pub response_token_count: u64,
     pub response_duration_seconds: f64,
 }
@@ -63,6 +67,8 @@ pub struct ModelSummary {
     pub unstable_case_rate: Option<f64>,
     pub latency_p50_seconds: f64,
     pub latency_p95_seconds: f64,
+    pub reasoning_token_mean: f64,
+    pub reasoning_latency_p95_seconds: f64,
     pub tokens_per_second: f64,
     pub category_recall: BTreeMap<ErrorCategoryKind, (usize, usize)>,
 }
@@ -71,6 +77,8 @@ pub fn score_run(record: &RunRecord, cases: &[GradingCase]) -> Result<ScoredRun,
     let case_by_id: HashMap<&str, &GradingCase> = cases.iter().map(|case| (case.id.as_str(), case)).collect();
     let mut scored_calls: Vec<ScoredCall> = Vec::new();
     let mut latencies_seconds: Vec<f64> = Vec::new();
+    let mut reasoning_token_counts: Vec<u64> = Vec::new();
+    let mut reasoning_latencies_seconds: Vec<f64> = Vec::new();
     let mut response_token_count: u64 = 0;
     let mut response_duration_nanoseconds: u64 = 0;
 
@@ -101,10 +109,18 @@ pub fn score_run(record: &RunRecord, cases: &[GradingCase]) -> Result<ScoredRun,
             response_duration_nanoseconds += reply.response_duration_nanoseconds;
         }
 
+        let thinking: Option<ThinkingReply> = call.reply.as_ref().and_then(|reply| reply.thinking.clone());
+
+        if let Some(thinking) = &thinking {
+            reasoning_token_counts.push(thinking.reasoning_token_count);
+            reasoning_latencies_seconds.push(thinking.reasoning_duration_nanoseconds as f64 / 1e9);
+        }
+
         scored_calls.push(ScoredCall {
             case_id: call.case_id.clone(),
             repeat: call.repeat,
             response,
+            thinking,
             score,
         });
     }
@@ -117,6 +133,8 @@ pub fn score_run(record: &RunRecord, cases: &[GradingCase]) -> Result<ScoredRun,
         repeats: record.repeats,
         scored_calls,
         latencies_seconds,
+        reasoning_token_counts,
+        reasoning_latencies_seconds,
         response_token_count,
         response_duration_seconds: response_duration_nanoseconds as f64 / 1e9,
     })
@@ -180,6 +198,8 @@ pub fn summarize(run: &ScoredRun, cases: &[GradingCase]) -> ModelSummary {
         unstable_case_rate: unstable_case_rate(run),
         latency_p50_seconds: percentile(&run.latencies_seconds, 0.50),
         latency_p95_seconds: percentile(&run.latencies_seconds, 0.95),
+        reasoning_token_mean: mean(&run.reasoning_token_counts),
+        reasoning_latency_p95_seconds: percentile(&run.reasoning_latencies_seconds, 0.95),
         tokens_per_second: run.response_token_count as f64 / run.response_duration_seconds,
         category_recall: category_recall(run, &case_by_id),
     }
@@ -246,6 +266,14 @@ fn ratio(numerator: usize, denominator: usize) -> f64 {
     }
 
     numerator as f64 / denominator as f64
+}
+
+fn mean(values: &[u64]) -> f64 {
+    if values.is_empty() {
+        return f64::NAN;
+    }
+
+    values.iter().sum::<u64>() as f64 / values.len() as f64
 }
 
 fn harmonic_mean(left: f64, right: f64) -> f64 {
@@ -369,6 +397,14 @@ fn render_call_detail(case: &GradingCase, call: &ScoredCall) -> String {
         ));
     }
 
+    if let Some(thinking) = &call.thinking {
+        detail.push_str(&format!(
+            "- Reasoning ({} tokens): {}\n",
+            thinking.reasoning_token_count,
+            thinking.reasoning_text.split_whitespace().collect::<Vec<&str>>().join(" "),
+        ));
+    }
+
     let Some(response) = &call.response else {
         detail.push_str("- Response: invalid or missing\n");
 
@@ -473,6 +509,8 @@ fn behavior_headers() -> Vec<&'static str> {
         "Unstable cases",
         "p50 s",
         "p95 s",
+        "Reasoning tokens",
+        "Reasoning p95 s",
         "Tokens/s",
     ]
 }
@@ -489,6 +527,8 @@ fn behavior_row(summary: &ModelSummary) -> Vec<String> {
         summary.unstable_case_rate.map(percent).unwrap_or_else(|| "n/a".to_string()),
         format!("{:.1}", summary.latency_p50_seconds),
         format!("{:.1}", summary.latency_p95_seconds),
+        format_or_not_available(summary.reasoning_token_mean, 0),
+        format_or_not_available(summary.reasoning_latency_p95_seconds, 1),
         format!("{:.0}", summary.tokens_per_second),
     ]
 }
@@ -559,6 +599,14 @@ fn bar_row(summary: &ModelSummary) -> Vec<String> {
 
 fn mark(passed: bool) -> String {
     if passed { "yes".to_string() } else { "no".to_string() }
+}
+
+fn format_or_not_available(value: f64, decimal_count: usize) -> String {
+    if value.is_nan() {
+        return "n/a".to_string();
+    }
+
+    format!("{value:.decimal_count$}")
 }
 
 fn percent(proportion: f64) -> String {

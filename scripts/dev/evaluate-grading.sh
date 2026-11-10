@@ -1,20 +1,30 @@
 #!/usr/bin/env bash
 
-# Measures how well local language models grade a learner's written answer. Models run through Ollama.
+# Measures how well local language models grade a learner's written answer. Models run through Ollama, or through
+# cross-llama with `run --runtime cross-llama`.
 #
 # Usage:
-#   ./scripts/dev/evaluate-grading.sh pull small|large   download the candidate models
-#   ./scripts/dev/evaluate-grading.sh run-candidates     grade with every installed candidate model, then report
+#   ./scripts/dev/evaluate-grading.sh pull small|large           download the candidate models
+#   ./scripts/dev/evaluate-grading.sh run-candidates             grade with every installed candidate model, then report
+#   ./scripts/dev/evaluate-grading.sh run-thinking [arguments]   grade both case sets through cross-llama with thinking
+#                                                                off, on, and on with a 128-token budget, then report;
+#                                                                the arguments go to each run
 #   ./scripts/dev/evaluate-grading.sh <grading_evaluation arguments>
 # e.g.
 #   ./scripts/dev/evaluate-grading.sh check-cases
 #   ./scripts/dev/evaluate-grading.sh run --model gemma3:4b --prompt-variant plain --only a2-
+#   ./scripts/dev/evaluate-grading.sh run --runtime cross-llama --thinking on --thinking-budget 128
 #   ./scripts/dev/evaluate-grading.sh report
 
 set -euo pipefail
 
 readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+
+readonly HOLDOUT_CASES_PATH="tools/grading_evaluation/cases/pt_br.en.holdout.json"
+readonly THINKING_RUNS_DIRECTORY="build/grading_evaluation_thinking"
+readonly THINKING_HOLDOUT_RUNS_DIRECTORY="build/grading_evaluation_thinking_holdout"
+readonly THINKING_PROMPT_VARIANT="few_shot_six"
 
 readonly SMALL_MODELS=(
     "gemma3:1b"
@@ -65,6 +75,22 @@ function run_installed_candidates {
     cargo run --release --package grading_evaluation -- report
 }
 
+function run_cross_llama_on_both_case_sets {
+    cargo run --release --package grading_evaluation -- run --runtime cross-llama --prompt-variant "${THINKING_PROMPT_VARIANT}" --output "${THINKING_RUNS_DIRECTORY}" "$@" > /dev/null
+    cargo run --release --package grading_evaluation -- run --runtime cross-llama --prompt-variant "${THINKING_PROMPT_VARIANT}" --cases "${HOLDOUT_CASES_PATH}" --output "${THINKING_HOLDOUT_RUNS_DIRECTORY}" "$@" > /dev/null
+}
+
+function run_thinking_comparison {
+    cd "${REPO_ROOT}"
+    run_cross_llama_on_both_case_sets --thinking off "$@"
+    run_cross_llama_on_both_case_sets --thinking on "$@"
+    run_cross_llama_on_both_case_sets --thinking on --thinking-budget 128 "$@"
+    run_cross_llama_on_both_case_sets --thinking on --thinking-budget 256 "$@"
+    run_cross_llama_on_both_case_sets --thinking on --thinking-budget 512 "$@"
+    cargo run --release --package grading_evaluation -- report --runs "${THINKING_RUNS_DIRECTORY}"
+    cargo run --release --package grading_evaluation -- report --runs "${THINKING_HOLDOUT_RUNS_DIRECTORY}" --cases "${HOLDOUT_CASES_PATH}"
+}
+
 subcommand="${1:-}"
 
 if test "${subcommand}" == "pull"; then
@@ -80,6 +106,8 @@ if test "${subcommand}" == "pull"; then
     fi
 elif test "${subcommand}" == "run-candidates"; then
     run_installed_candidates
+elif test "${subcommand}" == "run-thinking"; then
+    run_thinking_comparison "${@:2}"
 else
     cd "${REPO_ROOT}"
     cargo run --release --package grading_evaluation -- "$@"
