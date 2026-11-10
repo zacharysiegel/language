@@ -59,6 +59,13 @@ pub enum GraderStateKind {
     Failed,
 }
 
+impl GraderStateKind {
+    /// The model is downloaded and this page may load it.
+    pub fn can_grade(self) -> bool {
+        matches!(self, GraderStateKind::Downloaded | GraderStateKind::Loading | GraderStateKind::Ready)
+    }
+}
+
 /// The grader's latest report on the generation it runs.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GraderGenerationProgressKind {

@@ -4,9 +4,9 @@ use shared::grading::{self, GraderPromptKind};
 use shared::practice::{self, PracticeModeKind, SessionScore};
 use shared::progress::{PausedPractice, PausedPracticeStateKind, PracticeOutcome, SavedExerciseResult};
 
-use crate::grading::OpenResponseGradingContext;
+use crate::grading::{GraderStateKind, GradingStore, OpenResponseGradingContext, OpenResponseSessionId, use_grading_store};
 use crate::platform;
-use crate::practice::{ExerciseSession, SessionExitKind, SessionScoringKind};
+use crate::practice::{ExerciseSession, OpenResponseUnitContext, SessionExitKind, SessionScoringKind};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 const EXERCISES_CHANGED_NOTE: &str = "The practice changed since you paused, so it starts over.";
@@ -65,6 +65,13 @@ enum PracticeStartKind {
     ResumeFull(PausedPractice),
     Quick,
     OpenResponse,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SavedAnswersQueueingKind {
+    /// This browser is not checked yet.
+    WaitingForCheck,
+    Done,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -127,7 +134,7 @@ fn resume_label(paused_practice: &PausedPractice) -> String {
 
 #[component]
 pub fn PracticeSection(course_id: String, target_language: String, source_language: String, unit: Unit) -> impl IntoView {
-    provide_open_response_grading(&target_language, &source_language, &unit);
+    provide_open_response_contexts(&course_id, &target_language, &source_language, &unit);
 
     let progress_store: ProgressStore = use_progress_store();
     let unit_id: String = unit.id.clone();
@@ -217,6 +224,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
         }
     };
 
+    let course_id_for_sessions: String = course_id.clone();
     let paused_practice_state = move || progress_store.paused_practice_state(&course_id, &unit_id, &quiz_exercises);
 
     view! {
@@ -228,9 +236,10 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                     PracticeSessionKind::Quiz => Some(record_full_practice_answer),
                     PracticeSessionKind::QuickPractice | PracticeSessionKind::OpenResponse => None,
                 };
-                let on_complete: Option<Callback<SessionScore>> = kind
-                    .practice_mode()
-                    .map(|mode| Callback::new(move |score: SessionScore| record_completion(mode, score)));
+                let on_complete: Option<Callback<SessionScore>> = match kind.practice_mode() {
+                    Some(mode) => Some(Callback::new(move |score: SessionScore| record_completion(mode, score))),
+                    None => Some(hold_grading_model_for_session(&course_id_for_sessions)),
+                };
 
                 view! {
                     <ExerciseSession
@@ -265,16 +274,55 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
     }
 }
 
-fn provide_open_response_grading(target_language: &str, source_language: &str, unit: &Unit) {
+fn provide_open_response_contexts(course_id: &str, target_language: &str, source_language: &str, unit: &Unit) {
     let grader_prompt: Option<GraderPromptKind> = grading::find_grader_prompt(target_language, source_language);
 
+    provide_context(OpenResponseUnitContext {
+        course_id: course_id.to_string(),
+        unit_id: unit.id.clone(),
+        level: unit.level.clone(),
+        target_language_name: course::language_name(target_language),
+    });
+
     if let Some(grader_prompt) = grader_prompt {
-        provide_context(OpenResponseGradingContext {
-            grader_prompt,
-            level: unit.level.clone(),
-            target_language_name: course::language_name(target_language),
-        });
+        provide_context(OpenResponseGradingContext { grader_prompt });
     }
+}
+
+/// Keeps the grading model in memory until the session reaches its summary or closes; the returned callback ends the hold.
+fn hold_grading_model_for_session(course_id: &str) -> Callback<SessionScore> {
+    let grading_store: GradingStore = use_grading_store();
+    let session_id: OpenResponseSessionId = grading_store.begin_open_response_session();
+    let grading_context: Option<OpenResponseGradingContext> = use_context::<OpenResponseGradingContext>();
+
+    on_cleanup(move || grading_store.end_open_response_session(session_id));
+
+    if let Some(grading_context) = grading_context {
+        queue_saved_ungraded_answers_once_checked(grading_store, course_id.to_string(), grading_context);
+    }
+
+    Callback::new(move |_: SessionScore| grading_store.end_open_response_session(session_id))
+}
+
+/// Queues the course's saved answers without a grade once this browser is known to grade.
+fn queue_saved_ungraded_answers_once_checked(grading_store: GradingStore, course_id: String, grading_context: OpenResponseGradingContext) {
+    Effect::new(move |queueing: Option<SavedAnswersQueueingKind>| {
+        if queueing == Some(SavedAnswersQueueingKind::Done) {
+            return SavedAnswersQueueingKind::Done;
+        }
+
+        let grader_state: GraderStateKind = grading_store.state();
+
+        if grader_state == GraderStateKind::Unchecked {
+            return SavedAnswersQueueingKind::WaitingForCheck;
+        }
+
+        if grader_state.can_grade() {
+            grading_store.queue_saved_ungraded_answers(&course_id, &grading_context);
+        }
+
+        SavedAnswersQueueingKind::Done
+    });
 }
 
 /// Clears the unit's paused quiz, and shows the note, whenever its exercises differ from the quiz's.

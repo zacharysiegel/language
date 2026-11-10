@@ -77,7 +77,13 @@ struct PracticeSection: View {
                 onExit: { activeSession = nil },
             )
         } else {
-            OpenResponseSession(title: sessionKind.title(), exercises: unitOpenResponseExercises(), onExit: { activeSession = nil })
+            OpenResponseSession(
+                title: sessionKind.title(),
+                courseId: courseId,
+                unit: unit,
+                exercises: unitOpenResponseExercises(),
+                onExit: { activeSession = nil },
+            )
         }
     }
 

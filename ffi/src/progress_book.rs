@@ -5,12 +5,13 @@ use std::sync::{Arc, Mutex, MutexGuard};
 
 use chrono::Utc;
 use shared::AppError;
-use shared::course::Exercise;
+use shared::course::{Exercise, OpenResponseExercise};
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
 use shared::progress::{
-    AudioEngineKind, CourseProgress, PausedPractice, PausedPracticeStateKind, PracticeOutcome, Progress, QueuedCards, ReviewDirectionKind, SavedExerciseResult,
-    Settings, UnitProgress, UnitStatusKind, VoiceChoiceKind,
+    self, AudioEngineKind, CourseProgress, OpenResponseTask, PausedPractice, PausedPracticeStateKind, PracticeOutcome, Progress, QueuedCards,
+    ReviewDirectionKind, SavedExerciseResult, SavedGraderFinding, SavedOpenResponse, SavedOpenResponseGrade, Settings, UnitProgress, UnitStatusKind,
+    VoiceChoiceKind,
 };
 use shared::review::{self, ReviewCard};
 
@@ -284,6 +285,60 @@ impl From<PausedPracticeStateKind> for PausedPracticeStateRecord {
     }
 }
 
+/// The learner's latest answer to an open-response task.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SavedOpenResponseRecord {
+    pub answer_text: String,
+    pub answered_milliseconds: i64,
+    /// Absent until a grader grades the answer.
+    pub grade: Option<SavedOpenResponseGradeRecord>,
+}
+
+impl From<&SavedOpenResponse> for SavedOpenResponseRecord {
+    fn from(saved_open_response: &SavedOpenResponse) -> SavedOpenResponseRecord {
+        SavedOpenResponseRecord {
+            answer_text: saved_open_response.answer_text.clone(),
+            answered_milliseconds: saved_open_response.answered_milliseconds,
+            grade: saved_open_response.grade.as_ref().map(SavedOpenResponseGradeRecord::from),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SavedOpenResponseGradeRecord {
+    pub answers_the_question: bool,
+    pub written_in_target_language: bool,
+    pub findings: Vec<SavedGraderFindingRecord>,
+}
+
+impl From<&SavedOpenResponseGrade> for SavedOpenResponseGradeRecord {
+    fn from(grade: &SavedOpenResponseGrade) -> SavedOpenResponseGradeRecord {
+        SavedOpenResponseGradeRecord {
+            answers_the_question: grade.answers_the_question,
+            written_in_target_language: grade.written_in_target_language,
+            findings: grade.findings.iter().map(SavedGraderFindingRecord::from).collect(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct SavedGraderFindingRecord {
+    /// The mistaken text, as it appears in the answer.
+    pub quote: String,
+    pub correction: String,
+    pub explanation: String,
+}
+
+impl From<&SavedGraderFinding> for SavedGraderFindingRecord {
+    fn from(finding: &SavedGraderFinding) -> SavedGraderFindingRecord {
+        SavedGraderFindingRecord {
+            quote: finding.quote.clone(),
+            correction: finding.correction.clone(),
+            explanation: finding.explanation.clone(),
+        }
+    }
+}
+
 /// The learner's progress, saved to one file after every change.
 #[derive(uniffi::Object)]
 pub struct ProgressBook {
@@ -397,6 +452,39 @@ impl ProgressBook {
         self.change(|progress| outcome = progress.finish_full_practice(&course_id, &unit_id, vocabulary_count as usize, now_milliseconds()))?;
 
         Ok(outcome.map(PracticeOutcomeRecord::from))
+    }
+
+    /// Replaces the task's saved answer and its grade; `exercise` must be an open response.
+    pub fn save_open_response_answer(
+        &self,
+        course_id: String,
+        unit_id: String,
+        level_code: String,
+        exercise: ExerciseRecord,
+        answer_text: String,
+    ) -> Result<(), CoreError> {
+        let open_response: OpenResponseExercise = open_response_of(&exercise)
+            .ok_or_else(|| CoreError::arising("only an open response's answer is saved".to_string()))?;
+        let task_key: String = progress::open_response_task_key(&unit_id, &open_response);
+        let task: OpenResponseTask = OpenResponseTask::of(&level_code, &open_response);
+        let answered_milliseconds: i64 = now_milliseconds();
+
+        self.change(|progress| {
+            progress
+                .course_progress_mut(&course_id)
+                .save_open_response_answer(&task_key, task, &answer_text, answered_milliseconds)
+        })
+    }
+
+    pub fn saved_open_response(&self, course_id: String, unit_id: String, exercise: ExerciseRecord) -> Option<SavedOpenResponseRecord> {
+        let open_response: OpenResponseExercise = open_response_of(&exercise)?;
+        let task_key: String = progress::open_response_task_key(&unit_id, &open_response);
+
+        self.lock()
+            .courses
+            .get(&course_id)
+            .and_then(|course_progress| course_progress.saved_open_response(&task_key))
+            .map(SavedOpenResponseRecord::from)
     }
 
     pub fn queue_unit_vocabulary(&self, course_id: String, unit_id: String, vocabulary_count: u32) -> Result<QueuedCardsRecord, CoreError> {
@@ -518,6 +606,13 @@ fn save(path: &Path, text: &str) -> Result<(), AppError> {
     }
 
     filesystem::write_atomically(path, text.as_bytes())
+}
+
+fn open_response_of(exercise: &ExerciseRecord) -> Option<OpenResponseExercise> {
+    match Exercise::from(exercise) {
+        Exercise::OpenResponse(open_response) => Some(open_response),
+        _ => None,
+    }
 }
 
 fn now_milliseconds() -> i64 {
@@ -687,6 +782,37 @@ mod tests {
         assert_eq!(
             book_in(&directory).paused_practice_state(COURSE_ID.to_string(), "u".to_string(), changed_exercises),
             PausedPracticeStateRecord::NotPaused,
+        );
+    }
+
+    fn open_response_record(prompt_source: &str) -> ExerciseRecord {
+        ExerciseRecord::OpenResponse {
+            prompt_source: prompt_source.to_string(),
+            context_source: None,
+            example_answers: vec!["Oi, eu sou a Ana.".to_string()],
+            explanation: None,
+            clip_key: None,
+        }
+    }
+
+    #[test]
+    fn a_saved_open_response_answer_is_read_back_after_reopening_and_only_for_its_task() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        let task: ExerciseRecord = open_response_record("Introduce yourself.");
+
+        book.save_open_response_answer(COURSE_ID.to_string(), "u".to_string(), "a1".to_string(), task.clone(), "Eu sou o Pedro.".to_string())
+            .unwrap();
+
+        let reopened: Arc<ProgressBook> = book_in(&directory);
+        let saved: Option<SavedOpenResponseRecord> = reopened.saved_open_response(COURSE_ID.to_string(), "u".to_string(), task);
+
+        assert_eq!(saved.map(|saved| (saved.answer_text, saved.grade)), Some(("Eu sou o Pedro.".to_string(), None)));
+        assert_eq!(reopened.saved_open_response(COURSE_ID.to_string(), "u".to_string(), open_response_record("Describe Paulo.")), None);
+        assert!(
+            reopened
+                .save_open_response_answer(COURSE_ID.to_string(), "u".to_string(), "a1".to_string(), choice_records(&["Q"]).remove(0), "x".to_string())
+                .is_err()
         );
     }
 

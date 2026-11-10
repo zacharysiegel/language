@@ -57,7 +57,7 @@ final class OpenResponseUITests: LanguageUITestCase {
         saveScreenshot("25-open-response-self-check")
     }
 
-    func testTheOpenResponsePracticeEndsWithTheLearnersAnswersAndRecordsNothing() throws {
+    func testTheOpenResponsePracticeEndsWithTheLearnersAnswersAndLeavesTheQuizUntaken() throws {
         let openResponses: [[String: Any]] = try Self.readOpenResponses(Self.testCourseQuizUnitId)
         let writtenAnswer: String = Self.writtenAnswerLines[0]
 
@@ -86,6 +86,30 @@ final class OpenResponseUITests: LanguageUITestCase {
         XCTAssertTrue(app.buttons["open-response"].waitForExistence(timeout: 5))
         XCTAssertTrue(app.staticTexts["You have not taken the quiz yet."].exists)
         XCTAssertFalse(app.buttons["resume-quiz"].exists)
+    }
+
+    func testAnOpenResponseShowsItsSavedAnswerAfterTheAppStartsAgain() throws {
+        let writtenAnswer: String = Self.writtenAnswerLines[0]
+
+        openThePracticeTab(Self.testCourseQuizUnitId)
+        startTheOpenResponses()
+        XCTAssertFalse(app.staticTexts["saved-answer"].exists)
+        writeAnswer(writtenAnswer)
+        scrollUntilHittable(app.buttons["continue-exercise"])
+        app.buttons["continue-exercise"].tap()
+        XCTAssertTrue(app.buttons["session-done"].waitForExistence(timeout: 5))
+        app.buttons["session-done"].tap()
+
+        relaunchKeepingProgress()
+        openThePracticeTab(Self.testCourseQuizUnitId)
+        startTheOpenResponses()
+
+        let savedAnswer: XCUIElement = app.staticTexts["saved-answer"]
+
+        XCTAssertTrue(savedAnswer.waitForExistence(timeout: 5))
+        XCTAssertEqual(savedAnswer.label, writtenAnswer)
+        XCTAssertFalse(app.staticTexts["saved-grade-heading"].exists)
+        saveScreenshot("27-open-response-saved-answer")
     }
 
     private func startTheOpenResponses() {

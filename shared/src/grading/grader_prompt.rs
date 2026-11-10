@@ -1,5 +1,7 @@
-use serde_json::Value;
+use serde::{Deserialize, Serialize};
+use serde_json::{Value, json};
 
+use crate::artifact::content_address;
 use crate::course;
 use crate::grading::brazilian_portuguese_taught_in_english;
 use crate::grading::{ChatMessage, ChatRoleKind};
@@ -22,7 +24,41 @@ pub enum GraderPromptKind {
     BrazilianPortugueseTaughtInEnglish,
 }
 
+/// Which grader prompt produced a grade, down to its wording.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub struct GraderPromptIdentity {
+    pub code: String,
+    /// Of everything the prompt sends besides the answer.
+    pub sha256: String,
+}
+
 impl GraderPromptKind {
+    pub fn code(self) -> &'static str {
+        match self {
+            GraderPromptKind::BrazilianPortugueseTaughtInEnglish => "brazilian_portuguese_taught_in_english",
+        }
+    }
+
+    pub fn identity(self) -> GraderPromptIdentity {
+        let example_exchanges: Vec<[String; 2]> = self
+            .examples()
+            .iter()
+            .map(|example| [self.render_user_message(&example.graded_answer), example.response_json.to_string()])
+            .collect();
+        let prompt_material: Value = json!({
+            "system_prompt": self.render_system_prompt(&[]),
+            "example_exchanges": example_exchanges,
+            "response_schema": self.response_schema(),
+        });
+        // Serializing a JSON value has no failing case.
+        let serialized: Vec<u8> = serde_json::to_vec(&prompt_material).unwrap_or_default();
+
+        GraderPromptIdentity {
+            code: self.code().to_string(),
+            sha256: content_address::sha256_hex(&serialized),
+        }
+    }
+
     pub fn examples(self) -> &'static [GraderExample] {
         match self {
             GraderPromptKind::BrazilianPortugueseTaughtInEnglish => {
@@ -119,6 +155,17 @@ mod tests {
         );
         assert_eq!(find_grader_prompt("pt-BR", "es"), None);
         assert_eq!(find_grader_prompt("es", "en"), None);
+    }
+
+    #[test]
+    fn identity_is_the_same_on_every_call_and_names_the_prompt() {
+        let grader_prompt: GraderPromptKind = GraderPromptKind::BrazilianPortugueseTaughtInEnglish;
+
+        let identity: GraderPromptIdentity = grader_prompt.identity();
+
+        assert_eq!(identity, grader_prompt.identity());
+        assert_eq!(identity.code, "brazilian_portuguese_taught_in_english");
+        assert!(content_address::is_sha256_hex(&identity.sha256));
     }
 
     #[test]

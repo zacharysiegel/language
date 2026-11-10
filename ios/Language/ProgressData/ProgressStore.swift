@@ -135,6 +135,18 @@ final class ProgressStore {
         return outcome
     }
 
+    /// Replaces the task's saved answer and its grade.
+    func saveOpenResponseAnswer(courseId: String, unit: UnitOutlineRecord, exercise: ExerciseRecord, answerText: String) {
+        perform {
+            try book.saveOpenResponseAnswer(courseId: courseId, unitId: unit.id, levelCode: unit.levelCode, exercise: exercise, answerText: answerText)
+        }
+    }
+
+    func savedOpenResponse(courseId: String, unitId: String, exercise: ExerciseRecord) -> SavedOpenResponseRecord? {
+        _ = changeCount
+        return book.savedOpenResponse(courseId: courseId, unitId: unitId, exercise: exercise)
+    }
+
     /// Moves a not started unit to in progress and leaves any other status alone.
     func startUnit(courseId: String, unitId: String) {
         guard unitProgress(courseId: courseId, unitId: unitId).status == .notStarted else {
