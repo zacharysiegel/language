@@ -304,7 +304,7 @@ Each step skips work already done, so a rerun after a failure at any step comple
   - `VersionGate` becomes `CourseIndexGate`; `CourseGate` gates the course's publication and outline, says the course does not exist only after the repository index load has finished, and its retry refreshes that course.
   - `RootView` and `UnitPage`: `onChange(of: courseStore.shownPublication(courseId:)?.manifestSha256())`.
   - `RootView.activeCourseId` and `CoursesPage` read the index.
-- Settings (`SettingsSheet.courseContentSection`): for the active course, "Published as <label>", then "The copy included in the app" or "Downloaded from <base>"; "Check for updated course content" refreshes that course; its message shows below. No course open: the section is hidden.
+- Settings (`SettingsSheet.courseContentSection`): for the active course, "Published as <label>", then "Embedded" or "Downloaded from <base>"; "Check for updated course content" refreshes that course; its message shows below. No course open: the section is hidden.
 
 ## Migration
 

@@ -15,7 +15,7 @@ use crate::http::{HttpCacheMode, HttpFetch};
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ArtifactOriginKind {
     Repository,
-    /// The bundle included in the app.
+    /// The embedded bundle.
     Embedded,
 }
 
@@ -140,7 +140,7 @@ pub fn parse_cached_course_index(course_index_bytes: Vec<u8>, repository_base_ur
 }
 
 /// The publication `course_id`'s latest pointer names, read under the repository `course_index` came from. Fails
-/// for an index from the bundle included in the app, and for a course `course_index` does not list.
+/// for an index from the embedded bundle, and for a course `course_index` does not list.
 pub async fn fetch_latest_course_manifest(
     http_fetch: &impl HttpFetch,
     course_index: &CourseIndexSource,
@@ -183,7 +183,7 @@ pub async fn load_embedded_course_manifest(
     let embedded_index: CourseIndexSource = load_embedded_course_index(http_fetch, embedded_base_url).await?;
     let entry: &CourseIndexEntry = embedded_index.course_index.courses.get(course_id).ok_or_else(|| {
         AppErrorStatic::from(format!(
-            "the bundle included in the app does not include the course; [course_id={course_id} embedded_base_url={embedded_base_url}]",
+            "the embedded bundle does not include the course; [course_id={course_id} embedded_base_url={embedded_base_url}]",
         ))
     })?;
     let manifest_bytes: Vec<u8> = fetch::fetch_pointer(http_fetch, embedded_base_url, &entry.latest_manifest_key).await?;
@@ -255,7 +255,7 @@ pub fn choose_local_publication(
     LocalPublicationKind::Cached
 }
 
-/// The base `source`'s recordings are fetched from; the bundle included in the app holds none, so its recordings come
+/// The base `source`'s recordings are fetched from; the embedded bundle holds none, so its recordings come
 /// from the static repository.
 pub fn recordings_base_url(source: &CourseManifestSource, static_repository_base_url: &str) -> String {
     match source.origin {

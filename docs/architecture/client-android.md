@@ -155,7 +155,7 @@ From Maven Central and the Gradle plugin portal, pinned to the latest stable rel
 
 - Packaged by `syncEmbeddedBundle` as assets under `embedded_bundle/`, the same tree as `ios/Language/Resources/embedded_bundle/`. No sync script: the Gradle task runs on every build, which is when `sync-ios-embedded-bundle.sh` runs in Xcode.
 - `coursedata/EmbeddedBundleInstaller.kt`: on `Dispatchers.IO`, before the first embedded read, copies the asset tree to `noBackupFilesDir/embedded_bundle/` when `noBackupFilesDir/embedded_bundle.installed` does not hold this package's `PackageInfo.lastUpdateTime`. Copies into a sibling temporary directory, then renames over the old one, then writes the marker, so an interrupted copy is redone.
-- `CourseStore.start` awaits the installer before `showCachedOrEmbeddedIndex`; a failed install is the embedded index's failure and reads as on iOS ("the copy included in the app: ...").
+- `CourseStore.start` awaits the installer before `showCachedOrEmbeddedIndex`; a failed install is the embedded index's failure and reads as on iOS ("embedded course content: ...").
 - `./scripts/release/check-embedded-bundle.sh` applies unchanged before a release build.
 
 ## Design tokens and components
@@ -240,7 +240,7 @@ Every screen, from its iOS file to its Kotlin file. Test tags equal the iOS acce
 - `Review/ReviewPage.swift` to `review/ReviewPage.kt`: due figure (`due-count`), "scheduled for later", the explanations, the direction picker (a square drop-down menu of the three directions), Start review (`start-review`, 20 cards, mixed direction picked per card); the session (`flashcard-prompt`, `show-answer`, Forgot `forgot`, Remembered `remembered`, `review-complete`); the target plays when it shows.
 - `Glossary/GlossaryPage.swift` and `GlossaryRail.swift` to `glossary/GlossaryPage.kt` and `glossary/GlossaryRail.kt`: a search field "Search <target> or <source>" folded with `searchKey`, the level segmented control ("All levels", each level code), a `LazyColumn` of runs; the rail lists levels (`glossary-level-index`) with all levels shown and the chosen level's units (`glossary-unit-index`) with one; rows link to the unit's Vocabulary tab. `GlossaryRail.dividing` and `GlossaryRailKind` are plain Kotlin, unit tested.
 - `ProgressPage/ProgressPage.swift` to `progresspage/ProgressPage.kt`: summary, units with status tags, the review deck by box from `reviewIntervalDays()`, `ProgressTransfer` (Export copies to the clipboard through `ClipboardManager`, Import from the text box, the monospaced text box `transfer-text`, reset with a second tap).
-- `Settings/SettingsSheet.swift` to `settings/SettingsSheet.kt`: Voice (`voice-auto`, `voice-kokoro`, `voice-macos_say`, same titles and details), Speed (Slow audio), Course content ("Published as <label>" `publication-label`, "The copy included in the app" or "Downloaded from <url>", "Check for updated course content" `check-for-updated-content` with its pending state and "Checking for updated course content…", then the store's update message).
+- `Settings/SettingsSheet.swift` to `settings/SettingsSheet.kt`: Voice (`voice-auto`, `voice-kokoro`, `voice-macos_say`, same titles and details), Speed (Slow audio), Course content ("Published as <label>" `publication-label`, "Embedded" or "Downloaded from <url>", "Check for updated course content" `check-for-updated-content` with its pending state and "Checking for updated course content…", then the store's update message).
 
 ### Pending states
 

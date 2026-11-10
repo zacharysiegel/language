@@ -117,7 +117,7 @@ mod browser {
         loaded_publication(source)
     }
 
-    /// The course's publication in the bundle included in the app.
+    /// The course's publication in the embedded bundle.
     pub async fn load_embedded_course_publication(course_id: &str) -> Result<LoadedCoursePublication, AppError> {
         let source: CourseManifestSource = artifact::load_embedded_course_manifest(&BrowserFetch, discovery::EMBEDDED_BUNDLE_BASE_URL, course_id).await?;
 

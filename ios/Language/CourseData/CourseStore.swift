@@ -147,7 +147,7 @@ final class CourseStore {
         updateMessages[courseId]
     }
 
-    /// Shows the cached course index at once, else the one included in the app, then reads the repository's.
+    /// Shows the cached course index at once, else the embedded one, then reads the repository's.
     func start() async {
         guard let library, startKind == .notStarted else {
             return
@@ -183,7 +183,7 @@ final class CourseStore {
         ensureOutlineLoaded(courseId: courseId)
     }
 
-    /// Once per launch: shows at once the cached publication or the one included in the app, as the core picks, then the
+    /// Once per launch: shows at once the cached publication or the embedded one, as the core picks, then the
     /// publication the course's latest pointer names once the repository's course index has been read.
     func ensurePublicationLoaded(courseId: String) {
         guard let library, !requestedPublicationCourseIds.contains(courseId) else {
@@ -267,7 +267,7 @@ final class CourseStore {
         do {
             indexState = .loaded(try await library.loadEmbeddedCourseIndex())
         } catch {
-            embeddedIndexFailure = CoreErrorReport.record(error, while: "opening the course index included in the app")
+            embeddedIndexFailure = CoreErrorReport.record(error, while: "opening the embedded course index")
         }
     }
 
@@ -296,7 +296,7 @@ final class CourseStore {
             }
 
             if shownIndex() == nil {
-                indexState = .failed(embeddedIndexFailure.map { embeddedFailure in "\(message) (the copy included in the app: \(embeddedFailure))" } ?? message)
+                indexState = .failed(embeddedIndexFailure.map { embeddedFailure in "\(message) (embedded course content: \(embeddedFailure))" } ?? message)
             }
         }
 
@@ -349,7 +349,7 @@ final class CourseStore {
         let local: LocalCoursePublication = await library.loadLocalCoursePublication(courseId: courseId)
 
         if let failure = local.embeddedFailure {
-            _ = CoreErrorReport.record(CoreError.Failure(message: failure.message, backtrace: failure.backtrace), while: "opening the copy of \(courseId) included in the app")
+            _ = CoreErrorReport.record(CoreError.Failure(message: failure.message, backtrace: failure.backtrace), while: "opening the embedded publication of \(courseId)")
         }
 
         if let publication = local.publication {
