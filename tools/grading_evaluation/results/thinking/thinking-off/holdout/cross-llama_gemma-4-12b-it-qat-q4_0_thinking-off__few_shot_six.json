@@ -1,0 +1,755 @@
+{
+  "model": "cross-llama:gemma-4-12b-it-qat-q4_0:thinking-off",
+  "prompt_variant": "few_shot_six",
+  "temperature": 0.0,
+  "repeats": 1,
+  "started_at": "2026-11-09T21:38:33.552120+00:00",
+  "model_description": {
+    "family": "",
+    "parameter_size": "",
+    "quantization_level": "",
+    "size_bytes": 6975879296
+  },
+  "runtime": {
+    "kind": "cross_llama",
+    "model_path": "/Users/singularity/language-worktrees/thinking-experiment/models/gemma-4-12b-it-qat-q4_0.gguf",
+    "context_token_count": 5065,
+    "maximum_token_count": 1024,
+    "reasoning_token_allowance": 0,
+    "thinking": {
+      "thinking": "off",
+      "budget_token_count": null,
+      "effort": null
+    }
+  },
+  "case_calls": [
+    {
+      "case_id": "h-a1-control-weather-cold",
+      "case_fingerprint": "716082bea6742954",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 1577044542,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1030,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 460026791
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-mother-job",
+      "case_fingerprint": "99e5a2b526133f74",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 601995209,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 457400959
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-brother-age",
+      "case_fingerprint": "1cdd198f7aed6179",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 553862125,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1018,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 463389416
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-hobbies",
+      "case_fingerprint": "9fb43f5d4c2a8ba5",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 615934625,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 465421750
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-colloquial-ta",
+      "case_fingerprint": "229be0bd2408bcbc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 569037791,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1018,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 468895000
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-market-purchases",
+      "case_fingerprint": "bbf4690108c36a08",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 664869084,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1037,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 482565459
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-control-bedroom",
+      "case_fingerprint": "8a07e0c1951ac88f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 675573667,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1026,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 486795334
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-yesterday-park",
+      "case_fingerprint": "b4bfb77f22401fcf",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 681835208,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1026,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 485406041
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-childhood-house",
+      "case_fingerprint": "2d80c90b82791791",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"morávamos\",\"explanation\":\"The verb should be in the first person singular 'morava' to agree with 'eu'.\",\"kind\":\"verb_form\",\"replacement\":\"morava\"}]}",
+        "total_duration_nanoseconds": 1547877792,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 64,
+        "response_duration_nanoseconds": 1355736958
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-progressive-study",
+      "case_fingerprint": "5d1386bdac0a8450",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 741864416,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1022,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 524739708
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-comparison-cities",
+      "case_fingerprint": "9cba1d208e2e8603",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 742573833,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1030,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 511517834
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-future-tomorrow",
+      "case_fingerprint": "ffe5947005489084",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 719587541,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1025,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 496283583
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-object-pronoun-call",
+      "case_fingerprint": "101c44b7619faaff",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 698094459,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 491839167
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-health-symptoms",
+      "case_fingerprint": "179839ce95315d90",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 663672583,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1022,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 477191167
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-directions-pharmacy",
+      "case_fingerprint": "28d617f0f09f93e4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 662386875,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1046,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 477561250
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-control-a-gente-sunday",
+      "case_fingerprint": "4a01e45682f830ad",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 658050625,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1031,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 474669292
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-control-opinion-bike-lanes",
+      "case_fingerprint": "4debe7aa25756b7d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 690277167,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1041,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 480999167
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-control-subjunctive-wish",
+      "case_fingerprint": "1ea1a02db374bf94",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 692008292,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1028,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 491643333
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-control-future-subjunctive-salvador",
+      "case_fingerprint": "61fc8c30bb6b61bd",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 686031125,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1029,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 489936500
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-control-imperfect-subjunctive-month",
+      "case_fingerprint": "0f495ae26d1fbd0e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 694173958,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1028,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 489672750
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-control-reported-doctor",
+      "case_fingerprint": "56a94697b8f8935d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 698591333,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1041,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 491029334
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-control-formal-thanks",
+      "case_fingerprint": "04cb5ef9da7dac77",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 716752542,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1035,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 504014625
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-spelling-sao-paulo",
+      "case_fingerprint": "59f77009abc7a161",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"Sao Paulo\",\"explanation\":\"The name of the city requires a tilde on the 'a'.\",\"kind\":\"spelling\",\"replacement\":\"São Paulo\"}]}",
+        "total_duration_nanoseconds": 1436766834,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 57,
+        "response_duration_nanoseconds": 1228040208
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-spelling-pao",
+      "case_fingerprint": "7d16498f13935ea5",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"pao\",\"explanation\":\"The word needs a tilde on the 'a': pão.\",\"kind\":\"spelling\",\"replacement\":\"pão\"}]}",
+        "total_duration_nanoseconds": 1392977083,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1020,
+        "response_token_count": 57,
+        "response_duration_nanoseconds": 1264408208
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-agreement-black-cat",
+      "case_fingerprint": "e0024e31996d9291",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"preto\",\"explanation\":\"The adjective must be feminine to agree with 'gata'.\",\"kind\":\"agreement\",\"replacement\":\"preta\"}]}",
+        "total_duration_nanoseconds": 1349741750,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1020,
+        "response_token_count": 54,
+        "response_duration_nanoseconds": 1205933709
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-verb-form-ter-age",
+      "case_fingerprint": "c9bdf82da9d4a646",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"tem\",\"explanation\":\"The verb 'ter' must be conjugated as 'tenho' for the first person singular 'eu'.\",\"kind\":\"verb_form\",\"replacement\":\"tenho\"}]}",
+        "total_duration_nanoseconds": 1579074917,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1018,
+        "response_token_count": 64,
+        "response_duration_nanoseconds": 1447643500
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-serestar-father-location",
+      "case_fingerprint": "cde9ed798ac01053",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"é\",\"explanation\":\"Use 'estar' for location, not 'ser'.\",\"kind\":\"ser_estar\",\"replacement\":\"está\"}]}",
+        "total_duration_nanoseconds": 1346110458,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1017,
+        "response_token_count": 54,
+        "response_duration_nanoseconds": 1205718708
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-article-contraction-hospital",
+      "case_fingerprint": "111ddb991cd0179c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"em o\",\"explanation\":\"'em' and 'o' contract to 'no'.\",\"kind\":\"article_preposition\",\"replacement\":\"no\"}]}",
+        "total_duration_nanoseconds": 1402524583,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1020,
+        "response_token_count": 56,
+        "response_duration_nanoseconds": 1265852875
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-pronoun-reflexive-feel",
+      "case_fingerprint": "402c1ccbaca564e1",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"sinto bem\",\"explanation\":\"The verb 'sentir' is used with an adjective to describe a state, but 'sentir-se' is required here.\",\"kind\":\"verb_form\",\"replacement\":\"me sinto bem\"}]}",
+        "total_duration_nanoseconds": 1892432166,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1023,
+        "response_token_count": 74,
+        "response_duration_nanoseconds": 1660086041
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-word-choice-radio",
+      "case_fingerprint": "e20de45de784f7e1",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 742195208,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 515619250
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-word-order-white-house",
+      "case_fingerprint": "299e0da86fdca8f0",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"branca casa\",\"explanation\":\"In Portuguese, adjectives usually come after the noun.\",\"kind\":\"word_order\",\"replacement\":\"casa branca\"}]}",
+        "total_duration_nanoseconds": 1367942541,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1019,
+        "response_token_count": 55,
+        "response_duration_nanoseconds": 1229398166
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-verb-form-ir-summer",
+      "case_fingerprint": "6eac0d5794b2daf0",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"foi\",\"explanation\":\"The verb must agree with the first person subject 'eu': fui.\",\"kind\":\"verb_form\",\"replacement\":\"fui\"}]}",
+        "total_duration_nanoseconds": 1567825250,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1024,
+        "response_token_count": 58,
+        "response_duration_nanoseconds": 1318600333
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-verb-form-pôr-table",
+      "case_fingerprint": "a6b40654000c2b68",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 740224292,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 510907666
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-agreement-red-shoes",
+      "case_fingerprint": "5aabb1be5549c7d4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"novo\",\"explanation\":\"The adjective must be plural to agree with 'sapatos'.\",\"kind\":\"agreement\",\"replacement\":\"novos\"}]}",
+        "total_duration_nanoseconds": 1462859542,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1031,
+        "response_token_count": 53,
+        "response_duration_nanoseconds": 1217915042
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-preposition-bicycle",
+      "case_fingerprint": "c6f75d968f712af4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 678458167,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1020,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 545443917
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-article-contraction-umbrella",
+      "case_fingerprint": "c8847890e82f8905",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"de o\",\"explanation\":\"The preposition 'de' and the article 'o' must contract to 'do'.\",\"kind\":\"article_preposition\",\"replacement\":\"do\"}]}",
+        "total_duration_nanoseconds": 1742943959,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1022,
+        "response_token_count": 61,
+        "response_duration_nanoseconds": 1484326416
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-pronoun-reflexive-hurt",
+      "case_fingerprint": "a4bec983b7a205c8",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 644262375,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1019,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 506280000
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-not-brazilian-fridge",
+      "case_fingerprint": "fcd35c71e3244e22",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"frigorífico\",\"explanation\":\"In Brazil, the word for refrigerator is 'geladeira'.\",\"kind\":\"not_brazilian\",\"replacement\":\"geladeira\"}]}",
+        "total_duration_nanoseconds": 1555211917,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1017,
+        "response_token_count": 59,
+        "response_duration_nanoseconds": 1427299416
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-not-brazilian-train",
+      "case_fingerprint": "7590a79c3e2628cb",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"comboio\",\"explanation\":\"'Comboio' is the European Portuguese term; 'trem' is used in Brazil.\",\"kind\":\"not_brazilian\",\"replacement\":\"trem\"}]}",
+        "total_duration_nanoseconds": 1816938875,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1023,
+        "response_token_count": 63,
+        "response_duration_nanoseconds": 1544637125
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-content-car",
+      "case_fingerprint": "3d38f3b57b1032c9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"grande\",\"explanation\":\"The car is small, not large.\",\"kind\":\"content_mismatch\",\"replacement\":\"pequeno\"},{\"error_text\":\"vermelho\",\"explanation\":\"The car is blue, not red.\",\"kind\":\"content_mismatch\",\"replacement\":\"azul\"}]}",
+        "total_duration_nanoseconds": 2144918875,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 83,
+        "response_duration_nanoseconds": 1878810167
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-word-choice-pedir-pizza",
+      "case_fingerprint": "b461f2a25a6c2f3a",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"perguntei\",\"explanation\":\"The verb 'pedir' (to order/ask for) should be used instead of 'perguntar' (to ask a question).\",\"kind\":\"word_choice\",\"replacement\":\"pedi\"}]}",
+        "total_duration_nanoseconds": 1991638167,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1026,
+        "response_token_count": 73,
+        "response_duration_nanoseconds": 1718768708
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-verb-form-subjunctive-advice",
+      "case_fingerprint": "1d096de3c8b1b7a6",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"fala\",\"explanation\":\"The verb should be in the subjunctive mood after 'aconselho que'.\",\"kind\":\"verb_form\",\"replacement\":\"fale\"}]}",
+        "total_duration_nanoseconds": 1601905625,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 58,
+        "response_duration_nanoseconds": 1341031834
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-verb-form-future-subjunctive-querer",
+      "case_fingerprint": "03d9bbae28294c2e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"querer\",\"explanation\":\"The verb should be in the future subjunctive 'quiser' after 'se'.\",\"kind\":\"verb_form\",\"replacement\":\"quiser\"}]}",
+        "total_duration_nanoseconds": 1675040792,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 60,
+        "response_duration_nanoseconds": 1434786042
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-verb-form-passive-agreement",
+      "case_fingerprint": "7f93c6ecd85892e9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"foi\",\"explanation\":\"The verb must be plural to agree with 'as janelas'.\",\"kind\":\"verb_form\",\"replacement\":\"foram\"}]}",
+        "total_duration_nanoseconds": 1589425250,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1026,
+        "response_token_count": 57,
+        "response_duration_nanoseconds": 1342106375
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-verb-form-pluperfect-agreement",
+      "case_fingerprint": "bf839424495a3af8",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"tinha\",\"explanation\":\"The verb must agree with the plural subject 'os diretores': tinham.\",\"kind\":\"verb_form\",\"replacement\":\"tinham\"}]}",
+        "total_duration_nanoseconds": 1631639417,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 59,
+        "response_duration_nanoseconds": 1400654125
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-crase-school",
+      "case_fingerprint": "e505baa516ff856c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"a escola\",\"explanation\":\"The preposition 'a' must contract with the article 'a' to form 'à' when indicating destination.\",\"kind\":\"article_preposition\",\"replacement\":\"à escola\"}]}",
+        "total_duration_nanoseconds": 1879418333,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 67,
+        "response_duration_nanoseconds": 1706594333
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-spelling-ótima",
+      "case_fingerprint": "43e3d61c0033b047",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"otima\",\"explanation\":\"The word needs an acute accent on the 'i': ótima.\",\"kind\":\"spelling\",\"replacement\":\"ótima\"}]}",
+        "total_duration_nanoseconds": 1477295167,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1019,
+        "response_token_count": 56,
+        "response_duration_nanoseconds": 1318294125
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b2-spelling-vários",
+      "case_fingerprint": "6b88853f3a704142",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":true,\"mistakes\":[{\"error_text\":\"varios\",\"explanation\":\"The word needs an acute accent: vários.\",\"kind\":\"spelling\",\"replacement\":\"vários\"}]}",
+        "total_duration_nanoseconds": 1515435291,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1024,
+        "response_token_count": 52,
+        "response_duration_nanoseconds": 1258591291
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-off-topic-music",
+      "case_fingerprint": "fb56f67fe8c8b734",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":false,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 766583209,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1021,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 533609250
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-b1-off-topic-rain",
+      "case_fingerprint": "34a2492516e339dc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":false,\"language_is_portuguese\":true,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 772261666,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1027,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 550909875
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a1-english-apartment",
+      "case_fingerprint": "425abdbb2e987bfa",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":false,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 745456875,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1020,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 582527250
+      },
+      "error": null
+    },
+    {
+      "case_id": "h-a2-english-market",
+      "case_fingerprint": "db4f90966d78ae96",
+      "repeat": 1,
+      "reply": {
+        "content": "{\"answers_the_question\":true,\"language_is_portuguese\":false,\"mistakes\":[]}",
+        "total_duration_nanoseconds": 700160625,
+        "load_duration_nanoseconds": 0,
+        "prompt_token_count": 1017,
+        "response_token_count": 23,
+        "response_duration_nanoseconds": 546241708
+      },
+      "error": null
+    }
+  ]
+}

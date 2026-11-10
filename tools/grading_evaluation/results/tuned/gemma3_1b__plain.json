@@ -1,0 +1,1009 @@
+{
+  "model": "gemma3:1b",
+  "prompt_variant": "plain",
+  "temperature": 0.0,
+  "repeats": 1,
+  "started_at": "2026-10-29T21:07:09.856687+00:00",
+  "model_description": {
+    "family": "gemma3",
+    "parameter_size": "999.89M",
+    "quantization_level": "Q4_K_M",
+    "size_bytes": 806067407
+  },
+  "case_calls": [
+    {
+      "case_id": "a1-control-beach-clothes",
+      "case_fingerprint": "b80938ba1cc23b7d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"maiô\",\n        \"explanation\": \"The word 'maiô' means 'swimsuit', not 'red swimsuit'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"roupa\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 520445042,
+        "load_duration_nanoseconds": 1028709,
+        "prompt_token_count": 510,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 491235000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-coffee",
+      "case_fingerprint": "ffd8d7028fb044bb",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gosto\",\n        \"explanation\": \"The verb 'gostar' is used for liking, not 'to like'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"gosto\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 596027333,
+        "load_duration_nanoseconds": 1225167,
+        "prompt_token_count": 472,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 497436000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-colloquial-feeling",
+      "case_fingerprint": "260bd3b0780fda36",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"tô\",\n        \"explanation\": \"This is a misspelling of 'tô'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"tô\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 674667292,
+        "load_duration_nanoseconds": 1321625,
+        "prompt_token_count": 477,
+        "response_token_count": 88,
+        "response_duration_nanoseconds": 555962000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-daily-routine",
+      "case_fingerprint": "381125e3a285547f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"tomo\",\n        \"explanation\": \"The verb 'tomar' means 'to drink'. 'Vou' means 'I go'. You need to use 'tomar' to drink coffee.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"tomar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 848828375,
+        "load_duration_nanoseconds": 1443542,
+        "prompt_token_count": 481,
+        "response_token_count": 110,
+        "response_duration_nanoseconds": 714242000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-order-meal",
+      "case_fingerprint": "e18695f4a097d9b9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"queria\",\n        \"explanation\": \"The verb 'querer' means 'to want'. 'Eu queria' is the correct form of the verb to express desire.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"quisem\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 860676292,
+        "load_duration_nanoseconds": 1636209,
+        "prompt_token_count": 485,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 711765000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-family",
+      "case_fingerprint": "05ae361026f4ca28",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Eu\",\n        \"explanation\": \"The correct form of 'I' is 'eu'.\",\n        \"kind\": \"pronoun\",\n        \"replacement\": \"Eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 740435750,
+        "load_duration_nanoseconds": 1597250,
+        "prompt_token_count": 482,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 600249000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-control-reflexive-name",
+      "case_fingerprint": "8833268af9a9e595",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Eu\",\n        \"explanation\": \"The verb 'me chamar' (to call me) is used for a person, not a thing. 'Eu' is the subject of the sentence.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"Eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 796944834,
+        "load_duration_nanoseconds": 1466417,
+        "prompt_token_count": 477,
+        "response_token_count": 107,
+        "response_duration_nanoseconds": 662443000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-spelling-feijao",
+      "case_fingerprint": "b0f4c21d1cbc6f88",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"feijão\",\n        \"explanation\": \"‘Feijão’ is a type of bean, not a food.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"arroz\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 910045625,
+        "load_duration_nanoseconds": 2033833,
+        "prompt_token_count": 476,
+        "response_token_count": 94,
+        "response_duration_nanoseconds": 559696000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-spelling-accents",
+      "case_fingerprint": "57ecadc11c3bbf0b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"de\",\n        \"explanation\": \"The word 'de' should be 'de' to indicate possession.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"de\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 723689750,
+        "load_duration_nanoseconds": 1546416,
+        "prompt_token_count": 478,
+        "response_token_count": 89,
+        "response_duration_nanoseconds": 605636000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-trousers",
+      "case_fingerprint": "832dacd5a07c2ade",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"veste\",\n        \"explanation\": \"The correct verb is 'usa' (uses). 'Vestir' means 'to wear'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"usa\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 759973500,
+        "load_duration_nanoseconds": 1808541,
+        "prompt_token_count": 494,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 634395000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-article-gender",
+      "case_fingerprint": "af584daf3f4a573c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"escritório\",\n        \"explanation\": \"The word 'escritório' means 'office' in Portuguese, not 'office'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"ofice\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 692355500,
+        "load_duration_nanoseconds": 1417166,
+        "prompt_token_count": 473,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 571058000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-agreement-plural-adjective",
+      "case_fingerprint": "2b7e6253f900c8ed",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Eu\",\n        \"explanation\": \"The correct form of 'I' is 'eu'.\",\n        \"kind\": \"pronoun\",\n        \"replacement\": \"Eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 695208041,
+        "load_duration_nanoseconds": 1369875,
+        "prompt_token_count": 475,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 573921000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-location-now",
+      "case_fingerprint": "861bc66a3c0332d4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Agora\",\n        \"explanation\": \"This is the correct form of the verb 'to be' in Portuguese. 'Agora' means 'now'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"Agora\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 829010708,
+        "load_duration_nanoseconds": 1833791,
+        "prompt_token_count": 475,
+        "response_token_count": 99,
+        "response_duration_nanoseconds": 696468000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-nationality",
+      "case_fingerprint": "19bd6d9dffe54cc6",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"eu\",\n        \"explanation\": \"The verb 'estar' is used for states and conditions, not for the origin of a person.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 845093667,
+        "load_duration_nanoseconds": 1576459,
+        "prompt_token_count": 484,
+        "response_token_count": 96,
+        "response_duration_nanoseconds": 619219000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-serestar-tired",
+      "case_fingerprint": "aab5410b0fd18314",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"cansado\",\n        \"explanation\": \"This word means 'tired' in Portuguese, not 'exhausted' or 'exhausted'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"cansado\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 750040417,
+        "load_duration_nanoseconds": 1532334,
+        "prompt_token_count": 496,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 621861000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-article-contraction-em-o",
+      "case_fingerprint": "43e7bd8cdb2f7722",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"o\",\n        \"explanation\": \"The word 'o' should be 'em' because it indicates a location.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"em\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 830726875,
+        "load_duration_nanoseconds": 1539625,
+        "prompt_token_count": 476,
+        "response_token_count": 91,
+        "response_duration_nanoseconds": 690451000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-preposition-missing-em",
+      "case_fingerprint": "803acab0f7313775",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"sou\",\n        \"explanation\": \"The verb 'ser' is used for permanent characteristics, not temporary locations. 'Eu sou' means 'I am', not 'I am from'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"Eu estou\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 870090750,
+        "load_duration_nanoseconds": 1607458,
+        "prompt_token_count": 474,
+        "response_token_count": 108,
+        "response_duration_nanoseconds": 737050000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-verb-form-jantar",
+      "case_fingerprint": "60fb10da9ba6e8c2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"à oito\",\n        \"explanation\": \"The verb 'jantar' (to eat) should be in the past tense, so 'jantou' (ate) instead of 'à oito' (at eight).\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"jantou\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 924735208,
+        "load_duration_nanoseconds": 1563667,
+        "prompt_token_count": 477,
+        "response_token_count": 116,
+        "response_duration_nanoseconds": 790229000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-reflexive-name",
+      "case_fingerprint": "a5a3b2e7ceac7701",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"chamo\",\n        \"explanation\": \"The verb 'chamar' (to call) is used for a person, not a thing. It should be 'eu chamo' (I call).\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1253095125,
+        "load_duration_nanoseconds": 1755666,
+        "prompt_token_count": 475,
+        "response_token_count": 110,
+        "response_duration_nanoseconds": 1113042000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-pronoun-reflexive-friend",
+      "case_fingerprint": "cf60246f27de20f7",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"amiga\",\n        \"explanation\": \"The word 'amiga' means 'friend' in Portuguese, but it’s used to mean 'woman'.\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"amigo\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 736990916,
+        "load_duration_nanoseconds": 1526875,
+        "prompt_token_count": 480,
+        "response_token_count": 100,
+        "response_duration_nanoseconds": 622034000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-choice-beans",
+      "case_fingerprint": "9d818c5d71a2fc73",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"almoço\",\n        \"explanation\": \"The verb 'almoçar' is used for 'to eat lunch', not 'to eat'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"almoçar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 743445500,
+        "load_duration_nanoseconds": 1476834,
+        "prompt_token_count": 479,
+        "response_token_count": 101,
+        "response_duration_nanoseconds": 627908000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-order-adjective",
+      "case_fingerprint": "7bc79d6e1f047d20",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"vermelha\",\n        \"explanation\": \"The word 'vermelha' means 'red'. 'Vermelho' is the correct word for 'red'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"vermelho\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 942490500,
+        "load_duration_nanoseconds": 1594125,
+        "prompt_token_count": 494,
+        "response_token_count": 103,
+        "response_duration_nanoseconds": 813569000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-word-order-adverb",
+      "case_fingerprint": "685bb491a060b621",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"muito\",\n        \"explanation\": \"The verb 'gostar' is used for 'to like' but 'muito' is an excessive amount, which doesn’t fit the context.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"muito\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1256391458,
+        "load_duration_nanoseconds": 1616083,
+        "prompt_token_count": 473,
+        "response_token_count": 109,
+        "response_duration_nanoseconds": 1127094000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-content-jacket-colour",
+      "case_fingerprint": "43e5838b848b0569",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"usa\",\n        \"explanation\": \"The verb 'use' is incorrect in this context.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"use\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 700234042,
+        "load_duration_nanoseconds": 1600458,
+        "prompt_token_count": 498,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 571242000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-off-topic-football",
+      "case_fingerprint": "ee316bb450e82a37",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gosto\",\n        \"explanation\": \"The verb 'gostar' is used for liking, not 'to like'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"gosto\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 725497542,
+        "load_duration_nanoseconds": 2207208,
+        "prompt_token_count": 479,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 610863000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a1-english-lunch",
+      "case_fingerprint": "e18b2e5940b20701",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"rice\",\n        \"explanation\": \"The word 'rice' is a noun, not a verb.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"meal\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 939315042,
+        "load_duration_nanoseconds": 2151583,
+        "prompt_token_count": 475,
+        "response_token_count": 89,
+        "response_duration_nanoseconds": 806088000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-portugues",
+      "case_fingerprint": "317e6777630a950e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"estudei\",\n        \"explanation\": \"The verb 'estudar' (to study) is used for a lesson or activity, not for simply studying.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"estudii\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1033044167,
+        "load_duration_nanoseconds": 1997417,
+        "prompt_token_count": 483,
+        "response_token_count": 103,
+        "response_duration_nanoseconds": 894301000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-agua",
+      "case_fingerprint": "7187e9494a845ccc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"comprei\",\n        \"explanation\": \"The verb 'comprei' (bought) is the correct form of the verb 'comprar' (to buy) in the past tense. 'No mercado eu comprei' is the correct way to say 'I bought at the market'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"comprar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1107897042,
+        "load_duration_nanoseconds": 2498333,
+        "prompt_token_count": 506,
+        "response_token_count": 129,
+        "response_duration_nanoseconds": 969953000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-spelling-three-errors",
+      "case_fingerprint": "c3aaaf37a047659c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"tomar\",\n        \"explanation\": \"The verb 'tomar' means 'to drink'. 'Aprender' means 'to learn'.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"aprender\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 743102541,
+        "load_duration_nanoseconds": 2114166,
+        "prompt_token_count": 491,
+        "response_token_count": 100,
+        "response_duration_nanoseconds": 624090000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-irregular-fazer",
+      "case_fingerprint": "66c87c915836cff3",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"fazi\",\n        \"explanation\": \"The correct verb is 'fez' (past tense of 'fazer' - to do).\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"fez\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1430736000,
+        "load_duration_nanoseconds": 2222833,
+        "prompt_token_count": 482,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 1286603000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-regular-past",
+      "case_fingerprint": "8ea6cc8d6169721d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"visitei\",\n        \"explanation\": \"The verb 'visitar' means 'to visit'. 'Ver\",\"kind\": \"spelling\",\"replacement\": \"visitamos\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1023505417,
+        "load_duration_nanoseconds": 6250750,
+        "prompt_token_count": 492,
+        "response_token_count": 87,
+        "response_duration_nanoseconds": 891644000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-imperfect",
+      "case_fingerprint": "9375231205100e5e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"moro\",\n        \"explanation\": \"The verb 'morar' means 'to live', not 'to live in'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"live\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 920231792,
+        "load_duration_nanoseconds": 8905500,
+        "prompt_token_count": 481,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 790337000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-verb-form-subject-agreement",
+      "case_fingerprint": "6acec96d9ccdaeaf",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"no\",\n        \"explanation\": \"The verb 'no' is used to indicate 'not'. It should be 'na' before 'casa'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"na\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 953760416,
+        "load_duration_nanoseconds": 3430458,
+        "prompt_token_count": 482,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 822983000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-serestar-tired-day",
+      "case_fingerprint": "304727f565913027",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"fiquei\",\n        \"explanation\": \"The correct verb is 'dormi'. 'Fiquei' means 'I stayed'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"dormi\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 865041583,
+        "load_duration_nanoseconds": 3491250,
+        "prompt_token_count": 509,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 711136000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-agreement-two-errors",
+      "case_fingerprint": "4ed21e94678d6e8d",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"muito\",\n        \"explanation\": \"It should be 'very'\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"very\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1129407708,
+        "load_duration_nanoseconds": 2142875,
+        "prompt_token_count": 505,
+        "response_token_count": 81,
+        "response_duration_nanoseconds": 999954000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-preposition-por-para",
+      "case_fingerprint": "21d43ac77ded00f5",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"estudo\",\n        \"explanation\": \"The verb 'estudar' is used for 'to study', not 'to be studying'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"estudar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1170574417,
+        "load_duration_nanoseconds": 2664959,
+        "prompt_token_count": 479,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 1042423000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-word-choice-atender",
+      "case_fingerprint": "327c78c859b67d88",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"atendi\",\n        \"explanation\": \"This verb means 'to attend' or 'to watch'. It’s the wrong verb form for 'to watch a movie'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"estudei\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 821394291,
+        "load_duration_nanoseconds": 3462625,
+        "prompt_token_count": 480,
+        "response_token_count": 106,
+        "response_duration_nanoseconds": 689905000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-word-choice-lavar-dentes",
+      "case_fingerprint": "3742ceffe9b83c51",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"foco\",\n        \"explanation\": \"This means 'focus'. It’s not what you’re doing.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"focus\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 703501375,
+        "load_duration_nanoseconds": 2704166,
+        "prompt_token_count": 482,
+        "response_token_count": 92,
+        "response_duration_nanoseconds": 582545000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-pronoun-reciprocal",
+      "case_fingerprint": "f6b33c2c8429a309",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"me\",\n        \"explanation\": \"The verb 'me' should be 'eu' because it's used as a subject.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"eu\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 730412917,
+        "load_duration_nanoseconds": 1641625,
+        "prompt_token_count": 483,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 611944000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-gerund",
+      "case_fingerprint": "bb10a0fb2a654c10",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"estou\",\n        \"explanation\": \"The verb 'estar' is used for temporary states, not continuous actions. 'Estou a comer' is the correct form.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"estou a comer\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1304285042,
+        "load_duration_nanoseconds": 1654000,
+        "prompt_token_count": 477,
+        "response_token_count": 106,
+        "response_duration_nanoseconds": 1169351000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-bus",
+      "case_fingerprint": "b62cec85a2331cd1",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"autocarro\",\n        \"explanation\": \"‘Autocarro’ means ‘bus’ in Portuguese, not ‘coach’.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"autocarro\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 716793083,
+        "load_duration_nanoseconds": 1712208,
+        "prompt_token_count": 480,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 594138000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-not-brazilian-breakfast",
+      "case_fingerprint": "66033aa135918541",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"tomar\",\n        \"explanation\": \"This verb means 'to take' or 'to eat'. It’s not the correct verb for 'breakfast'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"comer\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 738141959,
+        "load_duration_nanoseconds": 1756584,
+        "prompt_token_count": 480,
+        "response_token_count": 101,
+        "response_duration_nanoseconds": 620114000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-content-weather",
+      "case_fingerprint": "e6554fc8ab090f6f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"fazendo\",\n        \"explanation\": \"This verb is used to describe an action that is happening now, but it’s not the correct verb to use when describing the weather.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"está\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 730567583,
+        "load_duration_nanoseconds": 9039875,
+        "prompt_token_count": 485,
+        "response_token_count": 106,
+        "response_duration_nanoseconds": 583566000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-trip",
+      "case_fingerprint": "a7cd9c8986687c81",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"viajamos\",\n        \"explanation\": \"The verb 'viajar' (to travel) is used correctly, but 'viajamos' (we traveled) is incorrect.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"viajamos\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 816269667,
+        "load_duration_nanoseconds": 1342625,
+        "prompt_token_count": 498,
+        "response_token_count": 107,
+        "response_duration_nanoseconds": 691821000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-weekend-plans",
+      "case_fingerprint": "749f9c976322b627",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"vai\",\n        \"explanation\": \"The verb 'ir' (to go) is used for a future action, but 'vai' is used to indicate a future action in the present tense. It should be 'vouro' or 'vou'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"vouro\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1550858917,
+        "load_duration_nanoseconds": 1782875,
+        "prompt_token_count": 483,
+        "response_token_count": 121,
+        "response_duration_nanoseconds": 1416451000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-comparison",
+      "case_fingerprint": "8401394391c8dedc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"seu\",\n        \"explanation\": \"The word 'seu' is a possessive pronoun and should be 'o' before 'seu'.\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"o\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 803582625,
+        "load_duration_nanoseconds": 1637417,
+        "prompt_token_count": 505,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 678927000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-directions",
+      "case_fingerprint": "64adcfe2fd1a1709",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"siga\",\n        \"explanation\": \"This is the wrong verb form to use. It should be 'siga em frente'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"siga em frente\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 796640500,
+        "load_duration_nanoseconds": 2700375,
+        "prompt_token_count": 506,
+        "response_token_count": 99,
+        "response_duration_nanoseconds": 665101000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-a-gente",
+      "case_fingerprint": "52b055ef40e65f65",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gente\",\n        \"explanation\": \"‘Gente’ is a plural noun, so it should be ‘pessoas’ (people) to agree with ‘comer’ (to eat).\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"pessoas\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 813862167,
+        "load_duration_nanoseconds": 1738292,
+        "prompt_token_count": 486,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 688846000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-object-pronoun",
+      "case_fingerprint": "f9ff5ec6ad677655",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gostei\",\n        \"explanation\": \"This verb is used to express a feeling or opinion, not a simple statement of liking.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"gostei de\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1314338084,
+        "load_duration_nanoseconds": 1586459,
+        "prompt_token_count": 479,
+        "response_token_count": 99,
+        "response_duration_nanoseconds": 1170568000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-control-free-time",
+      "case_fingerprint": "a5bbbd7a130ebfff",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gosto\",\n        \"explanation\": \"The verb 'gostar' means 'to like', so 'gosto' is incorrect.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"gosto\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 766635833,
+        "load_duration_nanoseconds": 1831875,
+        "prompt_token_count": 491,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 641475000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-off-topic-meal",
+      "case_fingerprint": "70125b3c96a675ab",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"morou\",\n        \"explanation\": \"The verb 'morar' means 'to live', not 'to live in'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"vive\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1252643917,
+        "load_duration_nanoseconds": 1597917,
+        "prompt_token_count": 499,
+        "response_token_count": 95,
+        "response_duration_nanoseconds": 1119625000
+      },
+      "error": null
+    },
+    {
+      "case_id": "a2-english-day",
+      "case_fingerprint": "f855eb09521641da",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"woke\",\n        \"explanation\": \"The verb 'wake up' is usually past tense. 'Woke' is the present tense.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"woke\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 809924375,
+        "load_duration_nanoseconds": 1589958,
+        "prompt_token_count": 474,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 682447000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-subjunctive-present",
+      "case_fingerprint": "0b53cb9aa36cdc6b",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Espero\",\n        \"explanation\": \"This is the beginning of a phrase, not a question.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"Espero que\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 779837875,
+        "load_duration_nanoseconds": 1888667,
+        "prompt_token_count": 483,
+        "response_token_count": 91,
+        "response_duration_nanoseconds": 650992000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-future-subjunctive",
+      "case_fingerprint": "f3b6266ec2c6ffe9",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"ter\",\n        \"explanation\": \"The verb 'ter' means 'to have'. 'Viajar' means 'to travel'. They are not interchangeable here.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"ir\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1369834333,
+        "load_duration_nanoseconds": 1541625,
+        "prompt_token_count": 488,
+        "response_token_count": 101,
+        "response_duration_nanoseconds": 1229427000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-imperfect-subjunctive",
+      "case_fingerprint": "13fda4320e0f8a04",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"comprar\",\n        \"explanation\": \"The verb 'comprar' means 'to buy'. 'Ganhar' means 'to win'. The correct verb to use is 'ganhar' to indicate winning.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"ganhar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 829879042,
+        "load_duration_nanoseconds": 1800000,
+        "prompt_token_count": 489,
+        "response_token_count": 112,
+        "response_duration_nanoseconds": 697893000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-verb-form-present-perfect",
+      "case_fingerprint": "8301cd5d317d5620",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"eu\",\n        \"explanation\": \"The verb 'morar' (to live) is conjugated to 'morro' (I live) in the present tense. 'Eu' is the first person singular pronoun.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"Eu\"\n    },\n    {\n        \"error_text\": \"desde\",\n        \"explanation\": \"The word 'desde' is used to indicate a duration of time. It is not needed here.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"desde\"\n    },\n    {\n        \"error_text\": \"2019\",\n        \"explanation\": \"The number 2019 is not a correct way to express the duration of time.\",\n        \"kind\": \"word_choice\",\n        \"replacement\": \"2019\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 2085442959,
+        "load_duration_nanoseconds": 1518667,
+        "prompt_token_count": 486,
+        "response_token_count": 237,
+        "response_duration_nanoseconds": 1957085000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-agreement-passive",
+      "case_fingerprint": "fcbad2aabedadb52",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"construída\",\n        \"explanation\": \"The verb 'construir' (to build) is needed here, not 'feita' (made).\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"built\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 809232750,
+        "load_duration_nanoseconds": 1691208,
+        "prompt_token_count": 509,
+        "response_token_count": 100,
+        "response_duration_nanoseconds": 684561000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-content-date",
+      "case_fingerprint": "347646a78c27eaa4",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"construída\",\n        \"explanation\": \"The verb 'construir' means 'to build'. 'Construir' is the correct verb for 'to build' a building.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"built\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 747531625,
+        "load_duration_nanoseconds": 1314542,
+        "prompt_token_count": 508,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 635642000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-subjunctive",
+      "case_fingerprint": "b5d3dad33a1fbeb2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"Espero\",\n        \"explanation\": \"This is a verb used to express a wish or hope. It’s not the correct phrase to introduce an invitation.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"Espero que você possa vir\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 804103750,
+        "load_duration_nanoseconds": 1414417,
+        "prompt_token_count": 481,
+        "response_token_count": 106,
+        "response_duration_nanoseconds": 681371000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-future-subjunctive",
+      "case_fingerprint": "1bf6bd6025a7670a",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"vou\",\n        \"explanation\": \"The verb 'vou' is used for 'going to' but 'terminar' is the correct verb for 'to finish'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"terminar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 863235792,
+        "load_duration_nanoseconds": 1654500,
+        "prompt_token_count": 482,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 729160000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-conditional",
+      "case_fingerprint": "d04ea693156fe65e",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"comprar\",\n        \"explanation\": \"The verb 'comprar' means 'to buy'. 'Ganhar' means 'to win'. The correct verb to use is 'ganhar' to indicate winning.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"gain\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 826156375,
+        "load_duration_nanoseconds": 1712041,
+        "prompt_token_count": 490,
+        "response_token_count": 111,
+        "response_duration_nanoseconds": 693425000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-personal-infinitive",
+      "case_fingerprint": "dd01a26729fba50c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"podermos\",\n        \"explanation\": \"The verb 'podermos' is the subjunctive form of 'poder' and is used to express a hypothetical or unreal situation. It’s not appropriate here.\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"poderíamos\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1148032834,
+        "load_duration_nanoseconds": 1579334,
+        "prompt_token_count": 480,
+        "response_token_count": 108,
+        "response_duration_nanoseconds": 1016462000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-opinion",
+      "case_fingerprint": "68af50a98b31c295",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gente\",\n        \"explanation\": \"The word 'gente' means 'people'. It’s a common word, but it’s not the correct word to use here.\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"pessoas\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 879848041,
+        "load_duration_nanoseconds": 2673083,
+        "prompt_token_count": 492,
+        "response_token_count": 102,
+        "response_duration_nanoseconds": 734405000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b1-control-formal-email",
+      "case_fingerprint": "8df41e3b9a21696f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"gostaria\",\n        \"explanation\": \"The verb 'gostar' is used for 'to like'. 'Gostar' is used for 'to like' in English.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"to like\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 790296208,
+        "load_duration_nanoseconds": 1998583,
+        "prompt_token_count": 497,
+        "response_token_count": 107,
+        "response_duration_nanoseconds": 671663000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-verb-form-pluperfect-participle",
+      "case_fingerprint": "ad3f6a38517d1b7f",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"cheguei\",\n        \"explanation\": \"The verb 'chegar' means 'to arrive'. 'Chegar' is the correct verb to use when you arrive.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"chegar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1086627625,
+        "load_duration_nanoseconds": 1611375,
+        "prompt_token_count": 497,
+        "response_token_count": 104,
+        "response_duration_nanoseconds": 961719000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-verb-form-subjunctive-three-errors",
+      "case_fingerprint": "3c6bb149853ceb29",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"recomendo\",\n        \"explanation\": \"The verb 'recomendar' means 'to recommend'. 'Recomendar' is the correct verb.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"recomendar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1665334667,
+        "load_duration_nanoseconds": 2254875,
+        "prompt_token_count": 497,
+        "response_token_count": 102,
+        "response_duration_nanoseconds": 1509433000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-preposition-sobre-do",
+      "case_fingerprint": "44272a9fae086dcc",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"do\",\n        \"explanation\": \"The word 'do' is used incorrectly in this context. It should be 'de' to indicate the time.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"de\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 725330458,
+        "load_duration_nanoseconds": 1642708,
+        "prompt_token_count": 509,
+        "response_token_count": 98,
+        "response_duration_nanoseconds": 596279000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-reported-speech",
+      "case_fingerprint": "324f9b6267f484e2",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n  \"answers_the_question\": true,\n  \"language_is_portuguese\": false,\n  \"mistakes\": [\n    {\n      \"error_text\": \"já\",\n      \"explanation\": \"The verb 'já' means 'already' but is used to indicate completion. It should be 'já que' to indicate 'that' or 'because'.\",\n      \"kind\": \"verb_form\",\n      \"replacement\": \"já que\"\n    }\n  ]\n}",
+        "total_duration_nanoseconds": 775326791,
+        "load_duration_nanoseconds": 1370666,
+        "prompt_token_count": 504,
+        "response_token_count": 113,
+        "response_duration_nanoseconds": 670054000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-idiom",
+      "case_fingerprint": "e0e150075faf026c",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": true,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"complicado\",\n        \"explanation\": \"The verb 'apagar' means 'to extinguish', not 'to complicate'.\",\n        \"kind\": \"spelling\",\n        \"replacement\": \"simple\"\n    },\n    {\n        \"error_text\": \"morto de cansaço\",\n        \"explanation\": \"The verb 'chegar' is used to describe a state of being, not to describe a feeling of exhaustion.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"chegar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 1663276792,
+        "load_duration_nanoseconds": 1664042,
+        "prompt_token_count": 495,
+        "response_token_count": 163,
+        "response_duration_nanoseconds": 1541556000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-formal-complaint",
+      "case_fingerprint": "57f1b0e5b186112a",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"reclamer\",\n        \"explanation\": \"The verb 'reclamer' is incorrect. It should be 'reclamar'.\",\n        \"kind\": \"verb_form\",\n        \"replacement\": \"reclamar\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 786478041,
+        "load_duration_nanoseconds": 1692125,
+        "prompt_token_count": 520,
+        "response_token_count": 97,
+        "response_duration_nanoseconds": 656575000
+      },
+      "error": null
+    },
+    {
+      "case_id": "b2-control-pronoun-placement",
+      "case_fingerprint": "6135ff130d98adaa",
+      "repeat": 1,
+      "reply": {
+        "content": "{\n\"answers_the_question\": false,\n\"language_is_portuguese\": false,\n\"mistakes\": [\n    {\n        \"error_text\": \"lhe\",\n        \"explanation\": \"The correct pronoun is 'ele' (he) instead of 'lhe' (him).\",\n        \"kind\": \"agreement\",\n        \"replacement\": \"ele\"\n    }\n]\n}",
+        "total_duration_nanoseconds": 916516166,
+        "load_duration_nanoseconds": 1537916,
+        "prompt_token_count": 484,
+        "response_token_count": 93,
+        "response_duration_nanoseconds": 780098000
+      },
+      "error": null
+    }
+  ]
+}
