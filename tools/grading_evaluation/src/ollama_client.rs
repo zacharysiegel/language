@@ -3,13 +3,14 @@ use std::sync::Mutex;
 use std::time::Duration;
 
 use reqwest::blocking::{Client, Response};
-use serde::{Deserialize, Serialize};
+use serde::Deserialize;
 use serde_json::{Value, json};
 use shared::AppError;
 use shared::grading::ChatMessage;
 
+use crate::grading_runtime::{self, ChatReply, GradingRequest, GradingRuntime, ModelDescription};
+
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(300);
-const MAXIMUM_RESPONSE_TOKENS: u32 = 1024;
 const KEEP_MODEL_LOADED: &str = "30m";
 
 pub struct ChatRequest<'request_lifetime> {
@@ -20,28 +21,29 @@ pub struct ChatRequest<'request_lifetime> {
     pub seed: i64,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ChatReply {
-    pub content: String,
-    pub total_duration_nanoseconds: u64,
-    pub load_duration_nanoseconds: u64,
-    pub prompt_token_count: u64,
-    pub response_token_count: u64,
-    pub response_duration_nanoseconds: u64,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ModelDescription {
-    pub family: String,
-    pub parameter_size: String,
-    pub quantization_level: String,
-    pub size_bytes: u64,
-}
-
 pub struct OllamaConnection {
     client: Client,
     base_url: String,
     models_without_thinking: Mutex<HashSet<String>>,
+}
+
+pub struct OllamaModel<'connection_lifetime> {
+    pub connection: &'connection_lifetime OllamaConnection,
+    pub model: &'connection_lifetime str,
+}
+
+impl GradingRuntime for OllamaModel<'_> {
+    fn grade(&self, request: &GradingRequest) -> Result<ChatReply, AppError> {
+        let chat_request: ChatRequest = ChatRequest {
+            model: self.model,
+            messages: request.messages,
+            response_schema: request.response_schema,
+            temperature: request.temperature,
+            seed: i64::from(request.seed),
+        };
+
+        self.connection.chat(&chat_request)
+    }
 }
 
 #[derive(Deserialize)]
@@ -191,7 +193,7 @@ impl OllamaConnection {
             "options": {
                 "temperature": request.temperature,
                 "seed": request.seed,
-                "num_predict": MAXIMUM_RESPONSE_TOKENS,
+                "num_predict": grading_runtime::MAXIMUM_ANSWER_TOKEN_COUNT,
             },
         });
 
@@ -238,5 +240,6 @@ fn into_reply(chat: OllamaChatSerialOut) -> Result<ChatReply, AppError> {
         prompt_token_count: chat.prompt_eval_count,
         response_token_count: chat.eval_count,
         response_duration_nanoseconds: chat.eval_duration,
+        thinking: None,
     })
 }

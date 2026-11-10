@@ -29,7 +29,7 @@ Follow `docs/design.md` (Eafora's identity): tokens in `web/style/_tokens.scss`,
 
 ## Grading evaluation
 
-`docs/grading-evaluation.md` describes how local language models are measured on grading a learner's written answer. Run it with `./scripts/dev/evaluate-grading.sh`; the cases are in `tools/grading_evaluation/cases/`, and Ollama must be running.
+`docs/grading-evaluation.md` describes how local language models are measured on grading a learner's written answer. Run it with `./scripts/dev/evaluate-grading.sh`; the cases are in `tools/grading_evaluation/cases/`, and Ollama must be running unless the run uses `--runtime cross-llama`.
 
 ## iOS tests
 
