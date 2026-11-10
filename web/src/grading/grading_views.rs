@@ -1,5 +1,6 @@
 use leptos::prelude::*;
-use shared::grading::{self, GraderFinding, GraderResponse};
+use shared::grading;
+use shared::progress::{SavedGraderFinding, SavedOpenResponseGrade};
 
 use crate::grading::{
     self as web_grading, GraderStateKind, GradingProgress, GradingStepKind, GradingStore, ModelDownloadProgress, use_grading_store,
@@ -14,6 +15,7 @@ const DOWNLOAD_SETTING_LABEL: &str = "Download AI grading model";
 const DOWNLOAD_PROGRESS_LABEL: &str = "AI grading model download";
 const AI_MODEL_TAG: &str = "AI model";
 const GRADING_PROGRESS_LABEL: &str = "Automatic grading progress";
+pub const GRADING_PENDING_NOTICE: &str = "Grading pending";
 
 fn download_progress_text(progress: &ModelDownloadProgress) -> String {
     format!("Downloading the AI model for automatic grading: {}", progress.description())
@@ -39,7 +41,7 @@ fn yes_or_no(value: bool) -> &'static str {
     if value { "Yes" } else { "No" }
 }
 
-pub fn mistake_count_heading(findings: &[GraderFinding]) -> String {
+pub fn mistake_count_heading(findings: &[SavedGraderFinding]) -> String {
     match findings.len() {
         0 => "No mistakes found".to_string(),
         1 => "1 mistake found".to_string(),
@@ -170,8 +172,8 @@ pub fn GradedFeedbackHeading(heading: String) -> impl IntoView {
 }
 
 #[component]
-pub fn GraderFindings(response: GraderResponse, target_language_name: String) -> impl IntoView {
-    let finding_items: Vec<_> = response
+pub fn GraderFindings(grade: SavedOpenResponseGrade, target_language_name: String) -> impl IntoView {
+    let finding_items: Vec<_> = grade
         .findings
         .into_iter()
         .map(|finding| {
@@ -192,9 +194,9 @@ pub fn GraderFindings(response: GraderResponse, target_language_name: String) ->
     view! {
         <dl class="grader-checks">
             <dt>"Addresses the task"</dt>
-            <dd>{yes_or_no(response.answers_the_question)}</dd>
+            <dd>{yes_or_no(grade.answers_the_question)}</dd>
             <dt>{format!("Written in {target_language_name}")}</dt>
-            <dd>{yes_or_no(response.written_in_portuguese)}</dd>
+            <dd>{yes_or_no(grade.written_in_target_language)}</dd>
         </dl>
         <ul class="grader-findings">{finding_items}</ul>
     }

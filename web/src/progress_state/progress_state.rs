@@ -3,7 +3,9 @@ use std::time::Duration;
 use leptos::prelude::*;
 use leptos::wasm_bindgen::JsValue;
 use shared::course::{Exercise, vocabulary_card_id};
-use shared::progress::{PausedPractice, PausedPracticeStateKind, Progress, QueuedCards, SavedExerciseResult, UnitProgress, UnitStatusKind};
+use shared::progress::{
+    OpenResponseTask, PausedPractice, PausedPracticeStateKind, Progress, QueuedCards, SavedExerciseResult, SavedOpenResponse, UnitProgress, UnitStatusKind,
+};
 
 use crate::platform;
 
@@ -22,6 +24,10 @@ pub struct ProgressStore {
 impl ProgressStore {
     pub fn read<R>(&self, reader: impl FnOnce(&Progress) -> R) -> R {
         self.progress.with(reader)
+    }
+
+    pub fn read_untracked<R>(&self, reader: impl FnOnce(&Progress) -> R) -> R {
+        self.progress.with_untracked(reader)
     }
 
     pub fn update(&self, updater: impl FnOnce(&mut Progress)) {
@@ -85,6 +91,25 @@ impl ProgressStore {
 
     pub fn clear_paused_practice(&self, course_id: &str, unit_id: &str) {
         self.progress.update(|progress| progress.course_progress_mut(course_id).clear_paused_practice(unit_id));
+    }
+
+    /// Replaces the task's saved answer and its grade.
+    pub fn save_open_response_answer(&self, course_id: &str, task_key: &str, task: OpenResponseTask, answer_text: &str, answered_milliseconds: i64) {
+        self.progress.update(|progress| {
+            progress
+                .course_progress_mut(course_id)
+                .save_open_response_answer(task_key, task, answer_text, answered_milliseconds)
+        });
+    }
+
+    pub fn saved_open_response(&self, course_id: &str, task_key: &str) -> Option<SavedOpenResponse> {
+        self.progress.with(|progress| {
+            progress
+                .courses
+                .get(course_id)
+                .and_then(|course_progress| course_progress.saved_open_response(task_key))
+                .cloned()
+        })
     }
 
     pub fn due_card_count(&self, course_id: &str) -> usize {

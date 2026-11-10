@@ -19,7 +19,9 @@ import ro.zach.language.core.PracticeOutcomeRecord
 import ro.zach.language.core.ProgressBook
 import ro.zach.language.core.QueuedCardsRecord
 import ro.zach.language.core.SavedExerciseResultRecord
+import ro.zach.language.core.SavedOpenResponseRecord
 import ro.zach.language.core.SettingsRecord
+import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
 import ro.zach.language.coursedata.CoreEnvironment
@@ -164,6 +166,16 @@ class ProgressStore(environment: CoreEnvironment, private val scope: CoroutineSc
         perform { outcome = book.finishFullPractice(courseId, unitId, vocabularyCount.toUInt()) }
 
         return outcome
+    }
+
+    /** Replaces the task's saved answer and its grade. */
+    fun saveOpenResponseAnswer(courseId: String, unit: UnitOutlineRecord, exercise: ExerciseRecord, answerText: String): ProgressChangeOutcome {
+        return perform { book.saveOpenResponseAnswer(courseId, unit.id, unit.levelCode, exercise, answerText) }
+    }
+
+    fun savedOpenResponse(courseId: String, unitId: String, exercise: ExerciseRecord): SavedOpenResponseRecord? {
+        readChangeCount()
+        return book.savedOpenResponse(courseId, unitId, exercise)
     }
 
     /** Moves a not started unit to in progress and leaves any other status alone. */

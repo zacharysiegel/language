@@ -44,6 +44,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
 - `PausedPractice::unscored_exercise_indices`, so a paused quiz is scored without its exercises.
 - The quiz button counts scored exercises and open responses separately.
 - The grader's mistakes are shown, not saved.
+  - Reversed by the owner after deployment: the latest answer to each task is saved with its grade (see Web).
 - Deviations, as built:
   - The owner reversed the placement. Open response: a third Practice-tab option on units with open responses, in unit order; no score, nothing recorded, ends with the learner's answers.
   - `shared::practice` builds the three lists: `quiz_exercises`, `quick_practice_exercises` and `open_response_exercises`.
@@ -114,6 +115,11 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - The native apps keep the stored `download_grading_model` when they save settings.
   - Measured in headless Chrome against the local repository: Check to feedback 3.1 s after the warm-up, 1,018 of 1,043 prompt tokens reused; a Check during the load waited 4 s for it, then graded in 9 s.
   - Check on an answer the model will grade shows the self-check at once, with a progress bar and status line in place of the notice in three steps: loading the model (no fill, since wllama reports none), reading the answer (prompt tokens read; a warm-up's reading counts) and writing feedback (reply tokens against 80, near the upper end of the evaluation's reply lengths). The grade replaces the heading and adds the findings above the example answers. The Check button has no pending label; Continue is available meanwhile, and leaving the question cancels the grading.
+  - Then replaced, saved open responses:
+    - Progress: `CourseProgress::open_responses` by task key (unit id, then the SHA-256 of `prompt_source` and `context_source`), each the latest answer, its time, the task as answered (level, task, scene facts) and, once graded, `SavedOpenResponseGrade` (applicable findings, both flags, `GraderPromptIdentity`: the prompt's code and the SHA-256 of everything it sends besides the answer). A grade is recorded only for the answer still saved.
+    - Web: Check saves the answer and queues it in `GradingStore` (`grading_queue.rs`, pure ordering and unload rules) when the grader state can grade (downloaded, loading or ready). Continue never waits or cancels. One generation at a time; answers just checked before saved ones; a newer answer replaces a waiting one of its task. The model stays loaded while an Open response practice is open (begun and ended by `PracticeSection`) or the queue is not empty, then unloads. A page that cannot load the model leaves the waiting answers ungraded. Starting the practice queues the course's ungraded saved answers once the browser is checked.
+    - The question shows the saved answer under "Your last answer" while the learner writes: with its grade, the stepped progress for the answer being graded (also while the model loads for it), "Grading pending" for a queued one, nothing more when ungraded. The feedback and the "Your answers" summary fill in the grade when it arrives.
+    - Native: `ProgressBook::save_open_response_answer` and `saved_open_response`; iOS and Android save on Check and show the saved answer and any saved grade, never grading.
 
 ## Course content
 

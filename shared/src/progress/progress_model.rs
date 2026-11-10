@@ -6,7 +6,7 @@ use crate::AppError;
 use crate::course::Exercise;
 use crate::course_shard::VoiceEngineKind;
 use crate::practice::{PASS_PROPORTION, PracticeModeKind, SessionScore};
-use crate::progress::{PausedPractice, PausedPracticeStateKind, SavedExerciseResult};
+use crate::progress::{OpenResponseTask, PausedPractice, PausedPracticeStateKind, SavedExerciseResult, SavedOpenResponse, SavedOpenResponseGrade};
 use crate::review::ReviewCard;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -195,6 +195,9 @@ pub struct CourseProgress {
     /// By unit id.
     #[serde(default)]
     pub paused_practices: BTreeMap<String, PausedPractice>,
+    /// By `open_response_task_key`.
+    #[serde(default)]
+    pub open_responses: BTreeMap<String, SavedOpenResponse>,
 }
 
 impl CourseProgress {
@@ -261,6 +264,52 @@ impl CourseProgress {
 
     pub fn clear_paused_practice(&mut self, unit_id: &str) {
         self.paused_practices.remove(unit_id);
+    }
+
+    /// Replaces the task's saved answer and its grade.
+    pub fn save_open_response_answer(&mut self, task_key: &str, task: OpenResponseTask, answer_text: &str, answered_milliseconds: i64) {
+        let saved_open_response: SavedOpenResponse = SavedOpenResponse {
+            task,
+            answer_text: answer_text.to_string(),
+            answered_milliseconds,
+            grade: None,
+        };
+
+        self.open_responses.insert(task_key.to_string(), saved_open_response);
+    }
+
+    /// Does nothing once the answer given at `answered_milliseconds` is no longer the task's saved one.
+    pub fn record_open_response_grade(&mut self, task_key: &str, answered_milliseconds: i64, grade: SavedOpenResponseGrade) {
+        let saved_open_response: Option<&mut SavedOpenResponse> = self.open_responses.get_mut(task_key);
+
+        let Some(saved_open_response) = saved_open_response
+        else {
+            return;
+        };
+
+        if saved_open_response.answered_milliseconds != answered_milliseconds {
+            return;
+        }
+
+        saved_open_response.grade = Some(grade);
+    }
+
+    pub fn saved_open_response(&self, task_key: &str) -> Option<&SavedOpenResponse> {
+        self.open_responses.get(task_key)
+    }
+
+    /// With their task keys, the earliest answered first.
+    pub fn ungraded_open_responses(&self) -> Vec<(String, SavedOpenResponse)> {
+        let mut ungraded_open_responses: Vec<(String, SavedOpenResponse)> = self
+            .open_responses
+            .iter()
+            .filter(|(_, saved_open_response)| saved_open_response.grade.is_none())
+            .map(|(task_key, saved_open_response)| (task_key.clone(), saved_open_response.clone()))
+            .collect();
+
+        ungraded_open_responses.sort_by_key(|(_, saved_open_response)| saved_open_response.answered_milliseconds);
+
+        ungraded_open_responses
     }
 
     pub fn add_cards_if_missing(&mut self, card_ids: impl Iterator<Item = String>, now_milliseconds: i64) -> usize {
@@ -417,7 +466,9 @@ impl Progress {
 mod tests {
     use super::*;
     use crate::course::course_test_fixtures;
+    use crate::grading::GraderPromptKind;
     use crate::practice::AnswerStatus;
+    use crate::progress::SavedGraderFinding;
 
     const COURSE_ID: &str = "pt_br.en.foundations";
 
@@ -846,6 +897,110 @@ mod tests {
         progress.record_practice_session(COURSE_ID, "u", PracticeModeKind::Full, score, 3, 0);
 
         assert_eq!(progress.course_progress(COURSE_ID).paused_practice_state("u", &exercises), PausedPracticeStateKind::NotPaused);
+    }
+
+    fn open_response_task(prompt_source: &str) -> OpenResponseTask {
+        OpenResponseTask {
+            level: "a1".to_string(),
+            prompt_source: prompt_source.to_string(),
+            context_source: None,
+        }
+    }
+
+    fn open_response_grade(answers_the_question: bool) -> SavedOpenResponseGrade {
+        SavedOpenResponseGrade {
+            grader_prompt: GraderPromptKind::BrazilianPortugueseTaughtInEnglish.identity(),
+            answers_the_question,
+            written_in_target_language: true,
+            findings: vec![SavedGraderFinding {
+                quote: "chamo".to_string(),
+                correction: "me chamo".to_string(),
+                explanation: "The verb is reflexive.".to_string(),
+                category: "pronoun".to_string(),
+            }],
+        }
+    }
+
+    #[test]
+    fn save_open_response_answer_replaces_the_saved_answer_and_its_grade() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.save_open_response_answer("u:task", open_response_task("Introduce yourself."), "Eu chamo Pedro.", 1_000);
+        course_progress.record_open_response_grade("u:task", 1_000, open_response_grade(true));
+
+        course_progress.save_open_response_answer("u:task", open_response_task("Introduce yourself."), "Eu me chamo Pedro.", 2_000);
+
+        assert_eq!(
+            course_progress.saved_open_response("u:task"),
+            Some(&SavedOpenResponse {
+                task: open_response_task("Introduce yourself."),
+                answer_text: "Eu me chamo Pedro.".to_string(),
+                answered_milliseconds: 2_000,
+                grade: None,
+            }),
+        );
+        assert_eq!(course_progress.open_responses.len(), 1);
+    }
+
+    #[test]
+    fn record_open_response_grade_grades_only_the_answer_still_saved() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.save_open_response_answer("u:task", open_response_task("Introduce yourself."), "Eu chamo Pedro.", 1_000);
+        course_progress.save_open_response_answer("u:task", open_response_task("Introduce yourself."), "Eu me chamo Pedro.", 2_000);
+
+        course_progress.record_open_response_grade("u:task", 1_000, open_response_grade(false));
+        course_progress.record_open_response_grade("u:unsaved", 1_000, open_response_grade(false));
+
+        assert_eq!(course_progress.saved_open_response("u:task").and_then(|saved| saved.grade.clone()), None);
+        assert_eq!(course_progress.saved_open_response("u:unsaved"), None);
+
+        course_progress.record_open_response_grade("u:task", 2_000, open_response_grade(true));
+
+        assert_eq!(course_progress.saved_open_response("u:task").and_then(|saved| saved.grade.clone()), Some(open_response_grade(true)));
+    }
+
+    #[test]
+    fn ungraded_open_responses_leaves_out_graded_answers_and_starts_with_the_earliest() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.save_open_response_answer("a:later", open_response_task("Later."), "Depois.", 3_000);
+        course_progress.save_open_response_answer("b:graded", open_response_task("Graded."), "Sim.", 1_000);
+        course_progress.save_open_response_answer("c:earlier", open_response_task("Earlier."), "Antes.", 2_000);
+        course_progress.record_open_response_grade("b:graded", 1_000, open_response_grade(true));
+
+        let ungraded_task_keys: Vec<String> = course_progress.ungraded_open_responses().into_iter().map(|(task_key, _)| task_key).collect();
+
+        assert_eq!(ungraded_task_keys, vec!["c:earlier".to_string(), "a:later".to_string()]);
+    }
+
+    #[test]
+    fn a_saved_open_response_and_its_grade_round_trip_through_json() {
+        let mut progress: Progress = Progress::default();
+        let course_progress: &mut CourseProgress = progress.course_progress_mut(COURSE_ID);
+        course_progress.save_open_response_answer("u:graded", open_response_task("Introduce yourself."), "Eu chamo Pedro.", 1_000);
+        course_progress.record_open_response_grade("u:graded", 1_000, open_response_grade(true));
+        course_progress.save_open_response_answer("u:ungraded", open_response_task("Describe Paulo."), "O Paulo é alto.", 2_000);
+
+        let text: String = progress.to_json().unwrap();
+        let read_back: Progress = Progress::from_json(&text).unwrap();
+
+        assert_eq!(read_back, progress);
+    }
+
+    #[test]
+    fn progress_saved_before_open_responses_were_saved_reads_without_any() {
+        let text: String = format!(r#"{{"courses": {{"{COURSE_ID}": {{"cards": {{}}, "units": {{}}, "paused_practices": {{}}}}}}}}"#);
+        let progress: Progress = Progress::from_json(&text).unwrap();
+
+        assert!(progress.course_progress(COURSE_ID).open_responses.is_empty());
+    }
+
+    #[test]
+    fn from_json_reads_progress_with_fields_this_build_does_not_know() {
+        let text: String = format!(
+            r#"{{"courses": {{"{COURSE_ID}": {{"units": {{"u": {{"status": "completed", "streak": 3}}}}, "notes": {{}}}}}}, "devices": []}}"#
+        );
+        let progress: Progress = Progress::from_json(&text).unwrap();
+
+        assert_eq!(progress.course_progress(COURSE_ID).unit_progress("u").status, UnitStatusKind::Completed);
     }
 
     #[test]

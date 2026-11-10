@@ -7,8 +7,7 @@ use shared::practice::{AnswerStatus, SessionScore};
 use shared::progress::{SavedExerciseResult, VoiceChoiceKind};
 
 use crate::audio_player::{PlayButton, PlaybackStore, audio_clip, use_playback_store};
-use crate::grading::{GradingStore, use_grading_store};
-use crate::practice::{self, OpenResponseOutcomeKind};
+use crate::practice;
 
 const ENTER_KEY: &str = "Enter";
 
@@ -88,7 +87,6 @@ pub fn ExerciseSession(
     let current_result: RwSignal<Option<SavedExerciseResult>> = RwSignal::new(None);
     let round: RwSignal<SessionRoundKind> = RwSignal::new(SessionRoundKind::First);
     let completion_reported: RwSignal<bool> = RwSignal::new(false);
-    let grading_store: GradingStore = use_grading_store();
 
     let advance = move || {
         if current_result.get_untracked().is_none() {
@@ -108,15 +106,10 @@ pub fn ExerciseSession(
         }
     });
     on_cleanup(move || keydown_listener.remove());
-    on_cleanup(move || grading_store.unload());
 
     Effect::new(move |_| {
         let finished: bool = current_index.get() >= active_exercises.get().len();
         let is_first_round: bool = round.get_untracked() == SessionRoundKind::First;
-
-        if finished {
-            grading_store.unload();
-        }
 
         if finished && is_first_round && !completion_reported.get_untracked() {
             completion_reported.set(true);
@@ -233,7 +226,7 @@ fn question_view(
     } = session_progress;
     let instruction: &'static str = exercise.kind().instruction();
     let feedback_exercise: Exercise = exercise.clone();
-    let open_response_outcome: RwSignal<Option<OpenResponseOutcomeKind>> = RwSignal::new(None);
+    let open_response_answered_milliseconds: RwSignal<Option<i64>> = RwSignal::new(None);
 
     view! {
         <div class="session-header">
@@ -242,11 +235,11 @@ fn question_view(
         </div>
         <progress max=total_count value=index></progress>
         <div class="exercise-type">{instruction}</div>
-        {practice::exercise_body(exercise, on_submit, open_response_outcome)}
+        {practice::exercise_body(exercise, on_submit, open_response_answered_milliseconds)}
         {move || {
             current_result
                 .get()
-                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_outcome, advance))
+                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_answered_milliseconds, advance))
         }}
     }
 }
@@ -296,7 +289,7 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
-    open_response_outcome: RwSignal<Option<OpenResponseOutcomeKind>>,
+    open_response_answered_milliseconds: RwSignal<Option<i64>>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
     speak_after_answer(&exercise);
@@ -309,7 +302,7 @@ fn feedback_view(
                 <practice::OpenResponseFeedback
                     exercise=open_response.clone()
                     answer_text=result.answer_text.clone()
-                    outcome=open_response_outcome
+                    answered_milliseconds=open_response_answered_milliseconds.get_untracked().unwrap_or_default()
                 />
             }
             .into_any(),
@@ -372,11 +365,28 @@ fn answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoVi
     }
 }
 
+fn unscored_answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoView + use<> {
+    let summary_grade = match exercise {
+        Exercise::OpenResponse(open_response) => {
+            Some(view! { <practice::OpenResponseSummaryGrade exercise=open_response.clone() answer_text=result.answer_text.clone() /> })
+        },
+        _ => None,
+    };
+
+    view! {
+        <li>
+            <div>{exercise.prompt_text()}</div>
+            <div class="answer">{result.answer_text.clone()}</div>
+            {summary_grade}
+        </li>
+    }
+}
+
 fn unscored_summary_view(title: &str, exercises: Arc<Vec<Exercise>>, results: Vec<SavedExerciseResult>, on_exit: Callback<()>) -> impl IntoView {
     let answer_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
-        .map(|(result, exercise)| answer_item(exercise, result))
+        .map(|(result, exercise)| unscored_answer_item(exercise, result))
         .collect();
 
     view! {

@@ -1,11 +1,15 @@
 import SwiftUI
 
-/// Runs open responses one at a time with the self-check, keeping no score, then lists the learner's answers.
+/// Runs open responses one at a time with the self-check, saving each answer as its task's latest, then lists the learner's answers.
 struct OpenResponseSession: View {
     let title: String
+    let courseId: String
+    let unit: UnitOutlineRecord
     let exercises: [ExerciseRecord]
     let onExit: () -> Void
 
+    @Environment(ProgressStore.self) private var progressStore
+    @Environment(CourseStore.self) private var courseStore
     @State private var currentIndex: Int = 0
     @State private var answerTexts: [String] = []
     @State private var currentAnswerText: String?
@@ -33,8 +37,12 @@ struct OpenResponseSession: View {
             )
 
             if case .openResponse(let promptSource, let contextSource, let exampleAnswers, let explanation, let clipKey) = exercise {
-                OpenResponseQuestion(promptSource: promptSource, contextSource: contextSource, onCheck: check)
+                OpenResponseQuestion(promptSource: promptSource, contextSource: contextSource, onCheck: { answerText in check(exercise: exercise, answerText: answerText) })
                     .id(currentIndex)
+
+                if currentAnswerText == nil, let savedOpenResponse = progressStore.savedOpenResponse(courseId: courseId, unitId: unit.id, exercise: exercise) {
+                    SavedOpenResponseAnswer(savedOpenResponse: savedOpenResponse, targetLanguageName: targetLanguageName())
+                }
 
                 if let currentAnswerText {
                     OpenResponseSelfCheck(
@@ -67,11 +75,16 @@ struct OpenResponseSession: View {
         }
     }
 
-    private func check(_ answerText: String) {
+    private func targetLanguageName() -> String {
+        courseStore.outline(courseId: courseId)?.targetLanguageName ?? ""
+    }
+
+    private func check(exercise: ExerciseRecord, answerText: String) {
         guard currentAnswerText == nil else {
             return
         }
 
+        progressStore.saveOpenResponseAnswer(courseId: courseId, unit: unit, exercise: exercise, answerText: answerText)
         answerTexts.append(answerText)
         currentAnswerText = answerText
     }
@@ -208,5 +221,80 @@ struct OpenResponseSelfCheck: View {
         .padding(.spaceSm + .spaceXs)
         .frame(maxWidth: .infinity, alignment: .leading)
         .overlay(Rectangle().stroke(Color.ink, lineWidth: .hairline))
+    }
+}
+
+/// The learner's saved answer to the task, shown while they write a new one, with any grade an AI model gave it.
+struct SavedOpenResponseAnswer: View {
+    let savedOpenResponse: SavedOpenResponseRecord
+    let targetLanguageName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spaceSm) {
+            MicroLabel(text: "Your last answer")
+
+            Text(savedOpenResponse.answerText)
+                .font(.bodyText)
+                .fixedSize(horizontal: false, vertical: true)
+                .accessibilityIdentifier("saved-answer")
+
+            if let grade = savedOpenResponse.grade {
+                SavedOpenResponseGrade(grade: grade, targetLanguageName: targetLanguageName)
+            }
+        }
+        .padding(.spaceSm + .spaceXs)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .overlay(Rectangle().stroke(Color.rule, lineWidth: .hairline))
+    }
+}
+
+/// An AI model's grade of an answer: the mistake count, the two checks and each mistake with its correction.
+struct SavedOpenResponseGrade: View {
+    static let aiModelTag: String = "AI model"
+
+    let grade: SavedOpenResponseGradeRecord
+    let targetLanguageName: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: .spaceSm) {
+            HStack(spacing: .spaceSm) {
+                MicroLabel(text: Self.mistakeCountHeading(findingCount: grade.findings.count)).accessibilityIdentifier("saved-grade-heading")
+                TagView(text: Self.aiModelTag)
+            }
+
+            checkRow(label: "Addresses the task", value: grade.answersTheQuestion)
+            checkRow(label: "Written in \(targetLanguageName)", value: grade.writtenInTargetLanguage)
+
+            ForEach(Array(grade.findings.enumerated()), id: \.offset) { _, finding in
+                VStack(alignment: .leading, spacing: .spaceXs) {
+                    HStack(spacing: .spaceSm) {
+                        Text(finding.quote).font(.bodyText).foregroundStyle(Color.accentActive).strikethrough()
+                        Text("→").font(.bodyText).accessibilityHidden(true)
+                        Text(finding.correction).font(.bodyText).fontWeight(.semibold)
+                    }
+                    .accessibilityElement(children: .combine)
+
+                    Text(finding.explanation).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
+                }
+            }
+        }
+    }
+
+    static func mistakeCountHeading(findingCount: Int) -> String {
+        switch findingCount {
+        case 0:
+            return "No mistakes found"
+        case 1:
+            return "1 mistake found"
+        default:
+            return "\(findingCount) mistakes found"
+        }
+    }
+
+    private func checkRow(label: String, value: Bool) -> some View {
+        HStack(spacing: .spaceMd) {
+            MicroLabel(text: label)
+            Text(value ? "Yes" : "No").font(.bodyText)
+        }
     }
 }
