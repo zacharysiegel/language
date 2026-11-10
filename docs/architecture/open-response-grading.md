@@ -113,6 +113,7 @@ A new exercise type in which the learner writes a free answer to a task. In the 
   - Removed with the unsplit model: deleting a split model's files from wllama's cache, and downloading it again, after wllama 3.8.1 fails with "Model file not found" on a split model whose download stopped before every part's metadata was written (commit `4542479`, language). An unsplit model cannot reach that state.
   - The native apps keep the stored `download_grading_model` when they save settings.
   - Measured in headless Chrome against the local repository: Check to feedback 3.1 s after the warm-up, 1,018 of 1,043 prompt tokens reused; a Check during the load waited 4 s for it, then graded in 9 s.
+  - Check on an answer the model will grade shows the self-check at once, with a progress bar and status line in place of the notice in three steps: loading the model (no fill, since wllama reports none), reading the answer (prompt tokens read; a warm-up's reading counts) and writing feedback (reply tokens against 80, near the upper end of the evaluation's reply lengths). The grade replaces the heading and adds the findings above the example answers. The Check button has no pending label; Continue is available meanwhile, and leaving the question cancels the grading.
 
 ## Course content
 

@@ -1,7 +1,7 @@
 use leptos::prelude::*;
 use shared::grading::GraderPromptKind;
 
-use crate::grading::GraderStateKind;
+use crate::grading::{GraderGenerationProgressKind, GraderStateKind};
 use crate::progress_state::{ProgressStore, use_progress_store};
 
 /// How the grader reads a practice session's open responses.
@@ -32,6 +32,8 @@ pub enum GradingFailureKind {
 #[derive(Clone, Copy)]
 pub struct GradingStore {
     state: RwSignal<GraderStateKind>,
+    /// Cleared when a grading starts and when it ends.
+    generation_progress: RwSignal<Option<GraderGenerationProgressKind>>,
 }
 
 impl GradingStore {
@@ -42,11 +44,16 @@ impl GradingStore {
     pub fn state_untracked(self) -> GraderStateKind {
         self.state.get_untracked()
     }
+
+    pub fn generation_progress(self) -> Option<GraderGenerationProgressKind> {
+        self.generation_progress.get()
+    }
 }
 
 pub fn provide_grading_store() {
     let grading_store: GradingStore = GradingStore {
         state: RwSignal::new(GraderStateKind::Unchecked),
+        generation_progress: RwSignal::new(None),
     };
     let progress_store: ProgressStore = use_progress_store();
 
@@ -76,6 +83,7 @@ mod browser {
         DownloadProgress,
         Generation,
         GenerationError,
+        GenerationProgress,
         GenerationRequest,
         LoadOptions,
         LoadProgress,
@@ -179,7 +187,9 @@ mod browser {
 
             spawn_local(async move {
                 let request: GenerationRequest = create_generation_request(&submission, None, WARM_UP_REPLY_TOKEN_COUNT);
-                let warmed: Result<Generation, GenerationError> = model.generate(&request, |_| {}).await;
+                let warmed: Result<Generation, GenerationError> = model
+                    .generate(&request, move |progress: GenerationProgress| self.show_warm_up_progress(progress))
+                    .await;
 
                 match warmed {
                     Ok(generation) => log::debug!(
@@ -198,7 +208,15 @@ mod browser {
             let response_schema: serde_json::Value = submission.grader_prompt.response_schema();
             let request: GenerationRequest = create_generation_request(&submission, Some(response_schema), MAXIMUM_REPLY_TOKEN_COUNT);
 
-            let generated: Result<Generation, GenerationError> = model.generate(&request, |_| {}).await;
+            self.generation_progress.set(None);
+
+            let generated: Result<Generation, GenerationError> = model
+                .generate(&request, move |progress: GenerationProgress| {
+                    self.generation_progress.set(Some(grader_generation_progress(progress)));
+                })
+                .await;
+
+            self.generation_progress.set(None);
 
             let generation: Generation = match generated {
                 Ok(generation) => generation,
@@ -226,6 +244,13 @@ mod browser {
                     log::warn!("the grader's reply is not a grading; [error={error}]");
                     Err(GradingFailureKind::Failed)
                 },
+            }
+        }
+
+        /// Stops the generation under way and any waiting for it.
+        pub fn cancel_generation(self) {
+            if let Some(model) = loaded_model() {
+                model.cancel();
             }
         }
 
@@ -260,6 +285,15 @@ mod browser {
 
         fn set_state(self, state: GraderStateKind) {
             self.state.set(state);
+        }
+
+        /// The warm-up reads the prompt the answer's grading continues from, so its reading counts as the grading's.
+        fn show_warm_up_progress(self, progress: GenerationProgress) {
+            let reported_progress: GraderGenerationProgressKind = grader_generation_progress(progress);
+
+            if matches!(reported_progress, GraderGenerationProgressKind::ReadingPrompt { .. }) {
+                self.generation_progress.set(Some(reported_progress));
+            }
         }
 
         async fn check_capability(self) {
@@ -451,6 +485,23 @@ mod browser {
         LOADED_MODEL.with(|model| model.borrow().clone())
     }
 
+    fn grader_generation_progress(progress: GenerationProgress) -> GraderGenerationProgressKind {
+        match progress {
+            GenerationProgress::ReadingPrompt {
+                read_token_count,
+                prompt_token_count,
+                ..
+            } => GraderGenerationProgressKind::ReadingPrompt {
+                read_token_count: read_token_count as u64,
+                prompt_token_count: prompt_token_count as u64,
+            },
+            GenerationProgress::GeneratingReasoning { generated_token_count, .. }
+            | GenerationProgress::GeneratingAnswer { generated_token_count, .. } => GraderGenerationProgressKind::WritingReply {
+                generated_token_count: generated_token_count as u64,
+            },
+        }
+    }
+
     async fn assess_this_browser(model_source: &ModelSource) -> GraderStateKind {
         let probed: Result<BrowserCapability, cross_llama::Error> = cross_llama::probe_browser_capability().await;
 
@@ -579,6 +630,8 @@ mod server {
         pub fn load_model(self) {}
 
         pub fn warm_up(self, _submission: OpenResponseSubmission) {}
+
+        pub fn cancel_generation(self) {}
 
         pub async fn grade(self, _submission: OpenResponseSubmission) -> Result<GraderResponse, GradingFailureKind> {
             Err(GradingFailureKind::ModelNotLoaded)
