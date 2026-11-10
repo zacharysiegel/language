@@ -11,13 +11,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import ro.zach.language.core.CourseOutlineRecord
 import ro.zach.language.core.ExerciseRecord
+import ro.zach.language.core.LevelCompletionRecord
 import ro.zach.language.core.PausedPracticeRecord
 import ro.zach.language.core.PausedPracticeStateRecord
 import ro.zach.language.core.PracticeModeRecord
 import ro.zach.language.core.PracticeOutcomeRecord
 import ro.zach.language.core.ProgressBook
 import ro.zach.language.core.QueuedCardsRecord
+import ro.zach.language.core.QuizResultRecord
 import ro.zach.language.core.SavedExerciseResultRecord
 import ro.zach.language.core.SavedOpenResponseRecord
 import ro.zach.language.core.SettingsRecord
@@ -70,9 +73,14 @@ class ProgressStore(environment: CoreEnvironment, private val scope: CoroutineSc
         return book.unitProgress(courseId, unitId)
     }
 
-    fun completedUnitCount(courseId: String): Int {
+    fun levelCompletions(outline: CourseOutlineRecord): List<LevelCompletionRecord> {
         readChangeCount()
-        return book.completedUnitCount(courseId).toInt()
+        return book.levelCompletions(outline)
+    }
+
+    fun quizResults(outline: CourseOutlineRecord): List<QuizResultRecord> {
+        readChangeCount()
+        return book.quizResults(outline)
     }
 
     fun dueCardCount(courseId: String): Int {

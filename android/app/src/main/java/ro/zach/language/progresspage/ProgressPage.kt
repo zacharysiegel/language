@@ -24,12 +24,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.semantics
 import ro.zach.language.app.LocalRootNavigation
 import ro.zach.language.app.RootNavigationState
 import ro.zach.language.app.UnitDestination
 import ro.zach.language.core.CourseOutlineRecord
-import ro.zach.language.core.UnitOutlineRecord
+import ro.zach.language.core.LevelCompletionRecord
+import ro.zach.language.core.QuizResultRecord
 import ro.zach.language.core.reviewIntervalDays
+import ro.zach.language.design.Glyph
+import ro.zach.language.design.GlyphKind
 import ro.zach.language.design.HairlineRule
 import ro.zach.language.design.LanguageColors
 import ro.zach.language.design.LanguageSpacing
@@ -38,7 +42,6 @@ import ro.zach.language.design.LanguageType
 import ro.zach.language.design.PageHeader
 import ro.zach.language.design.SquareTextButton
 import ro.zach.language.design.SquareTextField
-import ro.zach.language.design.UnitStatusTag
 import ro.zach.language.design.readableWidth
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressChangeOutcome
@@ -54,8 +57,9 @@ fun ProgressPage(outline: CourseOutlineRecord, modifier: Modifier = Modifier) {
             modifier = Modifier.readableWidth().padding(LanguageSpacing.spaceMd),
             verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceLg),
         ) {
-            ProgressSummary(outline)
-            UnitsSection(outline)
+            PageHeader(caption = null, title = "Progress")
+            LevelsSection(outline)
+            QuizResultsSection(outline)
             ReviewDeckSection(outline)
             ProgressTransfer()
         }
@@ -63,41 +67,29 @@ fun ProgressPage(outline: CourseOutlineRecord, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ProgressSummary(outline: CourseOutlineRecord) {
+private fun LevelsSection(outline: CourseOutlineRecord) {
     val progressStore: ProgressStore = LocalProgressStore.current
-
-    Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
-        PageHeader(caption = null, title = "Progress")
-        LanguageText(
-            text = "${progressStore.completedUnitCount(outline.id)} / ${outline.units.size} units completed",
-            style = LanguageType.dataText,
-            color = LanguageColors.inkMuted,
-        )
-    }
-}
-
-@Composable
-private fun UnitsSection(outline: CourseOutlineRecord) {
-    val progressStore: ProgressStore = LocalProgressStore.current
-    val rootNavigation: RootNavigationState = LocalRootNavigation.current
+    val levelCompletions: List<LevelCompletionRecord> = progressStore.levelCompletions(outline)
 
     Column {
-        SectionTitle(text = "Units")
+        SectionTitle(text = "Levels")
         HairlineRule()
 
-        for (unit in outline.units) {
-            Row(
+        for (levelCompletion in levelCompletions) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .clickable(interactionSource = null, indication = null, role = Role.Button) {
-                        rootNavigation.openUnit(UnitDestination(courseId = outline.id, unitId = unit.id, tab = UnitTabKind.Overview))
-                    }
+                    .semantics(mergeDescendants = true) {}
+                    .testTag("level-completion-${levelCompletion.levelCode}")
                     .padding(vertical = LanguageSpacing.spaceSm),
-                horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
-                verticalAlignment = Alignment.CenterVertically,
+                verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs),
             ) {
-                LanguageText(text = unitRowText(unit), style = LanguageType.bodyText, color = LanguageColors.accentLink, modifier = Modifier.weight(1f))
-                UnitStatusTag(status = progressStore.unitProgress(outline.id, unit.id).status)
+                LanguageText(text = "${levelCompletion.levelCode} · ${levelCompletion.levelTitle}", style = LanguageType.bodyText)
+                LanguageText(
+                    text = "${levelCompletion.completedUnitCount} of ${levelCompletion.unitCount} units completed",
+                    style = LanguageType.dataText,
+                    color = LanguageColors.inkMuted,
+                )
             }
 
             HairlineRule()
@@ -105,8 +97,61 @@ private fun UnitsSection(outline: CourseOutlineRecord) {
     }
 }
 
-private fun unitRowText(unit: UnitOutlineRecord): String {
-    return "${unit.levelCode} ${unit.order}: ${unit.title}"
+@Composable
+private fun QuizResultsSection(outline: CourseOutlineRecord) {
+    val progressStore: ProgressStore = LocalProgressStore.current
+    val rootNavigation: RootNavigationState = LocalRootNavigation.current
+    val quizResults: List<QuizResultRecord> = progressStore.quizResults(outline)
+
+    Column {
+        SectionTitle(text = "Quiz results")
+        HairlineRule()
+
+        if (quizResults.isEmpty()) {
+            LanguageText(
+                text = "You have not taken a quiz yet.",
+                style = LanguageType.bodyText,
+                color = LanguageColors.inkMuted,
+                modifier = Modifier.testTag("quiz-results-empty").padding(vertical = LanguageSpacing.spaceSm),
+            )
+
+            HairlineRule()
+        }
+
+        for (quizResult in quizResults) {
+            QuizResultRow(
+                quizResult = quizResult,
+                onOpen = { rootNavigation.openUnit(UnitDestination(courseId = outline.id, unitId = quizResult.unitId, tab = UnitTabKind.Overview)) },
+            )
+
+            HairlineRule()
+        }
+    }
+}
+
+@Composable
+private fun QuizResultRow(quizResult: QuizResultRecord, onOpen: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onOpen)
+            .semantics(mergeDescendants = true) {}
+            .testTag("quiz-result-${quizResult.unitId}")
+            .padding(vertical = LanguageSpacing.spaceSm),
+        horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+            LanguageText(text = quizResult.unitTitle, style = LanguageType.bodyText, color = LanguageColors.accentLink)
+            LanguageText(text = quizResultSummary(quizResult), style = LanguageType.dataText, color = LanguageColors.inkMuted)
+        }
+
+        Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)
+    }
+}
+
+private fun quizResultSummary(quizResult: QuizResultRecord): String {
+    return "Best score: ${quizResult.bestScorePercent}% over ${quizResult.attemptCount} attempt(s)"
 }
 
 @Composable

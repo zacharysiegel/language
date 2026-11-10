@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -133,23 +132,13 @@ private fun HomeHeader(outline: CourseOutlineRecord) {
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         PageHeader(caption = "${outline.units.size} units", title = outline.title)
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            LanguageText(
-                text = "${progressStore.completedUnitCount(outline.id)} / ${outline.units.size} units completed",
-                style = LanguageType.dataText,
-                color = LanguageColors.inkMuted,
+        if (nextUnit != null) {
+            SquareTextButton(
+                text = "Continue",
+                isPrimary = true,
+                onClick = { rootNavigation.openUnit(UnitDestination(outline.id, nextUnit.id, UnitTabKind.Overview)) },
+                modifier = Modifier.testTag("continue"),
             )
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            if (nextUnit != null) {
-                SquareTextButton(
-                    text = "Continue",
-                    isPrimary = true,
-                    onClick = { rootNavigation.openUnit(UnitDestination(outline.id, nextUnit.id, UnitTabKind.Overview)) },
-                    modifier = Modifier.testTag("continue"),
-                )
-            }
         }
     }
 }
