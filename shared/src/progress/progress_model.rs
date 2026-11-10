@@ -139,6 +139,14 @@ impl UnitProgress {
     pub fn is_completed(&self) -> bool {
         self.status == UnitStatusKind::Completed
     }
+
+    pub fn is_quiz_taken(&self) -> bool {
+        self.attempt_count > 0
+    }
+
+    pub fn best_score_percent(&self) -> u32 {
+        (self.best_proportion * 100.0).round() as u32
+    }
 }
 
 /// A unit record as saved; records saved before `status` existed carry `started` and `completed` instead.
@@ -171,6 +179,13 @@ impl From<StoredUnitProgress> for UnitProgress {
             attempt_count: stored.attempt_count,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct QuizResult {
+    pub unit_id: String,
+    pub best_score_percent: u32,
+    pub attempt_count: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -351,6 +366,26 @@ impl CourseProgress {
 
     pub fn completed_unit_count(&self) -> usize {
         self.units.values().filter(|unit_progress| unit_progress.is_completed()).count()
+    }
+
+    pub fn completed_unit_count_among<'a>(&self, unit_ids: impl IntoIterator<Item = &'a str>) -> usize {
+        unit_ids.into_iter().filter(|unit_id| self.unit_progress(unit_id).is_completed()).count()
+    }
+
+    /// In the order of `unit_ids`; a unit whose quiz has not been taken has none.
+    pub fn quiz_results<'a>(&self, unit_ids: impl IntoIterator<Item = &'a str>) -> Vec<QuizResult> {
+        unit_ids
+            .into_iter()
+            .filter_map(|unit_id| {
+                let unit_progress: UnitProgress = self.unit_progress(unit_id);
+
+                unit_progress.is_quiz_taken().then(|| QuizResult {
+                    unit_id: unit_id.to_string(),
+                    best_score_percent: unit_progress.best_score_percent(),
+                    attempt_count: unit_progress.attempt_count,
+                })
+            })
+            .collect()
     }
 
     pub fn due_card_count(&self, now_milliseconds: i64) -> usize {
@@ -573,6 +608,43 @@ mod tests {
         course_progress.set_unit_status("reset", UnitStatusKind::NotStarted);
 
         assert_eq!(course_progress.completed_unit_count(), 2);
+    }
+
+    #[test]
+    fn completed_unit_count_among_counts_only_the_given_completed_units() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.record_unit_attempt("passed", 0.9, 0.8);
+        course_progress.record_unit_attempt("failed", 0.5, 0.8);
+        course_progress.set_unit_status("other level", UnitStatusKind::Completed);
+
+        assert_eq!(course_progress.completed_unit_count_among(["passed", "failed", "never opened"]), 1);
+    }
+
+    #[test]
+    fn quiz_results_keep_the_given_order_and_leave_out_units_whose_quiz_was_not_taken() {
+        let mut course_progress: CourseProgress = CourseProgress::default();
+        course_progress.record_unit_attempt("second", 0.625, 0.8);
+        course_progress.record_unit_attempt("second", 0.5, 0.8);
+        course_progress.record_unit_attempt("first", 0.9, 0.8);
+        course_progress.set_unit_status("marked", UnitStatusKind::Completed);
+
+        let quiz_results: Vec<QuizResult> = course_progress.quiz_results(["first", "marked", "second", "never opened"]);
+
+        assert_eq!(
+            quiz_results,
+            vec![
+                QuizResult {
+                    unit_id: "first".to_string(),
+                    best_score_percent: 90,
+                    attempt_count: 1,
+                },
+                QuizResult {
+                    unit_id: "second".to_string(),
+                    best_score_percent: 63,
+                    attempt_count: 2,
+                },
+            ],
+        );
     }
 
     #[test]
