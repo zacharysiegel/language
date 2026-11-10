@@ -30,8 +30,8 @@ use crate::grading_case::{GradingCase, GradingCaseKind};
 use crate::ollama_client::OllamaConnection;
 
 const DEFAULT_CASES_PATH: &str = "tools/grading_evaluation/cases/pt_br.en.json";
-const DEFAULT_RUNS_DIRECTORY: &str = "build/grading_evaluation";
-const DEFAULT_VERIFICATION_DIRECTORY: &str = "build/grading_evaluation_verification";
+const DEFAULT_RUNS_DIRECTORY: &str = "tools/grading_evaluation/results/tuned";
+const DEFAULT_VERIFICATION_DIRECTORY: &str = "tools/grading_evaluation/results/verification";
 const DEFAULT_DECISOR_URL: &str = "http://127.0.0.1:8500";
 const DEFAULT_OLLAMA_URL: &str = "http://127.0.0.1:11434";
 const MODELS_DIRECTORY: &str = "models";
@@ -120,7 +120,7 @@ struct RunArguments {
     #[arg(long)]
     cases: Option<PathBuf>,
 
-    /// Where the runs are recorded; `build/grading_evaluation/` when omitted.
+    /// Where the runs are recorded; `tools/grading_evaluation/results/tuned/` when omitted.
     #[arg(long)]
     output: Option<PathBuf>,
 
@@ -135,7 +135,7 @@ enum RuntimeChoice {
 
 #[derive(Args)]
 struct ReportArguments {
-    /// The directory of recorded runs; `build/grading_evaluation/` when omitted.
+    /// The directory of recorded runs; `tools/grading_evaluation/results/tuned/` when omitted.
     #[arg(long)]
     runs: Option<PathBuf>,
 
@@ -160,14 +160,14 @@ struct VerifyArguments {
     #[arg(long, value_enum, default_value = "bare")]
     input: VerificationInputKind,
 
-    /// The directory of recorded runs; `build/grading_evaluation/` when omitted.
+    /// The directory of recorded runs; `tools/grading_evaluation/results/tuned/` when omitted.
     #[arg(long)]
     runs_directory: Option<PathBuf>,
 
     #[arg(long)]
     cases: Option<PathBuf>,
 
-    /// Where the verification is recorded; `build/grading_evaluation_verification/` when omitted.
+    /// Where the verification is recorded; `tools/grading_evaluation/results/verification/` when omitted.
     #[arg(long)]
     output: Option<PathBuf>,
 
@@ -177,7 +177,7 @@ struct VerifyArguments {
 
 #[derive(Args)]
 struct VerifyReportArguments {
-    /// The directory of recorded verifications; `build/grading_evaluation_verification/` when omitted.
+    /// The directory of recorded verifications; `tools/grading_evaluation/results/verification/` when omitted.
     #[arg(long)]
     verifications: Option<PathBuf>,
 }
