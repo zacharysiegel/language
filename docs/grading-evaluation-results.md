@@ -1,6 +1,6 @@
 # Grading evaluation results
 
-Results of measuring small local language models on grading a learner's short written answer in Portuguese, by pointing at specific mistakes. The method, cases, scoring and bar are in `grading-evaluation.md`. Runs took place from 2026-10-29 to 2026-11-09 on one Apple M4 Max with 48 GB, through Ollama and, for thinking, cross-llama.
+Results of measuring small local language models on grading a learner's short written answer in Portuguese, by pointing at specific mistakes. The method, cases, scoring and bar are in `grading-evaluation.md`. Runs took place from 2026-10-29 to 2026-11-09 on one Apple M4 Max with 48 GB, through Ollama and, for thinking, cross-llama. Every run's replies and reports are in `tools/grading_evaluation/results/`.
 
 ## Decision
 

@@ -22,8 +22,8 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 
 readonly HOLDOUT_CASES_PATH="tools/grading_evaluation/cases/pt_br.en.holdout.json"
-readonly THINKING_RUNS_DIRECTORY="build/grading_evaluation_thinking"
-readonly THINKING_HOLDOUT_RUNS_DIRECTORY="build/grading_evaluation_thinking_holdout"
+readonly THINKING_RUNS_DIRECTORY="tools/grading_evaluation/results/thinking_comparison"
+readonly THINKING_HOLDOUT_RUNS_DIRECTORY="tools/grading_evaluation/results/thinking_comparison_holdout"
 readonly THINKING_PROMPT_VARIANT="few_shot_six"
 
 readonly SMALL_MODELS=(

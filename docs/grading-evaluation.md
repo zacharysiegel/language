@@ -112,4 +112,4 @@ The lists are in `scripts/dev/evaluate-grading.sh`. A model shipped inside the a
 ./scripts/dev/evaluate-grading.sh run-thinking
 ```
 
-`run` records raw replies in `build/grading_evaluation/`; `report` writes `report.md`, `failures.md` and `review-sample.md` beside them. `run-thinking` grades both case sets with `few_shot_six` through cross-llama with thinking off, on, and on with budgets of 128, 256 and 512 tokens, into `build/grading_evaluation_thinking/` and `build/grading_evaluation_thinking_holdout/`, and reports each.
+`run` records raw replies in `tools/grading_evaluation/results/tuned/`; `report` writes `report.md`, `failures.md` and `review-sample.md` beside them. `run-thinking` grades both case sets with `few_shot_six` through cross-llama with thinking off, on, and on with budgets of 128, 256 and 512 tokens, into `tools/grading_evaluation/results/thinking_comparison/` and `thinking_comparison_holdout/`, and reports each. Every finished run is committed under `tools/grading_evaluation/results/`, one directory per evaluation, so results are read there rather than rerun.
