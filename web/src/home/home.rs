@@ -22,21 +22,17 @@ pub fn HomePage() -> impl IntoView {
             .iter()
             .map(|level| level_section(&course, level, progress_store))
             .collect();
-        let completed_course: Arc<CourseOutline> = course.clone();
 
         view! {
             <div class="course-title">
                 <h1>{course.title.clone()}</h1>
                 <span class="page-caption">{format!("{} units", course.units.len())}</span>
             </div>
-            <div class="course-summary">
-                {move || {
-                    let completed_count: usize = progress_store.read(|progress| progress.course_progress(&completed_course.id).completed_unit_count());
-
-                    view! { <span class="numeric muted">{completed_count}" / "{completed_course.units.len()}" units completed"</span> }
-                }}
-                {next_unit_id.map(|unit_id| view! { <A href=course_data::unit_path(&course.id, &unit_id) attr:class="button primary">"Continue"</A> })}
-            </div>
+            {next_unit_id.map(|unit_id| view! {
+                <div class="row">
+                    <A href=course_data::unit_path(&course.id, &unit_id) attr:class="button primary">"Continue"</A>
+                </div>
+            })}
             {level_sections}
         }
     })
