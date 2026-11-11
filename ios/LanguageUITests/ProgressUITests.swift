@@ -15,6 +15,7 @@ final class ProgressUITests: LanguageUITestCase {
     @MainActor
     func testTheProgressPageShowsCompletionPerLevelAndQuizResults() throws {
         let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
+        let quizUnitTitle: String = try XCTUnwrap(Self.readUnit(Self.testCourseQuizUnitId, courseId: Self.testCourseId)["title"] as? String)
         let unitCount: Int = try Self.readCurriculumUnits(courseId: Self.testCourseId).filter { curriculumUnit in curriculumUnit["level"] as? String == Self.testCourseLevelCode }.count
 
         openTheProgressPage()
@@ -40,6 +41,7 @@ final class ProgressUITests: LanguageUITestCase {
 
         quizResult.tap()
         XCTAssertTrue(app.buttons["tab-overview"].waitForExistence(timeout: 15))
+        XCTAssertTrue(app.navigationBars[quizUnitTitle].exists)
 
         relaunchKeepingProgress()
         XCTAssertTrue(app.buttons["continue"].waitForExistence(timeout: 20))

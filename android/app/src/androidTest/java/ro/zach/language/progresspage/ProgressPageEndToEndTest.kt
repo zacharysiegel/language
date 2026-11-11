@@ -75,6 +75,7 @@ class ProgressPageEndToEndTest {
 
         composeRule.onNodeWithTag(quizResultTag).performScrollTo().performClick()
         driver.waitForTag("tab-overview", UNIT_OPEN_TIMEOUT_MILLISECONDS)
+        driver.assertPageHeading(CourseData.readUnit(CourseData.PRACTICED_UNIT_ID).getString("title"))
 
         driver.relaunchKeepingProgress()
         driver.waitForTag("continue")
