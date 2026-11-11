@@ -68,7 +68,7 @@ class ProgressPageEndToEndTest {
 
         openTheProgressPage()
         driver.waitForTag(quizResultTag, PAGE_OPEN_TIMEOUT_MILLISECONDS)
-        composeRule.onNodeWithTag(quizResultTag).assert(hasText("Best score: 100% over 1 attempt(s)", substring = true))
+        composeRule.onNodeWithTag(quizResultTag).assert(hasText("Best score: 100% over 1 attempt"))
         assertFalse(driver.hasNode("quiz-results-empty"))
         assertLevelCompletion(completedUnitCount = 1, unitCount = levelUnitCount)
         driver.saveScreenshot("28-progress-recorded")

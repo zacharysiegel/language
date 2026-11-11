@@ -34,7 +34,7 @@ final class ProgressUITests: LanguageUITestCase {
         let quizResult: XCUIElement = app.buttons["quiz-result-\(Self.testCourseQuizUnitId)"]
 
         XCTAssertTrue(quizResult.waitForExistence(timeout: 5))
-        XCTAssertTrue(quizResult.label.contains("Best score: 100% over 1 attempt(s)"), quizResult.label)
+        XCTAssertTrue(quizResult.label.hasSuffix("Best score: 100% over 1 attempt"), quizResult.label)
         XCTAssertFalse(app.staticTexts["quiz-results-empty"].exists)
         assertLevelCompletion(completedUnitCount: 1, unitCount: unitCount)
         saveScreenshot("28-progress-recorded")

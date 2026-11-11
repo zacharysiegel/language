@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import ro.zach.language.core.CourseSummaryRecord
+import ro.zach.language.core.countedNounPhrase
 import ro.zach.language.coursedata.CourseStore
 import ro.zach.language.coursedata.LocalCourseStore
 import ro.zach.language.design.HairlineRule
@@ -36,7 +37,7 @@ fun CoursesPage(onChoose: () -> Unit, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState())) {
         Column(modifier = Modifier.readableWidth().padding(LanguageSpacing.spaceMd)) {
             PageHeader(
-                caption = if (courses.size == 1) "1 course" else "${courses.size} courses",
+                caption = countedNounPhrase(courses.size.toUInt(), "course", "courses"),
                 title = "Courses",
                 modifier = Modifier.padding(bottom = LanguageSpacing.spaceMd),
             )

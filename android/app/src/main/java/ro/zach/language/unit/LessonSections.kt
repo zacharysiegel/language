@@ -29,6 +29,7 @@ import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.VocabularyItemRecord
 import ro.zach.language.core.VoiceChoiceRecord
+import ro.zach.language.core.countedNounPhrase
 import ro.zach.language.design.ColumnScrollTargets
 import ro.zach.language.design.HairlineRule
 import ro.zach.language.design.LanguageColors
@@ -86,7 +87,7 @@ private fun AddWordsToReviewDeck(courseId: String, unit: UnitOutlineRecord) {
             val queued: QueuedCardsRecord? = progressStore.queueUnitVocabulary(courseId, unit.id, vocabularyCount)
 
             if (queued != null) {
-                addedMessage = "${queued.addedCount} new word(s) added and ${queued.madeDueCount} word(s) queued for review again."
+                addedMessage = "${countedNounPhrase(queued.addedCount, "new word", "new words")} added and ${countedNounPhrase(queued.madeDueCount, "word", "words")} queued for review again."
             }
         },
         modifier = Modifier.testTag("add-words"),

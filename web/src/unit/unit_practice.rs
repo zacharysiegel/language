@@ -1,6 +1,7 @@
 use leptos::prelude::*;
 use shared::course::{self, Exercise, Unit};
 use shared::grading::{self, GraderPromptKind};
+use shared::interface_text;
 use shared::practice::{self, PracticeModeKind, SessionScore};
 use shared::progress::{PausedPractice, PausedPracticeStateKind, PracticeOutcome, SavedExerciseResult};
 
@@ -110,18 +111,12 @@ fn open_response_session(open_response_exercises: &[Exercise]) -> ActiveSession 
     }
 }
 
-fn counted(count: usize, singular_noun: &str, plural_noun: &str) -> String {
-    let noun: &str = if count == 1 { singular_noun } else { plural_noun };
-
-    format!("{count} {noun}")
-}
-
 fn quiz_label(exercise_count: usize) -> String {
-    format!("Quiz ({})", counted(exercise_count, "exercise", "exercises"))
+    format!("Quiz ({})", interface_text::counted_noun_phrase(exercise_count, "exercise", "exercises"))
 }
 
 fn open_response_label(task_count: usize) -> String {
-    format!("Open response ({})", counted(task_count, "task", "tasks"))
+    format!("Open response ({})", interface_text::counted_noun_phrase(task_count, "task", "tasks"))
 }
 
 fn resume_label(paused_practice: &PausedPractice) -> String {
@@ -215,10 +210,10 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                 "You have not taken the quiz yet.".to_string()
             } else {
                 format!(
-                    "Quiz: {}% over {} attempt(s). {}",
+                    "Quiz: {}% over {}.{}",
                     unit_progress.best_score_percent(),
-                    unit_progress.attempt_count,
-                    if unit_progress.is_completed() { "Unit completed." } else { "" },
+                    interface_text::counted_noun_phrase(unit_progress.attempt_count as usize, "attempt", "attempts"),
+                    if unit_progress.is_completed() { " Unit completed." } else { "" },
                 )
             }
         }

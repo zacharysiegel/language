@@ -24,7 +24,7 @@ struct OverviewSection: View {
                     let queued: QueuedCardsRecord? = progressStore.queueUnitVocabulary(courseId: courseId, unitId: unit.id, vocabularyCount: unit.vocabulary.count)
 
                     if let queued {
-                        addedMessage = "\(queued.addedCount) new word(s) added and \(queued.madeDueCount) word(s) queued for review again."
+                        addedMessage = "\(countedNounPhrase(count: queued.addedCount, singularNoun: "new word", pluralNoun: "new words")) added and \(countedNounPhrase(count: queued.madeDueCount, singularNoun: "word", pluralNoun: "words")) queued for review again."
                     }
                 }
                 .buttonStyle(SquareButtonStyle())

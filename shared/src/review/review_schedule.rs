@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::interface_text;
+
 pub const REVIEW_INTERVAL_DAYS: [u32; 7] = [0, 1, 3, 7, 14, 30, 90];
 
 const DAY_MILLISECONDS: i64 = 24 * 60 * 60 * 1000;
@@ -65,6 +67,14 @@ pub fn count_by_box<'a>(cards: impl Iterator<Item = &'a ReviewCard>) -> [usize; 
     }
 
     counts
+}
+
+/// The label of the review box whose cards wait `interval_days` before their next review.
+pub fn review_box_label(interval_days: u32) -> String {
+    match interval_days {
+        0 => "New or forgotten".to_string(),
+        days => format!("Next review after {}", interface_text::counted_noun_phrase(days as usize, "day", "days")),
+    }
 }
 
 #[cfg(test)]
@@ -135,5 +145,12 @@ mod tests {
         let cards: Vec<ReviewCard> = vec![ReviewCard::new("a".to_string(), NOW), second];
 
         assert_eq!(count_by_box(cards.iter()), [1, 0, 1, 0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn review_box_label_names_the_first_box_new_or_forgotten_and_the_others_by_their_interval() {
+        assert_eq!(review_box_label(0), "New or forgotten");
+        assert_eq!(review_box_label(1), "Next review after 1 day");
+        assert_eq!(review_box_label(3), "Next review after 3 days");
     }
 }

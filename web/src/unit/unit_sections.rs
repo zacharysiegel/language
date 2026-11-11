@@ -1,5 +1,6 @@
 use leptos::prelude::*;
 use shared::course::{Dialogue, GrammarNote, PhrasePair, ProseBlock, Reading, Unit, VocabularyItem, prose_blocks};
+use shared::interface_text;
 use shared::progress::{QueuedCards, VoiceChoiceKind};
 
 use crate::audio_player::{PlayAllButton, PlayButton, audio_clip};
@@ -84,8 +85,9 @@ pub fn OverviewSection(course_id: String, unit: Unit) -> impl IntoView {
                 on:click=move |_| {
                     let queued: QueuedCards = progress_store.queue_unit_vocabulary_for_review(&course_id, &unit_id, vocabulary_count);
                     added_message.set(Some(format!(
-                        "{} new word(s) added and {} word(s) queued for review again.",
-                        queued.added_count, queued.made_due_count,
+                        "{} added and {} queued for review again.",
+                        interface_text::counted_noun_phrase(queued.added_count, "new word", "new words"),
+                        interface_text::counted_noun_phrase(queued.made_due_count, "word", "words"),
                     )));
                 }
             >
