@@ -28,7 +28,6 @@ pub fn unit_status_from_code(code: &str) -> Option<UnitStatusKind> {
     UNIT_STATUS_KINDS.into_iter().find(|status| unit_status_code(*status) == code)
 }
 
-/// A unit's status tag, as the course and progress pages show it.
 pub fn unit_status_view(status: UnitStatusKind) -> impl IntoView {
     let tag_class: &'static str = match status {
         UnitStatusKind::Completed => "tag tag-ink",

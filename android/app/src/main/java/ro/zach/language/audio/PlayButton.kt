@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,12 +58,14 @@ fun PlayButton(clip: AudioClip, modifier: Modifier = Modifier, slow: Boolean = f
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs, Alignment.CenterHorizontally),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        PendingGlyphSwap(isIndicated = isPending, glyphColor = LanguageColors.accentActive) {
-            SpeedGlyph(slow = slow)
-        }
+        DisableSelection {
+            PendingGlyphSwap(isIndicated = isPending, glyphColor = LanguageColors.accentActive) {
+                SpeedGlyph(slow = slow)
+            }
 
-        if (label != null) {
-            LanguageText(text = label, style = LanguageType.bodyText)
+            if (label != null) {
+                LanguageText(text = label, style = LanguageType.bodyText)
+            }
         }
     }
 }

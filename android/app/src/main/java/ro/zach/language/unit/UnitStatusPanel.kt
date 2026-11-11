@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,7 +68,9 @@ fun UnitStatusPanel(
                     .testTag("unit-status-help"),
                 contentAlignment = Alignment.Center,
             ) {
-                LanguageText(text = "?", style = LanguageType.bodyText, color = helpColor)
+                DisableSelection {
+                    LanguageText(text = "?", style = LanguageType.bodyText, color = helpColor)
+                }
             }
 
             if (unitProgress.attemptCount > 0u) {
@@ -123,7 +126,9 @@ fun UnitStatusHelpTip(onClose: () -> Unit, modifier: Modifier = Modifier) {
                 .testTag("unit-status-help-close"),
             contentAlignment = Alignment.Center,
         ) {
-            LanguageText(text = "×", style = LanguageType.titleText)
+            DisableSelection {
+                LanguageText(text = "×", style = LanguageType.titleText)
+            }
         }
     }
 }
