@@ -3,12 +3,12 @@ use std::sync::Arc;
 use leptos::prelude::*;
 use leptos_router::components::A;
 use shared::AppError;
-use shared::course::CourseOutline;
-use shared::progress::{Progress, UnitStatusKind};
+use shared::course::{CourseOutline, UnitOutline};
+use shared::progress::{CourseProgress, Progress, QuizResult};
 use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
 
 use crate::course_data::{self, course_gate, use_route_course_id};
-use crate::progress_state::{self, ProgressStore, remember_route_course, use_progress_store};
+use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
 
 #[component]
 pub fn ProgressPage() -> impl IntoView {
@@ -29,28 +29,16 @@ fn box_label(box_index: usize) -> String {
 #[component]
 fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
-    let unit_rows: Vec<_> = course
-        .units
-        .iter()
-        .map(|unit| {
-            let unit_id: String = unit.id.clone();
-            let course_id: String = course.id.clone();
-            let unit_href: String = course_data::unit_path(&course_id, &unit_id);
-            let unit_label: String = format!("{} {}: {}", unit.level, unit.order, unit.title);
-            let status = move || {
-                let unit_status: UnitStatusKind = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id).status);
+    let level_rows = {
+        let course: Arc<CourseOutline> = course.clone();
 
-                progress_state::unit_status_view(unit_status)
-            };
+        move || progress_store.read(|progress| level_completion_rows(&course, &progress.course_progress(&course.id)))
+    };
+    let quiz_results = {
+        let course: Arc<CourseOutline> = course.clone();
 
-            view! {
-                <tr>
-                    <td><A href=unit_href>{unit_label}</A></td>
-                    <td>{status}</td>
-                </tr>
-            }
-        })
-        .collect();
+        move || progress_store.read(|progress| quiz_results_view(&course, &progress.course_progress(&course.id)))
+    };
 
     let box_course_id: String = course.id.clone();
     let box_rows = move || {
@@ -63,21 +51,63 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
             .collect_view()
     };
 
-    let unit_count: usize = course.units.len();
-    let completed_course_id: String = course.id.clone();
-    let completed_count = move || progress_store.read(|progress| progress.course_progress(&completed_course_id).completed_unit_count());
-
     view! {
         <h1>"Progress"</h1>
-        <div class="course-summary">
-            <span class="numeric muted">{move || format!("{} / {unit_count} units completed", completed_count())}</span>
-        </div>
-        <h2>"Units"</h2>
-        <table class="grid"><tbody>{unit_rows}</tbody></table>
+        <h2>"Levels"</h2>
+        <table class="grid"><tbody>{level_rows}</tbody></table>
+        <h2>"Quiz results"</h2>
+        {quiz_results}
         <h2>"Review deck"</h2>
         <table class="grid"><tbody>{box_rows}</tbody></table>
         <DataTransfer />
     }
+}
+
+fn level_completion_rows(course: &CourseOutline, course_progress: &CourseProgress) -> impl IntoView + use<> {
+    course
+        .levels
+        .iter()
+        .map(|level| {
+            let level_unit_ids: Vec<&str> = course.units_at_level(&level.code).map(|unit| unit.id.as_str()).collect();
+            let completed_unit_count: usize = course_progress.completed_unit_count_among(level_unit_ids.iter().copied());
+
+            view! {
+                <tr>
+                    <td>{level.code.clone()}" · "{level.title.clone()}</td>
+                    <td class="muted tabular-figures">{format!("{completed_unit_count} of {} units completed", level_unit_ids.len())}</td>
+                </tr>
+            }
+        })
+        .collect_view()
+}
+
+fn quiz_results_view(course: &CourseOutline, course_progress: &CourseProgress) -> AnyView {
+    let quiz_results: Vec<QuizResult> = course_progress.quiz_results(course.units.iter().map(|unit| unit.id.as_str()));
+
+    if quiz_results.is_empty() {
+        return view! { <p class="muted">"You have not taken a quiz yet."</p> }.into_any();
+    }
+
+    let quiz_result_rows: Vec<_> = quiz_results
+        .into_iter()
+        .filter_map(|quiz_result| quiz_result_row(course, quiz_result))
+        .collect();
+
+    view! { <table class="grid"><tbody>{quiz_result_rows}</tbody></table> }.into_any()
+}
+
+fn quiz_result_row(course: &CourseOutline, quiz_result: QuizResult) -> Option<impl IntoView + use<>> {
+    let unit: &UnitOutline = course.find_unit(&quiz_result.unit_id)?;
+    let unit_href: String = course_data::unit_path(&course.id, &unit.id);
+    let unit_title: String = unit.title.clone();
+    let score_text: String = format!("Best score: {}% over {} attempt(s)", quiz_result.best_score_percent, quiz_result.attempt_count);
+
+    Some(view! {
+        <tr>
+            <td><A href=unit_href>{unit_title}</A></td>
+            <td class="muted tabular-figures">{score_text}</td>
+        </tr>
+    })
 }
 
 #[component]
