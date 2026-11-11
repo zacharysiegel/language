@@ -181,6 +181,7 @@ Components, one Kotlin file per iOS file:
   - Semantics per entry: content description "Go to note A1.1.4", `selected` for the current one, test tag `<rail identifier>-<visible text>`, custom accessibility actions "Next entry" and "Previous entry" in place of iOS's adjustable action.
 - Glyphs: vector drawables in `res/drawable/` (`glyph_course`, `glyph_review`, `glyph_glossary`, `glyph_progress`, `glyph_settings`, `glyph_play`, `glyph_stop`, `glyph_chevron`, `glyph_check`, `glyph_pending`), standing in for the SF Symbols.
 - Theme: light only (`preferredColorScheme(.light)`); edge to edge with dark system bar icons; window insets padded with `WindowInsets.safeDrawing`.
+- Text selection: `MainActivity` wraps the app in one `SelectionContainer`; the content of every clickable control is wrapped in `DisableSelection`, so labels and glyphs of buttons, links, rows and tabs are never selected.
 - Launcher icon from `ios/Language/Resources/Assets.xcassets/AppIcon.appiconset/AppIcon.png`, scaled with `sips` into `mipmap-*dpi/ic_launcher.png` once and committed.
 
 ## Screens and behaviours
