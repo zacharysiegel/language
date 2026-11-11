@@ -286,7 +286,7 @@ Compose UI tests driving `MainActivity` through `ActivityScenario` with `createE
 
 Gestures that iOS runs without waiting for idle run with `mainClock.autoAdvance = false`, advancing frames by hand, so a fling is still moving when the rail is tapped.
 
-From `CourseUITests.swift`, one Android test per iOS test, in the feature package that owns the screen:
+From the iOS UI test classes, one Android test per iOS test, in the feature package that owns the screen:
 
 - `unit/UnitPageEndToEndTest.kt`
   - `unitPage_opensEveryTab` (home opens a unit and every tab)
