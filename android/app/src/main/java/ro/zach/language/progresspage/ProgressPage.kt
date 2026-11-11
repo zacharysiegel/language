@@ -32,6 +32,8 @@ import ro.zach.language.app.UnitDestination
 import ro.zach.language.core.CourseOutlineRecord
 import ro.zach.language.core.LevelCompletionRecord
 import ro.zach.language.core.QuizResultRecord
+import ro.zach.language.core.countedNounPhrase
+import ro.zach.language.core.reviewBoxLabel
 import ro.zach.language.core.reviewIntervalDays
 import ro.zach.language.design.Glyph
 import ro.zach.language.design.GlyphKind
@@ -154,13 +156,13 @@ private fun QuizResultRow(quizResult: QuizResultRecord, onOpen: () -> Unit) {
 }
 
 private fun quizResultSummary(quizResult: QuizResultRecord): String {
-    return "Best score: ${quizResult.bestScorePercent}% over ${quizResult.attemptCount} attempt(s)"
+    return "Best score: ${quizResult.bestScorePercent}% over ${countedNounPhrase(quizResult.attemptCount, "attempt", "attempts")}"
 }
 
 @Composable
 private fun ReviewDeckSection(outline: CourseOutlineRecord) {
     val progressStore: ProgressStore = LocalProgressStore.current
-    val intervalDays: List<Int> = remember { reviewIntervalDays().map { days -> days.toInt() } }
+    val intervalDays: List<UInt> = remember { reviewIntervalDays() }
     val cardCounts: List<Int> = progressStore.countByBox(outline.id)
 
     Column {
@@ -176,11 +178,6 @@ private fun ReviewDeckSection(outline: CourseOutlineRecord) {
             HairlineRule()
         }
     }
-}
-
-/** A review box's label from the days its cards wait before their next review. */
-fun reviewBoxLabel(intervalDays: Int): String {
-    return if (intervalDays == 0) "New or forgotten" else "Next review after $intervalDays day(s)"
 }
 
 @Composable

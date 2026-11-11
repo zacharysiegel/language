@@ -21,6 +21,7 @@ import ro.zach.language.core.UnitLessonRecord
 import ro.zach.language.core.UnitOutlineRecord
 import ro.zach.language.core.UnitProgressRecord
 import ro.zach.language.core.UnitStatusRecord
+import ro.zach.language.core.countedNounPhrase
 import ro.zach.language.core.openResponseExercises
 import ro.zach.language.core.passPercent
 import ro.zach.language.core.quickPracticeExerciseCount
@@ -111,7 +112,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
                 val outcome: PracticeOutcomeRecord? = recordOutcome(progressStore, courseId, unit, mode, score)
 
                 if (outcome != null && outcome.wordsAddedCount > 0u) {
-                    noticeMessage = "${outcome.wordsAddedCount} word(s) from this unit were added to your review deck."
+                    noticeMessage = "Added ${countedNounPhrase(outcome.wordsAddedCount, "word", "words")} from this unit to your review deck."
                 }
             },
             onExit = { activeSessionKind = null },
@@ -203,18 +204,12 @@ private fun PracticeStartButtons(
     }
 }
 
-private fun counted(count: Int, singularNoun: String, pluralNoun: String): String {
-    val noun: String = if (count == 1) singularNoun else pluralNoun
-
-    return "$count $noun"
+private fun quizLabel(exerciseCount: Int): String {
+    return "Quiz (${countedNounPhrase(exerciseCount.toUInt(), "exercise", "exercises")})"
 }
 
-internal fun quizLabel(exerciseCount: Int): String {
-    return "Quiz (${counted(exerciseCount, "exercise", "exercises")})"
-}
-
-internal fun openResponseLabel(taskCount: Int): String {
-    return "Open response (${counted(taskCount, "task", "tasks")})"
+private fun openResponseLabel(taskCount: Int): String {
+    return "Open response (${countedNounPhrase(taskCount.toUInt(), "task", "tasks")})"
 }
 
 private enum class PausedPracticeDropOutcome {
@@ -288,5 +283,5 @@ private fun bestSummary(unitProgress: UnitProgressRecord): String {
 
     val completion: String = if (unitProgress.status == UnitStatusRecord.COMPLETED) " Unit completed." else ""
 
-    return "Quiz: ${unitProgress.bestScorePercent}% over ${unitProgress.attemptCount} attempt(s).$completion"
+    return "Quiz: ${unitProgress.bestScorePercent}% over ${countedNounPhrase(unitProgress.attemptCount, "attempt", "attempts")}.$completion"
 }

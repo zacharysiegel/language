@@ -83,7 +83,7 @@ struct ProgressPage: View {
                     .foregroundStyle(Color.accentLink)
                     .multilineTextAlignment(.leading)
 
-                Text("Best score: \(quizResult.bestScorePercent)% over \(quizResult.attemptCount) attempt(s)")
+                Text("Best score: \(quizResult.bestScorePercent)% over \(countedNounPhrase(count: quizResult.attemptCount, singularNoun: "attempt", pluralNoun: "attempts"))")
                     .font(.dataText)
                     .foregroundStyle(Color.inkMuted)
             }
@@ -108,7 +108,7 @@ struct ProgressPage: View {
 
             ForEach(Array(zip(intervals, counts).enumerated()), id: \.offset) { _, entry in
                 HStack {
-                    Text(entry.0 == 0 ? "New or forgotten" : "Next review after \(entry.0) day(s)").font(.bodyText)
+                    Text(reviewBoxLabel(intervalDays: entry.0)).font(.bodyText)
                     Spacer()
                     Text("\(entry.1)").font(.dataText)
                 }

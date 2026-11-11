@@ -98,6 +98,11 @@ pub fn review_interval_days() -> Vec<u32> {
 }
 
 #[uniffi::export]
+pub fn review_box_label(interval_days: u32) -> String {
+    review::review_box_label(interval_days)
+}
+
+#[uniffi::export]
 pub fn fill_blank_marker() -> String {
     FillBlankExercise::BLANK_MARKER.to_string()
 }

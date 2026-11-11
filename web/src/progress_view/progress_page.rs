@@ -5,7 +5,8 @@ use leptos_router::components::A;
 use shared::AppError;
 use shared::course::{CourseOutline, UnitOutline};
 use shared::progress::{CourseProgress, Progress, QuizResult};
-use shared::review::{REVIEW_INTERVAL_DAYS, count_by_box};
+use shared::interface_text;
+use shared::review::{self, REVIEW_INTERVAL_DAYS, count_by_box};
 
 use crate::course_data::{self, course_gate, use_route_course_id};
 use crate::progress_state::{ProgressStore, remember_route_course, use_progress_store};
@@ -17,13 +18,6 @@ pub fn ProgressPage() -> impl IntoView {
     remember_route_course(use_progress_store(), course_id);
 
     course_gate(move || course_id.get(), |course: Arc<CourseOutline>| view! { <ProgressSummary course /> })
-}
-
-fn box_label(box_index: usize) -> String {
-    match REVIEW_INTERVAL_DAYS[box_index] {
-        0 => "New or forgotten".to_string(),
-        days => format!("Next review after {days} day(s)"),
-    }
 }
 
 #[component]
@@ -47,7 +41,7 @@ fn ProgressSummary(course: Arc<CourseOutline>) -> impl IntoView {
         counts
             .into_iter()
             .enumerate()
-            .map(|(box_index, count)| view! { <tr><td>{box_label(box_index)}</td><td class="numeric">{count}</td></tr> })
+            .map(|(box_index, count)| view! { <tr><td>{review::review_box_label(REVIEW_INTERVAL_DAYS[box_index])}</td><td class="numeric">{count}</td></tr> })
             .collect_view()
     };
 
@@ -100,7 +94,8 @@ fn quiz_result_row(course: &CourseOutline, quiz_result: QuizResult) -> Option<im
     let unit: &UnitOutline = course.find_unit(&quiz_result.unit_id)?;
     let unit_href: String = course_data::unit_path(&course.id, &unit.id);
     let unit_title: String = unit.title.clone();
-    let score_text: String = format!("Best score: {}% over {} attempt(s)", quiz_result.best_score_percent, quiz_result.attempt_count);
+    let attempts_text: String = interface_text::counted_noun_phrase(quiz_result.attempt_count as usize, "attempt", "attempts");
+    let score_text: String = format!("Best score: {}% over {attempts_text}", quiz_result.best_score_percent);
 
     Some(view! {
         <tr>

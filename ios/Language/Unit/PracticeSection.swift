@@ -121,18 +121,12 @@ struct PracticeSection: View {
         }
     }
 
-    private func counted(count: Int, singularNoun: String, pluralNoun: String) -> String {
-        let noun: String = count == 1 ? singularNoun : pluralNoun
-
-        return "\(count) \(noun)"
-    }
-
     private func quizLabel(exerciseCount: Int) -> String {
-        "Quiz (\(counted(count: exerciseCount, singularNoun: "exercise", pluralNoun: "exercises")))"
+        "Quiz (\(countedNounPhrase(count: UInt32(exerciseCount), singularNoun: "exercise", pluralNoun: "exercises")))"
     }
 
     private func openResponseLabel(taskCount: Int) -> String {
-        "Open response (\(counted(count: taskCount, singularNoun: "task", pluralNoun: "tasks")))"
+        "Open response (\(countedNounPhrase(count: UInt32(taskCount), singularNoun: "task", pluralNoun: "tasks")))"
     }
 
     /* A practice left on its last feedback has every question answered and resumes at its summary. */
@@ -221,7 +215,7 @@ struct PracticeSection: View {
         let outcome: PracticeOutcomeRecord? = recordedOutcome(mode: mode, score: score)
 
         if let outcome, outcome.wordsAddedCount > 0 {
-            noticeMessage = "\(outcome.wordsAddedCount) word(s) from this unit were added to your review deck."
+            noticeMessage = "Added \(countedNounPhrase(count: outcome.wordsAddedCount, singularNoun: "word", pluralNoun: "words")) from this unit to your review deck."
         }
     }
 
@@ -250,6 +244,6 @@ struct PracticeSection: View {
 
         let completion: String = unitProgress.status == .completed ? " Unit completed." : ""
 
-        return "Quiz: \(unitProgress.bestScorePercent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
+        return "Quiz: \(unitProgress.bestScorePercent)% over \(countedNounPhrase(count: unitProgress.attemptCount, singularNoun: "attempt", pluralNoun: "attempts")).\(completion)"
     }
 }
