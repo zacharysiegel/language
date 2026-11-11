@@ -74,7 +74,7 @@ fn level_completion_rows(course: &CourseOutline, course_progress: &CourseProgres
             view! {
                 <tr>
                     <td>{level.code.clone()}" · "{level.title.clone()}</td>
-                    <td class="muted">{format!("{completed_unit_count} of {} units completed", level_unit_ids.len())}</td>
+                    <td class="muted tabular-figures">{format!("{completed_unit_count} of {} units completed", level_unit_ids.len())}</td>
                 </tr>
             }
         })
@@ -105,7 +105,7 @@ fn quiz_result_row(course: &CourseOutline, quiz_result: QuizResult) -> Option<im
     Some(view! {
         <tr>
             <td><A href=unit_href>{unit_title}</A></td>
-            <td class="muted">{score_text}</td>
+            <td class="muted tabular-figures">{score_text}</td>
         </tr>
     })
 }

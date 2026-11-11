@@ -73,6 +73,13 @@ strong {
     line-height: var(--type-line-height-data);
 }
 
+// Running text that carries figures: tabular digits in the body face, free to wrap.
+.tabular-figures {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    font-size: var(--type-size-data);
+}
+
 .muted {
     color: var(--color-ink-muted);
 }
