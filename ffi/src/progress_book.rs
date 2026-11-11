@@ -9,13 +9,13 @@ use shared::course::{Exercise, OpenResponseExercise};
 use shared::filesystem;
 use shared::practice::{PracticeModeKind, SessionScore};
 use shared::progress::{
-    self, AudioEngineKind, CourseProgress, OpenResponseTask, PausedPractice, PausedPracticeStateKind, PracticeOutcome, Progress, QueuedCards,
+    self, AudioEngineKind, CourseProgress, OpenResponseTask, PausedPractice, PausedPracticeStateKind, PracticeOutcome, Progress, QueuedCards, QuizResult,
     ReviewDirectionKind, SavedExerciseResult, SavedGraderFinding, SavedOpenResponse, SavedOpenResponseGrade, Settings, UnitProgress, UnitStatusKind,
     VoiceChoiceKind,
 };
 use shared::review::{self, ReviewCard};
 
-use crate::course_records::{self, ExerciseRecord};
+use crate::course_records::{self, CourseLevelRecord, CourseOutlineRecord, ExerciseRecord, UnitOutlineRecord};
 use crate::ffi_error::CoreError;
 use crate::practice_functions::AnswerStatusRecord;
 
@@ -168,6 +168,22 @@ impl From<UnitProgress> for UnitProgressRecord {
             attempt_count: unit_progress.attempt_count,
         }
     }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct LevelCompletionRecord {
+    pub level_code: String,
+    pub level_title: String,
+    pub completed_unit_count: u32,
+    pub unit_count: u32,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct QuizResultRecord {
+    pub unit_id: String,
+    pub unit_title: String,
+    pub best_score_percent: u32,
+    pub attempt_count: u32,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
@@ -392,6 +408,21 @@ impl ProgressBook {
         self.lock().course_progress(&course_id).completed_unit_count() as u32
     }
 
+    /// One per level of the outline, in its order.
+    pub fn level_completions(&self, outline: CourseOutlineRecord) -> Vec<LevelCompletionRecord> {
+        let course_progress: CourseProgress = self.lock().course_progress(&outline.id);
+
+        outline.levels.iter().map(|level| level_completion(&course_progress, level, &outline.units)).collect()
+    }
+
+    /// In the outline's order; a unit whose quiz has not been taken has none.
+    pub fn quiz_results(&self, outline: CourseOutlineRecord) -> Vec<QuizResultRecord> {
+        let course_progress: CourseProgress = self.lock().course_progress(&outline.id);
+        let quiz_results: Vec<QuizResult> = course_progress.quiz_results(outline.units.iter().map(|unit| unit.id.as_str()));
+
+        quiz_results.into_iter().filter_map(|quiz_result| quiz_result_record(quiz_result, &outline.units)).collect()
+    }
+
     pub fn record_practice_session(
         &self,
         course_id: String,
@@ -608,6 +639,28 @@ fn save(path: &Path, text: &str) -> Result<(), AppError> {
     filesystem::write_atomically(path, text.as_bytes())
 }
 
+fn level_completion(course_progress: &CourseProgress, level: &CourseLevelRecord, units: &[UnitOutlineRecord]) -> LevelCompletionRecord {
+    let level_unit_ids: Vec<&str> = units.iter().filter(|unit| unit.level_code == level.code).map(|unit| unit.id.as_str()).collect();
+
+    LevelCompletionRecord {
+        level_code: level.code.clone(),
+        level_title: level.title.clone(),
+        completed_unit_count: course_progress.completed_unit_count_among(level_unit_ids.iter().copied()) as u32,
+        unit_count: level_unit_ids.len() as u32,
+    }
+}
+
+fn quiz_result_record(quiz_result: QuizResult, units: &[UnitOutlineRecord]) -> Option<QuizResultRecord> {
+    let unit: &UnitOutlineRecord = units.iter().find(|unit| unit.id == quiz_result.unit_id)?;
+
+    Some(QuizResultRecord {
+        unit_id: quiz_result.unit_id,
+        unit_title: unit.title.clone(),
+        best_score_percent: quiz_result.best_score_percent,
+        attempt_count: quiz_result.attempt_count,
+    })
+}
+
 fn open_response_of(exercise: &ExerciseRecord) -> Option<OpenResponseExercise> {
     match Exercise::from(exercise) {
         Exercise::OpenResponse(open_response) => Some(open_response),
@@ -680,6 +733,98 @@ mod tests {
             },
         );
         assert_eq!(reopened.completed_unit_count(COURSE_ID.to_string()), 0);
+    }
+
+    fn unit_outline_record(id: &str, level_code: &str, order: u32) -> UnitOutlineRecord {
+        UnitOutlineRecord {
+            id: id.to_string(),
+            level_code: level_code.to_string(),
+            order,
+            title: format!("Title of {id}"),
+            objectives: Vec::new(),
+            vocabulary: Vec::new(),
+        }
+    }
+
+    fn level_record(code: &str, title: &str) -> CourseLevelRecord {
+        CourseLevelRecord {
+            code: code.to_string(),
+            title: title.to_string(),
+            requires_readings: false,
+        }
+    }
+
+    fn outline_record() -> CourseOutlineRecord {
+        CourseOutlineRecord {
+            id: COURSE_ID.to_string(),
+            title: "Foundations".to_string(),
+            target_language: "pt-BR".to_string(),
+            source_language: "en".to_string(),
+            target_language_name: "Portuguese".to_string(),
+            source_language_name: "English".to_string(),
+            levels: vec![level_record("A1", "Beginner"), level_record("A2", "Elementary"), level_record("B1", "Intermediate")],
+            units: vec![
+                unit_outline_record("a1-one", "A1", 1),
+                unit_outline_record("a1-two", "A1", 2),
+                unit_outline_record("a2-one", "A2", 1),
+            ],
+        }
+    }
+
+    #[test]
+    fn level_completions_count_each_level_of_the_outline() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.record_practice_session(COURSE_ID.to_string(), "a1-two".to_string(), PracticeModeRecord::Full, 9, 10, 0).unwrap();
+        book.set_unit_status(COURSE_ID.to_string(), "a2-one".to_string(), UnitStatusRecord::InProgress).unwrap();
+        book.set_unit_status(COURSE_ID.to_string(), "removed-unit".to_string(), UnitStatusRecord::Completed).unwrap();
+
+        let level_completions: Vec<LevelCompletionRecord> = book.level_completions(outline_record());
+
+        assert_eq!(
+            level_completions,
+            vec![
+                LevelCompletionRecord {
+                    level_code: "A1".to_string(),
+                    level_title: "Beginner".to_string(),
+                    completed_unit_count: 1,
+                    unit_count: 2,
+                },
+                LevelCompletionRecord {
+                    level_code: "A2".to_string(),
+                    level_title: "Elementary".to_string(),
+                    completed_unit_count: 0,
+                    unit_count: 1,
+                },
+                LevelCompletionRecord {
+                    level_code: "B1".to_string(),
+                    level_title: "Intermediate".to_string(),
+                    completed_unit_count: 0,
+                    unit_count: 0,
+                },
+            ],
+        );
+    }
+
+    #[test]
+    fn quiz_results_name_the_units_of_the_outline_whose_quiz_was_taken() {
+        let directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let book: Arc<ProgressBook> = book_in(&directory);
+        book.record_practice_session(COURSE_ID.to_string(), "a2-one".to_string(), PracticeModeRecord::Full, 3, 4, 0).unwrap();
+        book.record_practice_session(COURSE_ID.to_string(), "a1-two".to_string(), PracticeModeRecord::Quick, 4, 4, 0).unwrap();
+        book.record_practice_session(COURSE_ID.to_string(), "removed-unit".to_string(), PracticeModeRecord::Full, 4, 4, 0).unwrap();
+
+        let quiz_results: Vec<QuizResultRecord> = book.quiz_results(outline_record());
+
+        assert_eq!(
+            quiz_results,
+            vec![QuizResultRecord {
+                unit_id: "a2-one".to_string(),
+                unit_title: "Title of a2-one".to_string(),
+                best_score_percent: 75,
+                attempt_count: 1,
+            }],
+        );
     }
 
     #[test]
