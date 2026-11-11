@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -141,12 +142,14 @@ private fun QuizResultRow(quizResult: QuizResultRecord, onOpen: () -> Unit) {
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
-            LanguageText(text = quizResult.unitTitle, style = LanguageType.bodyText, color = LanguageColors.accentLink)
-            LanguageText(text = quizResultSummary(quizResult), style = LanguageType.dataText, color = LanguageColors.inkMuted)
-        }
+        DisableSelection {
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+                LanguageText(text = quizResult.unitTitle, style = LanguageType.bodyText, color = LanguageColors.accentLink)
+                LanguageText(text = quizResultSummary(quizResult), style = LanguageType.dataText, color = LanguageColors.inkMuted)
+            }
 
-        Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)
+            Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)
+        }
     }
 }
 
