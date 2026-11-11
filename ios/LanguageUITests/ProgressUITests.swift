@@ -12,6 +12,7 @@ final class ProgressUITests: LanguageUITestCase {
         Self.localRepositoryDirectory
     }
 
+    @MainActor
     func testTheProgressPageShowsCompletionPerLevelAndQuizResults() throws {
         let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
         let unitCount: Int = try Self.readCurriculumUnits(courseId: Self.testCourseId).filter { curriculumUnit in curriculumUnit["level"] as? String == Self.testCourseLevelCode }.count
@@ -46,11 +47,13 @@ final class ProgressUITests: LanguageUITestCase {
         saveScreenshot("29-course-progress-recorded")
     }
 
+    @MainActor
     private func openTheProgressPage() {
         app.tabBars.buttons["Progress"].tap()
         XCTAssertTrue(app.staticTexts["Review deck"].waitForExistence(timeout: 5))
     }
 
+    @MainActor
     private func assertLevelCompletion(completedUnitCount: Int, unitCount: Int) {
         let levelCompletion: XCUIElement = app.descendants(matching: .any)["level-completion-\(Self.testCourseLevelCode)"]
 
