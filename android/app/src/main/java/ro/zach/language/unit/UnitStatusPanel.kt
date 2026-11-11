@@ -35,7 +35,6 @@ import ro.zach.language.design.shadowedBox
 import ro.zach.language.design.unitStatusRecords
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
-import kotlin.math.roundToInt
 
 const val UNIT_STATUS_HELP_AUTO_CLOSE_MILLISECONDS: Long = 8_000
 
@@ -76,7 +75,7 @@ fun UnitStatusPanel(
             if (unitProgress.attemptCount > 0u) {
                 Spacer(modifier = Modifier.weight(1f))
                 LanguageText(
-                    text = "Quiz: ${(unitProgress.bestProportion * 100).roundToInt()}%",
+                    text = "Quiz: ${unitProgress.bestScorePercent}%",
                     style = LanguageType.dataText,
                     color = LanguageColors.inkMuted,
                     modifier = Modifier.testTag("unit-best-score"),

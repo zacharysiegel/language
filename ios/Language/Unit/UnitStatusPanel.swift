@@ -36,7 +36,7 @@ struct UnitStatusPanel: View {
                 if unitProgress.attemptCount > 0 {
                     Spacer()
 
-                    Text("Quiz: \(Int((unitProgress.bestProportion * 100).rounded()))%")
+                    Text("Quiz: \(unitProgress.bestScorePercent)%")
                         .font(.dataText)
                         .foregroundStyle(Color.inkMuted)
                         .accessibilityIdentifier("unit-best-score")

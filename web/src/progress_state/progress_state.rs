@@ -65,7 +65,7 @@ impl ProgressStore {
         self.progress.with(|progress| {
             let unit_progress: UnitProgress = progress.course_progress(course_id).unit_progress(unit_id);
 
-            (unit_progress.attempt_count > 0).then(|| (unit_progress.best_proportion * 100.0).round() as u32)
+            unit_progress.is_quiz_taken().then(|| unit_progress.best_score_percent())
         })
     }
 
