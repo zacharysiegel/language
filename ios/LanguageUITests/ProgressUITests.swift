@@ -14,7 +14,7 @@ final class ProgressUITests: LanguageUITestCase {
 
     func testTheProgressPageShowsCompletionPerLevelAndQuizResults() throws {
         let exercises: [[String: Any]] = try Self.readQuizExercises(Self.testCourseQuizUnitId, courseId: Self.testCourseId)
-        let unitCount: Int = try Self.readCurriculumUnits(courseId: Self.testCourseId).count
+        let unitCount: Int = try Self.readCurriculumUnits(courseId: Self.testCourseId).filter { curriculumUnit in curriculumUnit["level"] as? String == Self.testCourseLevelCode }.count
 
         openTheProgressPage()
         XCTAssertTrue(app.staticTexts["quiz-results-empty"].waitForExistence(timeout: 5))
