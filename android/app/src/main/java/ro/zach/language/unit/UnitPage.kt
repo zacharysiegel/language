@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -277,11 +278,13 @@ private fun UnitTabRow(lesson: UnitLessonRecord, activeTab: UnitTabKind, onChoos
                     .testTag("tab-${tab.rawValue()}")
                     .padding(horizontal = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs, vertical = LanguageSpacing.spaceSm),
             ) {
-                LanguageText(
-                    text = tab.label().uppercase(),
-                    style = LanguageType.labelText.copy(letterSpacing = LanguageType.labelTracking),
-                    color = if (isActive) LanguageColors.accentActive else LanguageColors.ink,
-                )
+                DisableSelection {
+                    LanguageText(
+                        text = tab.label().uppercase(),
+                        style = LanguageType.labelText.copy(letterSpacing = LanguageType.labelTracking),
+                        color = if (isActive) LanguageColors.accentActive else LanguageColors.ink,
+                    )
+                }
             }
         }
     }
