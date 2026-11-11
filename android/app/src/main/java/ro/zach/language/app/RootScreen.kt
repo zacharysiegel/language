@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -224,7 +225,9 @@ private fun TopBarButton(testTag: String, contentDescription: String?, onClick: 
             .padding(horizontal = LanguageSpacing.spaceSm),
         contentAlignment = Alignment.Center,
     ) {
-        content()
+        DisableSelection {
+            content()
+        }
     }
 }
 
@@ -258,7 +261,9 @@ private fun RootBottomBar(selectedTab: RootTabKind, courseId: String?) {
                     }
                 }
 
-                LanguageText(text = tab.label(), style = LanguageType.labelText, color = color)
+                DisableSelection {
+                    LanguageText(text = tab.label(), style = LanguageType.labelText, color = color)
+                }
             }
         }
     }

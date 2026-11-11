@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.pulltorefresh.PullToRefreshBox
@@ -188,19 +189,21 @@ private fun UnitRow(outline: CourseOutlineRecord, unit: UnitOutlineRecord, onOpe
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        LanguageText(
-            text = "${unit.order}",
-            style = LanguageType.dataText,
-            color = LanguageColors.inkMuted,
-            textAlign = TextAlign.End,
-            modifier = Modifier.width(LanguageSpacing.unitOrderWidth),
-        )
+        DisableSelection {
+            LanguageText(
+                text = "${unit.order}",
+                style = LanguageType.dataText,
+                color = LanguageColors.inkMuted,
+                textAlign = TextAlign.End,
+                modifier = Modifier.width(LanguageSpacing.unitOrderWidth),
+            )
 
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
-            LanguageText(text = unit.title, style = LanguageType.bodyText, color = LanguageColors.accentLink)
-            UnitStatusTag(status = progressStore.unitProgress(outline.id, unit.id).status)
+            Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
+                LanguageText(text = unit.title, style = LanguageType.bodyText, color = LanguageColors.accentLink)
+                UnitStatusTag(status = progressStore.unitProgress(outline.id, unit.id).status)
+            }
+
+            Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)
         }
-
-        Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.rule, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs)
     }
 }

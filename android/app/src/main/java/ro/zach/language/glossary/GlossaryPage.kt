@@ -13,6 +13,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -172,13 +173,15 @@ private fun GlossaryRow(courseId: String, entry: GlossaryEntry) {
             }
         }
 
-        LanguageText(
-            text = entry.unitLabel(),
-            style = LanguageType.dataText,
-            color = LanguageColors.accentLink,
-            modifier = Modifier.clickable(interactionSource = null, indication = null, role = Role.Button) {
-                rootNavigation.openUnit(UnitDestination(courseId = courseId, unitId = entry.unit.id, tab = UnitTabKind.Vocabulary))
-            },
-        )
+        DisableSelection {
+            LanguageText(
+                text = entry.unitLabel(),
+                style = LanguageType.dataText,
+                color = LanguageColors.accentLink,
+                modifier = Modifier.clickable(interactionSource = null, indication = null, role = Role.Button) {
+                    rootNavigation.openUnit(UnitDestination(courseId = courseId, unitId = entry.unit.id, tab = UnitTabKind.Vocabulary))
+                },
+            )
+        }
     }
 }

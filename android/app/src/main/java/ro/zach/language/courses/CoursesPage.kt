@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -67,11 +68,13 @@ private fun CourseRow(course: CourseSummaryRecord, onChoose: () -> Unit) {
             .padding(vertical = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs),
         verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs),
     ) {
-        LanguageText(text = course.title, style = LanguageType.bodyText, color = LanguageColors.accentLink)
-        LanguageText(
-            text = "${course.targetLanguageName} for ${course.sourceLanguageName} speakers",
-            style = LanguageType.captionText,
-            color = LanguageColors.inkMuted,
-        )
+        DisableSelection {
+            LanguageText(text = course.title, style = LanguageType.bodyText, color = LanguageColors.accentLink)
+            LanguageText(
+                text = "${course.targetLanguageName} for ${course.sourceLanguageName} speakers",
+                style = LanguageType.captionText,
+                color = LanguageColors.inkMuted,
+            )
+        }
     }
 }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.text.selection.DisableSelection
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -64,8 +65,10 @@ fun <Option> SquareDropDown(
             horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            LanguageText(text = label(selection), style = LanguageType.bodyText)
-            Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.ink, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs, modifier = Modifier.rotate(DOWNWARD_CHEVRON_ROTATION_DEGREES))
+            DisableSelection {
+                LanguageText(text = label(selection), style = LanguageType.bodyText)
+                Glyph(glyph = GlyphKind.Chevron, color = LanguageColors.ink, size = LanguageSpacing.spaceSm + LanguageSpacing.spaceXs, modifier = Modifier.rotate(DOWNWARD_CHEVRON_ROTATION_DEGREES))
+            }
         }
 
         if (isExpanded) {
@@ -117,13 +120,15 @@ private fun <Option> SquareDropDownMenu(
                 horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Box(modifier = Modifier.size(LanguageSpacing.checkBoxSize), contentAlignment = Alignment.Center) {
-                    if (isSelected) {
-                        Glyph(glyph = GlyphKind.Check, color = LanguageColors.ink, size = LanguageSpacing.checkBoxSize - LanguageSpacing.spaceXs)
+                DisableSelection {
+                    Box(modifier = Modifier.size(LanguageSpacing.checkBoxSize), contentAlignment = Alignment.Center) {
+                        if (isSelected) {
+                            Glyph(glyph = GlyphKind.Check, color = LanguageColors.ink, size = LanguageSpacing.checkBoxSize - LanguageSpacing.spaceXs)
+                        }
                     }
-                }
 
-                LanguageText(text = label(option), style = LanguageType.bodyText)
+                    LanguageText(text = label(option), style = LanguageType.bodyText)
+                }
             }
         }
     }
