@@ -207,7 +207,7 @@ Every screen, from its iOS file to its Kotlin file. Test tags equal the iOS acce
 ### Course list and course page
 
 - `Courses/CoursesPage.swift` to `courses/CoursesPage.kt`: caption "N courses", a row per course (`course-<id>`), "<target> for <source> speakers"; choosing remembers the course.
-- `Home/HomePage.swift` to `home/HomePage.kt`: header with "N units", "completed / total units completed", Continue (`continue`) to the first incomplete unit; per level "A1 · <title>" and unit rows (`unit-<id>`) with order, title, status tag and chevron; pull to refresh calls `courseStore.refresh(outline.id)`.
+- `Home/HomePage.swift` to `home/HomePage.kt`: header with "N units" and Continue (`continue`) to the first incomplete unit; per level "A1 · <title>" and unit rows (`unit-<id>`) with order, title, status tag and chevron; pull to refresh calls `courseStore.refresh(outline.id)`.
 
 ### Unit page
 
@@ -239,7 +239,7 @@ Every screen, from its iOS file to its Kotlin file. Test tags equal the iOS acce
 
 - `Review/ReviewPage.swift` to `review/ReviewPage.kt`: due figure (`due-count`), "scheduled for later", the explanations, the direction picker (a square drop-down menu of the three directions), Start review (`start-review`, 20 cards, mixed direction picked per card); the session (`flashcard-prompt`, `show-answer`, Forgot `forgot`, Remembered `remembered`, `review-complete`); the target plays when it shows.
 - `Glossary/GlossaryPage.swift` and `GlossaryRail.swift` to `glossary/GlossaryPage.kt` and `glossary/GlossaryRail.kt`: a search field "Search <target> or <source>" folded with `searchKey`, the level segmented control ("All levels", each level code), a `LazyColumn` of runs; the rail lists levels (`glossary-level-index`) with all levels shown and the chosen level's units (`glossary-unit-index`) with one; rows link to the unit's Vocabulary tab. `GlossaryRail.dividing` and `GlossaryRailKind` are plain Kotlin, unit tested.
-- `ProgressPage/ProgressPage.swift` to `progresspage/ProgressPage.kt`: summary, units with status tags, the review deck by box from `reviewIntervalDays()`, `ProgressTransfer` (Export copies to the clipboard through `ClipboardManager`, Import from the text box, the monospaced text box `transfer-text`, reset with a second tap).
+- `ProgressPage/ProgressPage.swift` to `progresspage/ProgressPage.kt`: the "Progress" heading, "Levels" (per level "A1 · <title>" and "N of M units completed" from `levelCompletions`, `level-completion-<code>`), "Quiz results" (per attempted unit from `quizResults` its title and "Best score: N% over M attempt(s)", `quiz-result-<id>` opening the unit; `quiz-results-empty` when none), the review deck by box from `reviewIntervalDays()`, `ProgressTransfer` (Export copies to the clipboard through `ClipboardManager`, Import from the text box, the monospaced text box `transfer-text`, reset with a second tap).
 - `Settings/SettingsSheet.swift` to `settings/SettingsSheet.kt`: Voice (`voice-auto`, `voice-kokoro`, `voice-macos_say`, same titles and details), Speed (Slow audio), Course content ("Published as <label>" `publication-label`, "Embedded" or "Downloaded from <url>", "Check for updated course content" `check-for-updated-content` with its pending state and "Checking for updated course content…", then the store's update message).
 
 ### Pending states
@@ -311,6 +311,7 @@ From `CourseUITests.swift`, one Android test per iOS test, in the feature packag
   - `openResponses_showTheExampleAnswersAfterCheckThenListYourAnswersAndLeaveTheQuizUntaken`
   - `openResponse_showsItsSavedAnswerAfterTheAppStartsAgain`
 - `review/ReviewEndToEndTest.kt`: `review_addsWordsAndGradesACard`.
+- `progresspage/ProgressPageEndToEndTest.kt`: `progressPage_showsCompletionPerLevelAndQuizResults` (the empty state before a quiz; after one, the level's count and the result, which opens the unit; the course page without a completion count).
 - `glossary/GlossaryEndToEndTest.kt`
   - `glossaryLevelRail_jumpsToTheFirstWordOfALevel`
   - `glossaryUnitRail_ofOneLevelJumpsToTheFirstWordOfAUnit`
