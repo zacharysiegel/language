@@ -5,6 +5,7 @@ pub mod error;
 pub mod filesystem;
 pub mod grading;
 pub mod http;
+pub mod interface_text;
 pub mod pending_indication;
 pub mod practice;
 pub mod progress;

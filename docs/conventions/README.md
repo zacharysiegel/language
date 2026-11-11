@@ -7,3 +7,5 @@ The conventions follow the Eafora project's; these are copies of the ones that a
 - [`conditional-compilation.md`](conditional-compilation.md) - gate a block of target or feature-specific items in one `#[cfg]`-ed submodule, with a one-line WHY on each gate.
 
 The course data types in `shared::course` are serialized directly to and from JSON. Shards are read record by record (`shared::sqlite::SqlRecord`) straight into those types, so the `Entity` and `Projection` wire types never appear.
+
+A count shown with a noun in app text comes from `shared::interface_text::counted_noun_phrase` (`countedNounPhrase` in Swift and Kotlin); no app picks the singular or plural itself.
