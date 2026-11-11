@@ -404,10 +404,6 @@ impl ProgressBook {
         self.change(|progress| progress.course_progress_mut(&course_id).set_unit_status(&unit_id, status.into()))
     }
 
-    pub fn completed_unit_count(&self, course_id: String) -> u32 {
-        self.lock().course_progress(&course_id).completed_unit_count() as u32
-    }
-
     /// One per level of the outline, in its order.
     pub fn level_completions(&self, outline: CourseOutlineRecord) -> Vec<LevelCompletionRecord> {
         let course_progress: CourseProgress = self.lock().course_progress(&outline.id);
@@ -732,7 +728,6 @@ mod tests {
                 attempt_count: 1,
             },
         );
-        assert_eq!(reopened.completed_unit_count(COURSE_ID.to_string()), 0);
     }
 
     fn unit_outline_record(id: &str, level_code: &str, order: u32) -> UnitOutlineRecord {
