@@ -153,10 +153,10 @@ impl From<UnitStatusKind> for UnitStatusRecord {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, uniffi::Record)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Record)]
 pub struct UnitProgressRecord {
     pub status: UnitStatusRecord,
-    pub best_proportion: f64,
+    pub best_score_percent: u32,
     pub attempt_count: u32,
 }
 
@@ -164,7 +164,7 @@ impl From<UnitProgress> for UnitProgressRecord {
     fn from(unit_progress: UnitProgress) -> UnitProgressRecord {
         UnitProgressRecord {
             status: unit_progress.status.into(),
-            best_proportion: unit_progress.best_proportion,
+            best_score_percent: unit_progress.best_score_percent(),
             attempt_count: unit_progress.attempt_count,
         }
     }
@@ -724,7 +724,7 @@ mod tests {
             reopened.unit_progress(COURSE_ID.to_string(), "u".to_string()),
             UnitProgressRecord {
                 status: UnitStatusRecord::NotStarted,
-                best_proportion: 0.9,
+                best_score_percent: 90,
                 attempt_count: 1,
             },
         );

@@ -248,9 +248,8 @@ struct PracticeSection: View {
             return "You have not taken the quiz yet."
         }
 
-        let percent: Int = Int((unitProgress.bestProportion * 100).rounded())
         let completion: String = unitProgress.status == .completed ? " Unit completed." : ""
 
-        return "Quiz: \(percent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
+        return "Quiz: \(unitProgress.bestScorePercent)% over \(unitProgress.attemptCount) attempt(s).\(completion)"
     }
 }

@@ -211,12 +211,12 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
         move || {
             let unit_progress = progress_store.read(|progress| progress.course_progress(&course_id).unit_progress(&unit_id));
 
-            if unit_progress.attempt_count == 0 {
+            if !unit_progress.is_quiz_taken() {
                 "You have not taken the quiz yet.".to_string()
             } else {
                 format!(
                     "Quiz: {}% over {} attempt(s). {}",
-                    (unit_progress.best_proportion * 100.0).round(),
+                    unit_progress.best_score_percent(),
                     unit_progress.attempt_count,
                     if unit_progress.is_completed() { "Unit completed." } else { "" },
                 )

@@ -38,7 +38,6 @@ import ro.zach.language.practice.OpenResponseSession
 import ro.zach.language.progressdata.LocalProgressStore
 import ro.zach.language.progressdata.ProgressStore
 import kotlin.math.min
-import kotlin.math.roundToInt
 
 private const val CHANGED_PRACTICE_NOTE: String = "The practice changed since you paused, so it starts over."
 
@@ -287,8 +286,7 @@ private fun bestSummary(unitProgress: UnitProgressRecord): String {
         return "You have not taken the quiz yet."
     }
 
-    val percent: Int = (unitProgress.bestProportion * 100).roundToInt()
     val completion: String = if (unitProgress.status == UnitStatusRecord.COMPLETED) " Unit completed." else ""
 
-    return "Quiz: $percent% over ${unitProgress.attemptCount} attempt(s).$completion"
+    return "Quiz: ${unitProgress.bestScorePercent}% over ${unitProgress.attemptCount} attempt(s).$completion"
 }
