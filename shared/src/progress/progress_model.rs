@@ -364,10 +364,6 @@ impl CourseProgress {
         queued
     }
 
-    pub fn completed_unit_count(&self) -> usize {
-        self.units.values().filter(|unit_progress| unit_progress.is_completed()).count()
-    }
-
     pub fn completed_unit_count_among<'a>(&self, unit_ids: impl IntoIterator<Item = &'a str>) -> usize {
         unit_ids.into_iter().filter(|unit_id| self.unit_progress(unit_id).is_completed()).count()
     }
@@ -595,19 +591,6 @@ mod tests {
             assert_eq!(unit_progress.best_proportion, 0.9);
             assert_eq!(unit_progress.attempt_count, 2);
         }
-    }
-
-    #[test]
-    fn completed_unit_count_counts_completed_units_only() {
-        let mut course_progress: CourseProgress = CourseProgress::default();
-        course_progress.record_unit_attempt("passed", 0.9, 0.8);
-        course_progress.record_unit_attempt("failed", 0.5, 0.8);
-        course_progress.start_unit("started");
-        course_progress.set_unit_status("marked", UnitStatusKind::Completed);
-        course_progress.record_unit_attempt("reset", 0.9, 0.8);
-        course_progress.set_unit_status("reset", UnitStatusKind::NotStarted);
-
-        assert_eq!(course_progress.completed_unit_count(), 2);
     }
 
     #[test]
