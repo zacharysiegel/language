@@ -15,6 +15,15 @@ settings:
     # Where the course index is looked for when discovery cannot be read, and the embedded bundle's recordings.
     LANGUAGE_REPOSITORY_BASE_URL: "http://127.0.0.1:3002"
     LANGUAGE_REPOSITORY_BASE_URL[sdk=iphoneos*]: "https://repository.language.zach.ro"
+aggregateTargets:
+  LanguageCore:
+    buildScripts:
+      - name: Build the Rust core
+        script: /usr/bin/env -i HOME="${HOME}" PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" "${SRCROOT}/../scripts/ios/build-ios-core.sh"
+        # Xcode copies a linked XCFramework into the build products before the linking target's script phases, waiting only for a phase that names it as an output.
+        outputFiles:
+          - $(SRCROOT)/../target/uniffi/LanguageCore.xcframework
+        basedOnDependencyAnalysis: false
 targets:
   Language:
     type: application
@@ -28,6 +37,7 @@ targets:
         buildPhase: resources
       - path: ../target/uniffi/swift
     dependencies:
+      - target: LanguageCore
       - framework: ../target/uniffi/LanguageCore.xcframework
         embed: false
       - sdk: AVFoundation.framework
@@ -57,9 +67,6 @@ targets:
         GENERATE_INFOPLIST_FILE: false
         CODE_SIGN_STYLE: Automatic
     preBuildScripts:
-      - name: Build the Rust core
-        script: /usr/bin/env -i HOME="${HOME}" PATH="${HOME}/.cargo/bin:/opt/homebrew/bin:/usr/bin:/bin:/usr/sbin:/sbin" "${SRCROOT}/../scripts/ios/build-ios-core.sh"
-        basedOnDependencyAnalysis: false
       - name: Sync the embedded bundle
         script: "\"${SRCROOT}/../scripts/ios/sync-ios-embedded-bundle.sh\""
         basedOnDependencyAnalysis: false
