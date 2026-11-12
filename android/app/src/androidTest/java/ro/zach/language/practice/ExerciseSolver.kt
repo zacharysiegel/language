@@ -14,11 +14,14 @@ import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import org.json.JSONArray
 import org.json.JSONObject
+import ro.zach.language.testsupport.SoftKeyboardDriver
 
 private const val EXERCISE_TIMEOUT_MILLISECONDS: Long = 5_000
 
 /** Answers exercises from their course JSON as a learner who knows every answer would. */
 class ExerciseSolver(private val composeRule: ComposeTestRule) {
+    private val softKeyboard: SoftKeyboardDriver = SoftKeyboardDriver(composeRule)
+
     fun solve(exercise: JSONObject) {
         when (val kind: String = exercise.getString("type")) {
             "multiple_choice", "listening_choice" -> {
@@ -72,6 +75,7 @@ class ExerciseSolver(private val composeRule: ComposeTestRule) {
     private fun typeAnswer(text: String) {
         waitForTag("answer-field")
         composeRule.onNodeWithTag("answer-field").performScrollTo().performTextInput(text)
+        softKeyboard.close()
         composeRule.onNodeWithTag("check").performScrollTo().performClick()
     }
 
