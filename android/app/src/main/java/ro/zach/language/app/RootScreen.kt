@@ -72,6 +72,8 @@ import ro.zach.language.unit.UnitPage
 private const val LOAD_FAILURE_PENDING_STATE_DESCRIPTION: String = "Loading"
 private const val COURSE_LOADING_MESSAGE: String = "Loading the course…"
 
+const val SAFE_DRAWING_AREA_TEST_TAG: String = "safe-drawing-area"
+
 /** The tabs, each with its own stack of opened units, under a top bar, with the settings and course list over them. */
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -99,7 +101,8 @@ fun RootScreen(courseStore: CourseStore, progressStore: ProgressStore, audioPlay
                 .fillMaxSize()
                 .background(LanguageColors.paper)
                 .windowInsetsPadding(WindowInsets.safeDrawing)
-                .semantics { testTagsAsResourceId = true },
+                .semantics { testTagsAsResourceId = true }
+                .testTag(SAFE_DRAWING_AREA_TEST_TAG),
         ) {
             RootTabs(saveableStateHolder = saveableStateHolder, onBack = goBack)
 
