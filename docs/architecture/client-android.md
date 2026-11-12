@@ -133,7 +133,7 @@ From Maven Central and the Gradle plugin portal, pinned to the latest stable rel
 - `buildFeatures { compose = true; buildConfig = true }`.
 - Kotlin `jvmToolchain(21)`; public declarations carry explicit types.
 - `sourceSets["main"].jniLibs.srcDir("../../target/uniffi/android/jniLibs")` and the Kotlin source directory `../../target/uniffi/kotlin`.
-- Task `buildRustCore` (`Exec`, runs `scripts/android/build-android-core.sh`, never up to date, as the iOS pre-build script runs on every build); `preBuild` depends on it. Cargo's own incremental build keeps a no-change run short.
+- Task `buildRustCore` (`Exec`, runs `scripts/android/build-android-core.sh`, never up to date, as the iOS build's core build phase runs on every build); `preBuild` depends on it. Cargo's own incremental build keeps a no-change run short.
 - Task `syncEmbeddedBundle` (`Sync`) from `web/static/embedded` into `build/generated/embedded_bundle_assets/embedded_bundle`, added to every variant's assets with `androidComponents.onVariants { variant.sources.assets?.addGeneratedSourceDirectory(...) }`. It fails, naming `./scripts/dev/build-local-repository.sh`, when `course-index.json` is missing, as `sync-ios-embedded-bundle.sh` does.
 - `sourceSets["androidTest"].assets.srcDir("../../data")`, so the instrumentation tests read `courses/<course id>/curriculum.json` and `units/*.json` as the iOS UI tests read `data/`.
 - `testOptions.unitTests.isReturnDefaultValues = true` for the JVM tests.
