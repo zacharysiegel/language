@@ -27,6 +27,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import ro.zach.language.testsupport.CourseAppDriver
 import ro.zach.language.testsupport.CourseData
+import ro.zach.language.testsupport.SoftKeyboardDriver
 import ro.zach.language.unit.UnitPageDriver
 import ro.zach.language.unit.UnitTabKind
 
@@ -44,6 +45,7 @@ class OpenResponseEndToEndTest {
 
     private val driver: CourseAppDriver = CourseAppDriver(composeRule)
     private val unitPageDriver: UnitPageDriver = UnitPageDriver(composeRule)
+    private val softKeyboard: SoftKeyboardDriver = SoftKeyboardDriver(composeRule)
     private val openResponseExercises: JSONArray = CourseData.readOpenResponseExercises(OPEN_RESPONSE_UNIT_ID)
 
     @Before
@@ -150,6 +152,7 @@ class OpenResponseEndToEndTest {
     private fun writeAndCheck(answerText: String) {
         driver.waitForTag("open-response-field", OPEN_RESPONSE_TIMEOUT_MILLISECONDS)
         composeRule.onNodeWithTag("open-response-field").performScrollTo().performTextInput(answerText)
+        softKeyboard.close()
         tap("check")
     }
 
