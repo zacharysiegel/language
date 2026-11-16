@@ -15,3 +15,12 @@ Personal accounts created after November 13, 2023 cannot publish to production o
 Google usually reviews the application within seven days and emails the account owner. With fewer than 12 opted-in testers or too little engagement, the closed test has to continue.
 
 Internal testing has no requirements and reaches testers within seconds. Open testing becomes available only with production access. A closed test can start only after the app's setup in Play Console is complete.
+
+## Declarations that depend on the app
+
+Play Console's App content section records these answers. Update them in the same change that makes them false.
+
+- App access: no part of the app is restricted. Adding sign-in or any other restriction requires instructions and test credentials for Google's reviewers.
+- Data safety: no user data is collected or shared. Adding accounts, analytics, crash reporting or any upload of progress changes this.
+- Ads: none.
+- Target audience: 13 and over.
