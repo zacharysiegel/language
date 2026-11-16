@@ -127,7 +127,7 @@ mod tests {
 
         assert!(document_text.starts_with("<!DOCTYPE html>"));
         assert!(document_text.contains(&format!(r#"id="{STATIC_SHELL_ELEMENT_ID}""#)));
-        assert!(document_text.contains("<title>Language</title>"));
+        assert!(document_text.contains("<title>Plainspoken</title>"));
         assert!(document_text.contains("/pkg/language.css"));
     }
 }

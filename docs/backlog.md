@@ -14,6 +14,7 @@ Known gaps, recorded when found.
 ## iOS app
 
 - On iPhone a unit's tab row scrolls sideways, so the Practice tab starts off-screen.
+- Move the site and repository from `language.zach.ro` and `repository.language.zach.ro` to `plainspoken.zach.ro` and `repository.plainspoken.zach.ro`, matching the app's name. The app ids and internal names stay `language`.
 
 ## History
 

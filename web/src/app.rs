@@ -39,7 +39,7 @@ mod ssr {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <title>"Language"</title>
+                <title>"Plainspoken"</title>
                 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
                 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
                 <HashedStylesheet options=options.clone() id="leptos" />
@@ -71,7 +71,7 @@ mod ssr {
                 <body>
                     <nav class="chrome">
                         <a href="/" class="chrome-brand" title="All courses">
-                            <span class="chrome-brand-name">"Language"</span>
+                            <span class="chrome-brand-name">"Plainspoken"</span>
                         </a>
                     </nav>
                     <main id=STATIC_SHELL_ELEMENT_ID aria-busy="true">
@@ -160,7 +160,7 @@ fn NavigationBar() -> impl IntoView {
     view! {
         <nav class="chrome">
             <A href="/" attr:class="chrome-brand" attr:title="All courses" exact=true>
-                <span class="chrome-brand-name">"Language"</span>
+                <span class="chrome-brand-name">"Plainspoken"</span>
                 {course_title}
             </A>
             {course_links}
