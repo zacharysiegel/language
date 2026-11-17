@@ -47,8 +47,8 @@ android {
         }
 
         release {
-            buildConfigField("String", "LANGUAGE_ORIGIN", "\"https://language.zach.ro\"")
-            buildConfigField("String", "LANGUAGE_REPOSITORY_BASE_URL", "\"https://repository.language.zach.ro\"")
+            buildConfigField("String", "LANGUAGE_ORIGIN", "\"https://plainspoken.zach.ro\"")
+            buildConfigField("String", "LANGUAGE_REPOSITORY_BASE_URL", "\"https://repository.plainspoken.zach.ro\"")
             isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
