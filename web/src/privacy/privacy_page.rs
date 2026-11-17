@@ -26,7 +26,7 @@ pub fn PrivacyPage() -> impl IntoView {
         <section class="policy-section">
             <h2>"Downloads and service providers"</h2>
             <p>
-                "Plainspoken downloads course material and the files its features need, such as recordings and models, from our servers and from third-party hosting and delivery providers. These requests do not include your data. As with any internet request, the providers receive standard technical information, such as your IP address and the type of device and software, which they use to deliver the files and protect their services."
+                "Plainspoken downloads course material and the files its features need, such as recordings and computational models, from our servers and from third-party hosting and delivery providers. These requests do not include your data. As with any internet request, the providers receive standard technical information, such as your IP address and the type of device and software, which they use to deliver the files and protect their services."
             </p>
             <p>"Services provided by your device, such as text-to-speech voices and backups, follow their provider's terms."</p>
         </section>
