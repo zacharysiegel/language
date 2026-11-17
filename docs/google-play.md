@@ -2,6 +2,8 @@
 
 The Android app is published as Plainspoken under the personal developer account "zach.ro", with the permanent package name `ro.zach.language`. Builds are signed with the upload key in `~/.android/language-release.jks` (alias `language`); Play App Signing holds the key that signs installed apps. `cd android && ./gradlew bundleRelease` writes `app/build/outputs/bundle/release/app-release.aab`, with the signing properties in `~/.gradle/gradle.properties`.
 
+The store listing's graphics are in `android/play-listing/`. Play requires screenshots in a 16:9 or 9:16 aspect ratio, so they are taken on emulators with 9:16 screens. `feature-graphic.png` is rendered from `feature-graphic.html` in Chrome at 1024 x 500.
+
 ## Production access for a personal account
 
 Personal accounts created after November 13, 2023 cannot publish to production or offer pre-registration until both of these are done ([Google's requirements](https://support.google.com/googleplay/android-developer/answer/14151465)):
