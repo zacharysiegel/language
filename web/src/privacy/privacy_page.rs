@@ -12,7 +12,7 @@ pub fn PrivacyPage() -> impl IntoView {
             <span class="page-caption">"Effective 16 November 2026"</span>
         </div>
         <p>
-            "Plainspoken is a language course for Android, iOS and the web at language.zach.ro. It has no accounts, no advertising and no analytics, and it collects no personal information."
+            "Plainspoken is a language course for Android, iOS and the web at language.zach.ro. It has no accounts and no advertising, and it collects no information that identifies you."
         </p>
 
         <section class="policy-section">
@@ -30,7 +30,7 @@ pub fn PrivacyPage() -> impl IntoView {
             </p>
             <h3>"Web"</h3>
             <p>
-                "Progress is kept in your browser's local storage, and downloaded course content in the browser's private file storage for the site. Clearing the site's data in your browser deletes them. The site sets no cookies."
+                "The site keeps what it needs to work in your browser: your progress and settings in local storage, and downloaded course content in the browser's private file storage for the site. It sets no advertising or tracking cookies. Clearing the site's data in your browser deletes it all."
             </p>
         </section>
 
@@ -54,6 +54,15 @@ pub fn PrivacyPage() -> impl IntoView {
             <p>"Speech is produced on the device."</p>
             <h3>"Web"</h3>
             <p>"Your browser's speech synthesis is used. Some browsers' voices run on their provider's servers, which receive the text."</p>
+        </section>
+
+        <section class="policy-section">
+            <h2>"Analytics"</h2>
+            <p>"The Android and iOS apps contain no analytics."</p>
+            <h3>"Web"</h3>
+            <p>
+                "The site may use Cloudflare Web Analytics to count visits and page views. It sets no cookies, does not follow you across other sites and does not identify you."
+            </p>
         </section>
 
         <section class="policy-section">
