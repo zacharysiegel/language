@@ -34,7 +34,7 @@ pub fn PrivacyPage() -> impl IntoView {
         <section class="policy-section">
             <h2>"Analytics and cookies"</h2>
             <p>
-                "We may use analytics that measure use of Plainspoken in aggregate. They do not identify you or track you across other applications. Plainspoken uses no advertising or tracking cookies."
+                "We may use analytics that measure use of Plainspoken in aggregate. They do not identify you or track you across other applications. Plainspoken stores no cookies or other data on your device beyond what it needs to function."
             </p>
         </section>
 
