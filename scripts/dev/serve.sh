@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Serves the app at http://127.0.0.1:3000 with rebuild on change, and the local repository at http://127.0.0.1:3002.
+# Serves the app at http://127.0.0.1:4000 with rebuild on change, and the local repository at http://127.0.0.1:4002.
 # Builds and publishes the courses, the test courses included, to the local repository first when it has no
 # course index, and fetches wllama's files into web/static/wllama/ when they are missing or of another version.
 

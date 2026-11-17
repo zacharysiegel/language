@@ -31,7 +31,7 @@ class LanguageUITestCase: XCTestCase {
     static let playedButtonIndexes: [Int] = [0, 0, 1, 2]
     static let clipPlaybackAllowance: TimeInterval = 3
     /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
-    static let unreachableOrigin: String = "http://192.0.2.1:3002"
+    static let unreachableOrigin: String = "http://192.0.2.1:4002"
     static let pendingRecordingValue: String = "Loading the recording"
     static let jumpedGlossaryLevelCode: String = "B1"
     static let jumpedGlossaryUnitId: String = "b1-05-imperfect-subjunctive-conditionals"

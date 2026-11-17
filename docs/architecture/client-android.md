@@ -10,7 +10,7 @@ A Kotlin and Jetpack Compose app in `android/` over the same Rust core the iOS a
 - Application id `ro.zach.language` for every build type.
 - `minSdk` 29 (Android 10), `targetSdk` and `compileSdk` 36. Every platform API the app uses (`AudioFocusRequest`, `UtteranceProgressListener`, ExoPlayer's playback speed) exists at 29 without compatibility branches; the S25 runs far above it.
 - ABI `arm64-v8a` only: the S25 and the `language_s25` AVD are both arm64, and so is every phone sold for years. Adding `x86_64` later is one `-t` argument and one ABI filter.
-- The debug build reaches the Mac's servers at `http://127.0.0.1:3000` and `http://127.0.0.1:3002` through `adb reverse`, on the emulator and on the S25 alike. Not `10.0.2.2`: the committed `web/static/discovery` names `http://127.0.0.1:3002` as the repository, so an emulator using `10.0.2.2` reads discovery, then fails to fetch the course index from its own loopback and never shows the local repository (test courses included). `adb reverse` makes the device's `127.0.0.1` the Mac's, so discovery's address is right everywhere, and no LAN address is needed.
+- The debug build reaches the Mac's servers at `http://127.0.0.1:4000` and `http://127.0.0.1:4002` through `adb reverse`, on the emulator and on the S25 alike. Not `10.0.2.2`: the committed `web/static/discovery` names `http://127.0.0.1:4002` as the repository, so an emulator using `10.0.2.2` reads discovery, then fails to fetch the course index from its own loopback and never shows the local repository (test courses included). `adb reverse` makes the device's `127.0.0.1` the Mac's, so discovery's address is right everywhere, and no LAN address is needed.
 - The release build reads https://language.zach.ro and https://repository.language.zach.ro, like the iOS device build.
 - All HTTP is the core's (reqwest over native sockets). Android's network security config governs only the platform's Java HTTP stacks, so it cannot restrict the core; each build type's origins are what keep release traffic on HTTPS. The debug config still declares cleartext for `127.0.0.1` only, so any platform-stack use stays within it.
 - TLS on Android is rustls (aws-lc-rs) with the Mozilla roots from `webpki-root-certs`, through reqwest's `tls_certs_only`. Not the platform verifier: on Android it needs a JNI context handed to Rust at startup and an AAR taken from the cargo registry. Other targets keep native-tls. A probe crate with `reqwest 0.13.5` (`rustls`) and `rusqlite` (`bundled`) built for `aarch64-linux-android` with `cargo ndk --platform 29` and NDK 30 without changes.
@@ -140,7 +140,7 @@ From Maven Central and the Gradle plugin portal, pinned to the latest stable rel
 
 ### Build types and origins
 
-- `debug`: `buildConfigField("String", "LANGUAGE_ORIGIN", "\"http://127.0.0.1:3000\"")`, `LANGUAGE_REPOSITORY_BASE_URL` `"http://127.0.0.1:3002"`.
+- `debug`: `buildConfigField("String", "LANGUAGE_ORIGIN", "\"http://127.0.0.1:4000\"")`, `LANGUAGE_REPOSITORY_BASE_URL` `"http://127.0.0.1:4002"`.
 - `release`: `https://language.zach.ro` and `https://repository.language.zach.ro`; `isMinifyEnabled = true`, `proguard-rules.pro` keeping `com.sun.jna.**` and `ro.zach.language.core.**` (JNA finds them by reflection).
 - Release signing from Gradle properties outside the repository (`languageReleaseStoreFile`, `languageReleaseStorePassword`, `languageReleaseKeyAlias`, `languageReleaseKeyPassword` in `~/.gradle/gradle.properties`); without them the release build is unsigned and `installRelease` is unavailable.
 
@@ -275,14 +275,14 @@ Plain Kotlin logic only; nothing that calls into the core, whose library is buil
 
 ### Instrumented tests (`./gradlew connectedDebugAndroidTest`)
 
-- `coursedata/CoreIntegrationTest.kt`, from `CoreIntegrationTests.swift`: the installed embedded bundle opens an index, a publication, an outline and a unit; latest publications and a recording from the local servers (skipped with `assumeTrue` when `http://127.0.0.1:3000` does not answer); an unreachable repository raises `CoreException.Failure` naming it, with a backtrace; the progress book records and persists; typed answers; the spoken text of a fill-blank exercise.
+- `coursedata/CoreIntegrationTest.kt`, from `CoreIntegrationTests.swift`: the installed embedded bundle opens an index, a publication, an outline and a unit; latest publications and a recording from the local servers (skipped with `assumeTrue` when `http://127.0.0.1:4000` does not answer); an unreachable repository raises `CoreException.Failure` naming it, with a backtrace; the progress book records and persists; typed answers; the spoken text of a fill-blank exercise.
 - `audio/AudioPlayerPendingTest.kt`: the system voice starting ends the pending request; `stop` ends it.
 - `audio/AudioOutputInterruptionTest.kt`: a 5 s silent WAV written to the test's cache plays and, on `Began` then `EndedShouldNotResume`, ends `Interrupted`.
 - `progressdata/ProgressStoreReviewClockTest.kt`: the due count recomposes when a card comes due (a snapshot observer instead of `withObservationTracking`).
 
 ### End-to-end suite
 
-Compose UI tests driving `MainActivity` through `ActivityScenario` with `createEmptyComposeRule()`, each test with its own progress file extra, reading the course data from the test APK's assets. `testsupport/CourseAppDriver.kt` launches, relaunches keeping progress, relaunches with an unreachable repository (`http://192.0.2.1:3002`, TEST-NET-1) and its own cache, chooses `pt_br.en.foundations` when the course list opens, opens units and tabs, solves exercises from their JSON, and saves screenshots with `UiAutomation.takeScreenshot()` into the app's external files directory under the iOS names. `testsupport/CourseData.kt` reads units and the curriculum with `org.json`.
+Compose UI tests driving `MainActivity` through `ActivityScenario` with `createEmptyComposeRule()`, each test with its own progress file extra, reading the course data from the test APK's assets. `testsupport/CourseAppDriver.kt` launches, relaunches keeping progress, relaunches with an unreachable repository (`http://192.0.2.1:4002`, TEST-NET-1) and its own cache, chooses `pt_br.en.foundations` when the course list opens, opens units and tabs, solves exercises from their JSON, and saves screenshots with `UiAutomation.takeScreenshot()` into the app's external files directory under the iOS names. `testsupport/CourseData.kt` reads units and the curriculum with `org.json`.
 
 Gestures that iOS runs without waiting for idle run with `mainClock.autoAdvance = false`, advancing frames by hand, so a fling is still moving when the rail is tapped.
 
@@ -324,7 +324,7 @@ From the iOS UI test classes, one Android test per iOS test, in the feature pack
 `scripts/android/test-android.sh`:
 
 - Sources the environment; reads `adb devices`; with no device, prints how to start the emulator and exits non-zero.
-- `adb reverse tcp:3000 tcp:3000` and `adb reverse tcp:3002 tcp:3002` (`ANDROID_SERIAL` picks a device when several are attached).
+- `adb reverse tcp:4000 tcp:4000` and `adb reverse tcp:4002 tcp:4002` (`ANDROID_SERIAL` picks a device when several are attached).
 - `./gradlew testDebugUnitTest connectedDebugAndroidTest` in `android/`.
 - `adb pull` of the screenshots to `/tmp/language-android-screenshots`, printing the path.
 - Like the iOS suite it passes with or without `./scripts/dev/serve.sh` running; with it, the local test courses appear and the course list opens first.

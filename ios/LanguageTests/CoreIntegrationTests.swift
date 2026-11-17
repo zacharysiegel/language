@@ -43,8 +43,8 @@ final class CoreIntegrationTests: XCTestCase {
     /* Needs the app's server and the local repository's, both started by `./scripts/dev/serve.sh`; skipped when they are not running. */
     func testLatestPublicationsAndARecordingDownloadFromTheLocalServer() async throws {
         let library: CourseLibrary = try CourseLibrary(configuration: CoreConfiguration(
-            appOrigin: "http://127.0.0.1:3000",
-            staticRepositoryBaseUrl: "http://127.0.0.1:3002",
+            appOrigin: "http://127.0.0.1:4000",
+            staticRepositoryBaseUrl: "http://127.0.0.1:4002",
             cacheDirectory: temporaryDirectory.path,
             embeddedBundleDirectory: temporaryDirectory.path,
         ))

@@ -97,10 +97,10 @@ mod tests {
 
     #[test]
     fn resolve_reference_joins_a_root_relative_path_to_the_base_origin() {
-        assert_eq!(resolve_reference("http://127.0.0.1:3000/discovery", "/repository"), "http://127.0.0.1:3000/repository");
+        assert_eq!(resolve_reference("http://127.0.0.1:4000/discovery", "/repository"), "http://127.0.0.1:4000/repository");
         assert_eq!(resolve_reference("https://example.org", "/repository"), "https://example.org/repository");
         assert_eq!(resolve_reference("/discovery", "/repository"), "/repository");
-        assert_eq!(resolve_reference("http://127.0.0.1:3000/discovery", "https://cdn.example/r"), "https://cdn.example/r");
+        assert_eq!(resolve_reference("http://127.0.0.1:4000/discovery", "https://cdn.example/r"), "https://cdn.example/r");
     }
 
     #[tokio::test]

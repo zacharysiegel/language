@@ -6,5 +6,5 @@ object UnreachableOrigins {
     const val REFUSING_HOST: String = "127.0.0.1:9"
     const val REFUSING_ORIGIN: String = "http://$REFUSING_HOST"
     /* A TEST-NET-1 address (RFC 5737), never routed, so a connection to it waits rather than failing. */
-    const val WAITING_ORIGIN: String = "http://192.0.2.1:3002"
+    const val WAITING_ORIGIN: String = "http://192.0.2.1:4002"
 }

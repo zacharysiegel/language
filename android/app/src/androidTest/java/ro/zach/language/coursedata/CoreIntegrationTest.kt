@@ -39,8 +39,8 @@ import java.io.File
 import java.util.UUID
 
 /* The Mac's servers, reachable from the device through `adb reverse`. */
-private const val LOCAL_ORIGIN: String = "http://127.0.0.1:3000"
-private const val LOCAL_REPOSITORY_BASE_URL: String = "http://127.0.0.1:3002"
+private const val LOCAL_ORIGIN: String = "http://127.0.0.1:4000"
+private const val LOCAL_REPOSITORY_BASE_URL: String = "http://127.0.0.1:4002"
 
 /** Exercises the Rust core through the generated bindings the app uses. */
 @RunWith(AndroidJUnit4::class)

@@ -479,14 +479,14 @@ mod tests {
     #[tokio::test]
     async fn discover_course_index_resolves_a_root_relative_base_against_the_discovery_origin() {
         let http_fetch: MockHttpFetch = MockHttpFetch::new(BTreeMap::from([
-            ("http://127.0.0.1:3000/discovery".to_string(), discovery_json("/repository", "0.1.0")),
-            ("http://127.0.0.1:3000/repository/course-index.json".to_string(), course_index_json(&[COURSE_ID])),
+            ("http://127.0.0.1:4000/discovery".to_string(), discovery_json("/repository", "0.1.0")),
+            ("http://127.0.0.1:4000/repository/course-index.json".to_string(), course_index_json(&[COURSE_ID])),
         ]));
 
         let source: CourseIndexSource =
-            discover_course_index(&http_fetch, "http://127.0.0.1:3000/discovery", "http://127.0.0.1:3000/repository").await.unwrap();
+            discover_course_index(&http_fetch, "http://127.0.0.1:4000/discovery", "http://127.0.0.1:4000/repository").await.unwrap();
 
-        assert_eq!(source.repository_base_url, "http://127.0.0.1:3000/repository");
+        assert_eq!(source.repository_base_url, "http://127.0.0.1:4000/repository");
         assert_eq!(http_fetch.requested_urls().await.len(), 2);
     }
 

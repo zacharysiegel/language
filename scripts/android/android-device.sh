@@ -3,7 +3,7 @@
 # Usage:
 #   source ./scripts/android/android-device.sh
 
-readonly ANDROID_LOCAL_SERVER_PORTS=(3000 3002)
+readonly ANDROID_LOCAL_SERVER_PORTS=(4000 4002)
 
 # Exits, saying how to start the emulator, when adb lists no attached device.
 require_attached_device() {

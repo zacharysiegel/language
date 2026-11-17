@@ -34,8 +34,8 @@ struct CoreEnvironment {
 
         return CoreEnvironment(
             configuration: CoreConfiguration(
-                appOrigin: declaredUrl(infoKey: originInfoKey, fallback: "http://127.0.0.1:3000"),
-                staticRepositoryBaseUrl: declaredUrl(infoKey: repositoryBaseUrlInfoKey, fallback: "http://127.0.0.1:3002"),
+                appOrigin: declaredUrl(infoKey: originInfoKey, fallback: "http://127.0.0.1:4000"),
+                staticRepositoryBaseUrl: declaredUrl(infoKey: repositoryBaseUrlInfoKey, fallback: "http://127.0.0.1:4002"),
                 cacheDirectory: cacheDirectory.path,
                 embeddedBundleDirectory: embeddedDirectory.path,
             ),
