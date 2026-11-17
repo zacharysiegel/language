@@ -26,3 +26,6 @@ Play Console's App content section records these answers. Update them in the sam
 - Data safety: no user data is collected or shared. Adding accounts, analytics, crash reporting or any upload of progress changes this.
 - Ads: none.
 - Target audience: 13 and over.
+- Privacy policy: https://plainspoken.zach.ro/privacy.
+
+The store listing's website (Store settings, contact details) is https://plainspoken.zach.ro.

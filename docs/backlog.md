@@ -14,7 +14,10 @@ Known gaps, recorded when found.
 ## iOS app
 
 - On iPhone a unit's tab row scrolls sideways, so the Practice tab starts off-screen.
-- Move the site and repository from `language.zach.ro` and `repository.language.zach.ro` to `plainspoken.zach.ro` and `repository.plainspoken.zach.ro`, matching the app's name. The app ids and internal names stay `language`.
+
+## Hosting
+
+- Detach `language.zach.ro` and `repository.language.zach.ro`, and remove `https://language.zach.ro` from `tools/course_builder/r2-cors.json`, once no supported app build reads them (Android version code 2 and earlier, and iOS builds before the move to `plainspoken.zach.ro`).
 
 ## History
 

@@ -11,7 +11,7 @@ A Kotlin and Jetpack Compose app in `android/` over the same Rust core the iOS a
 - `minSdk` 29 (Android 10), `targetSdk` and `compileSdk` 36. Every platform API the app uses (`AudioFocusRequest`, `UtteranceProgressListener`, ExoPlayer's playback speed) exists at 29 without compatibility branches; the S25 runs far above it.
 - ABI `arm64-v8a` only: the S25 and the `language_s25` AVD are both arm64, and so is every phone sold for years. Adding `x86_64` later is one `-t` argument and one ABI filter.
 - The debug build reaches the Mac's servers at `http://127.0.0.1:4000` and `http://127.0.0.1:4002` through `adb reverse`, on the emulator and on the S25 alike. Not `10.0.2.2`: the committed `web/static/discovery` names `http://127.0.0.1:4002` as the repository, so an emulator using `10.0.2.2` reads discovery, then fails to fetch the course index from its own loopback and never shows the local repository (test courses included). `adb reverse` makes the device's `127.0.0.1` the Mac's, so discovery's address is right everywhere, and no LAN address is needed.
-- The release build reads https://language.zach.ro and https://repository.language.zach.ro, like the iOS device build.
+- The release build reads https://plainspoken.zach.ro and https://repository.plainspoken.zach.ro, like the iOS device build.
 - All HTTP is the core's (reqwest over native sockets). Android's network security config governs only the platform's Java HTTP stacks, so it cannot restrict the core; each build type's origins are what keep release traffic on HTTPS. The debug config still declares cleartext for `127.0.0.1` only, so any platform-stack use stays within it.
 - TLS on Android is rustls (aws-lc-rs) with the Mozilla roots from `webpki-root-certs`, through reqwest's `tls_certs_only`. Not the platform verifier: on Android it needs a JNI context handed to Rust at startup and an AAR taken from the cargo registry. Other targets keep native-tls. A probe crate with `reqwest 0.13.5` (`rustls`) and `rusqlite` (`bundled`) built for `aarch64-linux-android` with `cargo ndk --platform 29` and NDK 30 without changes.
 - Compose Foundation for every control, drawn to `docs/design.md`: square, hairline, no ripple, no elevation. Material 3 only for the pull-to-refresh state on the course page, with the app's own indicator.
@@ -141,7 +141,7 @@ From Maven Central and the Gradle plugin portal, pinned to the latest stable rel
 ### Build types and origins
 
 - `debug`: `buildConfigField("String", "LANGUAGE_ORIGIN", "\"http://127.0.0.1:4000\"")`, `LANGUAGE_REPOSITORY_BASE_URL` `"http://127.0.0.1:4002"`.
-- `release`: `https://language.zach.ro` and `https://repository.language.zach.ro`; `isMinifyEnabled = true`, `proguard-rules.pro` keeping `com.sun.jna.**` and `ro.zach.language.core.**` (JNA finds them by reflection).
+- `release`: `https://plainspoken.zach.ro` and `https://repository.plainspoken.zach.ro`; `isMinifyEnabled = true`, `proguard-rules.pro` keeping `com.sun.jna.**` and `ro.zach.language.core.**` (JNA finds them by reflection).
 - Release signing from Gradle properties outside the repository (`languageReleaseStoreFile`, `languageReleaseStorePassword`, `languageReleaseKeyAlias`, `languageReleaseKeyPassword` in `~/.gradle/gradle.properties`); without them the release build is unsigned and `installRelease` is unavailable.
 
 ### Manifest and network security config
