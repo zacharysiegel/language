@@ -1,4 +1,4 @@
-# Language
+# Plainspoken
 
 Language courses that teach the principles first (sounds and spelling, stress and accents, the structure of the language, then grammar), with dialogues, readings, exercises and vocabulary, spoken audio for every sentence in the language taught, and a spaced-repetition review deck. Each course is one curriculum in a target language taught in a source language, in `data/courses/<course id>/`; the first is Brazilian Portuguese for English speakers, from A1 to B2. Progress is kept on the device.
 
