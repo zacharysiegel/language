@@ -21,7 +21,7 @@ readonly EMBEDDED_COURSE_INDEX_PATH="${WEB_DIR}/static/embedded/course-index.jso
 readonly SITE_ROOT="target/deploy-site"
 readonly SITE_DIR="${REPO_ROOT}/${SITE_ROOT}"
 readonly SERVER_BINARY="${REPO_ROOT}/target/release/web"
-readonly PRODUCTION_REPOSITORY_BASE_URL="https://repository.language.zach.ro"
+readonly PRODUCTION_REPOSITORY_BASE_URL="https://repository.plainspoken.zach.ro"
 readonly SITE_FEATURES="grading-model-from-hugging-face"
 
 # cargo-leptos's own variables, which the server binary's prerender reads too, so both agree on the tree and its

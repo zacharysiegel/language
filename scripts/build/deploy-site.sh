@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Deploys the site tree in target/deploy-site to Cloudflare Workers Assets at https://language.zach.ro.
+# Deploys the site tree in target/deploy-site to Cloudflare Workers Assets at the custom domains web/wrangler.toml names.
 #
 # Usage:
 #   ./scripts/build/deploy-site.sh [--build] [--dry-run]

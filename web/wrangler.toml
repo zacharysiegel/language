@@ -2,7 +2,9 @@
 name = "language-web"
 compatibility_date = "2026-08-17"
 
+# Deploy replaces the Worker's custom domains with this list. Installed app builds read language.zach.ro.
 routes = [
+    { pattern = "plainspoken.zach.ro", custom_domain = true },
     { pattern = "language.zach.ro", custom_domain = true },
 ]
 
