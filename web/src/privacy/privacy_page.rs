@@ -46,7 +46,7 @@ pub fn PrivacyPage() -> impl IntoView {
         <section class="policy-section">
             <h2>"Changes and contact"</h2>
             <p>
-                "If this policy changes, the new policy will appear on this page with a new effective date. Questions: "
+                "If this policy changes, the new policy will appear on this page with a new effective date. Direct any questions to "
                 <a href=format!("mailto:{CONTACT_EMAIL}")>{CONTACT_EMAIL}</a>
                 "."
             </p>
