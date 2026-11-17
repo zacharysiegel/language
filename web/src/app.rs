@@ -13,6 +13,7 @@ use crate::glossary::GlossaryPage;
 use crate::grading::{GradingModelDownloadSetting, provide_grading_store};
 use crate::home::HomePage;
 use crate::pending_indication::{PageBusyStore, provide_page_busy_store, use_page_busy_store};
+use crate::privacy::{PRIVACY_SEGMENT, PrivacyPage};
 use crate::progress_state::{ProgressStore, provide_progress_store, use_progress_store};
 use crate::progress_view::ProgressPage;
 use crate::review::ReviewPage;
@@ -32,14 +33,18 @@ mod ssr {
     use leptos_meta::HashedStylesheet;
 
     use super::{App, STATIC_SHELL_ELEMENT_ID};
+    use crate::privacy::PrivacyPage;
+
+    const APP_TITLE: &str = "Plainspoken";
+    const PRIVACY_TITLE: &str = "Privacy policy · Plainspoken";
 
     #[component]
-    fn DocumentHead(options: LeptosOptions) -> impl IntoView {
+    fn DocumentHead(options: LeptosOptions, title: &'static str) -> impl IntoView {
         view! {
             <head>
                 <meta charset="utf-8" />
                 <meta name="viewport" content="width=device-width, initial-scale=1" />
-                <title>"Plainspoken"</title>
+                <title>{title}</title>
                 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
                 <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
                 <HashedStylesheet options=options.clone() id="leptos" />
@@ -54,7 +59,7 @@ mod ssr {
         view! {
             <!DOCTYPE html>
             <html lang="en">
-                <DocumentHead options />
+                <DocumentHead options title=APP_TITLE />
                 <body>
                     <App />
                 </body>
@@ -62,23 +67,41 @@ mod ssr {
         }
     }
 
-    /// The one document a static host serves at every route.
-    pub fn static_shell(options: LeptosOptions) -> impl IntoView {
+    /// A document a static host serves, which the client renders over once it starts.
+    #[component]
+    fn StaticDocument(options: LeptosOptions, title: &'static str, busy: bool, children: Children) -> impl IntoView {
         view! {
             <!DOCTYPE html>
             <html lang="en">
-                <DocumentHead options />
+                <DocumentHead options title />
                 <body>
                     <nav class="chrome">
                         <a href="/" class="chrome-brand" title="All courses">
                             <span class="chrome-brand-name">"Plainspoken"</span>
                         </a>
                     </nav>
-                    <main id=STATIC_SHELL_ELEMENT_ID aria-busy="true">
-                        <p class="status" role="status">"Loading…"</p>
+                    <main id=STATIC_SHELL_ELEMENT_ID aria-busy=busy.then_some("true")>
+                        {children()}
                     </main>
                 </body>
             </html>
+        }
+    }
+
+    /// The one document a static host serves at every route without a document of its own.
+    pub fn static_shell(options: LeptosOptions) -> impl IntoView {
+        view! {
+            <StaticDocument options title=APP_TITLE busy=true>
+                <p class="status" role="status">"Loading…"</p>
+            </StaticDocument>
+        }
+    }
+
+    pub fn static_privacy_document(options: LeptosOptions) -> impl IntoView {
+        view! {
+            <StaticDocument options title=PRIVACY_TITLE busy=false>
+                <PrivacyPage />
+            </StaticDocument>
         }
     }
 }
@@ -100,6 +123,7 @@ pub fn App() -> impl IntoView {
             <main aria-busy=move || page_busy_store.is_busy().then_some("true")>
                 <Routes fallback=|| view! { <p class="status">"Page not found."</p> }>
                     <Route path=StaticSegment("") view=CoursesPage />
+                    <Route path=StaticSegment(PRIVACY_SEGMENT) view=PrivacyPage />
                     <Route path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM)) view=HomePage />
                     <Route
                         path=(StaticSegment(COURSE_SEGMENT), ParamSegment(COURSE_ID_PARAM), StaticSegment(UNIT_SEGMENT), ParamSegment(UNIT_ID_PARAM))

@@ -22,7 +22,7 @@ mod server_binary {
 
         let result: Result<(), AppError> = match first_argument.as_deref() {
             None => web::server::serve().await,
-            Some(PRERENDER_ARGUMENT) => web::server::write_static_shell(),
+            Some(PRERENDER_ARGUMENT) => web::server::write_static_documents(),
             Some(unrecognized) => {
                 eprintln!("unrecognized argument; [argument={unrecognized} expected={PRERENDER_ARGUMENT}]");
                 process::exit(ExitStatus::Usage as i32);

@@ -11,6 +11,8 @@ readonly SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 readonly REPO_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
 readonly SITE_DIR="${1:-${REPO_ROOT}/target/deploy-site}"
 readonly DOCUMENT_PATH="${SITE_DIR}/index.html"
+# Store listings link to /privacy, which Cloudflare serves from this file. PRIVACY_SEGMENT in web/src/privacy/privacy_page.rs.
+readonly PRIVACY_DOCUMENT_PATH="${SITE_DIR}/privacy.html"
 readonly DISCOVERY_PATH="${SITE_DIR}/discovery"
 readonly HEADERS_PATH="${SITE_DIR}/_headers"
 readonly EMBEDDED_COURSE_INDEX_PATH="${SITE_DIR}/embedded/course-index.json"
@@ -51,6 +53,13 @@ static_shell_marker_count="$(grep -F -c "${STATIC_SHELL_MARKER}" "${DOCUMENT_PAT
 
 if test "${static_shell_marker_count}" -eq 0; then
     fail "${DOCUMENT_PATH} is not the static shell; run ./scripts/build/build-site.sh"
+fi
+
+# The client renders over this document too, so it must carry the marker.
+privacy_marker_count="$(grep -F -c "${STATIC_SHELL_MARKER}" "${PRIVACY_DOCUMENT_PATH}" 2>/dev/null || true)"
+
+if test -z "${privacy_marker_count}" -o "${privacy_marker_count}" = "0"; then
+    fail "${PRIVACY_DOCUMENT_PATH} is missing or is not a static document; run ./scripts/build/build-site.sh"
 fi
 
 if test ! -d "${SITE_DIR}/pkg"; then
@@ -135,7 +144,7 @@ if test "${grading_model_url_count}" -eq 0; then
     fail "${wasm_path} was not compiled to download the grading model from ${grading_model_url}; run ./scripts/build/build-site.sh"
 fi
 
-printf '%s: static shell present, %d referenced assets present and content-hashed\n' "${SITE_DIR}" "${reference_count}"
+printf '%s: static shell and privacy policy present, %d referenced assets present and content-hashed\n' "${SITE_DIR}" "${reference_count}"
 printf '%s: discovery and the client both name %s\n' "${SITE_DIR}" "${repository_base_url}"
 printf '%s: the client downloads the grading model from %s\n' "${SITE_DIR}" "${grading_model_url}"
 printf '%s: wllama %s present\n' "${SITE_DIR}" "$(cat "${WLLAMA_DIR}/VERSION")"

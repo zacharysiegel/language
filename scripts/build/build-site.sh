@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Builds the deployable site tree into target/deploy-site: a release build of the app, which downloads the grading
-# model from its Hugging Face repository, the static shell every route serves, the static assets, the header rules,
+# model from its Hugging Face repository, the static shell and privacy policy documents, the static assets, the header rules,
 # and a discovery document naming the production repository.
 #
 # Usage:
@@ -69,7 +69,7 @@ if test ! -x "${SERVER_BINARY}"; then
 fi
 
 # Run in place: the render reads the content-hash file from the directory holding the binary.
-printf '\nwriting the static shell\n'
+printf '\nwriting the static documents\n'
 "${SERVER_BINARY}" prerender
 
 # Rewrites the one field rather than committing a second document, so the schema stays in one file.

@@ -14,6 +14,7 @@ pub mod item_index;
 pub mod pending_indication;
 pub mod platform;
 pub mod practice;
+pub mod privacy;
 pub mod progress_state;
 pub mod progress_view;
 pub mod recording_prefetch;

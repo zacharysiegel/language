@@ -11,7 +11,8 @@ use leptos_axum::LeptosRoutes;
 use shared::AppError;
 use shared::filesystem;
 
-use crate::app::{App, shell, static_shell};
+use crate::app::{App, shell, static_privacy_document, static_shell};
+use crate::privacy::PRIVACY_SEGMENT;
 
 const CACHE_CONTROL_REVALIDATE: &str = "no-cache";
 const CROSS_ORIGIN_OPENER_POLICY: &str = "cross-origin-opener-policy";
@@ -68,19 +69,25 @@ async fn require_cross_origin_isolation(mut response: Response) -> Response {
     response
 }
 
-/// Writes the static shell into the site root of a build that has already run.
-pub fn write_static_shell() -> Result<(), AppError> {
+/// Writes the static documents into the site root of a build that has already run.
+pub fn write_static_documents() -> Result<(), AppError> {
     let leptos_options: LeptosOptions = read_manifest_leptos_options()?;
     let site_root: PathBuf = resolve_site_root(&leptos_options)?;
-    let hash_files: bool = leptos_options.hash_files;
-    let document_text: String = render_static_shell(leptos_options);
-    let document_path: PathBuf = site_root.join(STATIC_SHELL_DOCUMENT_NAME);
+    let shell_text: String = render_static_shell(leptos_options.clone());
+    let privacy_text: String = render_static_privacy_document(leptos_options.clone());
 
-    fs::write(&document_path, &document_text).map_err(|error| {
-        AppError::from(format!("could not write the static shell; [path={} error={error}]", document_path.display()))
+    write_static_document(&site_root.join(STATIC_SHELL_DOCUMENT_NAME), &shell_text, leptos_options.hash_files)?;
+    write_static_document(&site_root.join(format!("{PRIVACY_SEGMENT}.html")), &privacy_text, leptos_options.hash_files)?;
+
+    Ok(())
+}
+
+fn write_static_document(document_path: &Path, document_text: &str, hash_files: bool) -> Result<(), AppError> {
+    fs::write(document_path, document_text).map_err(|error| {
+        AppError::from(format!("could not write a static document; [path={} error={error}]", document_path.display()))
     })?;
 
-    log!("wrote the static shell; [path={} bytes={} hash_files={hash_files}]", document_path.display(), document_text.len());
+    log!("wrote a static document; [path={} bytes={} hash_files={hash_files}]", document_path.display(), document_text.len());
 
     Ok(())
 }
@@ -89,6 +96,12 @@ pub fn render_static_shell(leptos_options: LeptosOptions) -> String {
     let owner: Owner = Owner::new();
 
     owner.with(move || static_shell(leptos_options).to_html())
+}
+
+pub fn render_static_privacy_document(leptos_options: LeptosOptions) -> String {
+    let owner: Owner = Owner::new();
+
+    owner.with(move || static_privacy_document(leptos_options).to_html())
 }
 
 /* `get_configuration(None)` reads variables only cargo-leptos sets, so this reads the manifest, which
@@ -128,6 +141,18 @@ mod tests {
         assert!(document_text.starts_with("<!DOCTYPE html>"));
         assert!(document_text.contains(&format!(r#"id="{STATIC_SHELL_ELEMENT_ID}""#)));
         assert!(document_text.contains("<title>Plainspoken</title>"));
+        assert!(document_text.contains("/pkg/language.css"));
+    }
+
+    #[test]
+    fn render_static_privacy_document_holds_the_shell_marker_and_the_policy() {
+        let leptos_options: LeptosOptions = LeptosOptions::builder().output_name("language").build();
+
+        let document_text: String = render_static_privacy_document(leptos_options);
+
+        assert!(document_text.contains(&format!(r#"id="{STATIC_SHELL_ELEMENT_ID}""#)));
+        assert!(document_text.contains("<title>Privacy policy · Plainspoken</title>"));
+        assert!(document_text.contains("<h1>Privacy policy</h1>"));
         assert!(document_text.contains("/pkg/language.css"));
     }
 }
