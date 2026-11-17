@@ -12,7 +12,7 @@ pub fn PrivacyPage() -> impl IntoView {
             <span class="page-caption">"Effective 16 November 2026"</span>
         </div>
         <p>
-            "Plainspoken is a language course for Android, iOS and the web at language.zach.ro. It has no accounts and no advertising, and it collects no information that identifies you."
+            "Plainspoken teaches languages through courses in its Android and iOS apps and on the web at language.zach.ro. It has no accounts and no advertising, and it collects no information that identifies you."
         </p>
 
         <section class="policy-section">
