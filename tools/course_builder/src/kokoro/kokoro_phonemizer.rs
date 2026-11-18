@@ -246,21 +246,34 @@ fn split_into_sentences(text: &str) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::speech_engine::BRAZILIAN_PORTUGUESE;
+    use crate::speech_engine::{BRAZILIAN_PORTUGUESE, KokoroSpeech, MEXICAN_SPANISH, SpeechLanguage};
+
+    fn espeak_voice(language: &SpeechLanguage) -> &'static str {
+        let kokoro: &KokoroSpeech = language.kokoro.as_ref().expect("Kokoro speaks the language");
+
+        kokoro.espeak_voice
+    }
 
     #[test]
     fn phonemize_keeps_punctuation_and_uses_kokoro_symbols() {
         let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
 
-        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "Nossa, de novo?").unwrap(), "nˈɔsæ, ʤy nˈovʊ?");
-        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "Estou com dor de barriga.").unwrap(), "estˌow koŋ dˈor ʤy bˌaxˈiɡæ.");
+        assert_eq!(phonemizer.phonemize(espeak_voice(&BRAZILIAN_PORTUGUESE), "Nossa, de novo?").unwrap(), "nˈɔsæ, ʤy nˈovʊ?");
+        assert_eq!(phonemizer.phonemize(espeak_voice(&BRAZILIAN_PORTUGUESE), "Estou com dor de barriga.").unwrap(), "estˌow koŋ dˈor ʤy bˌaxˈiɡæ.");
     }
 
     #[test]
     fn phonemize_single_word_has_no_punctuation() {
         let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
 
-        assert_eq!(phonemizer.phonemize(BRAZILIAN_PORTUGUESE.espeak_voice, "desejar").unwrap(), "dˌezeʒˈar");
+        assert_eq!(phonemizer.phonemize(espeak_voice(&BRAZILIAN_PORTUGUESE), "desejar").unwrap(), "dˌezeʒˈar");
+    }
+
+    #[test]
+    fn phonemize_speaks_latin_american_spanish() {
+        let phonemizer: Phonemizer = Phonemizer::initialize().expect("eSpeak NG initializes");
+
+        assert_eq!(phonemizer.phonemize(espeak_voice(&MEXICAN_SPANISH), "Hace calor, gracias.").unwrap(), "ˈase kalˈoɾ, ɡɾˈasjas.");
     }
 
     #[test]

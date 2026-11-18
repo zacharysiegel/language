@@ -13,7 +13,7 @@ use crate::artifact::ClipRecordings;
 use crate::audio_encoding::{self, AUDIO_FILE_EXTENSION, PARTIAL_FILE_EXTENSION};
 use crate::audio_plan::{AudioPlan, Utterance};
 use crate::kokoro::kokoro_synthesis;
-use crate::speech_engine::{self, ResolvedUtterance, SpeechEngineKind, SpeechLanguage};
+use crate::speech_engine::{self, ResolvedUtterance, SpeechEngineKind, SpeechLanguage, VoiceProfile};
 use crate::work_pool;
 use crate::workspace::WorkspacePaths;
 
@@ -52,12 +52,13 @@ fn synthesize_missing_engine_audio(plan: &AudioPlan, paths: &WorkspacePaths, eng
 
     prepare_engine_directory(&engine_directory, engine)?;
 
-    let missing_clips: Vec<(String, ResolvedUtterance)> = plan
+    let missing_clip_resolutions: Vec<Option<(String, ResolvedUtterance)>> = plan
         .utterances
         .iter()
         .filter(|(clip_key, _)| !is_valid_audio_file(&clip_file_path(&engine_directory, clip_key)))
-        .map(|(clip_key, utterance)| resolve(engine, utterance).map(|resolved| (clip_file_name(clip_key), resolved)))
-        .collect::<Result<Vec<(String, ResolvedUtterance)>, AppError>>()?;
+        .map(|(clip_key, utterance)| resolve(engine, utterance).map(|resolved| resolved.map(|resolved| (clip_file_name(clip_key), resolved))))
+        .collect::<Result<Vec<Option<(String, ResolvedUtterance)>>, AppError>>()?;
+    let missing_clips: Vec<(String, ResolvedUtterance)> = missing_clip_resolutions.into_iter().flatten().collect();
 
     log::info!(
         "audio plan; [engine={} distinct_clips={} to_synthesize={}]",
@@ -80,14 +81,16 @@ fn clip_file_path(engine_directory: &Path, clip_key: &str) -> PathBuf {
     engine_directory.join(clip_file_name(clip_key))
 }
 
-fn resolve(engine: SpeechEngineKind, utterance: &Utterance) -> Result<ResolvedUtterance, AppError> {
+/// `None` when the engine has no voices for the utterance's language.
+fn resolve(engine: SpeechEngineKind, utterance: &Utterance) -> Result<Option<ResolvedUtterance>, AppError> {
     let language: &'static SpeechLanguage = speech_engine::speech_language(&utterance.language)?;
+    let profile: Option<VoiceProfile> = engine.profile_for(language, utterance.persona);
 
-    Ok(ResolvedUtterance {
+    Ok(profile.map(|profile| ResolvedUtterance {
         language,
-        profile: engine.profile_for(language, utterance.persona),
+        profile,
         text: utterance.text.clone(),
-    })
+    }))
 }
 
 /* Clips made by an older version of the pipeline are discarded, because they carry the same file names. */
@@ -277,4 +280,32 @@ fn remove_partial_files(directory: &Path) -> Result<(), AppError> {
     }
 
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use shared::course;
+
+    use super::*;
+    use crate::speech_engine::PersonaKind;
+
+    #[test]
+    fn synthesize_missing_engine_audio_skips_kokoro_for_a_language_without_kokoro_voices() {
+        let workspace_directory: tempfile::TempDir = tempfile::tempdir().unwrap();
+        let paths: WorkspacePaths = WorkspacePaths::at_root(workspace_directory.path());
+        let mut plan: AudioPlan = AudioPlan::new();
+
+        plan.utterances.insert(
+            "russian_clip".to_string(),
+            Utterance {
+                language: course::RUSSIAN_LANGUAGE_TAG.to_string(),
+                persona: PersonaKind::Narrator,
+                text: "Приве\u{0301}т.".to_string(),
+            },
+        );
+
+        synthesize_missing_engine_audio(&plan, &paths, SpeechEngineKind::Kokoro).unwrap();
+
+        assert!(!clip_file_path(&paths.engine_clip_directory(SpeechEngineKind::Kokoro), "russian_clip").exists());
+    }
 }

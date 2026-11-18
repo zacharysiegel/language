@@ -63,10 +63,14 @@ fn prepare_clips<'a>(clips: &'a [(String, ResolvedUtterance)], files: &KokoroFil
     let mut prepared_clips: Vec<PreparedClip> = Vec::with_capacity(clips.len());
 
     for (file_name, utterance) in clips {
+        let Some(kokoro) = &utterance.language.kokoro
+        else {
+            return Err(AppError::from(format!("Kokoro has no voices for the language; [language={}]", utterance.language.language_tag)));
+        };
         let mut chunks: Vec<PreparedChunk> = Vec::new();
 
         for chunk in split_into_chunks(&speech_engine::spoken_text_for(utterance.language, &utterance.text)) {
-            let phonemes: String = phonemizer.phonemize(utterance.language.espeak_voice, &chunk)?;
+            let phonemes: String = phonemizer.phonemize(kokoro.espeak_voice, &chunk)?;
             let tokens: Vec<i64> = vocabulary.tokens_for(&phonemes);
 
             let carrier_tokens: Option<Vec<i64>> = (tokens.len() <= SHORT_INPUT_TOKEN_LIMIT && !phonemes.contains(' ')).then(|| {

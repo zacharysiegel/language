@@ -67,18 +67,21 @@ impl SpeechEngineKind {
         }
     }
 
-    pub fn profile_for(self, language: &SpeechLanguage, persona: PersonaKind) -> VoiceProfile {
+    /// `None` when the engine has no voices for the language.
+    pub fn profile_for(self, language: &SpeechLanguage, persona: PersonaKind) -> Option<VoiceProfile> {
         let voices: &PersonaVoices = match self {
-            SpeechEngineKind::Kokoro => &language.kokoro_voices,
+            SpeechEngineKind::Kokoro => &language.kokoro.as_ref()?.voices,
             SpeechEngineKind::MacosSay => &language.macos_voices,
         };
 
-        match persona {
+        let profile: VoiceProfile = match persona {
             PersonaKind::Narrator => voices.narrator,
             PersonaKind::FemaleSpeaker(index) => voices.female_speakers[index % voices.female_speakers.len()],
             PersonaKind::MaleSpeaker(index) => voices.male_speakers[index % voices.male_speakers.len()],
             PersonaKind::ListeningExercise(index) => voices.listening_pool[index % voices.listening_pool.len()],
-        }
+        };
+
+        Some(profile)
     }
 
 }
@@ -86,7 +89,7 @@ impl SpeechEngineKind {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::speech_engine::BRAZILIAN_PORTUGUESE;
+    use crate::speech_engine::{BRAZILIAN_PORTUGUESE, RUSSIAN};
 
     #[test]
     fn profile_for_wraps_speaker_indexes_around_the_pool() {
@@ -105,9 +108,18 @@ mod tests {
     #[test]
     fn kokoro_voices_for_brazilian_portuguese_are_its_portuguese_voices() {
         for index in 0..LISTENING_PERSONA_COUNT {
-            let voice_id: &str = SpeechEngineKind::Kokoro.profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::ListeningExercise(index)).voice_id;
+            let voice_id: &str = SpeechEngineKind::Kokoro
+                .profile_for(&BRAZILIAN_PORTUGUESE, PersonaKind::ListeningExercise(index))
+                .unwrap()
+                .voice_id;
 
             assert!(voice_id.starts_with("pf_") || voice_id.starts_with("pm_"));
         }
+    }
+
+    #[test]
+    fn profile_for_has_no_kokoro_voice_for_a_language_without_kokoro_voices() {
+        assert_eq!(SpeechEngineKind::Kokoro.profile_for(&RUSSIAN, PersonaKind::Narrator), None);
+        assert!(SpeechEngineKind::MacosSay.profile_for(&RUSSIAN, PersonaKind::MaleSpeaker(2)).is_some());
     }
 }
