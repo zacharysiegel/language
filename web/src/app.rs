@@ -4,8 +4,8 @@ use leptos_router::hooks::use_location;
 use leptos_router::{ParamSegment, StaticSegment};
 
 use crate::course_data::{
-    self, COURSE_ID_PARAM, COURSE_SEGMENT, CourseStore, GLOSSARY_SEGMENT, PROGRESS_SEGMENT, REVIEW_SEGMENT, UNIT_ID_PARAM, UNIT_SEGMENT,
-    provide_course_store, use_course_store,
+    self, COURSE_ID_PARAM, COURSE_SEGMENT, CourseStore, GLOSSARY_SEGMENT, LoadState, LoadedCoursePublication, PROGRESS_SEGMENT, REVIEW_SEGMENT,
+    UNIT_ID_PARAM, UNIT_SEGMENT, provide_course_store, use_course_store,
 };
 use crate::audio_player::{PlaybackAnnouncement, provide_playback_store};
 use crate::courses::CoursesPage;
@@ -148,6 +148,68 @@ fn published_course_title(course_store: CourseStore, course_id: &str) -> Option<
     course_store.index_entry(course_id).map(|index_entry| index_entry.title)
 }
 
+/// The voice settings the course's shown publication allows; every setting when no publication is shown.
+fn offered_audio_engines(course_store: CourseStore, course_id: Option<String>) -> Vec<AudioEngineKind> {
+    let publication_state: Option<LoadState<LoadedCoursePublication>> = course_id.and_then(|course_id| course_store.publication_state(&course_id));
+
+    match publication_state {
+        Some(LoadState::Loaded(publication)) => AudioEngineKind::choices_for_course(&publication.source.manifest.recorded_voice_engines()),
+        Some(LoadState::Loading | LoadState::Failed(_)) | None => AudioEngineKind::ALL.to_vec(),
+    }
+}
+
+fn audio_engine_option_value(engine: AudioEngineKind) -> &'static str {
+    match engine {
+        AudioEngineKind::Auto => "auto",
+        AudioEngineKind::Kokoro => "kokoro",
+        AudioEngineKind::MacosSay => "macos_say",
+    }
+}
+
+fn audio_engine_option_label(engine: AudioEngineKind) -> &'static str {
+    match engine {
+        AudioEngineKind::Auto => "Auto",
+        AudioEngineKind::Kokoro => "Neural (Kokoro)",
+        AudioEngineKind::MacosSay => "macOS",
+    }
+}
+
+fn audio_engine_of_option_value(value: &str) -> AudioEngineKind {
+    AudioEngineKind::ALL
+        .into_iter()
+        .find(|engine| audio_engine_option_value(*engine) == value)
+        .unwrap_or(AudioEngineKind::Auto)
+}
+
+#[component]
+fn VoiceSetting(offered_engines: Vec<AudioEngineKind>) -> impl IntoView {
+    let progress_store: ProgressStore = use_progress_store();
+    let audio_engine = move || progress_store.read(|progress| progress.settings.audio_engine);
+    let options: Vec<_> = offered_engines
+        .into_iter()
+        .map(|engine| {
+            view! {
+                <option value=audio_engine_option_value(engine) selected=move || audio_engine() == engine>
+                    {audio_engine_option_label(engine)}
+                </option>
+            }
+        })
+        .collect();
+
+    view! {
+        <label class="field">
+            <span class="field-label">"Voice"</span>
+            <select on:change:target=move |event| {
+                let engine: AudioEngineKind = audio_engine_of_option_value(&event.target().value());
+
+                progress_store.update(|progress| progress.settings.audio_engine = engine);
+            }>
+                {options}
+            </select>
+        </label>
+    }
+}
+
 #[component]
 fn NavigationBar() -> impl IntoView {
     let progress_store: ProgressStore = use_progress_store();
@@ -179,7 +241,11 @@ fn NavigationBar() -> impl IntoView {
         })
     };
     let slow_audio = move || progress_store.read(|progress| progress.settings.slow_audio);
-    let audio_engine = move || progress_store.read(|progress| progress.settings.audio_engine);
+    let voice_setting = move || {
+        let offered_engines: Vec<AudioEngineKind> = offered_audio_engines(course_store, course_id());
+
+        (!offered_engines.is_empty()).then(|| view! { <VoiceSetting offered_engines /> })
+    };
 
     view! {
         <nav class="chrome">
@@ -189,22 +255,7 @@ fn NavigationBar() -> impl IntoView {
             </A>
             {course_links}
             <div class="chrome-settings">
-                <label class="field">
-                    <span class="field-label">"Voice"</span>
-                    <select on:change:target=move |event| {
-                        let engine: AudioEngineKind = match event.target().value().as_str() {
-                            "kokoro" => AudioEngineKind::Kokoro,
-                            "macos_say" => AudioEngineKind::MacosSay,
-                            _ => AudioEngineKind::Auto,
-                        };
-
-                        progress_store.update(|progress| progress.settings.audio_engine = engine);
-                    }>
-                        <option value="auto" selected=move || audio_engine() == AudioEngineKind::Auto>"Auto"</option>
-                        <option value="kokoro" selected=move || audio_engine() == AudioEngineKind::Kokoro>"Neural (Kokoro)"</option>
-                        <option value="macos_say" selected=move || audio_engine() == AudioEngineKind::MacosSay>"macOS (Luciana)"</option>
-                    </select>
-                </label>
+                {voice_setting}
                 <label class="field">
                     <input
                         type="checkbox"
