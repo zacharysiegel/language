@@ -10,6 +10,7 @@ pub mod grouped_table;
 pub mod language_names;
 pub mod language_tag;
 pub mod prose;
+pub mod stress_mark;
 pub mod target_language_rules;
 pub mod unit_item_label;
 
@@ -23,4 +24,5 @@ pub use grouped_table::*;
 pub use language_names::*;
 pub use language_tag::*;
 pub use prose::*;
+pub use stress_mark::*;
 pub use unit_item_label::*;

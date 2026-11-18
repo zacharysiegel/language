@@ -1,3 +1,5 @@
+use crate::course::stress_mark;
+
 const QUOTE_CHARACTERS: [char; 8] = ['"', '\'', '“', '”', '‘', '’', '«', '»'];
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -60,7 +62,7 @@ pub fn slice_text(text: &str, span: &CharacterSpan) -> String {
 }
 
 pub fn normalize_for_comparison(text: &str) -> String {
-    let lowered: String = text
+    let lowered: String = stress_mark::compose_without_stress_marks(text)
         .chars()
         .map(|character| {
             if character.is_alphanumeric() {
@@ -151,5 +153,11 @@ mod tests {
     #[test]
     fn normalize_for_comparison_ignores_case_punctuation_and_spacing() {
         assert_eq!(normalize_for_comparison("  Me,  CHAMO. "), "me chamo");
+    }
+
+    #[test]
+    fn normalize_for_comparison_ignores_stress_marks_and_keeps_decomposed_accents() {
+        assert_eq!(normalize_for_comparison("сло\u{0301}во"), "слово");
+        assert_eq!(normalize_for_comparison("cafe\u{0301}"), "café");
     }
 }
