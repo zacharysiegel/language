@@ -65,7 +65,8 @@ sealed interface OutlineLoadState {
 sealed interface UnitLoadState {
     data object Loading : UnitLoadState
 
-    data class Loaded(val unit: UnitOutlineRecord, val lesson: UnitLessonRecord) : UnitLoadState
+    /** `course` is the course's outline when the unit loaded. */
+    data class Loaded(val course: CourseOutlineRecord, val unit: UnitOutlineRecord, val lesson: UnitLessonRecord) : UnitLoadState
 
     data class Failed(val message: String) : UnitLoadState
 }
@@ -311,13 +312,15 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
             return
         }
 
-        val unitOutline: UnitOutlineRecord = outline(courseId)?.units?.firstOrNull { unit -> unit.id == unitId }
+        val courseOutline: CourseOutlineRecord = outline(courseId)
+            ?: return
+        val unitOutline: UnitOutlineRecord = courseOutline.units.firstOrNull { unit -> unit.id == unitId }
             ?: return
 
         unitStates[key] = UnitLoadState.Loading
 
         scope.launch {
-            val loaded: UnitLoadState = loadUnit(publication, unitOutline, courseId)
+            val loaded: UnitLoadState = loadUnit(publication, courseOutline, unitOutline)
 
             if (isStillShown(publication)) {
                 unitStates[key] = loaded
@@ -335,13 +338,13 @@ class CourseStore(private val environment: CoreEnvironment, private val scope: C
         }
     }
 
-    private suspend fun loadUnit(publication: CoursePublication, unitOutline: UnitOutlineRecord, courseId: String): UnitLoadState {
+    private suspend fun loadUnit(publication: CoursePublication, courseOutline: CourseOutlineRecord, unitOutline: UnitOutlineRecord): UnitLoadState {
         try {
-            return UnitLoadState.Loaded(unitOutline, publication.loadUnit(unitOutline.id))
+            return UnitLoadState.Loaded(courseOutline, unitOutline, publication.loadUnit(unitOutline.id))
         } catch (cancellation: CancellationException) {
             throw cancellation
         } catch (error: Exception) {
-            return UnitLoadState.Failed(reportShardFailure(error, publication, "loading unit ${unitOutline.id} of $courseId"))
+            return UnitLoadState.Failed(reportShardFailure(error, publication, "loading unit ${unitOutline.id} of ${courseOutline.id}"))
         }
     }
 

@@ -99,13 +99,13 @@ private fun AddWordsToReviewDeck(courseId: String, unit: UnitOutlineRecord) {
 }
 
 @Composable
-fun VocabularySection(items: List<VocabularyItemRecord>, modifier: Modifier = Modifier) {
+fun VocabularySection(items: List<VocabularyItemRecord>, targetLanguage: String, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth()) {
         HairlineRule()
 
         for (item in items) {
             key(item.cardId) {
-                VocabularyRow(item = item)
+                VocabularyRow(item = item, targetLanguage = targetLanguage)
                 HairlineRule()
             }
         }
@@ -113,7 +113,7 @@ fun VocabularySection(items: List<VocabularyItemRecord>, modifier: Modifier = Mo
 }
 
 @Composable
-fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
+fun VocabularyRow(item: VocabularyItemRecord, targetLanguage: String, modifier: Modifier = Modifier) {
     val partOfSpeech: String? = item.partOfSpeech
     val literal: String? = item.sourceLiteral
     val note: String? = item.note
@@ -123,7 +123,7 @@ fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
         verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
-            PlayButton(clip = AudioClip(clipKey = item.clipKey, text = item.target))
+            PlayButton(clip = AudioClip(clipKey = item.clipKey, text = item.target, language = targetLanguage))
             LanguageText(text = item.target, style = LanguageType.targetText.copy(fontWeight = FontWeight.Bold))
 
             if (partOfSpeech != null) {
@@ -137,7 +137,7 @@ fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
             LiteralGloss(literal = literal)
         }
 
-        VocabularyExample(example = item.example, modifier = Modifier.padding(top = LanguageSpacing.spaceXs))
+        VocabularyExample(example = item.example, targetLanguage = targetLanguage, modifier = Modifier.padding(top = LanguageSpacing.spaceXs))
 
         if (note != null) {
             LanguageText(text = note, style = LanguageType.captionText, color = LanguageColors.inkMuted)
@@ -147,13 +147,13 @@ fun VocabularyRow(item: VocabularyItemRecord, modifier: Modifier = Modifier) {
 
 /** A vocabulary item's example sentence, playable, over its translation. */
 @Composable
-fun VocabularyExample(example: PhrasePairRecord, modifier: Modifier = Modifier) {
+fun VocabularyExample(example: PhrasePairRecord, targetLanguage: String, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.Top,
     ) {
-        PlayButton(clip = AudioClip(clipKey = example.clipKey, text = example.target))
+        PlayButton(clip = AudioClip(clipKey = example.clipKey, text = example.target, language = targetLanguage))
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
             LanguageText(text = example.target, style = LanguageType.bodyText)
@@ -164,7 +164,7 @@ fun VocabularyExample(example: PhrasePairRecord, modifier: Modifier = Modifier) 
 
 /** Each dialogue is the target of index rail entry n, through `Modifier.indexRailTarget(railTargets, n)`. */
 @Composable
-fun DialoguesSection(unit: UnitOutlineRecord, dialogues: List<DialogueRecord>, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
+fun DialoguesSection(unit: UnitOutlineRecord, dialogues: List<DialogueRecord>, targetLanguage: String, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         TranslationToggle()
 
@@ -175,6 +175,7 @@ fun DialoguesSection(unit: UnitOutlineRecord, dialogues: List<DialogueRecord>, r
                 DialoguePanel(
                     dialogue = dialogue,
                     itemLabel = unit.itemLabel(itemNumber),
+                    targetLanguage = targetLanguage,
                     modifier = Modifier.indexRailTarget(railTargets, itemNumber),
                 )
             }
@@ -183,9 +184,11 @@ fun DialoguesSection(unit: UnitOutlineRecord, dialogues: List<DialogueRecord>, r
 }
 
 @Composable
-private fun DialoguePanel(dialogue: DialogueRecord, itemLabel: String, modifier: Modifier) {
+private fun DialoguePanel(dialogue: DialogueRecord, itemLabel: String, targetLanguage: String, modifier: Modifier) {
     val voiceChoice: VoiceChoiceRecord = dialogueVoiceChoice(dialogue)
-    val clips: List<AudioClip> = dialogue.lines.map { line -> AudioClip(clipKey = line.phrase.clipKey, text = line.phrase.target, voiceChoice = voiceChoice) }
+    val clips: List<AudioClip> = dialogue.lines.map { line ->
+        AudioClip(clipKey = line.phrase.clipKey, text = line.phrase.target, language = targetLanguage, voiceChoice = voiceChoice)
+    }
 
     Column(modifier = modifier.panel(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         UnitItemLabel(text = itemLabel)
@@ -194,7 +197,7 @@ private fun DialoguePanel(dialogue: DialogueRecord, itemLabel: String, modifier:
         PlayAllButton(clips = clips)
 
         for (line in dialogue.lines) {
-            PhraseRow(pair = line.phrase, speaker = line.speaker, voiceChoice = voiceChoice)
+            PhraseRow(pair = line.phrase, targetLanguage = targetLanguage, speaker = line.speaker, voiceChoice = voiceChoice)
         }
     }
 }
@@ -206,7 +209,7 @@ fun dialogueVoiceChoice(dialogue: DialogueRecord): VoiceChoiceRecord {
 
 /** Each note is the target of index rail entry n, through `Modifier.indexRailTarget(railTargets, n)`. */
 @Composable
-fun GrammarSection(unit: UnitOutlineRecord, notes: List<GrammarNoteRecord>, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
+fun GrammarSection(unit: UnitOutlineRecord, notes: List<GrammarNoteRecord>, targetLanguage: String, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         TranslationToggle()
 
@@ -216,6 +219,7 @@ fun GrammarSection(unit: UnitOutlineRecord, notes: List<GrammarNoteRecord>, rail
             GrammarNotePanel(
                 note = note,
                 itemLabel = unit.itemLabel(itemNumber),
+                targetLanguage = targetLanguage,
                 modifier = Modifier.indexRailTarget(railTargets, itemNumber),
             )
         }
@@ -223,7 +227,7 @@ fun GrammarSection(unit: UnitOutlineRecord, notes: List<GrammarNoteRecord>, rail
 }
 
 @Composable
-private fun GrammarNotePanel(note: GrammarNoteRecord, itemLabel: String, modifier: Modifier) {
+private fun GrammarNotePanel(note: GrammarNoteRecord, itemLabel: String, targetLanguage: String, modifier: Modifier) {
     val table: GrammarTableRecord? = note.table
 
     Column(modifier = modifier.panel(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
@@ -236,14 +240,14 @@ private fun GrammarNotePanel(note: GrammarNoteRecord, itemLabel: String, modifie
         }
 
         for (example in note.examples) {
-            PhraseRow(pair = example)
+            PhraseRow(pair = example, targetLanguage = targetLanguage)
         }
     }
 }
 
 /** Each reading is the target of index rail entry n, through `Modifier.indexRailTarget(railTargets, n)`. */
 @Composable
-fun ReadingsSection(unit: UnitOutlineRecord, readings: List<ReadingRecord>, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
+fun ReadingsSection(unit: UnitOutlineRecord, readings: List<ReadingRecord>, targetLanguage: String, railTargets: ColumnScrollTargets, modifier: Modifier = Modifier) {
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         TranslationToggle()
 
@@ -254,6 +258,7 @@ fun ReadingsSection(unit: UnitOutlineRecord, readings: List<ReadingRecord>, rail
                 ReadingPanel(
                     reading = reading,
                     itemLabel = unit.itemLabel(itemNumber),
+                    targetLanguage = targetLanguage,
                     modifier = Modifier.indexRailTarget(railTargets, itemNumber),
                 )
             }
@@ -262,9 +267,9 @@ fun ReadingsSection(unit: UnitOutlineRecord, readings: List<ReadingRecord>, rail
 }
 
 @Composable
-fun ReadingPanel(reading: ReadingRecord, itemLabel: String, modifier: Modifier = Modifier) {
+fun ReadingPanel(reading: ReadingRecord, itemLabel: String, targetLanguage: String, modifier: Modifier = Modifier) {
     var areQuestionsOpen: Boolean by rememberSaveable(reading.id) { mutableStateOf(false) }
-    val clips: List<AudioClip> = reading.paragraphs.map { paragraph -> AudioClip(clipKey = paragraph.clipKey, text = paragraph.target) }
+    val clips: List<AudioClip> = reading.paragraphs.map { paragraph -> AudioClip(clipKey = paragraph.clipKey, text = paragraph.target, language = targetLanguage) }
 
     Column(modifier = modifier.panel(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         UnitItemLabel(text = itemLabel)
@@ -272,13 +277,14 @@ fun ReadingPanel(reading: ReadingRecord, itemLabel: String, modifier: Modifier =
         PlayAllButton(clips = clips)
 
         for (paragraph in reading.paragraphs) {
-            PhraseRow(pair = paragraph)
+            PhraseRow(pair = paragraph, targetLanguage = targetLanguage)
         }
 
         if (areQuestionsOpen) {
             ReadingQuestionsSession(
                 title = "${reading.title}: questions",
                 questions = reading.questions,
+                targetLanguage = targetLanguage,
                 onExit = { areQuestionsOpen = false },
             )
         } else {
@@ -294,10 +300,11 @@ fun ReadingPanel(reading: ReadingRecord, itemLabel: String, modifier: Modifier =
 
 /** A reading's comprehension questions as an exercise session that can only be quit. */
 @Composable
-private fun ReadingQuestionsSession(title: String, questions: List<ExerciseRecord>, onExit: () -> Unit, modifier: Modifier = Modifier) {
+private fun ReadingQuestionsSession(title: String, questions: List<ExerciseRecord>, targetLanguage: String, onExit: () -> Unit, modifier: Modifier = Modifier) {
     ExerciseSession(
         title = title,
         exercises = questions,
+        targetLanguage = targetLanguage,
         answeredResults = emptyList(),
         exitKind = ExerciseSessionExitKind.Quit,
         onAnswer = {},

@@ -66,9 +66,12 @@ private const val TRANSLATION_ANSWER_SEPARATOR: String = "  |  "
 private const val MATCH_PAIR_SEPARATOR: String = "; "
 private const val DEFAULT_MATCH_PROMPT: String = "Match each phrase with its translation"
 
-/** The interactive part of one exercise; it reports the learner's answer once through `onSubmit`. */
+/**
+ * The interactive part of one exercise; it reports the learner's answer once through `onSubmit`.
+ * `targetLanguage` is the BCP 47 tag of the language the exercise teaches.
+ */
 @Composable
-fun ExerciseBody(exercise: ExerciseRecord, onSubmit: (ExerciseResult) -> Unit) {
+fun ExerciseBody(exercise: ExerciseRecord, targetLanguage: String, onSubmit: (ExerciseResult) -> Unit) {
     when (exercise) {
         is ExerciseRecord.MultipleChoice -> {
             val answerIndex: Int = exercise.answerIndex.toInt()
@@ -82,7 +85,7 @@ fun ExerciseBody(exercise: ExerciseRecord, onSubmit: (ExerciseResult) -> Unit) {
             val answerIndex: Int = exercise.answerIndex.toInt()
 
             Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
-                ListeningControls(clip = AudioClip(clipKey = exercise.clipKey, text = exercise.audioTarget))
+                ListeningControls(clip = AudioClip(clipKey = exercise.clipKey, text = exercise.audioTarget, language = targetLanguage))
                 ChoiceList(
                     choices = exercise.choices,
                     answerIndex = answerIndex,
@@ -94,11 +97,13 @@ fun ExerciseBody(exercise: ExerciseRecord, onSubmit: (ExerciseResult) -> Unit) {
         is ExerciseRecord.FillBlank -> FillBlankView(
             exercise = exercise,
             completedSentence = exerciseSpokenText(exercise) ?: exercise.promptTarget,
+            targetLanguage = targetLanguage,
             onSubmit = onSubmit,
         )
         is ExerciseRecord.TranslateToTarget -> TypedAnswerView(
             acceptedAnswers = exercise.answers,
             answerText = exercise.answers.joinToString(TRANSLATION_ANSWER_SEPARATOR),
+            targetLanguage = targetLanguage,
             onSubmit = onSubmit,
         ) {
             LanguageText(text = exercise.promptSource, style = LanguageType.targetText)
@@ -106,12 +111,13 @@ fun ExerciseBody(exercise: ExerciseRecord, onSubmit: (ExerciseResult) -> Unit) {
         is ExerciseRecord.Dictation -> TypedAnswerView(
             acceptedAnswers = listOf(exercise.audioTarget),
             answerText = "${exercise.audioTarget} = ${exercise.hintSource}",
+            targetLanguage = targetLanguage,
             onSubmit = onSubmit,
         ) {
-            ListeningControls(clip = AudioClip(clipKey = exercise.clipKey, text = exercise.audioTarget))
+            ListeningControls(clip = AudioClip(clipKey = exercise.clipKey, text = exercise.audioTarget, language = targetLanguage))
         }
         is ExerciseRecord.OrderWords -> OrderWordsView(exercise = exercise, onSubmit = onSubmit)
-        is ExerciseRecord.Match -> MatchView(prompt = exercise.prompt ?: DEFAULT_MATCH_PROMPT, pairs = exercise.pairs, onSubmit = onSubmit)
+        is ExerciseRecord.Match -> MatchView(prompt = exercise.prompt ?: DEFAULT_MATCH_PROMPT, pairs = exercise.pairs, targetLanguage = targetLanguage, onSubmit = onSubmit)
         is ExerciseRecord.OpenResponse -> LanguageText(text = exercise.promptSource, style = LanguageType.bodyText)
     }
 }
@@ -173,6 +179,7 @@ private fun choiceMark(choiceIndex: Int, answerIndex: Int, selectedIndex: Int?):
 private fun TypedAnswerView(
     acceptedAnswers: List<String>,
     answerText: String,
+    targetLanguage: String,
     onSubmit: (ExerciseResult) -> Unit,
     prompt: @Composable () -> Unit,
 ) {
@@ -199,7 +206,14 @@ private fun TypedAnswerView(
 
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         prompt()
-        AnswerField(text = typedText, onTextChange = { text -> typedText = text }, isAnswered = isAnswered, focusRequester = focusRequester, onDone = check)
+        AnswerField(
+            text = typedText,
+            onTextChange = { text -> typedText = text },
+            language = targetLanguage,
+            isAnswered = isAnswered,
+            focusRequester = focusRequester,
+            onDone = check,
+        )
         SquareTextButton(
             text = "Check",
             onClick = check,
@@ -211,11 +225,12 @@ private fun TypedAnswerView(
 }
 
 @Composable
-private fun AnswerField(text: String, onTextChange: (String) -> Unit, isAnswered: Boolean, focusRequester: FocusRequester, onDone: () -> Unit) {
+private fun AnswerField(text: String, onTextChange: (String) -> Unit, language: String, isAnswered: Boolean, focusRequester: FocusRequester, onDone: () -> Unit) {
     SquareTextField(
         value = text,
         onValueChange = onTextChange,
         placeholder = "Type your answer",
+        keyboardLanguage = language,
         textStyle = LanguageType.targetText,
         enabled = !isAnswered,
         imeAction = ImeAction.Done,
@@ -227,8 +242,8 @@ private fun AnswerField(text: String, onTextChange: (String) -> Unit, isAnswered
 }
 
 @Composable
-private fun FillBlankView(exercise: ExerciseRecord.FillBlank, completedSentence: String, onSubmit: (ExerciseResult) -> Unit) {
-    TypedAnswerView(acceptedAnswers = exercise.answers, answerText = completedSentence, onSubmit = onSubmit) {
+private fun FillBlankView(exercise: ExerciseRecord.FillBlank, completedSentence: String, targetLanguage: String, onSubmit: (ExerciseResult) -> Unit) {
+    TypedAnswerView(acceptedAnswers = exercise.answers, answerText = completedSentence, targetLanguage = targetLanguage, onSubmit = onSubmit) {
         Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
             LanguageText(text = exercise.hintSource, style = LanguageType.captionText, color = LanguageColors.inkMuted)
             LanguageText(text = exercise.promptTarget.replace(fillBlankMarker(), BLANK_SHOWN), style = LanguageType.targetText)
@@ -329,7 +344,7 @@ internal fun shuffledAvoidingIdentity(items: List<String>, random: Random = Rand
 }
 
 @Composable
-private fun MatchView(prompt: String, pairs: List<PhrasePairRecord>, onSubmit: (ExerciseResult) -> Unit) {
+private fun MatchView(prompt: String, pairs: List<PhrasePairRecord>, targetLanguage: String, onSubmit: (ExerciseResult) -> Unit) {
     val audioPlayer: AudioPlayer = LocalAudioPlayer.current
     val progressStore: ProgressStore = LocalProgressStore.current
     val scope: CoroutineScope = rememberCoroutineScope()
@@ -376,7 +391,7 @@ private fun MatchView(prompt: String, pairs: List<PhrasePairRecord>, onSubmit: (
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
                 for (pairIndex in leftOrder) {
                     val pair: PhrasePairRecord = pairs[pairIndex]
-                    val clip: AudioClip = AudioClip(clipKey = pair.clipKey, text = pair.target)
+                    val clip: AudioClip = AudioClip(clipKey = pair.clipKey, text = pair.target, language = targetLanguage)
 
                     MatchTargetChoice(
                         clip = clip,

@@ -64,6 +64,7 @@ enum class ExerciseSessionExitKind {
 
 /**
  * Runs exercises one at a time with feedback, then a summary that offers to retry the missed ones.
+ * `targetLanguage` is the BCP 47 tag of the language the exercises teach.
  * `answeredResults` are the results of the first exercises, in order; the session continues after them.
  * `exitKind` applies until the summary, since the retry of missed exercises can only be quit, and `onAnswer` is not called in that retry.
  */
@@ -71,6 +72,7 @@ enum class ExerciseSessionExitKind {
 fun ExerciseSession(
     title: String,
     exercises: List<ExerciseRecord>,
+    targetLanguage: String,
     answeredResults: List<ExerciseResult>,
     exitKind: ExerciseSessionExitKind,
     onAnswer: (ExerciseResult) -> Unit,
@@ -92,7 +94,7 @@ fun ExerciseSession(
                 onAnswer(result)
             }
 
-            currentExercise?.let { exercise: ExerciseRecord -> speakTheAnswer(exercise, audioPlayer, progressStore) }
+            currentExercise?.let { exercise: ExerciseRecord -> speakTheAnswer(exercise, targetLanguage, audioPlayer, progressStore) }
         }
     }
     val exit: () -> Unit = {
@@ -102,7 +104,15 @@ fun ExerciseSession(
 
     Column(modifier = modifier.panel(), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd)) {
         if (currentExercise != null) {
-            QuestionView(title = title, exercise = currentExercise, sessionState = sessionState, exitKind = exitKind, onSubmit = submit, onExit = exit)
+            QuestionView(
+                title = title,
+                exercise = currentExercise,
+                targetLanguage = targetLanguage,
+                sessionState = sessionState,
+                exitKind = exitKind,
+                onSubmit = submit,
+                onExit = exit,
+            )
         } else {
             SummaryView(title = title, exercises = exercises, sessionState = sessionState, onComplete = onComplete, onExit = onExit)
         }
@@ -113,6 +123,7 @@ fun ExerciseSession(
 private fun QuestionView(
     title: String,
     exercise: ExerciseRecord,
+    targetLanguage: String,
     sessionState: ExerciseSessionState,
     exitKind: ExerciseSessionExitKind,
     onSubmit: (ExerciseResult) -> Unit,
@@ -128,11 +139,11 @@ private fun QuestionView(
         MicroLabel(text = exerciseInstruction(exercise))
 
         key(sessionState.isRetry(), sessionState.currentPosition()) {
-            ExerciseBody(exercise = exercise, onSubmit = onSubmit)
+            ExerciseBody(exercise = exercise, targetLanguage = targetLanguage, onSubmit = onSubmit)
         }
 
         if (currentResult != null) {
-            FeedbackView(exercise = exercise, result = currentResult, onContinue = sessionState::advance)
+            FeedbackView(exercise = exercise, targetLanguage = targetLanguage, result = currentResult, onContinue = sessionState::advance)
         }
     }
 }
@@ -154,7 +165,7 @@ internal fun SessionHeader(title: String, position: Int, total: Int, exitKind: E
 }
 
 @Composable
-private fun FeedbackView(exercise: ExerciseRecord, result: ExerciseResult, onContinue: () -> Unit) {
+private fun FeedbackView(exercise: ExerciseRecord, targetLanguage: String, result: ExerciseResult, onContinue: () -> Unit) {
     val explanation: String? = exercise.explanation()
     val spokenText: String? = exerciseSpokenText(exercise)
     val markColor: Color = if (result.isCorrect()) LanguageColors.goodText else LanguageColors.accentActive
@@ -178,7 +189,7 @@ private fun FeedbackView(exercise: ExerciseRecord, result: ExerciseResult, onCon
 
         Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
             if (spokenText != null) {
-                PlayButton(clip = AudioClip(clipKey = exercise.clipKey(), text = spokenText), label = "Hear it")
+                PlayButton(clip = AudioClip(clipKey = exercise.clipKey(), text = spokenText, language = targetLanguage), label = "Hear it")
             }
 
             SquareTextButton(text = "Continue", onClick = onContinue, isPrimary = true, modifier = Modifier.testTag("continue-exercise"))
@@ -237,14 +248,14 @@ private fun SummaryView(
     }
 }
 
-private fun speakTheAnswer(exercise: ExerciseRecord, audioPlayer: AudioPlayer, progressStore: ProgressStore) {
+private fun speakTheAnswer(exercise: ExerciseRecord, targetLanguage: String, audioPlayer: AudioPlayer, progressStore: ProgressStore) {
     val spokenText: String? = exerciseSpokenText(exercise)
 
     if (!exercise.speaksAfterAnswer() || spokenText == null) {
         return
     }
 
-    audioPlayer.play(AudioClip(clipKey = exercise.clipKey(), text = spokenText), progressStore.settings().audioEngine, false, PlaybackControlKind.NormalSpeed)
+    audioPlayer.play(AudioClip(clipKey = exercise.clipKey(), text = spokenText, language = targetLanguage), progressStore.settings().audioEngine, false, PlaybackControlKind.NormalSpeed)
 }
 
 private fun missedEntries(exercises: List<ExerciseRecord>, sessionState: ExerciseSessionState): List<Pair<ExerciseRecord, ExerciseResult>> {

@@ -155,7 +155,14 @@ fun UnitPage(courseId: String, unitId: String, initialTab: UnitTabKind, modifier
     }
 
     when (val unitState: UnitLoadState? = courseStore.unitState(courseId, unitId)) {
-        is UnitLoadState.Loaded -> UnitLoadedPage(courseId = courseId, unit = unitState.unit, lesson = unitState.lesson, initialTab = initialTab, modifier = modifier)
+        is UnitLoadState.Loaded -> UnitLoadedPage(
+            courseId = courseId,
+            targetLanguage = unitState.course.targetLanguage,
+            unit = unitState.unit,
+            lesson = unitState.lesson,
+            initialTab = initialTab,
+            modifier = modifier,
+        )
         is UnitLoadState.Failed -> LanguageText(
             text = "This unit could not be loaded. (${unitState.message})",
             style = LanguageType.bodyText,
@@ -167,7 +174,7 @@ fun UnitPage(courseId: String, unitId: String, initialTab: UnitTabKind, modifier
 }
 
 @Composable
-private fun UnitLoadedPage(courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, initialTab: UnitTabKind, modifier: Modifier) {
+private fun UnitLoadedPage(courseId: String, targetLanguage: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, initialTab: UnitTabKind, modifier: Modifier) {
     var activeTab: UnitTabKind? by rememberSaveable { mutableStateOf(null) }
     var isStatusHelpShown: Boolean by remember { mutableStateOf(false) }
     val tab: UnitTabKind = activeTab ?: initialTab
@@ -227,7 +234,7 @@ private fun UnitLoadedPage(courseId: String, unit: UnitOutlineRecord, lesson: Un
                     floatingTipState = floatingTipState,
                 )
                 UnitTabRow(lesson = lesson, activeTab = tab, onChoose = chooseTab)
-                UnitSection(tab = tab, courseId = courseId, unit = unit, lesson = lesson, railTargets = railTargets)
+                UnitSection(tab = tab, courseId = courseId, targetLanguage = targetLanguage, unit = unit, lesson = lesson, railTargets = railTargets)
                 UnitTabNavigation(lesson = lesson, activeTab = tab, onChoose = chooseTab)
             }
         }
@@ -291,14 +298,14 @@ private fun UnitTabRow(lesson: UnitLessonRecord, activeTab: UnitTabKind, onChoos
 }
 
 @Composable
-private fun UnitSection(tab: UnitTabKind, courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, railTargets: ColumnScrollTargets) {
+private fun UnitSection(tab: UnitTabKind, courseId: String, targetLanguage: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, railTargets: ColumnScrollTargets) {
     when (tab) {
         UnitTabKind.Overview -> OverviewSection(courseId = courseId, unit = unit, lesson = lesson)
-        UnitTabKind.Grammar -> GrammarSection(unit = unit, notes = lesson.grammar, railTargets = railTargets)
-        UnitTabKind.Dialogues -> DialoguesSection(unit = unit, dialogues = lesson.dialogues, railTargets = railTargets)
-        UnitTabKind.Readings -> ReadingsSection(unit = unit, readings = lesson.readings, railTargets = railTargets)
-        UnitTabKind.Vocabulary -> VocabularySection(items = unit.vocabulary)
-        UnitTabKind.Practice -> PracticeSection(courseId = courseId, unit = unit, lesson = lesson)
+        UnitTabKind.Grammar -> GrammarSection(unit = unit, notes = lesson.grammar, targetLanguage = targetLanguage, railTargets = railTargets)
+        UnitTabKind.Dialogues -> DialoguesSection(unit = unit, dialogues = lesson.dialogues, targetLanguage = targetLanguage, railTargets = railTargets)
+        UnitTabKind.Readings -> ReadingsSection(unit = unit, readings = lesson.readings, targetLanguage = targetLanguage, railTargets = railTargets)
+        UnitTabKind.Vocabulary -> VocabularySection(items = unit.vocabulary, targetLanguage = targetLanguage)
+        UnitTabKind.Practice -> PracticeSection(courseId = courseId, targetLanguage = targetLanguage, unit = unit, lesson = lesson)
     }
 }
 

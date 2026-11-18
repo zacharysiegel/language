@@ -55,11 +55,15 @@ private const val SELF_CHECK_HEADING: String = "Compare with the examples"
 private const val SELF_CHECK_NOTICE: String = "Automatic grading is not available on this device. In supported web browsers and native desktop applications, an AI model checks your answer and points out each mistake."
 private const val AI_MODEL_TAG: String = "AI model"
 
-/** Open responses the learner checks against their example answers; it keeps no score and saves each answer as its task's latest. */
+/**
+ * Open responses the learner checks against their example answers; it keeps no score and saves each answer as its task's latest.
+ * `targetLanguage` is the BCP 47 tag of the language the course teaches.
+ */
 @Composable
 fun OpenResponseSession(
     title: String,
     courseId: String,
+    targetLanguage: String,
     unit: UnitOutlineRecord,
     exercises: List<ExerciseRecord.OpenResponse>,
     onExit: () -> Unit,
@@ -89,6 +93,7 @@ fun OpenResponseSession(
                 key(currentPosition) {
                     OpenResponseQuestion(
                         exercise = currentExercise,
+                        targetLanguage = targetLanguage,
                         isAnswered = writtenAnswer != null,
                         onCheck = { answerText: String ->
                             if (writtenAnswers.size == currentPosition) {
@@ -106,7 +111,7 @@ fun OpenResponseSession(
                 }
 
                 if (writtenAnswer != null) {
-                    SelfCheckFeedback(exercise = currentExercise, writtenAnswer = writtenAnswer, onContinue = { currentPosition += 1 })
+                    SelfCheckFeedback(exercise = currentExercise, targetLanguage = targetLanguage, writtenAnswer = writtenAnswer, onContinue = { currentPosition += 1 })
                 }
             }
         } else {
@@ -116,7 +121,7 @@ fun OpenResponseSession(
 }
 
 @Composable
-private fun OpenResponseQuestion(exercise: ExerciseRecord.OpenResponse, isAnswered: Boolean, onCheck: (String) -> Unit) {
+private fun OpenResponseQuestion(exercise: ExerciseRecord.OpenResponse, targetLanguage: String, isAnswered: Boolean, onCheck: (String) -> Unit) {
     var typedText: String by rememberSaveable { mutableStateOf("") }
     val focusRequester: FocusRequester = remember { FocusRequester() }
     val focusManager: FocusManager = LocalFocusManager.current
@@ -146,6 +151,7 @@ private fun OpenResponseQuestion(exercise: ExerciseRecord.OpenResponse, isAnswer
             value = typedText,
             onValueChange = { text -> typedText = text },
             placeholder = "Type your answer",
+            keyboardLanguage = targetLanguage,
             singleLine = false,
             minLines = OPEN_RESPONSE_LINE_COUNT,
             enabled = !isAnswered,
@@ -164,7 +170,7 @@ private fun OpenResponseQuestion(exercise: ExerciseRecord.OpenResponse, isAnswer
 }
 
 @Composable
-private fun SelfCheckFeedback(exercise: ExerciseRecord.OpenResponse, writtenAnswer: String, onContinue: () -> Unit) {
+private fun SelfCheckFeedback(exercise: ExerciseRecord.OpenResponse, targetLanguage: String, writtenAnswer: String, onContinue: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -176,7 +182,7 @@ private fun SelfCheckFeedback(exercise: ExerciseRecord.OpenResponse, writtenAnsw
         MicroLabel(text = "Your answer")
         LanguageText(text = writtenAnswer, style = LanguageType.bodyText, modifier = Modifier.testTag("written-answer"))
         MicroLabel(text = "Example answers")
-        ExampleAnswers(exercise = exercise)
+        ExampleAnswers(exercise = exercise, targetLanguage = targetLanguage)
 
         exercise.explanation?.let { explanation: String ->
             LanguageText(text = explanation, style = LanguageType.captionText, color = LanguageColors.inkMuted)
@@ -255,7 +261,7 @@ private fun mistakeCountHeading(findingCount: Int): String {
 }
 
 @Composable
-private fun ExampleAnswers(exercise: ExerciseRecord.OpenResponse) {
+private fun ExampleAnswers(exercise: ExerciseRecord.OpenResponse, targetLanguage: String) {
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceXs)) {
         exercise.exampleAnswers.forEachIndexed { exampleIndex: Int, exampleAnswer: String ->
             Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
@@ -263,7 +269,7 @@ private fun ExampleAnswers(exercise: ExerciseRecord.OpenResponse) {
 
                 /* The exercise's clip speaks the first example answer. */
                 if (exampleIndex == 0) {
-                    PlayButton(clip = AudioClip(clipKey = exercise.clipKey, text = exampleAnswer), label = "Hear it")
+                    PlayButton(clip = AudioClip(clipKey = exercise.clipKey, text = exampleAnswer, language = targetLanguage), label = "Hear it")
                 }
             }
         }

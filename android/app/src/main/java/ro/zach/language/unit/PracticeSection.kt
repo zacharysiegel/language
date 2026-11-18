@@ -67,7 +67,7 @@ private enum class PracticeSessionKind {
 
 /** A unit's quiz score, its quiz, its quick practice and its open responses. */
 @Composable
-fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, modifier: Modifier = Modifier) {
+fun PracticeSection(courseId: String, targetLanguage: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord, modifier: Modifier = Modifier) {
     val progressStore: ProgressStore = LocalProgressStore.current
     val unitQuizExercises: List<ExerciseRecord> = remember(lesson) { quizExercises(lesson.exercises) }
     val unitOpenResponseExercises: List<ExerciseRecord.OpenResponse> = remember(lesson) {
@@ -92,6 +92,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
         OpenResponseSession(
             title = sessionKind.title(),
             courseId = courseId,
+            targetLanguage = targetLanguage,
             unit = unit,
             exercises = unitOpenResponseExercises,
             onExit = { activeSessionKind = null },
@@ -105,6 +106,7 @@ fun PracticeSection(courseId: String, unit: UnitOutlineRecord, lesson: UnitLesso
         ExerciseSession(
             title = sessionKind.title(),
             exercises = sessionExerciseIndexes.mapNotNull { exerciseIndex -> unitQuizExercises.getOrNull(exerciseIndex) },
+            targetLanguage = targetLanguage,
             answeredResults = answeredResults,
             exitKind = exitKind(mode),
             onAnswer = { result -> recordAnswer(progressStore, courseId, unit.id, mode, result) },

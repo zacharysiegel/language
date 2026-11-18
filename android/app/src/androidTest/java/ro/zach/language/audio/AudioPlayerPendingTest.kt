@@ -20,6 +20,7 @@ import org.junit.runner.RunWith
 import ro.zach.language.core.AudioEngineRecord
 
 private const val SPOKEN_TEXT: String = "Olá"
+private const val SPOKEN_TEXT_LANGUAGE: String = "pt-BR"
 private const val POLL_INTERVAL_MILLISECONDS: Long = 20
 private const val POLL_LIMIT: Int = 500
 
@@ -44,7 +45,7 @@ class AudioPlayerPendingTest {
 
     @Test
     fun play_endsThePendingRequestOnceTheSystemVoiceStartsSpeaking() {
-        onMainThread { audioPlayer.play(AudioClip(clipKey = null, text = SPOKEN_TEXT), AudioEngineRecord.AUTO, false, PlaybackControlKind.NormalSpeed) }
+        onMainThread { audioPlayer.play(AudioClip(clipKey = null, text = SPOKEN_TEXT, language = SPOKEN_TEXT_LANGUAGE), AudioEngineRecord.AUTO, false, PlaybackControlKind.NormalSpeed) }
         assertTrue(onMainThread { audioPlayer.hasPendingRequest() })
 
         waitUntilNoPendingRequest()
@@ -53,7 +54,7 @@ class AudioPlayerPendingTest {
 
     @Test
     fun stop_endsThePendingRequest() {
-        onMainThread { audioPlayer.play(AudioClip(clipKey = null, text = SPOKEN_TEXT), AudioEngineRecord.AUTO, false, PlaybackControlKind.NormalSpeed) }
+        onMainThread { audioPlayer.play(AudioClip(clipKey = null, text = SPOKEN_TEXT, language = SPOKEN_TEXT_LANGUAGE), AudioEngineRecord.AUTO, false, PlaybackControlKind.NormalSpeed) }
         assertTrue(onMainThread { audioPlayer.hasPendingRequest() })
         onMainThread { audioPlayer.stop() }
 

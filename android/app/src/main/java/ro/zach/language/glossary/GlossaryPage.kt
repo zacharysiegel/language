@@ -93,7 +93,7 @@ fun GlossaryPage(outline: CourseOutlineRecord, modifier: Modifier = Modifier) {
 
             items(items = matching, key = { entry: GlossaryEntry -> entry.id }) { entry: GlossaryEntry ->
                 Column(modifier = Modifier.readableWidth().padding(horizontal = LanguageSpacing.spaceMd)) {
-                    GlossaryRow(courseId = outline.id, entry = entry)
+                    GlossaryRow(courseId = outline.id, targetLanguage = outline.targetLanguage, entry = entry)
                     HairlineRule()
                 }
             }
@@ -153,7 +153,7 @@ private fun GlossaryHeader(
 }
 
 @Composable
-private fun GlossaryRow(courseId: String, entry: GlossaryEntry) {
+private fun GlossaryRow(courseId: String, targetLanguage: String, entry: GlossaryEntry) {
     val rootNavigation: RootNavigationState = LocalRootNavigation.current
     val sourceLiteral: String? = entry.item.sourceLiteral
 
@@ -162,7 +162,7 @@ private fun GlossaryRow(courseId: String, entry: GlossaryEntry) {
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.Top,
     ) {
-        PlayButton(clip = AudioClip(clipKey = entry.item.clipKey, text = entry.item.target))
+        PlayButton(clip = AudioClip(clipKey = entry.item.clipKey, text = entry.item.target, language = targetLanguage))
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
             LanguageText(text = entry.item.target, style = LanguageType.targetText)

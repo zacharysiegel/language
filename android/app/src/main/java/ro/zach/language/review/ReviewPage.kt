@@ -47,7 +47,13 @@ fun ReviewPage(outline: CourseOutlineRecord, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceMd),
         ) {
             if (shownSessionItems != null) {
-                ReviewSession(courseId = outline.id, vocabularyIndex = vocabularyIndex, items = shownSessionItems, onExit = { sessionItems = null })
+                ReviewSession(
+                    courseId = outline.id,
+                    targetLanguage = outline.targetLanguage,
+                    vocabularyIndex = vocabularyIndex,
+                    items = shownSessionItems,
+                    onExit = { sessionItems = null },
+                )
             } else {
                 ReviewSetup(
                     outline = outline,

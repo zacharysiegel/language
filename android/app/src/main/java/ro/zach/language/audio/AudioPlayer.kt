@@ -23,6 +23,8 @@ val LocalAudioPlayer: ProvidableCompositionLocal<AudioPlayer> = staticCompositio
 data class AudioClip(
     val clipKey: String?,
     val text: String,
+    /** The BCP 47 tag of the language `text` is in. */
+    val language: String,
     val voiceChoice: VoiceChoiceRecord = VoiceChoiceRecord.OwnText,
 )
 
@@ -181,7 +183,7 @@ class AudioPlayer(private val library: CourseLibrary?, private val output: Audio
         }
 
         if (recordingPath == null) {
-            return output.speak(clip.text, rate, onSoundStarted)
+            return output.speak(clip.text, clip.language, rate, onSoundStarted)
         }
 
         val recordingOutcome: PlaybackOutcome = output.playRecording(recordingPath, rate, onSoundStarted)
@@ -190,7 +192,7 @@ class AudioPlayer(private val library: CourseLibrary?, private val output: Audio
             return recordingOutcome
         }
 
-        return output.speak(clip.text, rate, onSoundStarted)
+        return output.speak(clip.text, clip.language, rate, onSoundStarted)
     }
 
     /* Off the main thread: the lookup can read and verify a downloaded recording. */

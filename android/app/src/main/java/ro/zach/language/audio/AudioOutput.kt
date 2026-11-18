@@ -27,6 +27,7 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.android.asCoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
+import ro.zach.language.core.composeWithoutStressMarks
 import ro.zach.language.diagnostics.LogTag
 import java.io.File
 import java.util.Locale
@@ -78,10 +79,6 @@ private sealed interface CurrentPlayback {
  * player's application looper, so none of their work reaches the main thread.
  */
 class AudioOutput(context: Context) {
-    companion object {
-        val systemVoiceLocale: Locale = Locale.forLanguageTag("pt-BR")
-    }
-
     private val applicationContext: Context = context.applicationContext
     private val audioThread: HandlerThread = HandlerThread(AUDIO_THREAD_NAME)
     private val audioHandler: Handler
@@ -107,6 +104,8 @@ class AudioOutput(context: Context) {
     private var player: ExoPlayer? = null
     private var systemVoiceCreation: Deferred<TextToSpeech?>? = null
     private var readySystemVoice: TextToSpeech? = null
+    /** The BCP 47 tag `readySystemVoice` was last set to speak. */
+    private var systemVoiceLanguage: String? = null
     private var currentPlayback: CurrentPlayback = CurrentPlayback.Nothing
     private var utteranceCount: Long = 0
 
@@ -155,8 +154,11 @@ class AudioOutput(context: Context) {
         }
     }
 
-    /** Returns once the utterance has ended, failed, been stopped or been interrupted; `onSoundStarted` runs when the voice starts speaking it. */
-    suspend fun speak(text: String, rate: Float, onSoundStarted: () -> Unit): PlaybackOutcome {
+    /**
+     * Returns once the utterance has ended, failed, been stopped or been interrupted; `onSoundStarted` runs when the voice starts speaking it.
+     * `language` is the BCP 47 tag of the language `text` is in.
+     */
+    suspend fun speak(text: String, language: String, rate: Float, onSoundStarted: () -> Unit): PlaybackOutcome {
         return withContext(audioDispatcher) {
             prepareIfUnprepared()
             stopCurrentPlayback(PlaybackOutcome.Stopped)
@@ -182,7 +184,8 @@ class AudioOutput(context: Context) {
 
             speechUtterances[speech.utteranceId] = speech
             currentPlayback = speech
-            startSpeaking(systemVoice, text, rate, speech)
+            setSystemVoiceLanguage(systemVoice, language)
+            startSpeaking(systemVoice, composeWithoutStressMarks(text), rate, speech)
             awaitOutcome(speech, speech.completion)
         }
     }
@@ -311,15 +314,10 @@ class AudioOutput(context: Context) {
             return
         }
 
-        val languageAvailability: Int = systemVoice.setLanguage(systemVoiceLocale)
-
-        if (languageAvailability < TextToSpeech.LANG_AVAILABLE) {
-            Log.w(LogTag.AUDIO, "no system voice speaks the language, so the default voice speaks; [language=${systemVoiceLocale.toLanguageTag()} availability=$languageAvailability]")
-        }
-
         systemVoice.setAudioAttributes(platformAudioAttributes)
         systemVoice.setOnUtteranceProgressListener(SpeechProgressListener())
         readySystemVoice = systemVoice
+        systemVoiceLanguage = null
         creation.complete(systemVoice)
     }
 
@@ -329,6 +327,20 @@ class AudioOutput(context: Context) {
         readySystemVoice?.shutdown()
         readySystemVoice = null
         systemVoiceCreation = null
+    }
+
+    private fun setSystemVoiceLanguage(systemVoice: TextToSpeech, language: String) {
+        if (systemVoiceLanguage == language) {
+            return
+        }
+
+        val languageAvailability: Int = systemVoice.setLanguage(Locale.forLanguageTag(language))
+
+        if (languageAvailability < TextToSpeech.LANG_AVAILABLE) {
+            Log.w(LogTag.AUDIO, "no system voice speaks the language, so the default voice speaks; [language=$language availability=$languageAvailability]")
+        }
+
+        systemVoiceLanguage = language
     }
 
     private fun preparePlayer(recordingPlayer: ExoPlayer, path: String, rate: Float) {

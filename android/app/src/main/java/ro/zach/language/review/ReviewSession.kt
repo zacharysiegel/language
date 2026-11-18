@@ -42,7 +42,7 @@ enum class ReviewGradeKind {
 }
 
 @Composable
-fun ReviewSession(courseId: String, vocabularyIndex: VocabularyIndex, items: List<ReviewItem>, onExit: () -> Unit) {
+fun ReviewSession(courseId: String, targetLanguage: String, vocabularyIndex: VocabularyIndex, items: List<ReviewItem>, onExit: () -> Unit) {
     val progressStore: ProgressStore = LocalProgressStore.current
     val audioPlayer: AudioPlayer = LocalAudioPlayer.current
     var currentIndex: Int by rememberSaveable { mutableIntStateOf(0) }
@@ -75,6 +75,7 @@ fun ReviewSession(courseId: String, vocabularyIndex: VocabularyIndex, items: Lis
         if (entry != null) {
             ReviewCardView(
                 entry = entry,
+                targetLanguage = targetLanguage,
                 promptSide = item.promptSide,
                 position = currentIndex,
                 total = items.size,
@@ -109,6 +110,7 @@ private fun MissingCard(onSkip: () -> Unit) {
 @Composable
 private fun ReviewCardView(
     entry: VocabularyIndexEntry,
+    targetLanguage: String,
     promptSide: ReviewCardSide,
     position: Int,
     total: Int,
@@ -124,7 +126,7 @@ private fun ReviewCardView(
     /* The target plays whenever it shows: with the prompt, or with the answer when the prompt is the source. */
     LaunchedEffect(isRevealed) {
         if (promptSide == ReviewCardSide.Target || isRevealed) {
-            audioPlayer.play(AudioClip(clipKey = item.clipKey, text = item.target), progressStore.settings().audioEngine, false, PlaybackControlKind.NormalSpeed)
+            audioPlayer.play(AudioClip(clipKey = item.clipKey, text = item.target, language = targetLanguage), progressStore.settings().audioEngine, false, PlaybackControlKind.NormalSpeed)
         }
     }
 
@@ -145,7 +147,7 @@ private fun ReviewCardView(
             )
 
             if (isRevealed) {
-                ReviewAnswer(item = item, promptSide = promptSide, onGrade = onGrade)
+                ReviewAnswer(item = item, targetLanguage = targetLanguage, promptSide = promptSide, onGrade = onGrade)
             } else {
                 SquareTextButton(text = "Show answer", onClick = onReveal, isPrimary = true, modifier = Modifier.testTag("show-answer"))
             }
@@ -154,13 +156,13 @@ private fun ReviewCardView(
 }
 
 @Composable
-private fun ReviewAnswer(item: VocabularyItemRecord, promptSide: ReviewCardSide, onGrade: (ReviewGradeKind) -> Unit) {
+private fun ReviewAnswer(item: VocabularyItemRecord, targetLanguage: String, promptSide: ReviewCardSide, onGrade: (ReviewGradeKind) -> Unit) {
     val literal: String? = item.sourceLiteral
     val note: String? = item.note
 
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         Row(horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm), verticalAlignment = Alignment.CenterVertically) {
-            PlayButton(clip = AudioClip(clipKey = item.clipKey, text = item.target))
+            PlayButton(clip = AudioClip(clipKey = item.clipKey, text = item.target, language = targetLanguage))
             LanguageText(text = if (promptSide == ReviewCardSide.Target) item.source else item.target, style = LanguageType.titleText)
         }
 
@@ -168,7 +170,7 @@ private fun ReviewAnswer(item: VocabularyItemRecord, promptSide: ReviewCardSide,
             LiteralGloss(literal = literal)
         }
 
-        VocabularyExample(example = item.example)
+        VocabularyExample(example = item.example, targetLanguage = targetLanguage)
 
         if (note != null) {
             LanguageText(text = note, style = LanguageType.captionText, color = LanguageColors.inkMuted)

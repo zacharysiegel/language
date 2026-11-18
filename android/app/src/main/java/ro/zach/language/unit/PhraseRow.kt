@@ -41,6 +41,7 @@ fun TranslationToggle(modifier: Modifier = Modifier) {
 @Composable
 fun PhraseRow(
     pair: PhrasePairRecord,
+    targetLanguage: String,
     modifier: Modifier = Modifier,
     speaker: String? = null,
     voiceChoice: VoiceChoiceRecord = VoiceChoiceRecord.OwnText,
@@ -53,7 +54,7 @@ fun PhraseRow(
         horizontalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm),
         verticalAlignment = Alignment.Top,
     ) {
-        PlayButton(clip = AudioClip(clipKey = pair.clipKey, text = pair.target, voiceChoice = voiceChoice))
+        PlayButton(clip = AudioClip(clipKey = pair.clipKey, text = pair.target, language = targetLanguage, voiceChoice = voiceChoice))
 
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(LanguageSpacing.phraseLineGap)) {
             if (speaker != null) {

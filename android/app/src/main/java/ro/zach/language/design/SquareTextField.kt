@@ -13,14 +13,19 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.intl.LocaleList
 
-/** A hairline-bordered text field, with `placeholder` shown in muted ink while it is empty. */
+/**
+ * A hairline-bordered text field, with `placeholder` shown in muted ink while it is empty.
+ * `keyboardLanguage` is the BCP 47 tag of the language the keyboard is asked to offer; `null` leaves the choice to the keyboard.
+ */
 @Composable
 fun SquareTextField(
     value: String,
     onValueChange: (String) -> Unit,
     placeholder: String,
     modifier: Modifier = Modifier,
+    keyboardLanguage: String? = null,
     textStyle: TextStyle = LanguageType.bodyText,
     singleLine: Boolean = true,
     minLines: Int = 1,
@@ -40,6 +45,7 @@ fun SquareTextField(
             capitalization = KeyboardCapitalization.None,
             autoCorrectEnabled = false,
             imeAction = imeAction,
+            hintLocales = keyboardLanguage?.let { language: String -> LocaleList(language) },
         ),
         keyboardActions = keyboardActions,
         cursorBrush = SolidColor(LanguageColors.ink),
