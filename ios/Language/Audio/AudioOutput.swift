@@ -36,10 +36,9 @@ enum AudioOutputActivityKind {
     case playing
 }
 
-/// The system voice for `AudioOutput.systemVoiceLanguage`, once looked up; `nil` when it is not installed.
-private enum SystemVoiceLookupState {
-    case notLookedUp
-    case lookedUp(AVSpeechSynthesisVoice?)
+/// The system voice of one language, once looked up; `nil` when none is installed.
+private struct SystemVoiceLookup {
+    let voice: AVSpeechSynthesisVoice?
 }
 
 /// The sound the output started last and has not yet ended.
@@ -62,19 +61,18 @@ private enum CurrentPlayback {
 
 /// Owns the audio session and the system players, so their blocking calls run off the main thread.
 actor AudioOutput {
-    static let systemVoiceLanguage: String = "pt-BR"
     static let silentPlaybackArgumentKey: String = "LanguageSilentPlayback"
 
     private var preparation: AudioOutputPreparationKind = .unprepared
     private var sessionActivation: AudioSessionActivationKind = .inactive
-    private var systemVoiceLookup: SystemVoiceLookupState = .notLookedUp
+    /// By BCP 47 language tag.
+    private var systemVoiceLookups: [String: SystemVoiceLookup] = [:]
     private var speechSynthesizer: AVSpeechSynthesizer?
     private var currentPlayback: CurrentPlayback = .nothing
 
-    /// Sets the session category and loads the system voice.
+    /// Sets the session category and creates the speech synthesizer.
     func prepareWithoutActivating() {
         prepareIfUnprepared()
-        _ = systemVoice()
         _ = speechSynthesizerCreatingIfAbsent()
     }
 
@@ -120,11 +118,12 @@ actor AudioOutput {
     }
 
     /// Returns once the utterance has ended, been stopped or been interrupted; `onSoundStarted` runs when the voice starts speaking it.
-    func speak(_ text: String, rate: Float, onSoundStarted: @escaping @Sendable () -> Void) async -> PlaybackOutcome {
+    /// `language` is the BCP 47 tag of the language `text` is in.
+    func speak(_ text: String, language: String, rate: Float, onSoundStarted: @escaping @Sendable () -> Void) async -> PlaybackOutcome {
         prepareIfUnprepared()
         stopCurrentPlayback(endingWith: .stopped)
 
-        let voice: AVSpeechSynthesisVoice? = systemVoice()
+        let voice: AVSpeechSynthesisVoice? = systemVoice(language: language)
         let synthesizer: AVSpeechSynthesizer = speechSynthesizerCreatingIfAbsent()
 
         guard !Task.isCancelled else {
@@ -137,7 +136,7 @@ actor AudioOutput {
             return .stopped
         }
 
-        let utterance: AVSpeechUtterance = AVSpeechUtterance(string: text)
+        let utterance: AVSpeechUtterance = AVSpeechUtterance(string: composeWithoutStressMarks(text: text))
 
         utterance.voice = voice
         utterance.rate = AVSpeechUtteranceDefaultSpeechRate * rate
@@ -181,19 +180,18 @@ actor AudioOutput {
         observeSessionNotifications()
     }
 
-    private func systemVoice() -> AVSpeechSynthesisVoice? {
-        switch systemVoiceLookup {
-        case .lookedUp(let voice):
-            return voice
-        case .notLookedUp:
-            let voiceLookup: PlaybackStepInterval = PlaybackTiming.begin(.systemVoiceLookup)
-            let voice: AVSpeechSynthesisVoice? = AVSpeechSynthesisVoice(language: Self.systemVoiceLanguage)
-
-            PlaybackTiming.end(voiceLookup)
-            systemVoiceLookup = .lookedUp(voice)
-
-            return voice
+    private func systemVoice(language: String) -> AVSpeechSynthesisVoice? {
+        if let lookup = systemVoiceLookups[language] {
+            return lookup.voice
         }
+
+        let voiceLookup: PlaybackStepInterval = PlaybackTiming.begin(.systemVoiceLookup)
+        let voice: AVSpeechSynthesisVoice? = AVSpeechSynthesisVoice(language: language)
+
+        PlaybackTiming.end(voiceLookup)
+        systemVoiceLookups[language] = SystemVoiceLookup(voice: voice)
+
+        return voice
     }
 
     private func speechSynthesizerCreatingIfAbsent() -> AVSpeechSynthesizer {

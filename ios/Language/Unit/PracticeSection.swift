@@ -34,6 +34,8 @@ struct PracticeSection: View {
     static let changedPracticeNote: String = "The practice changed since you paused, so it starts over."
 
     let courseId: String
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
     let unit: UnitOutlineRecord
     let lesson: UnitLessonRecord
 
@@ -70,6 +72,7 @@ struct PracticeSection: View {
             ExerciseSession(
                 title: sessionKind.title(),
                 exercises: sessionExercises,
+                targetLanguage: targetLanguage,
                 answeredResults: answeredResults,
                 exitKind: exitKind(mode: mode),
                 onAnswer: { result in recordAnswer(mode: mode, result: result) },
@@ -80,6 +83,7 @@ struct PracticeSection: View {
             OpenResponseSession(
                 title: sessionKind.title(),
                 courseId: courseId,
+                targetLanguage: targetLanguage,
                 unit: unit,
                 exercises: unitOpenResponseExercises(),
                 onExit: { activeSession = nil },

@@ -14,7 +14,7 @@ final class AudioPlayerPendingTests: XCTestCase {
 
         let audioPlayer: AudioPlayer = AudioPlayer(library: nil)
 
-        audioPlayer.play(AudioClip(clipKey: nil, text: "Olá"), engine: .auto, slow: false, control: .normalSpeed)
+        audioPlayer.play(AudioClip(clipKey: nil, text: "Olá", language: "pt-BR"), engine: .auto, slow: false, control: .normalSpeed)
         XCTAssertTrue(audioPlayer.hasPendingRequest())
 
         try await waitUntilNoPendingRequest(audioPlayer)
@@ -24,7 +24,7 @@ final class AudioPlayerPendingTests: XCTestCase {
     func testStop_endsThePendingRequest() {
         let audioPlayer: AudioPlayer = AudioPlayer(library: nil)
 
-        audioPlayer.play(AudioClip(clipKey: nil, text: "Olá"), engine: .auto, slow: false, control: .normalSpeed)
+        audioPlayer.play(AudioClip(clipKey: nil, text: "Olá", language: "pt-BR"), engine: .auto, slow: false, control: .normalSpeed)
         XCTAssertTrue(audioPlayer.hasPendingRequest())
         audioPlayer.stop()
 

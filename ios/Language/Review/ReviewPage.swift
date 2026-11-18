@@ -35,7 +35,13 @@ struct ReviewPage: View {
         ScrollView {
             VStack(alignment: .leading, spacing: .spaceMd) {
                 if let sessionItems {
-                    ReviewSession(courseId: outline.id, index: VocabularyIndex(outline: outline), items: sessionItems, onExit: { self.sessionItems = nil })
+                    ReviewSession(
+                        courseId: outline.id,
+                        targetLanguage: outline.targetLanguage,
+                        index: VocabularyIndex(outline: outline),
+                        items: sessionItems,
+                        onExit: { self.sessionItems = nil },
+                    )
                 } else {
                     setupView()
                 }
@@ -120,6 +126,8 @@ struct ReviewPage: View {
 
 struct ReviewSession: View {
     let courseId: String
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
     let index: VocabularyIndex
     let items: [ReviewItem]
     let onExit: () -> Void
@@ -150,6 +158,7 @@ struct ReviewSession: View {
             ReviewCardView(
                 unit: entry.0,
                 item: entry.1,
+                targetLanguage: targetLanguage,
                 promptIsTarget: item.promptIsTarget,
                 position: currentIndex,
                 total: items.count,
@@ -183,6 +192,8 @@ struct ReviewSession: View {
 struct ReviewCardView: View {
     let unit: UnitOutlineRecord
     let item: VocabularyItemRecord
+    /// The BCP 47 tag of the language of `item`'s target.
+    let targetLanguage: String
     let promptIsTarget: Bool
     let position: Int
     let total: Int
@@ -226,7 +237,7 @@ struct ReviewCardView: View {
     private func answerView() -> some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             HStack(spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target))
+                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target, language: targetLanguage))
                 Text(promptIsTarget ? item.source : item.target).font(.titleText)
             }
 
@@ -235,7 +246,7 @@ struct ReviewCardView: View {
             }
 
             HStack(alignment: .top, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target))
+                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target, language: targetLanguage))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.example.target).font(.bodyText)
@@ -265,6 +276,6 @@ struct ReviewCardView: View {
             return
         }
 
-        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
+        audioPlayer.play(AudioClip(clipKey: item.clipKey, text: item.target, language: targetLanguage), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
     }
 }

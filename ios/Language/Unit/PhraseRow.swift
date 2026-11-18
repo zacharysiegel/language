@@ -19,6 +19,8 @@ struct TranslationToggle: View {
 /// A spoken target-language phrase with its translation and, when it differs, its literal gloss.
 struct PhraseRow: View {
     let pair: PhrasePairRecord
+    /// The BCP 47 tag of the language of `pair`'s target.
+    let targetLanguage: String
     var speaker: String? = nil
     var voiceChoice: VoiceChoiceRecord = .ownText
 
@@ -26,7 +28,7 @@ struct PhraseRow: View {
 
     var body: some View {
         HStack(alignment: .top, spacing: .spaceSm) {
-            PlayButton(clip: AudioClip(clipKey: pair.clipKey, text: pair.target, voiceChoice: voiceChoice))
+            PlayButton(clip: AudioClip(clipKey: pair.clipKey, text: pair.target, language: targetLanguage, voiceChoice: voiceChoice))
 
             VStack(alignment: .leading, spacing: 2) {
                 if let speaker {

@@ -3,6 +3,8 @@ import SwiftUI
 /// The interactive part of one exercise; it reports the learner's answer once through `onSubmit`.
 struct ExerciseBody: View {
     let exercise: ExerciseRecord
+    /// The BCP 47 tag of the language the exercise teaches.
+    let targetLanguage: String
     let onSubmit: (ExerciseResult) -> Void
 
     var body: some View {
@@ -14,7 +16,7 @@ struct ExerciseBody: View {
             }
         case .listeningChoice(let audioTarget, let choices, let answerIndex, _, let clipKey):
             VStack(alignment: .leading, spacing: .spaceMd) {
-                ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget))
+                ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget, language: targetLanguage))
                 ChoiceList(choices: choices, answerIndex: Int(answerIndex), answerText: "\(audioTarget) = \(choices[Int(answerIndex)])", onSubmit: onSubmit)
             }
         case .fillBlank(let promptTarget, let answers, let hintSource, _, _):
@@ -28,7 +30,7 @@ struct ExerciseBody: View {
             )
         case .dictation(let audioTarget, let hintSource, _, let clipKey):
             TypedAnswerView(
-                prompt: { ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget)) },
+                prompt: { ListeningControls(clip: AudioClip(clipKey: clipKey, text: audioTarget, language: targetLanguage)) },
                 acceptedAnswers: [audioTarget],
                 answerText: "\(audioTarget) = \(hintSource)",
                 onSubmit: onSubmit,
@@ -36,7 +38,7 @@ struct ExerciseBody: View {
         case .orderWords(let promptSource, let words, let distractors, _, _):
             OrderWordsView(promptSource: promptSource, words: words, distractors: distractors, onSubmit: onSubmit)
         case .match(let prompt, let pairs, _):
-            MatchView(prompt: prompt ?? "Match each phrase with its translation", pairs: pairs, onSubmit: onSubmit)
+            MatchView(prompt: prompt ?? "Match each phrase with its translation", pairs: pairs, targetLanguage: targetLanguage, onSubmit: onSubmit)
         case .openResponse(let promptSource, _, _, _, _):
             Text(promptSource).font(.bodyText).fixedSize(horizontal: false, vertical: true)
         }
@@ -283,6 +285,8 @@ struct MatchView: View {
 
     let prompt: String
     let pairs: [PhrasePairRecord]
+    /// The BCP 47 tag of the language of the pairs' targets.
+    let targetLanguage: String
     let onSubmit: (ExerciseResult) -> Void
 
     @Environment(AudioPlayer.self) private var audioPlayer
@@ -296,9 +300,10 @@ struct MatchView: View {
     @State private var flashingWrong: [Int] = []
     @State private var mistakeCount: Int = 0
 
-    init(prompt: String, pairs: [PhrasePairRecord], onSubmit: @escaping (ExerciseResult) -> Void) {
+    init(prompt: String, pairs: [PhrasePairRecord], targetLanguage: String, onSubmit: @escaping (ExerciseResult) -> Void) {
         self.prompt = prompt
         self.pairs = pairs
+        self.targetLanguage = targetLanguage
         self.onSubmit = onSubmit
         _leftOrder = State(initialValue: Array(pairs.indices).shuffled())
         _rightOrder = State(initialValue: Array(pairs.indices).shuffled())
@@ -311,7 +316,7 @@ struct MatchView: View {
             HStack(alignment: .top, spacing: .spaceSm) {
                 VStack(spacing: .spaceSm) {
                     ForEach(leftOrder, id: \.self) { pairIndex in
-                        let isPending: Bool = audioPlayer.isIndicatedPending(clip: Self.targetClip(pairs[pairIndex]), control: .normalSpeed)
+                        let isPending: Bool = audioPlayer.isIndicatedPending(clip: targetClip(pairs[pairIndex]), control: .normalSpeed)
 
                         Button {
                             selectedLeft = pairIndex
@@ -372,14 +377,14 @@ struct MatchView: View {
         return selectedRight == pairIndex ? .selected : .unmarked
     }
 
-    private static func targetClip(_ pair: PhrasePairRecord) -> AudioClip {
-        AudioClip(clipKey: pair.clipKey, text: pair.target)
+    private func targetClip(_ pair: PhrasePairRecord) -> AudioClip {
+        AudioClip(clipKey: pair.clipKey, text: pair.target, language: targetLanguage)
     }
 
     private func playTarget(_ pairIndex: Int) {
         let pair: PhrasePairRecord = pairs[pairIndex]
 
-        audioPlayer.play(Self.targetClip(pair), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
+        audioPlayer.play(targetClip(pair), engine: progressStore.settings().audioEngine, slow: false, control: .normalSpeed)
     }
 
     private func resolveSelection() {

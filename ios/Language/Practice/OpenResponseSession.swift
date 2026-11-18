@@ -4,6 +4,8 @@ import SwiftUI
 struct OpenResponseSession: View {
     let title: String
     let courseId: String
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
     let unit: UnitOutlineRecord
     let exercises: [ExerciseRecord]
     let onExit: () -> Void
@@ -50,6 +52,7 @@ struct OpenResponseSession: View {
                         exampleAnswers: exampleAnswers,
                         explanation: explanation,
                         clipKey: clipKey,
+                        targetLanguage: targetLanguage,
                         onContinue: advance,
                     )
                 }
@@ -169,6 +172,8 @@ struct OpenResponseSelfCheck: View {
     let exampleAnswers: [String]
     let explanation: String?
     let clipKey: String?
+    /// The BCP 47 tag of the language the example answers are in.
+    let targetLanguage: String
     let onContinue: () -> Void
 
     var body: some View {
@@ -205,7 +210,7 @@ struct OpenResponseSelfCheck: View {
 
                     // The exercise's clip speaks the first example answer.
                     if exampleIndex == 0 {
-                        PlayButton(clip: AudioClip(clipKey: clipKey, text: exampleAnswer), label: "Hear it")
+                        PlayButton(clip: AudioClip(clipKey: clipKey, text: exampleAnswer, language: targetLanguage), label: "Hear it")
                     }
                 }
             }

@@ -84,7 +84,7 @@ struct GlossaryPage: View {
     private func runRows(_ run: GlossaryRun) -> some View {
         LazyVStack(alignment: .leading, spacing: 0) {
             ForEach(run.entries) { entry in
-                GlossaryRow(courseId: outline.id, entry: entry)
+                GlossaryRow(courseId: outline.id, targetLanguage: outline.targetLanguage, entry: entry)
                 HairlineRule()
             }
         }
@@ -128,11 +128,13 @@ struct GlossaryPage: View {
 
 struct GlossaryRow: View {
     let courseId: String
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
     let entry: GlossaryEntry
 
     var body: some View {
         HStack(alignment: .top, spacing: .spaceSm) {
-            PlayButton(clip: AudioClip(clipKey: entry.item.clipKey, text: entry.item.target))
+            PlayButton(clip: AudioClip(clipKey: entry.item.clipKey, text: entry.item.target, language: targetLanguage))
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(entry.item.target).font(.targetText)

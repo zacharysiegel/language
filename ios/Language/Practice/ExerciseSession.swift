@@ -92,6 +92,8 @@ extension ExerciseRecord {
 struct ExerciseSession: View {
     let title: String
     let exercises: [ExerciseRecord]
+    /// The BCP 47 tag of the language the exercises teach.
+    let targetLanguage: String
     /// Applies until the summary; the retry of missed exercises can only be quit.
     let exitKind: ExerciseSessionExitKind
     /// Not called in the retry of missed exercises.
@@ -113,6 +115,7 @@ struct ExerciseSession: View {
     init(
         title: String,
         exercises: [ExerciseRecord],
+        targetLanguage: String,
         answeredResults: [ExerciseResult],
         exitKind: ExerciseSessionExitKind,
         onAnswer: @escaping (ExerciseResult) -> Void,
@@ -121,6 +124,7 @@ struct ExerciseSession: View {
     ) {
         self.title = title
         self.exercises = exercises
+        self.targetLanguage = targetLanguage
         self.exitKind = exitKind
         self.onAnswer = onAnswer
         self.onComplete = onComplete
@@ -153,7 +157,7 @@ struct ExerciseSession: View {
                 onExit: onExit,
             )
 
-            ExerciseBody(exercise: exercise, onSubmit: submit)
+            ExerciseBody(exercise: exercise, targetLanguage: targetLanguage, onSubmit: submit)
                 .id("\(isRetry)-\(currentIndex)")
 
             if let currentResult {
@@ -181,7 +185,7 @@ struct ExerciseSession: View {
 
             HStack(spacing: .spaceSm) {
                 if let spokenText {
-                    PlayButton(clip: AudioClip(clipKey: exercise.clipKey(), text: spokenText), label: "Hear it")
+                    PlayButton(clip: AudioClip(clipKey: exercise.clipKey(), text: spokenText, language: targetLanguage), label: "Hear it")
                 }
 
                 Button("Continue") { advance() }
@@ -256,7 +260,7 @@ struct ExerciseSession: View {
 
         if exercise.speaksAfterAnswer(), let spokenText = exerciseSpokenText(exercise: exercise) {
             audioPlayer.play(
-                AudioClip(clipKey: exercise.clipKey(), text: spokenText),
+                AudioClip(clipKey: exercise.clipKey(), text: spokenText, language: targetLanguage),
                 engine: progressStore.settings().audioEngine,
                 slow: false,
                 control: .normalSpeed,

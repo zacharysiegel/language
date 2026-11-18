@@ -5,6 +5,8 @@ import Observation
 struct AudioClip: Equatable {
     let clipKey: String?
     let text: String
+    /// The BCP 47 tag of the language `text` is in.
+    let language: String
     var voiceChoice: VoiceChoiceRecord = .ownText
 }
 
@@ -171,7 +173,7 @@ final class AudioPlayer {
         }
 
         guard let recordingPath else {
-            return await output.speak(clip.text, rate: rate, onSoundStarted: onSoundStarted)
+            return await output.speak(clip.text, language: clip.language, rate: rate, onSoundStarted: onSoundStarted)
         }
 
         let recordingOutcome: PlaybackOutcome = await output.playRecording(path: recordingPath, rate: rate, onSoundStarted: onSoundStarted)
@@ -180,7 +182,7 @@ final class AudioPlayer {
             return recordingOutcome
         }
 
-        return await output.speak(clip.text, rate: rate, onSoundStarted: onSoundStarted)
+        return await output.speak(clip.text, language: clip.language, rate: rate, onSoundStarted: onSoundStarted)
     }
 
     private nonisolated func findRecording(_ clip: AudioClip, engine: AudioEngineRecord) async -> String? {

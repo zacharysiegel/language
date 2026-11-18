@@ -28,7 +28,8 @@ enum OutlineLoadState {
 
 enum UnitLoadState {
     case loading
-    case loaded(UnitOutlineRecord, UnitLessonRecord)
+    /// The outline is the course's when the unit loaded.
+    case loaded(CourseOutlineRecord, UnitOutlineRecord, UnitLessonRecord)
     case failed(String)
 }
 
@@ -235,7 +236,7 @@ final class CourseStore {
             return
         }
 
-        guard let unitOutline = outline(courseId: courseId)?.units.first(where: { unit in unit.id == unitId }) else {
+        guard let courseOutline = outline(courseId: courseId), let unitOutline = courseOutline.units.first(where: { unit in unit.id == unitId }) else {
             return
         }
 
@@ -245,7 +246,7 @@ final class CourseStore {
             let loaded: UnitLoadState
 
             do {
-                loaded = .loaded(unitOutline, try await publication.loadUnit(unitId: unitId))
+                loaded = .loaded(courseOutline, unitOutline, try await publication.loadUnit(unitId: unitId))
             } catch {
                 loaded = .failed(await reportShardFailure(error, of: publication, while: "loading unit \(unitId) of \(courseId)"))
             }

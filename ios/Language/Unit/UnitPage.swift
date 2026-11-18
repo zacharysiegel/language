@@ -117,8 +117,8 @@ struct UnitPage: View {
     @ViewBuilder
     private func content() -> some View {
         switch courseStore.unitState(courseId: courseId, unitId: unitId) {
-        case .loaded(let unit, let lesson):
-            loadedView(unit: unit, lesson: lesson)
+        case .loaded(let course, let unit, let lesson):
+            loadedView(course: course, unit: unit, lesson: lesson)
         case .failed(let message):
             Text("This unit could not be loaded. (\(message))")
                 .font(.bodyText)
@@ -130,7 +130,7 @@ struct UnitPage: View {
         }
     }
 
-    private func loadedView(unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
+    private func loadedView(course: CourseOutlineRecord, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
         let tab: UnitTabKind = activeTab ?? initialTab
         let prefetchRequest: RecordingPrefetchRequest = RecordingPrefetchRequest(
             tab: tab,
@@ -146,7 +146,7 @@ struct UnitPage: View {
                     PageHeader(caption: "\(unit.levelCode) · \(unit.order)", title: unit.title)
                     UnitStatusPanel(courseId: courseId, unitId: unit.id, isHelpShown: $isStatusHelpShown)
                     tabRow(lesson: lesson, active: tab)
-                    section(tab: tab, unit: unit, lesson: lesson)
+                    section(tab: tab, targetLanguage: course.targetLanguage, unit: unit, lesson: lesson)
                     tabNavigation(lesson: lesson, active: tab)
                 }
                 .padding(.spaceMd)
@@ -226,20 +226,20 @@ struct UnitPage: View {
     }
 
     @ViewBuilder
-    private func section(tab: UnitTabKind, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
+    private func section(tab: UnitTabKind, targetLanguage: String, unit: UnitOutlineRecord, lesson: UnitLessonRecord) -> some View {
         switch tab {
         case .overview:
             OverviewSection(courseId: courseId, unit: unit, lesson: lesson)
         case .grammar:
-            GrammarSection(unit: unit, notes: lesson.grammar)
+            GrammarSection(unit: unit, notes: lesson.grammar, targetLanguage: targetLanguage)
         case .dialogues:
-            DialoguesSection(unit: unit, dialogues: lesson.dialogues)
+            DialoguesSection(unit: unit, dialogues: lesson.dialogues, targetLanguage: targetLanguage)
         case .readings:
-            ReadingsSection(unit: unit, readings: lesson.readings)
+            ReadingsSection(unit: unit, readings: lesson.readings, targetLanguage: targetLanguage)
         case .vocabulary:
-            VocabularySection(items: unit.vocabulary)
+            VocabularySection(items: unit.vocabulary, targetLanguage: targetLanguage)
         case .practice:
-            PracticeSection(courseId: courseId, unit: unit, lesson: lesson)
+            PracticeSection(courseId: courseId, targetLanguage: targetLanguage, unit: unit, lesson: lesson)
         }
     }
 

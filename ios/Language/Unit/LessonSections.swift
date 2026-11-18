@@ -45,13 +45,15 @@ struct OverviewSection: View {
 
 struct VocabularySection: View {
     let items: [VocabularyItemRecord]
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             HairlineRule()
 
             ForEach(items, id: \.cardId) { item in
-                VocabularyRow(item: item)
+                VocabularyRow(item: item, targetLanguage: targetLanguage)
                 HairlineRule()
             }
         }
@@ -60,11 +62,13 @@ struct VocabularySection: View {
 
 struct VocabularyRow: View {
     let item: VocabularyItemRecord
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceXs) {
             HStack(alignment: .center, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target))
+                PlayButton(clip: AudioClip(clipKey: item.clipKey, text: item.target, language: targetLanguage))
                 Text(item.target).font(.targetText).bold()
 
                 if let partOfSpeech = item.partOfSpeech {
@@ -81,7 +85,7 @@ struct VocabularyRow: View {
             }
 
             HStack(alignment: .top, spacing: .spaceSm) {
-                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target))
+                PlayButton(clip: AudioClip(clipKey: item.example.clipKey, text: item.example.target, language: targetLanguage))
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(item.example.target).font(.bodyText).fixedSize(horizontal: false, vertical: true)
@@ -101,6 +105,8 @@ struct VocabularyRow: View {
 struct DialoguesSection: View {
     let unit: UnitOutlineRecord
     let dialogues: [DialogueRecord]
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
@@ -114,10 +120,12 @@ struct DialoguesSection: View {
                     UnitItemLabel(text: unit.itemLabel(itemNumber: itemNumber))
                     Text(dialogue.title).font(.titleText)
                     Text(dialogue.context).font(.captionText).foregroundStyle(Color.inkMuted).fixedSize(horizontal: false, vertical: true)
-                    PlayAllButton(clips: dialogue.lines.map { line in AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target, voiceChoice: voiceChoice) })
+                    PlayAllButton(clips: dialogue.lines.map { line in
+                        AudioClip(clipKey: line.phrase.clipKey, text: line.phrase.target, language: targetLanguage, voiceChoice: voiceChoice)
+                    })
 
                     ForEach(Array(dialogue.lines.enumerated()), id: \.offset) { _, line in
-                        PhraseRow(pair: line.phrase, speaker: line.speaker, voiceChoice: voiceChoice)
+                        PhraseRow(pair: line.phrase, targetLanguage: targetLanguage, speaker: line.speaker, voiceChoice: voiceChoice)
                     }
                 }
                 .panel()
@@ -134,6 +142,8 @@ struct DialoguesSection: View {
 struct GrammarSection: View {
     let unit: UnitOutlineRecord
     let notes: [GrammarNoteRecord]
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
@@ -152,7 +162,7 @@ struct GrammarSection: View {
                     }
 
                     ForEach(Array(note.examples.enumerated()), id: \.offset) { _, example in
-                        PhraseRow(pair: example)
+                        PhraseRow(pair: example, targetLanguage: targetLanguage)
                     }
                 }
                 .panel()
@@ -182,6 +192,8 @@ extension UnitOutlineRecord {
 struct ReadingsSection: View {
     let unit: UnitOutlineRecord
     let readings: [ReadingRecord]
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: .spaceMd) {
@@ -190,7 +202,7 @@ struct ReadingsSection: View {
             ForEach(Array(readings.enumerated()), id: \.element.id) { readingIndex, reading in
                 let itemNumber: Int = readingIndex + 1
 
-                ReadingPanel(reading: reading, itemLabel: unit.itemLabel(itemNumber: itemNumber))
+                ReadingPanel(reading: reading, itemLabel: unit.itemLabel(itemNumber: itemNumber), targetLanguage: targetLanguage)
                     .indexRailTarget(entryNumber: itemNumber)
             }
         }
@@ -200,6 +212,8 @@ struct ReadingsSection: View {
 struct ReadingPanel: View {
     let reading: ReadingRecord
     let itemLabel: String
+    /// The BCP 47 tag of the language the course teaches.
+    let targetLanguage: String
 
     @State private var questionsOpen: Bool = false
 
@@ -207,16 +221,17 @@ struct ReadingPanel: View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             UnitItemLabel(text: itemLabel)
             Text(reading.title).font(.titleText)
-            PlayAllButton(clips: reading.paragraphs.map { paragraph in AudioClip(clipKey: paragraph.clipKey, text: paragraph.target) })
+            PlayAllButton(clips: reading.paragraphs.map { paragraph in AudioClip(clipKey: paragraph.clipKey, text: paragraph.target, language: targetLanguage) })
 
             ForEach(Array(reading.paragraphs.enumerated()), id: \.offset) { _, paragraph in
-                PhraseRow(pair: paragraph)
+                PhraseRow(pair: paragraph, targetLanguage: targetLanguage)
             }
 
             if questionsOpen {
                 ExerciseSession(
                     title: "\(reading.title): questions",
                     exercises: reading.questions,
+                    targetLanguage: targetLanguage,
                     answeredResults: [],
                     exitKind: .quit,
                     onAnswer: { _ in },
