@@ -29,6 +29,19 @@ pub enum AudioEngineKind {
 const AUTO_SHORT_CLIP_WORD_LIMIT: usize = 2;
 
 impl AudioEngineKind {
+    pub const ALL: [AudioEngineKind; 3] = [AudioEngineKind::Auto, AudioEngineKind::Kokoro, AudioEngineKind::MacosSay];
+
+    /// `Auto` and each of `recorded_engines`, or none when fewer than two engines recorded the course's clips.
+    pub fn choices_for_course(recorded_engines: &[VoiceEngineKind]) -> Vec<AudioEngineKind> {
+        if recorded_engines.len() < 2 {
+            return Vec::new();
+        }
+
+        let recorded_choices = recorded_engines.iter().copied().map(AudioEngineKind::from);
+
+        std::iter::once(AudioEngineKind::Auto).chain(recorded_choices).collect()
+    }
+
     pub fn voice_engine_for(self, text: &str) -> VoiceEngineKind {
         self.voice_engine_for_longest_text(word_count(text))
     }
@@ -53,6 +66,15 @@ impl AudioEngineKind {
             AudioEngineKind::MacosSay => VoiceEngineKind::MacosSay,
             AudioEngineKind::Auto if longest_word_count <= AUTO_SHORT_CLIP_WORD_LIMIT => VoiceEngineKind::MacosSay,
             AudioEngineKind::Auto => VoiceEngineKind::Kokoro,
+        }
+    }
+}
+
+impl From<VoiceEngineKind> for AudioEngineKind {
+    fn from(engine: VoiceEngineKind) -> AudioEngineKind {
+        match engine {
+            VoiceEngineKind::Kokoro => AudioEngineKind::Kokoro,
+            VoiceEngineKind::MacosSay => AudioEngineKind::MacosSay,
         }
     }
 }
@@ -1086,6 +1108,17 @@ mod tests {
 
         assert_eq!(AudioEngineKind::Kokoro.voice_engine_for_dialogue(line_texts), VoiceEngineKind::Kokoro);
         assert_eq!(AudioEngineKind::MacosSay.voice_engine_for_dialogue(line_texts), VoiceEngineKind::MacosSay);
+    }
+
+    #[test]
+    fn choices_for_course_offers_auto_and_each_engine_only_when_two_engines_recorded_the_course() {
+        let both_engines: [VoiceEngineKind; 2] = [VoiceEngineKind::Kokoro, VoiceEngineKind::MacosSay];
+
+        assert_eq!(
+            AudioEngineKind::choices_for_course(&both_engines),
+            vec![AudioEngineKind::Auto, AudioEngineKind::Kokoro, AudioEngineKind::MacosSay],
+        );
+        assert!(AudioEngineKind::choices_for_course(&[VoiceEngineKind::MacosSay]).is_empty());
     }
 
     #[test]

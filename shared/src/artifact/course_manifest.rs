@@ -7,6 +7,7 @@ use crate::AppError;
 use crate::artifact::manifest::{self, ManifestEntry};
 use crate::artifact::{repository_key, schema_version};
 use crate::course::course_identity;
+use crate::course_shard::VoiceEngineKind;
 
 pub const COURSE_MANIFEST_SCHEMA_VERSION: u32 = 5;
 
@@ -33,6 +34,14 @@ pub struct CourseManifest {
 impl CourseManifest {
     pub fn file_entries(&self) -> impl Iterator<Item = &ManifestEntry> {
         std::iter::once(&self.outline).chain(self.units.values())
+    }
+
+    /// The engines that recorded any of the course's clips, without an engine this build does not know.
+    pub fn recorded_voice_engines(&self) -> Vec<VoiceEngineKind> {
+        self.voice_pipeline_revisions
+            .keys()
+            .filter_map(|engine_code| VoiceEngineKind::try_from(engine_code.as_str()).ok())
+            .collect()
     }
 
     pub fn find_unit(&self, unit_id: &str) -> Result<&ManifestEntry, AppError> {
@@ -159,6 +168,14 @@ mod tests {
 
         assert_eq!(course_manifest, reparsed);
         assert!(produced.starts_with("{\n  \"manifest_schema_version\""));
+    }
+
+    #[test]
+    fn recorded_voice_engines_leaves_out_an_unknown_engine() {
+        let json: String = valid_course_manifest_json().replace(r#"{ "kokoro": 3 }"#, r#"{ "kokoro": 3, "macos_say": 1, "future_engine": 1 }"#);
+        let course_manifest: CourseManifest = parse_course_manifest(json.as_bytes(), Some(COURSE_ID)).unwrap();
+
+        assert_eq!(course_manifest.recorded_voice_engines(), vec![VoiceEngineKind::Kokoro, VoiceEngineKind::MacosSay]);
     }
 
     #[test]

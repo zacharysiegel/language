@@ -629,6 +629,13 @@ impl CoursePublication {
         self.source.origin == ArtifactOriginKind::Embedded
     }
 
+    /// The voice settings worth offering for this publication; none when fewer than two engines recorded its clips.
+    pub fn audio_engine_choices(&self) -> Vec<AudioEngineRecord> {
+        let recorded_engines: Vec<VoiceEngineKind> = self.source.manifest.recorded_voice_engines();
+
+        AudioEngineKind::choices_for_course(&recorded_engines).into_iter().map(AudioEngineRecord::from).collect()
+    }
+
     pub async fn load_course(&self) -> Result<CourseOutlineRecord, CoreError> {
         let outline: CourseOutlineRecord = match self.source.origin {
             ArtifactOriginKind::Repository => self.open_course(&self.library.http_fetch).await?,
