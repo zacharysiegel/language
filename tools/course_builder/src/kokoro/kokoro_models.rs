@@ -17,7 +17,7 @@ struct ModelFile {
 }
 
 /* Pinned to exact revisions so a later upstream change cannot alter the voices. */
-const MODEL_FILES: [ModelFile; 5] = [
+const MODEL_FILES: [ModelFile; 8] = [
     ModelFile {
         relative_path: "config.json",
         url: "https://huggingface.co/hexgrad/Kokoro-82M/resolve/f3ff3571791e39611d31c381e3a41a3af07b4987/config.json",
@@ -42,6 +42,21 @@ const MODEL_FILES: [ModelFile; 5] = [
         relative_path: "voices/pm_santa.bin",
         url: "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/pm_santa.bin",
         sha256: "8b012db3185778afe2e45a62cbad69db73021774fe68dda634bcc748a982eede",
+    },
+    ModelFile {
+        relative_path: "voices/ef_dora.bin",
+        url: "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/ef_dora.bin",
+        sha256: "f66ec66bd295acb18372e37008533a9a3228483ccd294e7538d5d9294ac9a532",
+    },
+    ModelFile {
+        relative_path: "voices/em_alex.bin",
+        url: "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/em_alex.bin",
+        sha256: "27809e9eafdcbcfff90a3016c697568676531de2a2c39cee29c96c7bd6b83e95",
+    },
+    ModelFile {
+        relative_path: "voices/em_santa.bin",
+        url: "https://huggingface.co/onnx-community/Kokoro-82M-v1.0-ONNX/resolve/1939ad2a8e416c0acfeecc08a694d14ef25f2231/voices/em_santa.bin",
+        sha256: "ad43b774e1ca24d05c6161297d8aeb770ac3d29bb95daf516727af5f7d543683",
     },
 ];
 
