@@ -54,7 +54,7 @@ fun SettingsSheet(courseId: String?, modifier: Modifier = Modifier) {
             verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceLg),
         ) {
             PageHeader(caption = null, title = "Settings")
-            VoiceSection()
+            VoiceSection(courseId)
             SpeedSection()
 
             if (courseId != null) {
@@ -70,18 +70,33 @@ private data class VoiceOption(val identifier: String, val title: String, val de
 private val voiceOptions: List<VoiceOption> = listOf(
     VoiceOption(identifier = "auto", title = "Auto", detail = "The macOS voice for one- and two-word clips, the neural voice for longer ones", engine = AudioEngineRecord.AUTO),
     VoiceOption(identifier = "kokoro", title = "Neural (Kokoro)", detail = "Every clip in the neural voice", engine = AudioEngineRecord.KOKORO),
-    VoiceOption(identifier = "macos_say", title = "macOS (Luciana)", detail = "Every clip in the macOS voices", engine = AudioEngineRecord.MACOS_SAY),
+    VoiceOption(identifier = "macos_say", title = "macOS", detail = "Every clip in the macOS voices", engine = AudioEngineRecord.MACOS_SAY),
 )
 
+/** The options the course's shown publication allows; every option when no publication is shown. */
+private fun offeredVoiceOptions(courseStore: CourseStore, courseId: String?): List<VoiceOption> {
+    val publication: CoursePublication = courseId?.let { shownCourseId: String -> courseStore.shownPublication(shownCourseId) }
+        ?: return voiceOptions
+    val choices: List<AudioEngineRecord> = publication.audioEngineChoices()
+
+    return voiceOptions.filter { option: VoiceOption -> option.engine in choices }
+}
+
 @Composable
-private fun VoiceSection() {
+private fun VoiceSection(courseId: String?) {
     val progressStore: ProgressStore = LocalProgressStore.current
+    val courseStore: CourseStore = LocalCourseStore.current
     val chosenEngine: AudioEngineRecord = progressStore.settings().audioEngine
+    val offeredOptions: List<VoiceOption> = offeredVoiceOptions(courseStore, courseId)
+
+    if (offeredOptions.isEmpty()) {
+        return
+    }
 
     Column(verticalArrangement = Arrangement.spacedBy(LanguageSpacing.spaceSm)) {
         MicroLabel(text = "Voice")
 
-        for (option in voiceOptions) {
+        for (option in offeredOptions) {
             val isChosen: Boolean = option.engine == chosenEngine
 
             ChoiceButton(

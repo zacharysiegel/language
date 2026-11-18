@@ -63,7 +63,6 @@ class RootScreenEndToEndTest {
         driver.saveScreenshot("10-progress")
 
         composeRule.onNodeWithTag("settings").performClick()
-        driver.waitForTag("voice-kokoro", PAGE_OPEN_TIMEOUT_MILLISECONDS)
         driver.waitForTag("publication-label", PUBLICATION_LABEL_TIMEOUT_MILLISECONDS)
 
         val publicationLabel: String = composeRule.onNodeWithTag("publication-label").fetchSemanticsNode().config[SemanticsProperties.Text]
