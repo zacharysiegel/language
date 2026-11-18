@@ -207,10 +207,10 @@ fn unit_view(course: &CourseOutline, unit: Unit, active_tab: UnitTabKind) -> imp
     let title: String = unit.title.clone();
     let section = match active_tab {
         UnitTabKind::Overview => view! { <OverviewSection course_id=course.id.clone() unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Vocabulary => view! { <VocabularySection unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Dialogues => view! { <DialoguesSection unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Grammar => view! { <GrammarSection unit=unit.clone() /> }.into_any(),
-        UnitTabKind::Readings => view! { <ReadingsSection unit=unit.clone() /> }.into_any(),
+        UnitTabKind::Vocabulary => view! { <VocabularySection unit=unit.clone() target_language=course.target_language.clone() /> }.into_any(),
+        UnitTabKind::Dialogues => view! { <DialoguesSection unit=unit.clone() target_language=course.target_language.clone() /> }.into_any(),
+        UnitTabKind::Grammar => view! { <GrammarSection unit=unit.clone() target_language=course.target_language.clone() /> }.into_any(),
+        UnitTabKind::Readings => view! { <ReadingsSection unit=unit.clone() target_language=course.target_language.clone() /> }.into_any(),
         UnitTabKind::Practice => view! {
             <PracticeSection
                 course_id=course.id.clone()

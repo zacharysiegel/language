@@ -23,7 +23,7 @@ mod browser {
 
     use super::*;
     use crate::artifact_client::js_interop;
-    use crate::platform::{self, AudioClip};
+    use crate::platform;
 
     const RECORDING_PREFETCH_CONCURRENCY: usize = 2;
     const PRESSED_PLAY_RECHECK_MILLISECONDS: i32 = 100;
@@ -212,7 +212,7 @@ mod browser {
         let mut queued_urls: VecDeque<String> = VecDeque::new();
 
         for clip in clips {
-            let url: Option<String> = platform::recording_url(&AudioClip::from(clip), engine);
+            let url: Option<String> = platform::recording_url(&clip.clip_key, &clip.spoken_text, &clip.voice_choice, engine);
             let Some(url) = url
             else {
                 continue;

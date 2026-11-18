@@ -37,18 +37,21 @@ fn choice_result(chosen_correctly: bool, answer_text: &str) -> SavedExerciseResu
 
 pub fn exercise_body(
     exercise: Exercise,
+    target_language: String,
     on_submit: Callback<SavedExerciseResult>,
     open_response_answered_milliseconds: RwSignal<Option<i64>>,
 ) -> AnyView {
     match exercise {
         Exercise::MultipleChoice(exercise) => view! { <MultipleChoiceView exercise on_submit /> }.into_any(),
-        Exercise::FillBlank(exercise) => view! { <FillBlankView exercise on_submit /> }.into_any(),
-        Exercise::TranslateToTarget(exercise) => view! { <TranslateView exercise on_submit /> }.into_any(),
-        Exercise::OrderWords(exercise) => view! { <OrderWordsView exercise on_submit /> }.into_any(),
-        Exercise::ListeningChoice(exercise) => view! { <ListeningChoiceView exercise on_submit /> }.into_any(),
-        Exercise::Dictation(exercise) => view! { <DictationView exercise on_submit /> }.into_any(),
-        Exercise::Match(exercise) => view! { <MatchView exercise on_submit /> }.into_any(),
-        Exercise::OpenResponse(exercise) => view! { <OpenResponseView exercise on_submit answered_milliseconds=open_response_answered_milliseconds /> }.into_any(),
+        Exercise::FillBlank(exercise) => view! { <FillBlankView exercise target_language on_submit /> }.into_any(),
+        Exercise::TranslateToTarget(exercise) => view! { <TranslateView exercise target_language on_submit /> }.into_any(),
+        Exercise::OrderWords(exercise) => view! { <OrderWordsView exercise target_language on_submit /> }.into_any(),
+        Exercise::ListeningChoice(exercise) => view! { <ListeningChoiceView exercise target_language on_submit /> }.into_any(),
+        Exercise::Dictation(exercise) => view! { <DictationView exercise target_language on_submit /> }.into_any(),
+        Exercise::Match(exercise) => view! { <MatchView exercise target_language on_submit /> }.into_any(),
+        Exercise::OpenResponse(exercise) => {
+            view! { <OpenResponseView exercise target_language on_submit answered_milliseconds=open_response_answered_milliseconds /> }.into_any()
+        },
     }
 }
 
@@ -103,17 +106,17 @@ fn MultipleChoiceView(exercise: MultipleChoiceExercise, on_submit: Callback<Save
 }
 
 #[component]
-fn ListeningChoiceView(exercise: ListeningChoiceExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn ListeningChoiceView(exercise: ListeningChoiceExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.choices[exercise.answer_index]);
-    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText, &target_language);
     let playback_store: PlaybackStore = use_playback_store();
 
     Effect::new(move |_| playback_store.play_at_normal_speed(autoplay_clip.clone()));
 
     view! {
         <div class="row">
-            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() label="Play" />
-            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() slow=true />
+            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() language=target_language.clone() label="Play" />
+            <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() language=target_language slow=true />
         </div>
         {choice_buttons(&exercise.choices, exercise.answer_index, answer_text, on_submit)}
     }
@@ -146,6 +149,8 @@ fn submit_typed_answer(
 fn TypedInput(
     typed: RwSignal<String>,
     answered: RwSignal<bool>,
+    /// The BCP 47 tag of the language the answer is typed in.
+    language: String,
     #[prop(optional)] class: &'static str,
 ) -> impl IntoView {
     let input_ref: NodeRef<html::Input> = NodeRef::new();
@@ -161,6 +166,7 @@ fn TypedInput(
             node_ref=input_ref
             type="text"
             class=format!("typed {class}")
+            lang=language
             autocomplete="off"
             autocapitalize="off"
             spellcheck="false"
@@ -179,7 +185,7 @@ fn CheckButton(answered: RwSignal<bool>) -> impl IntoView {
 }
 
 #[component]
-fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn FillBlankView(exercise: FillBlankExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let (before, after): (&str, &str) = exercise
@@ -189,6 +195,7 @@ fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<SavedExerciseR
     let (before, after): (String, String) = (before.to_string(), after.to_string());
     let answer_text: String = exercise.completed_sentence();
     let accepted_answers: Vec<String> = exercise.answers.clone();
+    let input_language: String = target_language.clone();
 
     view! {
         <form on:submit=move |event: SubmitEvent| {
@@ -196,8 +203,8 @@ fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<SavedExerciseR
             submit_typed_answer(typed, answered, &accepted_answers, &answer_text, on_submit);
         }>
             <p class="hint">{exercise.hint_source.clone()}</p>
-            <p class="prompt sentence">
-                {before}<TypedInput typed answered class="inline" />{after}
+            <p class="prompt sentence" lang=target_language>
+                {before}<TypedInput typed answered language=input_language class="inline" />{after}
             </p>
             <CheckButton answered />
         </form>
@@ -205,7 +212,7 @@ fn FillBlankView(exercise: FillBlankExercise, on_submit: Callback<SavedExerciseR
 }
 
 #[component]
-fn TranslateView(exercise: TranslateToTargetExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn TranslateView(exercise: TranslateToTargetExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = exercise.answers.join("  |  ");
@@ -217,19 +224,19 @@ fn TranslateView(exercise: TranslateToTargetExercise, on_submit: Callback<SavedE
             submit_typed_answer(typed, answered, &accepted_answers, &answer_text, on_submit);
         }>
             <p class="prompt">{exercise.prompt_source.clone()}</p>
-            <TypedInput typed answered />
+            <TypedInput typed answered language=target_language />
             <CheckButton answered />
         </form>
     }
 }
 
 #[component]
-fn DictationView(exercise: DictationExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn DictationView(exercise: DictationExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let typed: RwSignal<String> = RwSignal::new(String::new());
     let answered: RwSignal<bool> = RwSignal::new(false);
     let answer_text: String = format!("{} = {}", exercise.audio_target, exercise.hint_source);
     let accepted_answers: Vec<String> = vec![exercise.audio_target.clone()];
-    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText);
+    let autoplay_clip: AudioClip = audio_clip(&exercise.clip_key, &exercise.audio_target, VoiceChoiceKind::OwnText, &target_language);
     let playback_store: PlaybackStore = use_playback_store();
 
     Effect::new(move |_| playback_store.play_at_normal_speed(autoplay_clip.clone()));
@@ -240,17 +247,17 @@ fn DictationView(exercise: DictationExercise, on_submit: Callback<SavedExerciseR
             submit_typed_answer(typed, answered, &accepted_answers, &answer_text, on_submit);
         }>
             <div class="row">
-                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() label="Play" />
-                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() slow=true />
+                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() language=target_language.clone() label="Play" />
+                <PlayButton clip_key=exercise.clip_key.clone() text=exercise.audio_target.clone() language=target_language.clone() slow=true />
             </div>
-            <TypedInput typed answered />
+            <TypedInput typed answered language=target_language />
             <CheckButton answered />
         </form>
     }
 }
 
 #[component]
-fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn OrderWordsView(exercise: OrderWordsExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let candidate_tokens: Vec<String> = exercise.words.iter().chain(exercise.distractors.iter()).cloned().collect();
     let tokens: Arc<Vec<String>> = Arc::new(shuffled_avoiding_identity(&candidate_tokens, platform::random_unit));
     let placed_token_ids: RwSignal<Vec<usize>> = RwSignal::new(Vec::new());
@@ -316,8 +323,8 @@ fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<SavedExercis
 
     view! {
         <p class="prompt">{exercise.prompt_source.clone()}</p>
-        <div class="tokens answer-area">{placed_buttons}</div>
-        <div class="tokens bank">{bank_buttons}</div>
+        <div class="tokens answer-area" lang=target_language.clone()>{placed_buttons}</div>
+        <div class="tokens bank" lang=target_language>{bank_buttons}</div>
         <button
             type="button"
             class="primary"
@@ -330,7 +337,7 @@ fn OrderWordsView(exercise: OrderWordsExercise, on_submit: Callback<SavedExercis
 }
 
 #[component]
-fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
+fn MatchView(exercise: MatchExercise, target_language: String, on_submit: Callback<SavedExerciseResult>) -> impl IntoView {
     let pairs: Arc<MatchExercise> = Arc::new(exercise);
     let pair_indexes: Vec<usize> = (0..pairs.pairs.len()).collect();
     let left_order: Vec<usize> = shuffled(&pair_indexes, platform::random_unit);
@@ -382,7 +389,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) 
         .map(|pair_index| {
             let pair = pairs.pairs[pair_index].clone();
             let resolve_selection = resolve_selection.clone();
-            let clip: AudioClip = audio_clip(&pair.clip_key, &pair.target, VoiceChoiceKind::OwnText);
+            let clip: AudioClip = audio_clip(&pair.clip_key, &pair.target, VoiceChoiceKind::OwnText, &target_language);
             let pending: Memo<bool> = indicated_pending(playback_store, PlaybackTarget::for_clip(&clip, false));
 
             view! {
@@ -440,7 +447,7 @@ fn MatchView(exercise: MatchExercise, on_submit: Callback<SavedExerciseResult>) 
     view! {
         <p class="prompt">{prompt}</p>
         <div class="match-columns">
-            <div class="choices">{left_buttons}</div>
+            <div class="choices" lang=target_language>{left_buttons}</div>
             <div class="choices">{right_buttons}</div>
         </div>
     }
@@ -510,6 +517,7 @@ fn save_open_response(
 #[component]
 fn OpenResponseView(
     exercise: OpenResponseExercise,
+    target_language: String,
     on_submit: Callback<SavedExerciseResult>,
     answered_milliseconds: RwSignal<Option<i64>>,
 ) -> impl IntoView {
@@ -570,6 +578,7 @@ fn OpenResponseView(
             <textarea
                 node_ref=textarea_ref
                 class="open-response"
+                lang=target_language.clone()
                 rows=OPEN_RESPONSE_ROWS
                 autocomplete="off"
                 autocapitalize="off"
@@ -590,7 +599,7 @@ fn OpenResponseView(
 }
 
 #[component]
-fn ExampleAnswers(exercise: OpenResponseExercise) -> impl IntoView {
+fn ExampleAnswers(exercise: OpenResponseExercise, target_language: String) -> impl IntoView {
     let example_items: Vec<_> = exercise
         .example_answers
         .iter()
@@ -598,12 +607,12 @@ fn ExampleAnswers(exercise: OpenResponseExercise) -> impl IntoView {
         .map(|(example_index, example_answer)| {
             // The exercise's clip speaks the first example answer.
             let play_button = (example_index == 0).then(|| {
-                view! { <PlayButton clip_key=exercise.clip_key.clone() text=example_answer.clone() label="Hear it" /> }
+                view! { <PlayButton clip_key=exercise.clip_key.clone() text=example_answer.clone() language=target_language.clone() label="Hear it" /> }
             });
 
             view! {
                 <li>
-                    <span>{example_answer.clone()}</span>
+                    <span lang=target_language.clone()>{example_answer.clone()}</span>
                     {play_button}
                 </li>
             }
@@ -642,6 +651,7 @@ pub fn OpenResponseFeedback(exercise: OpenResponseExercise, answer_text: String,
     let unit_context: OpenResponseUnitContext = use_open_response_unit_context();
     let grade: Memo<AnswerGradeKind> = open_response_answers::tracked_answer_grade(unit_context.course_id.clone(), unit_context.task_key(&exercise), answered_milliseconds);
     let target_language_name: String = unit_context.target_language_name.clone();
+    let target_language: String = unit_context.target_language.clone();
     let grader_findings = move || {
         let AnswerGradeKind::Graded(grade) = grade.get()
         else {
@@ -655,8 +665,8 @@ pub fn OpenResponseFeedback(exercise: OpenResponseExercise, answer_text: String,
     view! {
         {move || open_response_feedback_heading(grade.get())}
         <div class="field-label">"Your answer"</div>
-        <p class="written-answer">{answer_text}</p>
+        <p class="written-answer" lang=target_language.clone()>{answer_text}</p>
         {grader_findings}
-        <ExampleAnswers exercise />
+        <ExampleAnswers exercise target_language />
     }
 }

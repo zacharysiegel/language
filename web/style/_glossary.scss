@@ -1,6 +1,6 @@
 @use "tokens" as *;
 
-/* On a narrow screen each entry stacks: Portuguese with its unit, then the English, then the literal meaning. */
+/* On a narrow screen each entry stacks: the target text with its unit, then the source text, then the literal meaning. */
 @media (max-width: $breakpoint-narrow) {
     .table-scroll:has(> table.glossary-table) {
         overflow-x: visible;

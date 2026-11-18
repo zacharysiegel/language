@@ -68,6 +68,8 @@ fn score_of(question_count: usize, results: &[SavedExerciseResult]) -> SessionSc
 pub fn ExerciseSession(
     #[prop(into)] title: String,
     exercises: Vec<Exercise>,
+    /// The BCP 47 tag of the language the exercises teach.
+    target_language: String,
     /// The results of the first questions, answered before the session opened.
     #[prop(optional)]
     answered_results: Vec<SavedExerciseResult>,
@@ -161,6 +163,7 @@ pub fn ExerciseSession(
                     Some(exercise) => question_view(
                         session_progress(&session_title, round.get(), index, exercises_in_session.len(), exit_kind),
                         exercise.clone(),
+                        target_language.clone(),
                         on_submit,
                         current_result,
                         advance,
@@ -177,7 +180,7 @@ pub fn ExerciseSession(
                         )
                         .into_any(),
                         SessionScoringKind::Unscored => {
-                            unscored_summary_view(&session_title, exercises_in_session, results.get_untracked(), on_exit).into_any()
+                            unscored_summary_view(&session_title, exercises_in_session, results.get_untracked(), &target_language, on_exit).into_any()
                         },
                     },
                 }
@@ -213,6 +216,7 @@ fn session_progress(
 fn question_view(
     session_progress: SessionProgress,
     exercise: Exercise,
+    target_language: String,
     on_submit: Callback<SavedExerciseResult>,
     current_result: RwSignal<Option<SavedExerciseResult>>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
@@ -235,11 +239,11 @@ fn question_view(
         </div>
         <progress max=total_count value=index></progress>
         <div class="exercise-type">{instruction}</div>
-        {practice::exercise_body(exercise, on_submit, open_response_answered_milliseconds)}
+        {practice::exercise_body(exercise, target_language.clone(), on_submit, open_response_answered_milliseconds)}
         {move || {
             current_result
                 .get()
-                .map(|result| feedback_view(feedback_exercise.clone(), result, open_response_answered_milliseconds, advance))
+                .map(|result| feedback_view(feedback_exercise.clone(), result, target_language.clone(), open_response_answered_milliseconds, advance))
         }}
     }
 }
@@ -261,7 +265,7 @@ fn feedback_class(status: AnswerStatus) -> &'static str {
     }
 }
 
-fn speak_after_answer(exercise: &Exercise) {
+fn speak_after_answer(exercise: &Exercise, target_language: &str) {
     if !SPEAK_AFTER_ANSWER_KINDS.contains(&exercise.kind()) {
         return;
     }
@@ -270,7 +274,7 @@ fn speak_after_answer(exercise: &Exercise) {
         let playback_store: PlaybackStore = use_playback_store();
         let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
 
-        playback_store.play_at_normal_speed(audio_clip(&audio_path, &text, VoiceChoiceKind::OwnText));
+        playback_store.play_at_normal_speed(audio_clip(&audio_path, &text, VoiceChoiceKind::OwnText, target_language));
     }
 }
 
@@ -289,10 +293,11 @@ fn scored_answer_details(exercise: &Exercise, result: &SavedExerciseResult) -> i
 fn feedback_view(
     exercise: Exercise,
     result: SavedExerciseResult,
+    target_language: String,
     open_response_answered_milliseconds: RwSignal<Option<i64>>,
     advance: impl Fn() + Copy + Send + Sync + 'static,
 ) -> impl IntoView {
-    speak_after_answer(&exercise);
+    speak_after_answer(&exercise, &target_language);
 
     let audio_path: Option<String> = exercise.clip_key().map(str::to_string);
     let (details, row_spoken_text): (AnyView, Option<String>) = match &exercise {
@@ -315,7 +320,7 @@ fn feedback_view(
         <div class=feedback_class(result.status) aria-live="polite">
             {details}
             <div class="row">
-                {row_spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text label="Hear it" /> })}
+                {row_spoken_text.map(|text| view! { <PlayButton clip_key=audio_path.clone() text language=target_language label="Hear it" /> })}
                 <button type="button" class="primary" on:click=move |_| advance()>"Continue"</button>
             </div>
         </div>
@@ -365,7 +370,7 @@ fn answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoVi
     }
 }
 
-fn unscored_answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> impl IntoView + use<> {
+fn unscored_answer_item(exercise: &Exercise, result: &SavedExerciseResult, target_language: &str) -> impl IntoView + use<> {
     let summary_grade = match exercise {
         Exercise::OpenResponse(open_response) => {
             Some(view! { <practice::OpenResponseSummaryGrade exercise=open_response.clone() answer_text=result.answer_text.clone() /> })
@@ -376,17 +381,23 @@ fn unscored_answer_item(exercise: &Exercise, result: &SavedExerciseResult) -> im
     view! {
         <li>
             <div>{exercise.prompt_text()}</div>
-            <div class="answer">{result.answer_text.clone()}</div>
+            <div class="answer" lang=target_language.to_string()>{result.answer_text.clone()}</div>
             {summary_grade}
         </li>
     }
 }
 
-fn unscored_summary_view(title: &str, exercises: Arc<Vec<Exercise>>, results: Vec<SavedExerciseResult>, on_exit: Callback<()>) -> impl IntoView {
+fn unscored_summary_view(
+    title: &str,
+    exercises: Arc<Vec<Exercise>>,
+    results: Vec<SavedExerciseResult>,
+    target_language: &str,
+    on_exit: Callback<()>,
+) -> impl IntoView {
     let answer_items: Vec<_> = results
         .iter()
         .zip(exercises.iter())
-        .map(|(result, exercise)| unscored_answer_item(exercise, result))
+        .map(|(result, exercise)| unscored_answer_item(exercise, result, target_language))
         .collect();
 
     view! {

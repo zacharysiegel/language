@@ -247,12 +247,13 @@ fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
         }
     });
 
+    let target_language: String = course.target_language.clone();
     let frame_rows = move |frame_index: usize| {
         let first_entry_index: usize = frame_index * GLOSSARY_ROWS_PER_FRAME;
         let end_entry_index: usize = (first_entry_index + GLOSSARY_ROWS_PER_FRAME).min(entries.len());
 
         (first_entry_index..end_entry_index)
-            .map(|entry_index| glossary_row(entry_index, &entries[entry_index], normalized_query, level_filter))
+            .map(|entry_index| glossary_row(entry_index, &entries[entry_index], &target_language, normalized_query, level_filter))
             .collect_view()
     };
 
@@ -287,6 +288,7 @@ fn Glossary(course: Arc<CourseOutline>) -> impl IntoView {
 fn glossary_row(
     entry_index: usize,
     entry: &GlossaryEntry,
+    target_language: &str,
     normalized_query: Memo<String>,
     level_filter: Memo<Option<String>>,
 ) -> impl IntoView + use<> {
@@ -297,13 +299,14 @@ fn glossary_row(
     let source_literal: String = entry.source_literal.clone();
     let unit_href: String = entry.unit_href.clone();
     let unit_label: String = entry.unit_label.clone();
+    let target_language: String = target_language.to_string();
     let matches: bool =
         normalized_query.with_untracked(|query| level_filter.with_untracked(|level| entry.matches(query, level.as_deref())));
 
     view! {
         <tr id=element_id class=item_index::ITEM_INDEX_TARGET_CLASS tabindex="-1" hidden=!matches>
-            <td class="glossary-play"><PlayButton clip_key text=target.clone() /></td>
-            <td class="pt glossary-target">{target}</td>
+            <td class="glossary-play"><PlayButton clip_key text=target.clone() language=target_language.clone() /></td>
+            <td class="target-text glossary-target" lang=target_language>{target}</td>
             <td class="glossary-source">{source}</td>
             <td class="literal glossary-literal">{source_literal}</td>
             <td class="numeric glossary-unit"><A href=unit_href>{unit_label}</A></td>

@@ -240,6 +240,7 @@ pub fn PracticeSection(course_id: String, target_language: String, source_langua
                     <ExerciseSession
                         title=kind.title()
                         exercises=session.exercises
+                        target_language=target_language.clone()
                         answered_results=session.answered_results
                         on_answer
                         exit_kind=kind.exit_kind()
@@ -276,6 +277,7 @@ fn provide_open_response_contexts(course_id: &str, target_language: &str, source
         course_id: course_id.to_string(),
         unit_id: unit.id.clone(),
         level: unit.level.clone(),
+        target_language: target_language.to_string(),
         target_language_name: course::language_name(target_language),
     });
 

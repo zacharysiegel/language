@@ -188,6 +188,7 @@ fn ReviewSession(course: Arc<CourseOutline>, items: Vec<ReviewItem>, on_exit: Ca
                     Some((unit, vocabulary_item)) => card_view(
                         unit,
                         vocabulary_item,
+                        &card_course.target_language,
                         item.prompt_is_target,
                         index,
                         total_count,
@@ -217,6 +218,7 @@ struct CardProgress {
 fn card_view(
     unit: &UnitOutline,
     item: &VocabularyItem,
+    target_language: &str,
     prompt_is_target: bool,
     index: usize,
     total_count: usize,
@@ -225,7 +227,7 @@ fn card_view(
     on_exit: Callback<()>,
 ) -> impl IntoView {
     let card_progress: CardProgress = CardProgress { index, total_count };
-    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target, VoiceChoiceKind::OwnText);
+    let autoplay_clip: AudioClip = audio_clip(&item.clip_key, &item.target, VoiceChoiceKind::OwnText, target_language);
     let playback_store: PlaybackStore = use_playback_store();
 
     Effect::new(move |_| {
@@ -236,6 +238,9 @@ fn card_view(
 
     let prompt_text: String = if prompt_is_target { item.target.clone() } else { item.source.clone() };
     let answer_text: String = if prompt_is_target { item.source.clone() } else { item.target.clone() };
+    let target_language: String = target_language.to_string();
+    let prompt_language: Option<String> = prompt_is_target.then(|| target_language.clone());
+    let answer_language: Option<String> = (!prompt_is_target).then(|| target_language.clone());
     let unit_title: String = unit.title.clone();
     let item_audio: Option<String> = item.clip_key.clone();
     let item_target: String = item.target.clone();
@@ -254,7 +259,7 @@ fn card_view(
         <progress max=card_progress.total_count value=card_progress.index></progress>
         <div class="flashcard">
             <div class="muted">{unit_title}</div>
-            <div class="flashcard-prompt">{prompt_text}</div>
+            <div class="flashcard-prompt" lang=prompt_language>{prompt_text}</div>
             {move || {
                 if revealed.get() {
                     let note = note.clone();
@@ -263,13 +268,13 @@ fn card_view(
 
                     view! {
                         <div class="flashcard-answer">
-                            <PlayButton clip_key=item_audio.clone() text=item_target.clone() />
-                            {answer_text.clone()}
+                            <PlayButton clip_key=item_audio.clone() text=item_target.clone() language=target_language.clone() />
+                            <span lang=answer_language.clone()>{answer_text.clone()}</span>
                         </div>
                         {literal.clone().map(|literal| view! { <div class="literal">"literally: "{literal}</div> })}
                         <div class="example">
-                            <PlayButton clip_key=example_audio.clone() text=example_target.clone() />
-                            {example_target.clone()}" "<span class="muted">{example_source.clone()}</span>
+                            <PlayButton clip_key=example_audio.clone() text=example_target.clone() language=target_language.clone() />
+                            <span lang=target_language.clone()>{example_target.clone()}</span>" "<span class="muted">{example_source.clone()}</span>
                         </div>
                         {note.map(|note| view! { <div class="note">{note}</div> })}
                         <div class="row">

@@ -1,4 +1,3 @@
-use shared::course::SpokenClip;
 use shared::course_shard::ClipAudioEntry;
 use shared::progress::{AudioEngineKind, VoiceChoiceKind};
 
@@ -8,16 +7,8 @@ pub struct AudioClip {
     pub clip_key: Option<String>,
     pub fallback_text: String,
     pub voice_choice: VoiceChoiceKind,
-}
-
-impl From<SpokenClip> for AudioClip {
-    fn from(spoken_clip: SpokenClip) -> AudioClip {
-        AudioClip {
-            clip_key: Some(spoken_clip.clip_key),
-            fallback_text: spoken_clip.spoken_text,
-            voice_choice: spoken_clip.voice_choice,
-        }
-    }
+    /// The BCP 47 tag of the language `fallback_text` is in.
+    pub language: String,
 }
 
 /// How far a playback has got toward making sound.
@@ -42,6 +33,7 @@ mod browser {
     use wasm_bindgen::{JsCast, JsValue};
     use wasm_bindgen_futures::JsFuture;
     use shared::artifact::{self, fetch};
+    use shared::course;
     use shared::course_shard::VoiceEngineKind;
     use web_sys::{Blob, HtmlAudioElement, SpeechSynthesisUtterance, Storage, Url};
 
@@ -56,7 +48,6 @@ mod browser {
     const CLIP_FAILED: &str = "failed";
     const CLIP_STOPPED: &str = "stopped";
     const UTTERANCE_STARTED: &str = "started";
-    const BROWSER_VOICE_LANGUAGE: &str = "pt-BR";
     const CROSS_ORIGIN_ANONYMOUS: &str = "anonymous";
 
     struct ActiveClip {
@@ -190,13 +181,14 @@ mod browser {
     }
 
     fn clip_url(clip: &AudioClip) -> Option<String> {
-        recording_url(clip, SELECTED_ENGINE.with(Cell::get))
+        let clip_key: &str = clip.clip_key.as_deref()?;
+
+        recording_url(clip_key, &clip.fallback_text, &clip.voice_choice, SELECTED_ENGINE.with(Cell::get))
     }
 
-    /// The URL `clip` plays from when `engine` is selected; `None` when the browser's voice speaks it.
-    pub fn recording_url(clip: &AudioClip, engine: AudioEngineKind) -> Option<String> {
-        let clip_key: &str = clip.clip_key.as_deref()?;
-        let preferred_engine: VoiceEngineKind = engine.voice_engine_for_clip(&clip.fallback_text, &clip.voice_choice);
+    /// The URL the clip plays from when `engine` is selected; `None` when the browser's voice speaks it.
+    pub fn recording_url(clip_key: &str, spoken_text: &str, voice_choice: &VoiceChoiceKind, engine: AudioEngineKind) -> Option<String> {
+        let preferred_engine: VoiceEngineKind = engine.voice_engine_for_clip(spoken_text, voice_choice);
 
         CLIP_RECORDINGS.with(|registry| {
             let registry = registry.borrow();
@@ -239,7 +231,7 @@ mod browser {
         let url: Option<String> = clip_url(clip);
         let Some(url) = url
         else {
-            speak_with_browser_voice(&clip.fallback_text, rate, on_phase).await;
+            speak_with_browser_voice(clip, rate, on_phase).await;
             return;
         };
 
@@ -266,7 +258,7 @@ mod browser {
 
         // A pause while play() is pending rejects it, which is a stop and not a load failure.
         if outcome == CLIP_FAILED && !stopped_meanwhile {
-            speak_with_browser_voice(&clip.fallback_text, rate, on_phase).await;
+            speak_with_browser_voice(clip, rate, on_phase).await;
         }
     }
 
@@ -381,17 +373,18 @@ mod browser {
         captured_resolve.map(|resolve| (promise, resolve))
     }
 
-    async fn speak_with_browser_voice(text: &str, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) {
+    async fn speak_with_browser_voice(clip: &AudioClip, rate: f64, on_phase: &impl Fn(PlaybackPhaseKind)) {
         let Some(synthesis) = web_sys::window().and_then(|window| window.speech_synthesis().ok())
         else {
             return;
         };
-        let Ok(utterance) = SpeechSynthesisUtterance::new_with_text(text)
+        let spoken_text: String = course::compose_without_stress_marks(&clip.fallback_text);
+        let Ok(utterance) = SpeechSynthesisUtterance::new_with_text(&spoken_text)
         else {
             return;
         };
 
-        utterance.set_lang(BROWSER_VOICE_LANGUAGE);
+        utterance.set_lang(&clip.language);
         utterance.set_rate(rate as f32);
 
         let (Some((started, resolve_started)), Some((finished, resolve_finished))) = (resolvable_promise(), resolvable_promise())

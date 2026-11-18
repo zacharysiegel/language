@@ -14,6 +14,7 @@ pub struct OpenResponseUnitContext {
     pub course_id: String,
     pub unit_id: String,
     pub level: String,
+    pub target_language: String,
     pub target_language_name: String,
 }
 
@@ -109,7 +110,7 @@ pub fn SavedOpenResponseAnswer(exercise: OpenResponseExercise) -> impl IntoView 
         Some(view! {
             <div class="saved-answer">
                 <div class="field-label">"Your last answer"</div>
-                <p class="written-answer">{answer_text}</p>
+                <p class="written-answer" lang=unit_context.target_language.clone()>{answer_text}</p>
                 <AnswerGrade grade target_language_name=unit_context.target_language_name.clone() />
             </div>
         })

@@ -13,11 +13,12 @@ static NEXT_PLAYBACK_TOKEN: AtomicU64 = AtomicU64::new(0);
 
 const LOADING_RECORDING_ANNOUNCEMENT: &str = "Loading the recording";
 
-pub fn audio_clip(clip_key: &Option<String>, fallback_text: &str, voice_choice: VoiceChoiceKind) -> AudioClip {
+pub fn audio_clip(clip_key: &Option<String>, fallback_text: &str, voice_choice: VoiceChoiceKind, language: &str) -> AudioClip {
     AudioClip {
         clip_key: clip_key.clone(),
         fallback_text: fallback_text.to_string(),
         voice_choice,
+        language: language.to_string(),
     }
 }
 
@@ -212,6 +213,9 @@ fn GlyphSlot(pending: Memo<bool>, children: Children) -> impl IntoView {
 pub fn PlayButton(
     clip_key: Option<String>,
     #[prop(into)] text: String,
+    /// The BCP 47 tag of `text`'s language.
+    #[prop(into)]
+    language: String,
     #[prop(optional)] slow: bool,
     #[prop(optional, into)] label: Option<String>,
     #[prop(optional)] voice_choice: VoiceChoiceKind,
@@ -224,7 +228,7 @@ pub fn PlayButton(
         (false, true) => "play has-label",
         (false, false) => "play",
     };
-    let clip: AudioClip = audio_clip(&clip_key, &text, voice_choice);
+    let clip: AudioClip = audio_clip(&clip_key, &text, voice_choice, &language);
     let target: PlaybackTarget = PlaybackTarget::for_clip(&clip, slow);
     let pending: Memo<bool> = indicated_pending(playback_store, target.clone());
 
