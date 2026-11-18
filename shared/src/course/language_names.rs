@@ -1,5 +1,5 @@
 /* English names, since the apps' own words are in English; keyed by a tag's primary language subtag. */
-const LANGUAGE_NAMES: [(&str, &str); 12] = [
+const LANGUAGE_NAMES: [(&str, &str); 13] = [
     ("de", "German"),
     ("en", "English"),
     ("es", "Spanish"),
@@ -11,6 +11,7 @@ const LANGUAGE_NAMES: [(&str, &str); 12] = [
     ("pt", "Portuguese"),
     ("ru", "Russian"),
     ("sv", "Swedish"),
+    ("uk", "Ukrainian"),
     ("zh", "Chinese"),
 ];
 
