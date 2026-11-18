@@ -14,7 +14,6 @@ final class GlossaryUITests: LanguageUITestCase {
         saveScreenshot("10-progress")
 
         app.buttons["settings"].firstMatch.tap()
-        XCTAssertTrue(app.buttons["voice-kokoro"].waitForExistence(timeout: 5))
 
         let publicationLabel: XCUIElement = app.staticTexts["publication-label"]
 

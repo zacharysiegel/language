@@ -34,11 +34,31 @@ struct SettingsSheet: View {
         }
     }
 
+    @ViewBuilder
     private func voiceSection() -> some View {
+        let offeredOptions: [VoiceOption] = offeredVoiceOptions()
+
+        if !offeredOptions.isEmpty {
+            voiceOptionList(offeredOptions)
+        }
+    }
+
+    /// The options the course's shown publication allows; every option when no publication is shown.
+    private func offeredVoiceOptions() -> [VoiceOption] {
+        guard let courseId, let publication = courseStore.shownPublication(courseId: courseId) else {
+            return VoiceOption.all
+        }
+
+        let choices: [AudioEngineRecord] = publication.audioEngineChoices()
+
+        return VoiceOption.all.filter { option in choices.contains(option.engine) }
+    }
+
+    private func voiceOptionList(_ options: [VoiceOption]) -> some View {
         VStack(alignment: .leading, spacing: .spaceSm) {
             MicroLabel(text: "Voice")
 
-            ForEach(VoiceOption.all, id: \.title) { option in
+            ForEach(options, id: \.title) { option in
                 Button {
                     progressStore.updateSettings { settings in settings.audioEngine = option.engine }
                 } label: {
@@ -128,6 +148,6 @@ private struct VoiceOption {
     static let all: [VoiceOption] = [
         VoiceOption(identifier: "auto", title: "Auto", detail: "The macOS voice for one- and two-word clips, the neural voice for longer ones", engine: .auto),
         VoiceOption(identifier: "kokoro", title: "Neural (Kokoro)", detail: "Every clip in the neural voice", engine: .kokoro),
-        VoiceOption(identifier: "macos_say", title: "macOS (Luciana)", detail: "Every clip in the macOS voices", engine: .macosSay),
+        VoiceOption(identifier: "macos_say", title: "macOS", detail: "Every clip in the macOS voices", engine: .macosSay),
     ]
 }
