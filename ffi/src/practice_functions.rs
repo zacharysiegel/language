@@ -1,4 +1,4 @@
-use shared::course::{Exercise, FillBlankExercise};
+use shared::course::{self, Exercise, FillBlankExercise};
 use shared::pending_indication;
 use shared::practice::{self, AnswerStatus, SessionScore};
 use shared::review;
@@ -118,10 +118,16 @@ pub fn exercise_instruction(exercise: ExerciseRecord) -> String {
     Exercise::from(&exercise).kind().instruction().to_string()
 }
 
-/// The Portuguese sentence the exercise's clip speaks.
+/// The target-language sentence the exercise's clip speaks.
 #[uniffi::export]
 pub fn exercise_spoken_text(exercise: ExerciseRecord) -> Option<String> {
     Exercise::from(&exercise).spoken_text()
+}
+
+/// `text` in NFC without its stress marks, as a system voice is given it.
+#[uniffi::export]
+pub fn compose_without_stress_marks(text: String) -> String {
+    course::compose_without_stress_marks(&text)
 }
 
 #[uniffi::export]
