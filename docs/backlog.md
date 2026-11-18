@@ -15,6 +15,12 @@ Known gaps, recorded when found.
 
 - On iPhone a unit's tab row scrolls sideways, so the Practice tab starts off-screen.
 
+## Courses
+
+- Russian and Ukrainian courses have one macOS voice, which speaks every persona. Apple offers the male Russian voice Yuri (and the female Katya) under System Settings > Accessibility > Spoken Content > System Voice > Manage Voices; Apple offers no male Ukrainian voice, so Ukrainian male speakers need another engine.
+- Kokoro has no voices for German, Russian or Ukrainian and only a female French voice (`ff_siwis`), so those courses' clips come from the macOS voices alone.
+- Only Brazilian Portuguese taught in English has a grader prompt (`shared::grading::GraderPromptKind`), so the courses in Mexican Spanish, French, German, Russian and Ukrainian cannot have open responses.
+
 ## Hosting
 
 - Detach `language.zach.ro` and `repository.language.zach.ro`, and remove `https://language.zach.ro` from `tools/course_builder/r2-cors.json`, once no supported app build reads them (Android version code 2 and earlier, and iOS builds before the move to `plainspoken.zach.ro`).
