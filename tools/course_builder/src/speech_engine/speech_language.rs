@@ -250,10 +250,14 @@ pub const RUSSIAN: SpeechLanguage = SpeechLanguage {
     language_tag: course::RUSSIAN_LANGUAGE_TAG,
     kokoro: None,
     macos_voices: PersonaVoices {
-        narrator: profile("Milena", 1.0),
-        female_speakers: &[profile("Milena", 1.0)],
-        male_speakers: &[profile("Milena", 1.0)],
-        listening_pool: &[profile("Milena", 1.0)],
+        narrator: profile("Milena (Enhanced)", 1.0),
+        female_speakers: &[profile("Milena (Enhanced)", 1.0), profile("Katya (Enhanced)", 1.0)],
+        male_speakers: &[profile("Yuri (Enhanced)", 1.0)],
+        listening_pool: &[
+            profile("Milena (Enhanced)", 1.0),
+            profile("Yuri (Enhanced)", 1.0),
+            profile("Katya (Enhanced)", 1.0),
+        ],
     },
     isolated_word_phrases: &[
         ("в", "в доме"),
@@ -270,10 +274,10 @@ pub const UKRAINIAN: SpeechLanguage = SpeechLanguage {
     language_tag: course::UKRAINIAN_LANGUAGE_TAG,
     kokoro: None,
     macos_voices: PersonaVoices {
-        narrator: profile("Lesya", 1.0),
-        female_speakers: &[profile("Lesya", 1.0)],
-        male_speakers: &[profile("Lesya", 1.0)],
-        listening_pool: &[profile("Lesya", 1.0)],
+        narrator: profile("Lesya (Enhanced)", 1.0),
+        female_speakers: &[profile("Lesya (Enhanced)", 1.0), profile("Lesya", 1.0)],
+        male_speakers: &[profile("Lesya (Enhanced)", 1.0)],
+        listening_pool: &[profile("Lesya (Enhanced)", 1.0), profile("Lesya", 1.0)],
     },
     isolated_word_phrases: &[
         ("в", "в місті"),

@@ -17,7 +17,7 @@ Known gaps, recorded when found.
 
 ## Courses
 
-- Russian and Ukrainian courses have one macOS voice, which speaks every persona. Apple offers the male Russian voice Yuri (and the female Katya) under System Settings > Accessibility > Spoken Content > System Voice > Manage Voices; Apple offers no male Ukrainian voice, so Ukrainian male speakers need another engine.
+- Ukrainian has no male macOS voice: Apple offers only Lesya, so the Ukrainian male speakers use Lesya (Enhanced) and need another engine.
 - Kokoro has no voices for German, Russian or Ukrainian and only a female French voice (`ff_siwis`), so those courses' clips come from the macOS voices alone.
 - Only Brazilian Portuguese taught in English has a grader prompt (`shared::grading::GraderPromptKind`), so the courses in Mexican Spanish, French, German, Russian and Ukrainian cannot have open responses.
 
