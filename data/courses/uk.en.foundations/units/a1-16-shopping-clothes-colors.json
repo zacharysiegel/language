@@ -1,0 +1,528 @@
+{
+  "id": "a1-16-shopping-clothes-colors",
+  "level": "A1",
+  "order": 16,
+  "title": "Shopping, clothes and colors",
+  "objectives": [
+    "I can ask for clothes in a size and a color, and ask what they cost.",
+    "I can point things out with 'цей' and 'той' in the nominative and the accusative, and tell 'це' the pointer from 'це' the neuter of 'цей'.",
+    "I can make color adjectives agree with their nouns, including the plural-only nouns 'штани́' and 'гро́ші'.",
+    "I can say whether something is cheap or expensive, and use 'ко́штує' or 'ко́штують' to match the thing that costs.",
+    "I can ask permission with 'мо́жна' and an infinitive, and explain how 'соро́чка', 'жо́втий' and 'гро́ші' are pronounced."
+  ],
+  "vocabulary": [
+    {
+      "target": "цей",
+      "source": "this",
+      "part_of_speech": "demonstrative pronoun",
+      "note": "Its other forms are 'ця' (feminine), 'це' (neuter) and 'ці' (plural). It points at something near the speaker. The 'ц' is hard before 'е' and soft in 'ця', 'цю' and 'ці'.",
+      "example": {"target": "Цей стіл ду́же вели́кий.", "source": "This table is very big."}
+    },
+    {
+      "target": "той",
+      "source": "that",
+      "part_of_speech": "demonstrative pronoun",
+      "note": "Its other forms are 'та' (feminine), 'те' (neuter) and 'ті' (plural). It points at something farther from the speaker.",
+      "example": {"target": "Той магази́н дороги́й.", "source": "That store is expensive."}
+    },
+    {
+      "target": "соро́чка",
+      "source": "shirt",
+      "part_of_speech": "feminine noun",
+      "note": "A shirt with a collar and buttons, worn by men and women. The 'ч' is hard, as Ukrainian 'ч' always is before a consonant. The accusative is 'соро́чку'.",
+      "example": {"target": "Моя́ соро́чка бі́ла.", "source": "My shirt is white."}
+    },
+    {
+      "target": "су́кня",
+      "source": "dress",
+      "part_of_speech": "feminine noun",
+      "note": "The 'н' is soft before 'я', while the 'к' before it stays hard. The accusative is 'су́кню' and the nominative plural 'су́кні'.",
+      "example": {"target": "Ця су́кня ду́же га́рна.", "source": "This dress is very pretty."}
+    },
+    {
+      "target": "штани́",
+      "source": "trousers, pants",
+      "part_of_speech": "plural-only noun",
+      "note": "It has no singular: one pair of pants is 'штани́', and every word that agrees with it is plural ('ці штани́', 'мої́ штани́').",
+      "example": {"target": "Мої́ штани́ сі́рі.", "source": "My pants are gray."}
+    },
+    {
+      "target": "ку́ртка",
+      "source": "jacket",
+      "part_of_speech": "feminine noun",
+      "note": "A short coat for outdoors. The accusative is 'ку́ртку'.",
+      "example": {"target": "Де моя́ ку́ртка?", "source": "Where is my jacket?"}
+    },
+    {
+      "target": "череви́ки",
+      "source": "shoes, ankle boots",
+      "part_of_speech": "masculine noun",
+      "note": "It is cited in the plural, the form for a pair. One shoe is 'череви́к', genitive 'череви́ка', so this is an ordinary plural, unlike 'штани́'. It names closed shoes that cover the foot, up to the ankle.",
+      "example": {"target": "Ці череви́ки ду́же дорогі́.", "source": "These shoes are very expensive."}
+    },
+    {
+      "target": "черво́ний",
+      "source": "red",
+      "part_of_speech": "adjective",
+      "note": "A hard stem: 'черво́на', 'черво́не', 'черво́ні'. The 'в' before a vowel is [ʋ].",
+      "example": {"target": "У ме́не є черво́на су́кня.", "source": "I have a red dress.", "source_literal": "At me is red dress."}
+    },
+    {
+      "target": "жо́втий",
+      "source": "yellow",
+      "part_of_speech": "adjective",
+      "note": "The 'в' comes before a consonant, so it is said [w], as in 'cow': [ˈʒɔwtɪj].",
+      "example": {"target": "Жо́втий авто́бус стої́ть на зупи́нці.", "source": "The yellow bus is standing at the stop."}
+    },
+    {
+      "target": "зеле́ний",
+      "source": "green",
+      "part_of_speech": "adjective",
+      "note": "The first, unstressed 'е' leans toward 'и'; the stressed 'е' is a clear [ɛ].",
+      "example": {"target": "Парк вели́кий і зеле́ний.", "source": "The park is big and green."}
+    },
+    {
+      "target": "чо́рний",
+      "source": "black",
+      "part_of_speech": "adjective",
+      "note": "'Чо́рна ка́ва' is coffee without milk, as 'black coffee' is in English.",
+      "example": {"target": "Тара́с п’є чо́рну ка́ву.", "source": "Taras drinks black coffee."}
+    },
+    {
+      "target": "бі́лий",
+      "source": "white",
+      "part_of_speech": "adjective",
+      "note": "A hard stem: 'бі́ла', 'бі́ле', 'бі́лі'. The 'б' is only slightly softened before 'і'.",
+      "example": {"target": "Мій кіт бі́лий.", "source": "My cat is white."}
+    },
+    {
+      "target": "сі́рий",
+      "source": "gray",
+      "part_of_speech": "adjective",
+      "note": "The 'с' is soft before 'і'. A hard stem: 'сі́ра', 'сі́ре', 'сі́рі'.",
+      "example": {"target": "Ця сі́ра ку́ртка деше́ва.", "source": "This gray jacket is cheap."}
+    },
+    {
+      "target": "дороги́й",
+      "source": "expensive, dear",
+      "part_of_speech": "adjective",
+      "note": "The stress stays on the ending in every form: 'дорога́', 'дороге́', 'дорогі́'. It also means 'dear' about a person, for example at the start of a letter.",
+      "example": {"target": "Ка́ва тут дорога́.", "source": "Coffee is expensive here.", "source_literal": "Coffee here expensive."}
+    },
+    {
+      "target": "деше́вий",
+      "source": "cheap",
+      "part_of_speech": "adjective",
+      "note": "The 'ш' is hard before 'е'. The forms are 'деше́ва', 'деше́ве', 'деше́ві'.",
+      "example": {"target": "На ри́нку сир деше́вий.", "source": "Cheese is cheap at the market.", "source_literal": "At market cheese cheap."}
+    },
+    {
+      "target": "ро́змір",
+      "source": "size",
+      "part_of_speech": "masculine noun",
+      "note": "Genitive 'ро́зміру'. A size is said as a number after the noun: 'ро́змір со́рок ві́сім', size forty-eight.",
+      "example": {"target": "Яки́й у вас ро́змір?", "source": "What size are you?", "source_literal": "Which at you size?"}
+    },
+    {
+      "target": "ціна́",
+      "source": "price",
+      "part_of_speech": "feminine noun",
+      "note": "The 'ц' is soft before 'і'.",
+      "example": {"target": "Яка́ ціна́?", "source": "What is the price?", "source_literal": "Which price?"}
+    },
+    {
+      "target": "гро́ші",
+      "source": "money",
+      "part_of_speech": "plural-only noun",
+      "note": "It has no singular, so it takes plural words where English uses singular ones: 'мої́ гро́ші', my money; 'Гро́ші тут.', the money is here.",
+      "example": {"target": "Де мої́ гро́ші?", "source": "Where is my money?"}
+    },
+    {
+      "target": "купува́ти",
+      "source": "to buy",
+      "part_of_speech": "imperfective verb",
+      "note": "'купу́ю', 'купу́єш', 'купу́ють': in the present '-ува-' becomes '-у-', as in 'працюва́ти'.",
+      "example": {"target": "Я купу́ю хліб і молоко́.", "source": "I am buying bread and milk."}
+    },
+    {
+      "target": "приміря́ти",
+      "source": "to try on",
+      "part_of_speech": "imperfective verb",
+      "note": "Regular, like 'чита́ти': 'приміря́ю', 'приміря́єш'. The 'р' is soft before 'я'.",
+      "example": {"target": "Окса́на приміря́є су́кню.", "source": "Oksana is trying on a dress."}
+    }
+  ],
+  "dialogues": [
+    {
+      "id": "d1",
+      "title": "A dress for Oksana",
+      "context": "Oksana and Olena are in a small secondhand clothing shop. The two friends say 'ти' to each other; Bohdan, who works in the shop, says 'ви' to them.",
+      "lines": [
+        {"speaker": "Окса́на", "gender": "f", "target": "До́брий день! У вас є су́кні?", "source": "Good afternoon! Do you have dresses?", "source_literal": "Good day! At you is dresses?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "До́брий день! Так, ось вони́. Яки́й у вас ро́змір?", "source": "Good afternoon! Yes, here they are. What size are you?", "source_literal": "Good day! Yes, here they. Which at you size?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Со́рок чоти́ри. Оле́но, як ду́маєш, ця черво́на су́кня га́рна?", "source": "Forty-four. Olena, what do you think, is this red dress pretty?", "source_literal": "Forty four. Olena, how you-think, this red dress pretty?"},
+        {"speaker": "Оле́на", "gender": "f", "target": "Га́рна. А ту зеле́ну ти ба́чиш?", "source": "It's pretty. And do you see that green one?", "source_literal": "Pretty. And that green you see?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Ту? Так, вона́ ду́же га́рна! Скі́льки вона́ ко́штує?", "source": "That one? Yes, it's very pretty! How much is it?", "source_literal": "That? Yes, it very pretty! How-much it costs?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Зеле́на ко́штує дев’яно́сто гри́вень, а черво́на ко́штує п’ятдеся́т.", "source": "The green one costs ninety hryvnias, and the red one costs fifty.", "source_literal": "Green costs ninety of-hryvnias, and red costs fifty."},
+        {"speaker": "Оле́на", "gender": "f", "target": "Дев’яно́сто гри́вень? Вона́ не деше́ва.", "source": "Ninety hryvnias? It's not cheap.", "source_literal": "Ninety of-hryvnias? It not cheap."},
+        {"speaker": "Окса́на", "gender": "f", "target": "Не деше́ва, але́ ду́же га́рна. Мо́жна приміря́ти?", "source": "Not cheap, but very pretty. May I try it on?", "source_literal": "Not cheap, but very pretty. Possible to-try-on?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Так, мо́жна. Там, право́руч.", "source": "Yes, you may. Over there, on the right.", "source_literal": "Yes, possible. There, on-the-right."},
+        {"speaker": "Оле́на", "gender": "f", "target": "Окса́но, ця су́кня ду́же га́рна! І це твій ро́змір.", "source": "Oksana, this dress is very pretty! And it's your size.", "source_literal": "Oksana, this dress very pretty! And this your size."},
+        {"speaker": "Окса́на", "gender": "f", "target": "Так, я купу́ю цю су́кню. Ось гро́ші.", "source": "Yes, I'm buying this dress. Here is the money.", "source_literal": "Yes, I buy this dress. Here money."},
+        {"speaker": "Богда́н", "gender": "m", "target": "Дя́кую! До поба́чення!", "source": "Thank you! Goodbye!", "source_literal": "I-thank! Until seeing!"}
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "A jacket for Sam",
+      "context": "Sam is in the same secondhand shop and wants a jacket. He and Bohdan do not know each other, so they say 'ви'.",
+      "lines": [
+        {"speaker": "Сем", "gender": "m", "target": "До́брий день! Мо́жна приміря́ти цю ку́ртку?", "source": "Good afternoon! May I try on this jacket?", "source_literal": "Good day! Possible to-try-on this jacket?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Так, будь ла́ска. Це ро́змір со́рок ві́сім.", "source": "Yes, please do. It's a size forty-eight.", "source_literal": "Yes, be kindness. This size forty eight."},
+        {"speaker": "Сем", "gender": "m", "target": "Вона́ мала́. У вас є ро́змір п’ятдеся́т?", "source": "It's small. Do you have a size fifty?", "source_literal": "It small. At you is size fifty?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Так, є. Але́ вона́ чо́рна.", "source": "Yes, we do. But it's black.", "source_literal": "Yes, is. But it black."},
+        {"speaker": "Сем", "gender": "m", "target": "Чо́рна? А си́ня є?", "source": "Black? Is there a blue one?", "source_literal": "Black? And blue is?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Си́ньої нема́є. Є бі́ла й чо́рна.", "source": "There is no blue one. There's a white one and a black one.", "source_literal": "Of-blue there-is-not. Is white and black."},
+        {"speaker": "Сем", "gender": "m", "target": "Бі́ла? Ні, дя́кую. Мо́жна приміря́ти чо́рну?", "source": "White? No, thank you. May I try on the black one?", "source_literal": "White? No, I-thank. Possible to-try-on black?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Так, ось вона́.", "source": "Yes, here it is.", "source_literal": "Yes, here it."},
+        {"speaker": "Сем", "gender": "m", "target": "Ця не мала́. Це мій ро́змір! Скі́льки вона́ ко́штує?", "source": "This one isn't small. It's my size! How much is it?", "source_literal": "This not small. This my size! How-much it costs?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Сто гри́вень.", "source": "A hundred hryvnias.", "source_literal": "Hundred of-hryvnias."},
+        {"speaker": "Сем", "gender": "m", "target": "Вона́ не дорога́. Я її́ купу́ю!", "source": "It isn't expensive. I'll buy it!", "source_literal": "It not expensive. I it buy!"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Дя́кую! Ку́ртка ду́же га́рна.", "source": "Thank you! It's a very nice jacket.", "source_literal": "I-thank! Jacket very nice."}
+      ]
+    },
+    {
+      "id": "d3",
+      "title": "Two pairs of shoes",
+      "context": "Taras and Sam are at an outdoor market, at a stall that sells shoes. The friends say 'ти' to each other and 'ви' to Bohdan, the seller.",
+      "lines": [
+        {"speaker": "Тара́с", "gender": "m", "target": "Се́ме, ти ба́чиш ці череви́ки?", "source": "Sam, do you see these shoes?", "source_literal": "Sam, you see these shoes?"},
+        {"speaker": "Сем", "gender": "m", "target": "Ці чо́рні? Так, вони́ га́рні.", "source": "These black ones? Yes, they're nice.", "source_literal": "These black? Yes, they nice."},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ви́бачте, скі́льки ко́штують ці череви́ки?", "source": "Excuse me, how much do these shoes cost?", "source_literal": "Excuse, how-much cost these shoes?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Ці ко́штують дев’яно́сто гри́вень.", "source": "These cost ninety hryvnias.", "source_literal": "These cost ninety of-hryvnias."},
+        {"speaker": "Тара́с", "gender": "m", "target": "А ті, бі́лі?", "source": "And those, the white ones?", "source_literal": "And those, white?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Ті деше́ві. Вони́ ко́штують со́рок гри́вень.", "source": "Those are cheap. They cost forty hryvnias.", "source_literal": "Those cheap. They cost forty of-hryvnias."},
+        {"speaker": "Сем", "gender": "m", "target": "Тара́се, бі́лі ду́же деше́ві! Ти хо́чеш бі́лі?", "source": "Taras, the white ones are very cheap! Do you want the white ones?", "source_literal": "Taras, white very cheap! You want white?"},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ні, я не люблю́ бі́лі череви́ки. У вас є чо́рні, ро́змір со́рок три?", "source": "No, I don't like white shoes. Do you have the black ones in a size forty-three?", "source_literal": "No, I not like white shoes. At you is black, size forty three?"},
+        {"speaker": "Богда́н", "gender": "m", "target": "Є. Ось вони́. Мо́жна приміря́ти тут.", "source": "Yes. Here they are. You can try them on here.", "source_literal": "Is. Here they. Possible to-try-on here."},
+        {"speaker": "Тара́с", "gender": "m", "target": "Дя́кую. Вони́ дорогі́, але́ ду́же га́рні. Я їх купу́ю.", "source": "Thank you. They're expensive, but very nice. I'll buy them.", "source_literal": "I-thank. They expensive, but very nice. I them buy."},
+        {"speaker": "Сем", "gender": "m", "target": "А гро́ші в тебе́ є?", "source": "And do you have the money?", "source_literal": "And money at you is?"},
+        {"speaker": "Тара́с", "gender": "m", "target": "Є! Ось сто гри́вень.", "source": "I do! Here's a hundred hryvnias.", "source_literal": "Is! Here hundred of-hryvnias."},
+        {"speaker": "Богда́н", "gender": "m", "target": "Дя́кую. Ось де́сять гри́вень.", "source": "Thank you. Here are ten hryvnias.", "source_literal": "I-thank. Here ten of-hryvnias."}
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "title": "Spelling and sound: соро́чка, жо́втий, гро́ші and the other new words",
+      "explanation": "Every new word in this unit can be read with the rules of the alphabet units and the unit on stress. Nothing here needs a new rule. The points below are the ones that are easy to miss, in the order of the reading procedure: the letters first, then softness, then the stress.\n\nUkrainian 'ч' is a hard consonant. The tongue stays flat and the sound is [t͡ʃ], as in 'church', before every vowel and before a consonant: 'соро́чка' [sɔˈrɔt͡ʃkɑ], 'чо́рний', 'череви́ки'. Like the other consonants that cannot be fully soft, it is only slightly softened before 'і'. The soft sign never follows 'ч', so no spelling ever asks for a soft 'ч'.\n\nThe letter 'в' has two sounds. Before a vowel it is [ʋ], between English 'v' and 'w' ('черво́ний', 'деше́вий', 'череви́ки'). At the end of a syllable, before a consonant, it is [w], as in 'cow': 'жо́втий' is [ˈʒɔwtɪj], and its 'ов' sounds close to the 'ow' of English 'bowl'. The 'в' never turns into [f].\n\nIn 'гро́ші' [ˈɦrɔʃi] the 'г' is the voiced [ɦ] of the second alphabet unit, and the 'ш' stays the [ʃ] of 'shoe', only slightly softened by the 'і' after it. The 'ш' of 'деше́вий' is fully hard before 'е'.\n\nSoftness works as the unit on soft sounds taught:\n\n- 'ц' is hard before 'е' ('цей') and soft before 'і', 'я' and 'ю' ('ціна́', 'ця', 'цю'); in 'цьо́го' the soft sign plus 'о' writes the same soft 'ц' before [ɔ].\n- In 'су́кня' [ˈsuknʲɑ] only the 'н' is soft; the 'к' before it stays hard.\n- In 'приміря́ти' the 'р' is soft because 'я' follows it, and the 'м' is slightly softened before 'і'.\n- 'с' is soft before 'і' in 'сі́рий'; 'б' is only slightly softened in 'бі́лий'.\n\nUnstressed 'е' leans toward 'и', as the unit on stress explained: the first two vowels of 'череви́ки' and the first 'е' of 'зеле́ний' sound a little like 'и', while the stressed 'е' of 'зеле́ний' and 'деше́вий' is a clear [ɛ].\n\nTwo verbs show how the present can move the stress. 'Купува́ти' belongs to the family of 'працюва́ти': in the present '-ува-' becomes '-у-', and the stress falls on that 'у': 'купу́ю', 'купу́єш', 'купу́ють'. 'Коштува́ти' makes the same change but puts the stress on its first syllable: 'ко́штує', 'ко́штують'. This is why the stress of a present tense is learned from the 'я' and 'ти' forms.\n\nTwo nouns show that an 'і' in a closed syllable may or may not alternate. 'Ро́змір' keeps its 'і' in every form ('ро́зміру'), unlike 'стіл', 'стола́', so the genitive is learned with the noun. 'Ко́лір', color, does alternate: its other forms use the stem 'ко́льор-' ('ко́льору'), where the 'л' that was soft before 'і' stays soft and is written 'ль' before 'о'.",
+      "table": {
+        "headers": ["Spelling", "Where", "Sound", "Example"],
+        "rows": [
+          ["ч", "except before і", "[t͡ʃ], hard", "соро́чка, чо́рний"],
+          ["в", "before a vowel", "[ʋ]", "черво́ний, деше́вий"],
+          ["в", "before a consonant", "[w]", "жо́втий"],
+          ["ш", "before і", "[ʃ], slightly softened", "гро́ші"],
+          ["ц", "before е", "[t͡s], hard", "цей"],
+          ["ц", "before і, я, ю or ьо", "[t͡sʲ], soft", "ціна́, ця, цьо́го"],
+          ["н", "before я or ю", "[nʲ], soft", "су́кня, су́кню"],
+          ["р", "before я", "[rʲ], soft", "приміря́ти"],
+          ["е", "unstressed", "[ɛ], leaning to и", "череви́ки, зеле́ний"]
+        ]
+      },
+      "examples": [
+        {"target": "Соро́чка чо́рна.", "source": "The shirt is black."},
+        {"target": "Ці череви́ки жо́вті.", "source": "These shoes are yellow."},
+        {"target": "Гро́ші тут.", "source": "The money is here."},
+        {"target": "Я купу́ю су́кню.", "source": "I am buying a dress."},
+        {"target": "Я приміря́ю ку́ртку.", "source": "I am trying on a jacket."}
+      ]
+    },
+    {
+      "title": "Цей and той: this and that",
+      "explanation": "A demonstrative pronoun is a word that points out a particular person or thing, as 'this' and 'that' do in 'this shirt' and 'that jacket'. Ukrainian has two, and each agrees with its noun in gender, number and case, exactly as an adjective does:\n\n- 'цей' points at something near the speaker: 'цей ро́змір', 'ця соро́чка', 'це вікно́', 'ці штани́'.\n- 'той' points at something farther away: 'той магази́н', 'та су́кня', 'те мі́сто', 'ті череви́ки'.\n\nIn the accusative, the case of the object, they change exactly where an adjective changes (the unit on food and drink):\n\n- The feminine takes '-ю' or '-у': 'Я хо́чу цю ку́ртку.', 'Я купу́ю ту су́кню.'\n- The neuter and the plural of things stay as they are: 'Я ба́чу це вікно́.', 'Я купу́ю ці штани́.'\n- The masculine of a thing stays as it is: 'Я купу́ю цей стіл.'\n- The masculine of a person or an animal takes '-ого', like 'ново́го дру́га': 'цьо́го', 'того́' ('Ви ба́чите того́ чолові́ка?').\n\nPeople in the plural have another accusative form, which comes with the plural cases in A2; this unit uses the plural only for things.\n\nA demonstrative can stand without its noun when the noun is clear from the situation. 'Я хо́чу цю.' means 'I want this one': English adds 'one', while the Ukrainian ending already shows which noun is meant (here a feminine one, such as 'ку́ртка'). A shop assistant may ask 'Ця чи та?', 'This one or that one?'\n\nTwo words are spelled 'це', and they do different jobs:\n\n- 'Це' the pointer, from the unit on people and things, never changes and introduces whatever it points at, of any gender or number. The sentence has no word for 'is', and English adds one: 'Це су́кня.' 'This is a dress.'; 'Це мої́ штани́.' 'These are my pants.'\n- 'це' the neuter of 'цей' agrees with a neuter noun and stands directly before it: 'це вікно́', 'this window'.\n\nWord order tells them apart. In 'Ця су́кня черво́на.', 'This dress is red', the word 'ця' agrees with 'су́кня', and the color after the noun is the predicate. In 'Це черво́на су́кня.', 'This is a red dress', the word 'це' points, and 'черво́на су́кня' is what it points at. With a neuter noun the two words look the same, so only the order decides: 'Це вікно́ вели́ке.' is 'This window is big', and 'Це вели́ке вікно́.' is 'This is a big window'.",
+      "table": {
+        "headers": ["Case", "Question", "Masculine", "Feminine", "Neuter", "Plural"],
+        "rows": [
+          ["Nominative", "хто? що?", "цей, той", "ця, та", "це, те", "ці, ті"],
+          ["Accusative", "кого́? що?", "цей, той; цьо́го, того́ for a person or animal", "цю, ту", "це, те", "ці, ті (things)"]
+        ]
+      },
+      "examples": [
+        {"target": "Цей ро́змір мали́й.", "source": "This size is small."},
+        {"target": "Ця ку́ртка си́ня, а та сі́ра.", "source": "This jacket is blue, and that one is gray.", "source_literal": "This jacket blue, and that gray."},
+        {"target": "Ви ба́чите того́ чолові́ка?", "source": "Do you see that man?", "source_literal": "You see that man?"},
+        {"target": "Я хо́чу цю.", "source": "I want this one.", "source_literal": "I want this."},
+        {"target": "Це мої́ нові́ штани́.", "source": "These are my new pants.", "source_literal": "This my new pants."},
+        {"target": "Це вікно́ вели́ке.", "source": "This window is big."}
+      ]
+    },
+    {
+      "title": "Colors, plural-only nouns and prices",
+      "explanation": "Color words in Ukrainian are adjectives, so they agree with their noun in gender, number and case. Most of them have a hard stem and the endings of 'нови́й': '-ий' masculine, '-а' feminine, '-е' neuter and '-і' plural. The hard-stem colors of this unit are:\n\n- 'черво́ний', red\n- 'жо́втий', yellow\n- 'зеле́ний', green\n- 'чо́рний', black\n- 'бі́лий', white\n- 'сі́рий', gray\n\n'Си́ній', blue, has a soft stem, so its endings are '-ій', '-я', '-є' and '-і': 'си́ня су́кня', 'си́нє вікно́', 'си́ні штани́'. The word for color itself is 'ко́лір', a masculine noun: 'Яки́й ко́лір?', 'What color?'\n\nA color can stand before its noun as a description or after it as the predicate, with no word for 'is': 'бі́ла соро́чка', 'a white shirt'; 'Соро́чка бі́ла.', 'The shirt is white.'\n\nThe object of 'хоті́ти', 'купува́ти' or 'приміря́ти' is in the accusative, and the color changes with it: the feminine ending '-а' becomes '-у' and '-я' becomes '-ю' ('Я хо́чу зеле́ну соро́чку.', 'Я купу́ю си́ню су́кню.'), while masculine and neuter things and the plural of things keep the nominative form ('Ти хо́чеш бі́лий хліб?').\n\nA plural-only noun is a noun that has only plural forms, even when it names one thing. 'Штани́' is one pair of pants, and 'гро́ші' is money. Every word that agrees with such a noun is plural, and so is the verb:\n\n- 'Ці штани́ сі́рі.' 'These pants are gray.'\n- 'Мої́ гро́ші тут.' 'My money is here.'\n\nEnglish treats 'pants' the same way ('these pants are'), but it treats 'money' as singular ('my money is'), so 'гро́ші' needs care: where English says 'my money is', Ukrainian uses plural forms. 'Череви́ки' is different again. It is the ordinary plural of 'череви́к', one shoe, which has a singular of its own: 'Цей череви́к мали́й.', 'This shoe is small.'\n\nPrices follow the same agreement. In 'Скі́льки ко́штує ця су́кня?' the thing is the subject, so 'коштува́ти' agrees with it: 'ко́штує' for one thing, 'ко́штують' for a plural or a plural-only noun ('Скі́льки ко́штують ці штани́?'). The question word comes first, and Ukrainian needs no helper verb where English puts 'does' before the subject ('How much does this dress cost?'). A noun subject usually follows the verb ('Скі́льки ко́штує ця су́кня?'), and a pronoun subject usually comes before it ('Скі́льки вона́ ко́штує?'). The answer gives the number with the forms of 'гри́вня' from the unit on numbers: 'Вона́ ко́штує сто гри́вень.', 'Вони́ ко́штують дев’яно́сто гри́вень.'",
+      "table": {
+        "headers": ["Case", "Question", "Masculine", "Feminine", "Neuter", "Plural"],
+        "rows": [
+          ["Nominative", "хто? що?", "черво́ний, си́ній", "черво́на, си́ня", "черво́не, си́нє", "черво́ні, си́ні"],
+          ["Accusative", "що?", "черво́ний, си́ній", "черво́ну, си́ню", "черво́не, си́нє", "черво́ні, си́ні"]
+        ]
+      },
+      "examples": [
+        {"target": "Я хо́чу си́ню су́кню.", "source": "I want a blue dress."},
+        {"target": "Ці штани́ сі́рі.", "source": "These pants are gray."},
+        {"target": "Мої́ гро́ші тут.", "source": "My money is here."},
+        {"target": "Цей череви́к мали́й.", "source": "This shoe is small."},
+        {"target": "Скі́льки ко́штує ця су́кня?", "source": "How much does this dress cost?", "source_literal": "How-much costs this dress?"},
+        {"target": "Вони́ ко́штують дев’яно́сто гри́вень.", "source": "They cost ninety hryvnias.", "source_literal": "They cost ninety of-hryvnias."},
+        {"target": "Яки́й ко́лір ви хо́чете?", "source": "What color do you want?", "source_literal": "Which color you want?"}
+      ]
+    },
+    {
+      "title": "Мо́жна with an infinitive: asking permission",
+      "explanation": "The unit on food and drink introduced 'мо́жна' as a predicative word: a word that is the whole predicate of a sentence with no grammatical subject. 'Мо́жна ка́ву?' is literally 'possible coffee?'. Because there is no subject, 'мо́жна' has nothing to agree with and never changes.\n\nFollowed by an infinitive, 'мо́жна' says that an action is allowed or possible, and as a question it asks permission: 'Мо́жна приміря́ти?', literally 'possible to-try-on?', 'May I try it on?'. The sentence names no person. Who would do the action is clear from the situation: in a shop it is the customer, so English says 'May I...?', and in a general question about a place English says 'Can one...?' or 'Can you...?'.\n\nThe pattern builds like this:\n\n- An object of the infinitive follows it in the accusative: 'Мо́жна приміря́ти цю су́кню?'\n- A word of place or a question word can come first: 'Тут мо́жна сиді́ти?', 'Де мо́жна приміря́ти?'\n- 'Чи' can open the question, as with any yes or no question: 'Чи мо́жна приміря́ти?'\n- The answer repeats the word: 'Так, мо́жна.' or 'Ні, не мо́жна.'\n- 'Не мо́жна', written as two words, says that something is not allowed: 'Тут не мо́жна ї́сти.'\n\n'Мо́жна' is related to the verb 'могти́' ('мо́жу', 'мо́жеш'), but the two are built differently. 'Могти́' is a verb: it has a subject and an ending for each person ('Я мо́жу приміря́ти?', 'Can I try it on?'). 'Мо́жна' names no one and is the usual polite way to ask permission in a shop, a café or an office.",
+      "table": {
+        "headers": ["Pattern", "Example", "Literal", "Natural"],
+        "rows": [
+          ["мо́жна with a noun", "Мо́жна ка́ву?", "possible coffee?", "May I have a coffee?"],
+          ["мо́жна with an infinitive", "Мо́жна приміря́ти?", "possible to-try-on?", "May I try it on?"],
+          ["with an object", "Мо́жна приміря́ти цю су́кню?", "possible to-try-on this dress?", "May I try on this dress?"],
+          ["a question word first", "Де мо́жна приміря́ти?", "where possible to-try-on?", "Where can I try it on?"],
+          ["не мо́жна", "Тут не мо́жна ї́сти.", "here not possible to-eat", "You can't eat here."],
+          ["the answer", "Так, мо́жна.", "yes, possible", "Yes, you may."]
+        ]
+      },
+      "examples": [
+        {"target": "Тут мо́жна говори́ти англі́йською?", "source": "Can you speak English here?", "source_literal": "Here possible to-speak by-English?"},
+        {"target": "Де тут мо́жна купува́ти хліб?", "source": "Where can you buy bread here?", "source_literal": "Where here possible to-buy bread?"},
+        {"target": "Мо́жна приміря́ти ці штани́?", "source": "May I try on these pants?", "source_literal": "Possible to-try-on these pants?"},
+        {"target": "Так, мо́жна. Там, ліво́руч.", "source": "Yes, you may. Over there, on the left.", "source_literal": "Yes, possible. There, on-the-left."}
+      ]
+    }
+  ],
+  "culture": {
+    "title": "Markets, sizes and the embroidered shirt",
+    "text": "In Ukrainian cities people buy clothes in shopping centers and small shops, but also at open-air markets, where stalls sell clothes and shoes next to food. Secondhand clothing shops are common and cheap. At a market stall the price is sometimes open to a little bargaining; in a shop it is fixed. Prices are in hryvnias. A new jacket in a city shop often costs a few thousand hryvnias, and the numbers above a hundred come in a later unit.\n\nSizes are numbers, said after the word 'ро́змір':\n\n- women's clothes: 42, 44, 46 and so on\n- men's jackets and shirts: 48, 50, 52 and so on\n- shoes: from about 36 to 46\n\nMany shops also use the letters S, M and L.\n\nThe best-known piece of Ukrainian clothing is 'вишива́нка', an embroidered shirt; the word comes from the verb 'вишива́ти', to embroider. It is worn by men and women, and every region has its own patterns and colors, although red and black thread on white cloth is among the most common. Many people wear one on Vyshyvanka Day, the third Thursday of May, and at weddings and holidays.\n\nTwo of the colors in this unit are the colors of the flag of Ukraine, which has a blue stripe above a yellow one. The blue is often said to stand for the sky and the yellow for fields of wheat. Ukrainians often call the flag 'си́ньо-жо́втий', blue-and-yellow. It is a compound adjective: the stem of 'си́ній' with the linking vowel '-о-', written 'ьо' after the soft 'н', is joined by a hyphen to 'жо́втий', and only the second part takes endings."
+  },
+  "readings": [],
+  "exercises": [
+    {
+      "type": "match",
+      "prompt": "Match each color with its English name",
+      "pairs": [
+        {"target": "черво́ний", "source": "red"},
+        {"target": "жо́втий", "source": "yellow"},
+        {"target": "зеле́ний", "source": "green"},
+        {"target": "чо́рний", "source": "black"},
+        {"target": "бі́лий", "source": "white"},
+        {"target": "сі́рий", "source": "gray"}
+      ]
+    },
+    {
+      "type": "match",
+      "prompt": "Match each word with its English meaning",
+      "pairs": [
+        {"target": "соро́чка", "source": "shirt"},
+        {"target": "су́кня", "source": "dress"},
+        {"target": "штани́", "source": "pants"},
+        {"target": "ку́ртка", "source": "jacket"},
+        {"target": "череви́ки", "source": "shoes"},
+        {"target": "гро́ші", "source": "money"}
+      ]
+    },
+    {
+      "type": "listening_choice",
+      "audio_target": "Ця соро́чка черво́на.",
+      "choices": ["This shirt is yellow.", "This shirt is red.", "This shirt is green."],
+      "answer_index": 1
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "How is the 'в' in 'жо́втий' said?",
+      "choices": ["[w], as in 'cow', because it comes before a consonant", "[ʋ], between English 'v' and 'w', because it comes before a vowel", "[f], because it comes before 'т'"],
+      "answer_index": 0,
+      "explanation": "At the end of a syllable, before a consonant, 'в' is [w]: [ˈʒɔwtɪj]. It is [ʋ] only before a vowel, as in 'черво́ний', and it never turns into [f]."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "How is the 'ч' in 'соро́чка' said?",
+      "choices": ["As a soft sound, because 'к' follows it", "As a hard [t͡ʃ], as in 'church'", "As [ʃ], as in 'shoe'"],
+      "answer_index": 1,
+      "explanation": "Ukrainian 'ч' is hard before every vowel and before a consonant, and it is only slightly softened before 'і'. The soft sign never follows it."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why is the 'я' form of 'купува́ти' spelled 'купу́ю'?",
+      "choices": ["The verb belongs to the second conjugation", "The 'в' turns into 'ю' before an ending", "In the present, '-ува-' becomes '-у-', as in 'працюва́ти' and 'працю́ю'"],
+      "answer_index": 2,
+      "explanation": "Verbs in '-ува́ти' replace '-ува-' with '-у-' in the present and take first-conjugation endings: 'купу́ю', 'купу́єш', 'купу́ють'."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "___ су́кня черво́на.",
+      "answers": ["ця"],
+      "hint_source": "This dress is red.",
+      "explanation": "'Су́кня' is feminine singular, so 'this' is 'ця'."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "Я хо́чу ___ ку́ртку.",
+      "answers": ["цю"],
+      "hint_source": "I want this jacket.",
+      "explanation": "'Ку́ртку' is the object, in the accusative, and the feminine form 'ця' becomes 'цю' there, just as 'ку́ртка' becomes 'ку́ртку'."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "Ці штани́ ду́же ___.",
+      "answers": ["дорогі́"],
+      "hint_source": "These pants are very expensive.",
+      "explanation": "'Штани́' is a plural-only noun, so the adjective takes the plural ending '-і': 'дорогі́'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Which form of 'цей' agrees with 'гро́ші'?",
+      "choices": ["цей", "ця", "це", "ці"],
+      "answer_index": 3,
+      "explanation": "'Гро́ші' has only plural forms, so every word that agrees with it is plural: 'ці гро́ші', even though English says 'this money'."
+    },
+    {
+      "type": "listening_choice",
+      "audio_target": "Скі́льки ко́штують ці штани́?",
+      "choices": ["How much are these pants?", "Where are these pants?", "How much is this dress?"],
+      "answer_index": 0
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "Скі́льки ___ твої́ нові́ череви́ки?",
+      "answers": ["ко́штують"],
+      "hint_source": "How much do your new shoes cost?",
+      "explanation": "The shoes are the subject, and 'череви́ки' is plural, so the verb is 'ко́штують'. One thing takes 'ко́штує'."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "Сем ___ ку́ртку.",
+      "answers": ["приміря́є"],
+      "hint_source": "Sam is trying on a jacket.",
+      "explanation": "'Приміря́ти' is conjugated like 'чита́ти', so the form for 'він' is 'приміря́є'."
+    },
+    {
+      "type": "fill_blank",
+      "prompt_target": "Я не хо́чу цю су́кню, я хо́чу ___.",
+      "answers": ["ту"],
+      "hint_source": "I don't want this dress, I want that one.",
+      "explanation": "The noun is left out because it is clear. 'That' for a feminine object in the accusative is 'ту', as 'ця' becomes 'цю'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Which sentence means 'This shirt is white'?",
+      "choices": ["Це бі́ла соро́чка.", "Та соро́чка бі́ла.", "Ця соро́чка бі́ла."],
+      "answer_index": 2,
+      "explanation": "'Ця' agrees with 'соро́чка', and the color after the noun is the predicate. 'Це бі́ла соро́чка.' means 'This is a white shirt', and 'Та соро́чка бі́ла.' means 'That shirt is white'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "In 'Це черво́на су́кня.', what does 'це' do?",
+      "choices": ["It is the feminine form of 'цей' and agrees with 'су́кня'", "It points at the dress and never changes: 'This is a red dress.'", "It asks a question about the dress"],
+      "answer_index": 1,
+      "explanation": "This 'це' is the pointer: it introduces a whole noun phrase of any gender. The feminine of 'цей' is 'ця', as in 'Ця су́кня черво́на.', 'This dress is red'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "In the dress shop, Olena asks 'А ту зеле́ну ти ба́чиш?' What does she mean?",
+      "choices": ["And do you see that green one?", "And do you see this green one?", "And do you like the green color?"],
+      "answer_index": 0,
+      "explanation": "'Ту' is the accusative of 'та', 'that', and the noun 'су́кню' is left out. 'This' would be 'цю'."
+    },
+    {
+      "type": "listening_choice",
+      "audio_target": "Мо́жна приміря́ти?",
+      "choices": ["May I buy it?", "Can I sit here?", "May I try it on?"],
+      "answer_index": 2
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "In 'Мо́жна приміря́ти?', what is the grammatical subject?",
+      "choices": ["'Я', left out because the ending shows it", "There is none: 'мо́жна' is the predicate of a sentence with no subject", "'Приміря́ти', the infinitive"],
+      "answer_index": 1,
+      "explanation": "'Мо́жна' is a predicative word. It has no person endings and never changes, because the sentence has no subject; the situation shows who would act."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Why is it 'Ці штани́ сі́рі', with plural words, about one pair of pants?",
+      "choices": ["The sentence is about two pairs of pants", "'Штани́' is the plural of a word for one leg of a pair of pants", "'Штани́' has no singular, so every word that agrees with it is plural"],
+      "answer_index": 2,
+      "explanation": "'Штани́' is a plural-only noun: it names one thing but has only plural forms, so 'ці' and 'сі́рі' are plural too."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "In the jacket shop, Bohdan says 'Си́ньої нема́є.' Why is 'си́ньої' in the genitive?",
+      "choices": ["'Нема́є' takes the genitive of what is missing", "A color after a verb is always in the genitive", "It is the plural of 'си́ній'"],
+      "answer_index": 0,
+      "explanation": "'Нема́є' means 'there is not' and takes the genitive of the thing that is absent. The noun 'ку́ртки' is left out, and 'си́ньої' is the feminine genitive singular of the soft-stem adjective 'си́ній'."
+    },
+    {
+      "type": "multiple_choice",
+      "prompt": "Sam tries on a second jacket and says 'Ця не мала́.' Which noun does 'ця' stand for?",
+      "choices": ["'ро́змір', the size", "'череви́ки', the shoes", "'ку́ртка', the jacket"],
+      "answer_index": 2,
+      "explanation": "'Ця' and 'мала́' are feminine singular, so the noun left out is feminine. 'Ро́змір' is masculine and 'череви́ки' is plural."
+    },
+    {
+      "type": "dictation",
+      "audio_target": "Ця ку́ртка деше́ва.",
+      "hint_source": "This jacket is cheap."
+    },
+    {
+      "type": "dictation",
+      "audio_target": "Я хо́чу бі́лу соро́чку.",
+      "hint_source": "I want a white shirt."
+    },
+    {
+      "type": "order_words",
+      "prompt_source": "We are buying a yellow dress.",
+      "words": ["Ми", "купу́ємо", "жо́вту", "су́кню."],
+      "distractors": ["жо́вта", "купу́ю"]
+    },
+    {
+      "type": "order_words",
+      "prompt_source": "Those shoes are very cheap.",
+      "words": ["Ті", "череви́ки", "ду́же", "деше́ві."],
+      "distractors": ["та", "деше́ва"]
+    },
+    {
+      "type": "order_words",
+      "prompt_source": "This jacket costs a hundred hryvnias.",
+      "words": ["Ця", "ку́ртка", "ко́штує", "сто", "гри́вень."],
+      "distractors": ["ко́штують", "цю"]
+    },
+    {
+      "type": "order_words",
+      "prompt_source": "Oksana has a blue dress.",
+      "words": ["В", "Окса́ни", "є", "си́ня", "су́кня."],
+      "distractors": ["си́ню", "Окса́на"]
+    },
+    {
+      "type": "translate_to_target",
+      "prompt_source": "This shirt is green.",
+      "answers": ["Ця соро́чка зеле́на."],
+      "explanation": "'Ця' agrees with the feminine noun 'соро́чка', the color follows as the predicate in the feminine, and there is no word for 'is'."
+    },
+    {
+      "type": "translate_to_target",
+      "prompt_source": "I want that black jacket.",
+      "answers": ["Я хо́чу ту чо́рну ку́ртку.", "Хо́чу ту чо́рну ку́ртку."],
+      "explanation": "The jacket is the object, so all three words take the feminine accusative: 'ту чо́рну ку́ртку'."
+    },
+    {
+      "type": "translate_to_target",
+      "prompt_source": "How much do these shoes cost?",
+      "answers": ["Скі́льки ко́штують ці череви́ки?", "Скі́льки ці череви́ки ко́штують?", "Ці череви́ки скі́льки ко́штують?"],
+      "explanation": "'Череви́ки' is plural, so 'this' is 'ці' and the verb is 'ко́штують'."
+    },
+    {
+      "type": "translate_to_target",
+      "prompt_source": "May I try on this dress?",
+      "answers": ["Мо́жна приміря́ти цю су́кню?", "Чи мо́жна приміря́ти цю су́кню?", "Мо́жна цю су́кню приміря́ти?", "Цю су́кню мо́жна приміря́ти?"],
+      "explanation": "'Мо́жна' with the infinitive asks permission without naming a person, and the dress, the object of 'приміря́ти', is in the accusative."
+    }
+  ]
+}

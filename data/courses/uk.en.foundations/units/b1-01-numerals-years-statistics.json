@@ -1,0 +1,417 @@
+{
+  "id": "b1-01-numerals-years-statistics",
+  "level": "B1",
+  "order": 32,
+  "title": "Numerals in every case, years and statistics",
+  "objectives": [
+    "I can say and read large numbers, from the hundreds to the billions, and use 'ти́сяча', 'мільйо́н' and 'мілья́рд' with the genitive plural.",
+    "I can put cardinal numerals and the nouns they count into every case, as in 'з двома́ дру́зями' and 'у п’яти́ міста́х'.",
+    "I can say years, decades and centuries, and say in which year something happened or someone was born.",
+    "I can count people and plural-only things with 'дво́є' and 'тро́є', and say 'both' with 'о́бидва' and 'о́бидві'.",
+    "I can give and understand simple statistics with 'полови́на', 'чверть', 'півтора́' and percentages."
+  ],
+  "vocabulary": [
+    {
+      "target": "ти́сяча",
+      "source": "thousand",
+      "part_of_speech": "feminine noun",
+      "note": "A noun in form: 'дві ти́сячі', 'п’ять ти́сяч', instrumental 'ти́сячею'. What it counts follows in the genitive plural. On its own it means one thousand, with no 'одна́'.",
+      "example": {"target": "Цей телефо́н ко́штує ти́сячу гри́вень.", "source": "This phone costs a thousand hryvnias.", "source_literal": "This phone costs thousand of-hryvnias."}
+    },
+    {
+      "target": "мільйо́н",
+      "source": "million",
+      "part_of_speech": "masculine noun",
+      "note": "Genitive 'мільйо́на'; 'два мільйо́ни', 'п’ять мільйо́нів'. What it counts follows in the genitive plural.",
+      "example": {"target": "У цьо́му мі́сті живе́ мільйо́н люде́й.", "source": "A million people live in this city.", "source_literal": "In this city lives million of-people."}
+    },
+    {
+      "target": "мілья́рд",
+      "source": "billion",
+      "part_of_speech": "masculine noun",
+      "note": "A thousand million, as in American English. Genitive 'мілья́рда'; 'два мілья́рди', 'п’ять мілья́рдів'.",
+      "example": {"target": "На Землі́ живе́ бі́льше ніж ві́сім мілья́рдів люде́й.", "source": "More than eight billion people live on Earth.", "source_literal": "On Earth lives more than eight of-billions of-people."}
+    },
+    {
+      "target": "полови́на",
+      "source": "half",
+      "part_of_speech": "feminine noun",
+      "note": "What it divides follows in the genitive. As a subject it takes a singular verb, feminine in the past.",
+      "example": {"target": "Я прочита́в полови́ну кни́ги.", "source": "I've read half the book.", "source_literal": "I read half of-book."}
+    },
+    {
+      "target": "чверть",
+      "source": "quarter",
+      "part_of_speech": "feminine noun",
+      "note": "Genitive 'чве́рті'; 'три чве́рті', three quarters. What it divides follows in the genitive.",
+      "example": {"target": "Чверть студе́нтів ї́здить до університе́ту на метро́.", "source": "A quarter of the students take the metro to the university.", "source_literal": "Quarter of-students goes to university on metro."}
+    },
+    {
+      "target": "півтора́",
+      "source": "one and a half",
+      "part_of_speech": "numeral",
+      "note": "With masculine and neuter nouns; 'півтори́' with feminine nouns. The noun follows in the genitive singular: 'півтора́ ро́ку', 'півтори́ годи́ни'.",
+      "example": {"target": "Мені́ тре́ба півтора́ кілогра́ма карто́плі.", "source": "I need a kilo and a half of potatoes.", "source_literal": "To-me necessary one-and-a-half of-kilogram of-potatoes."}
+    },
+    {
+      "target": "відсо́ток",
+      "source": "percent",
+      "part_of_speech": "masculine noun",
+      "note": "Genitive 'відсо́тка'; 'два відсо́тки', 'п’ять відсо́тків'. The sign '%' is read as this word.",
+      "example": {"target": "Сього́дні все на два́дцять відсо́тків деше́вше.", "source": "Today everything is twenty percent cheaper.", "source_literal": "Today everything by twenty of-percents cheaper."}
+    },
+    {
+      "target": "дво́є",
+      "source": "two, of people or plural-only things",
+      "part_of_speech": "collective numeral",
+      "note": "For men, mixed groups, children and plural-only nouns, never for feminine nouns. The noun follows in the genitive plural. Other cases take the forms of 'два': 'двох', 'двом', 'двома́'.",
+      "example": {"target": "У на́ших сусі́дів дво́є діте́й.", "source": "Our neighbors have two children.", "source_literal": "At our neighbors two of-children."}
+    },
+    {
+      "target": "тро́є",
+      "source": "three, of people or plural-only things",
+      "part_of_speech": "collective numeral",
+      "note": "Used like 'дво́є'. Other cases take the forms of 'три': 'трьох', 'трьом', 'трьома́'.",
+      "example": {"target": "Нас тро́є: Окса́на, Тара́с і я.", "source": "There are three of us: Oksana, Taras and me.", "source_literal": "Of-us three: Oksana, Taras and I."}
+    },
+    {
+      "target": "о́бидва",
+      "source": "both",
+      "part_of_speech": "numeral",
+      "note": "With masculine and neuter nouns; 'о́бидві' with feminine nouns. The noun follows in the nominative plural, as after 'два'. Other cases: 'обо́х', 'обо́м', 'обома́'.",
+      "example": {"target": "Я зна́ю о́бидва ці міста́.", "source": "I know both of these cities.", "source_literal": "I know both these cities."}
+    },
+    {
+      "target": "столі́ття",
+      "source": "century",
+      "part_of_speech": "neuter noun",
+      "note": "From 'сто' and 'лі́то', summer, which once also meant a year: 'a hundred summers'. Locative 'у столі́тті', genitive plural 'столі́ть'.",
+      "example": {"target": "Ця ха́та стої́ть тут уже́ столі́ття.", "source": "This house has stood here for a century.", "source_literal": "This house stands here already century."}
+    },
+    {
+      "target": "десятилі́ття",
+      "source": "decade",
+      "part_of_speech": "neuter noun",
+      "note": "A period of ten years, built like 'столі́ття' from 'де́сять'. A named decade, such as the nineties, is said with 'ро́ки'.",
+      "example": {"target": "Я не був у Льво́ві ці́ле десятилі́ття.", "source": "I haven't been to Lviv for a whole decade.", "source_literal": "I not was in Lviv whole decade."}
+    },
+    {
+      "target": "насе́лення",
+      "source": "population",
+      "part_of_speech": "neuter noun",
+      "note": "Used in the singular. The place follows in the genitive: 'насе́лення мі́ста'.",
+      "example": {"target": "Насе́лення мі́ста ду́же молоде́.", "source": "The city's population is very young.", "source_literal": "Population of-city very young."}
+    },
+    {
+      "target": "краї́на",
+      "source": "country",
+      "part_of_speech": "feminine noun",
+      "example": {"target": "Сем був у п’яти́ краї́нах.", "source": "Sam has been to five countries.", "source_literal": "Sam was in five countries."}
+    },
+    {
+      "target": "рахува́ти",
+      "source": "to count",
+      "part_of_speech": "imperfective verb",
+      "note": "'раху́ю', 'раху́єш'. Perfective 'порахува́ти'.",
+      "example": {"target": "О́ля вже до́бре раху́є до ста.", "source": "Olia can already count to a hundred.", "source_literal": "Olia already well counts to hundred."}
+    },
+    {
+      "target": "ци́фра",
+      "source": "digit, figure",
+      "part_of_speech": "feminine noun",
+      "note": "A written digit, and in speech a figure in statistics. Genitive plural 'цифр'. A number as a quantity is 'число́'.",
+      "example": {"target": "Ці ци́фри ду́же ціка́ві.", "source": "These figures are very interesting."}
+    },
+    {
+      "target": "прибли́зно",
+      "source": "approximately",
+      "part_of_speech": "adverb",
+      "note": "Goes before a number, which keeps its own form.",
+      "example": {"target": "До вокза́лу прибли́зно два кіломе́три.", "source": "It's about two kilometers to the station.", "source_literal": "To station approximately two kilometers."}
+    },
+    {
+      "target": "стано́вити",
+      "source": "to amount to, to be",
+      "part_of_speech": "imperfective verb",
+      "note": "The word of statistics and formal text, mostly in the forms 'стано́вить' and 'стано́влять', with the amount in the accusative. It has no perfective partner in this meaning.",
+      "example": {"target": "Ціна́ квитка́ стано́вить три́ста гри́вень.", "source": "The ticket price is three hundred hryvnias.", "source_literal": "Price of-ticket amounts-to three-hundred of-hryvnias."}
+    },
+    {
+      "target": "народи́тися",
+      "source": "to be born",
+      "part_of_speech": "perfective reflexive verb",
+      "note": "Past 'народи́вся', 'народи́лася', 'народи́лися'. Imperfective 'народжува́тися'. The '-ся' does not mean 'self' here.",
+      "example": {"target": "Мій та́то народи́вся в Оде́сі.", "source": "My dad was born in Odesa."}
+    }
+  ],
+  "dialogues": [
+    {
+      "id": "d1",
+      "title": "Figures in the news",
+      "context": "Taras and Sam are having coffee at Andrii's café, and Taras reads Sam the results of a city survey in the news on his phone: how the people of Kyiv get to work. The friends say 'ти' to each other. 'На маши́ні' means by car, and 'Торо́нто' is Toronto, a large city in Canada.",
+      "lines": [
+        {"speaker": "Тара́с", "gender": "m", "target": "Се́ме, послу́хай, що тут пи́шуть. У Ки́єві живу́ть прибли́зно три мільйо́ни люде́й.", "source": "Sam, listen to what it says here. About three million people live in Kyiv.", "source_literal": "Sam, listen, what here they-write. In Kyiv live approximately three millions of-people."},
+        {"speaker": "Сем", "gender": "m", "target": "Три мільйо́ни? Як у Торо́нто. А я ду́мав, що Ки́їв бі́льший.", "source": "Three million? The same as Toronto. I thought Kyiv was bigger.", "source_literal": "Three millions? As in Toronto. And I thought that Kyiv bigger."},
+        {"speaker": "Тара́с", "gender": "m", "target": "А ось і́нші ци́фри. Со́рок відсо́тків люде́й ї́здять на робо́ту на метро́.", "source": "And here are some other figures. Forty percent of people take the metro to work.", "source_literal": "And here other figures. Forty of-percents of-people go to work on metro."},
+        {"speaker": "Сем", "gender": "m", "target": "Со́рок? Я ду́мав, що полови́на. Вра́нці в метро́ ду́же бага́то люде́й.", "source": "Forty? I thought it was half. In the morning the metro is full of people.", "source_literal": "Forty? I thought that half. In-the-morning in metro very many of-people."},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ні, тут пи́шуть «со́рок». Чверть ї́здить авто́бусом, а п’ятна́дцять відсо́тків хо́дять на робо́ту, бо живу́ть бли́зько.", "source": "No, it says 'forty' here. A quarter go by bus, and fifteen percent walk to work, because they live close by.", "source_literal": "No, here they-write «forty». Quarter goes by-bus, and fifteen of-percents go to work, because they-live near."},
+        {"speaker": "Сем", "gender": "m", "target": "Я раху́ю: со́рок, два́дцять п’ять і п’ятна́дцять. Це вісімдеся́т. А де ще два́дцять?", "source": "Let me count: forty, twenty-five and fifteen. That's eighty. Where are the other twenty?", "source_literal": "I count: forty, twenty five and fifteen. This eighty. And where still twenty?"},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ці лю́ди ї́здять на маши́ні. Тут усе́ є.", "source": "Those people go by car. It's all here.", "source_literal": "These people go on car. Here everything is."},
+        {"speaker": "Сем", "gender": "m", "target": "А скі́льки люде́й вони́ запита́ли?", "source": "And how many people did they ask?", "source_literal": "And how-many of-people they asked?"},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ти́сячу.", "source": "A thousand.", "source_literal": "Thousand."},
+        {"speaker": "Сем", "gender": "m", "target": "Ти́сячу з трьох мільйо́нів? Це ду́же ма́ло!", "source": "A thousand out of three million? That's very few!", "source_literal": "Thousand from three millions? This very few!"},
+        {"speaker": "Тара́с", "gender": "m", "target": "Ні, для таки́х цифр ти́сячі до́сить.", "source": "No, a thousand is enough for figures like these.", "source_literal": "No, for such figures of-thousand enough."},
+        {"speaker": "Сем", "gender": "m", "target": "Мо́жливо. Але́ за́втра вра́нці я сам пораху́ю люде́й у метро́.", "source": "Maybe. But tomorrow morning I'll count the people in the metro myself.", "source_literal": "Possibly. But tomorrow in-the-morning I myself will-count people in metro."},
+        {"speaker": "Тара́с", "gender": "m", "target": "Усі́ три мільйо́ни? Ти бу́деш рахува́ти ці́лий рік!", "source": "All three million? You'll be counting for a whole year!", "source_literal": "All three millions? You will to-count whole year!"}
+      ]
+    },
+    {
+      "id": "d2",
+      "title": "A family in years",
+      "context": "Oksana has drawn her family tree, with everyone's year of birth, as a birthday present for her grandmother. Sam looks at it at her home. They are friends and say 'ти'. 'Ону́ки' are grandchildren; one grandson is 'ону́к'.",
+      "lines": [
+        {"speaker": "Сем", "gender": "m", "target": "Окса́но, що це? Тут так бага́то цифр!", "source": "Oksana, what's this? There are so many figures here!", "source_literal": "Oksana, what this? Here so many of-figures!"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Це на́ша сім’я́ й ро́ки наро́дження. Я роблю́ це для бабу́сі, на її́ день наро́дження.", "source": "It's our family and everyone's year of birth. I'm making it for Grandma, for her birthday.", "source_literal": "This our family and years of-birth. I make this for grandma, on her day of-birth."},
+        {"speaker": "Сем", "gender": "m", "target": "А хто тут найста́рший?", "source": "And who's the oldest here?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Діду́сь. Він народи́вся в ти́сяча дев’ятсо́т со́рок п’я́тому ро́ці.", "source": "Grandpa. He was born in 1945.", "source_literal": "Grandpa. He was-born in thousand nine-hundred forty fifth year."},
+        {"speaker": "Сем", "gender": "m", "target": "А бабу́ся?", "source": "And Grandma?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Вона́ на три ро́ки моло́дша. Вона́ народи́лася в ти́сяча дев’ятсо́т со́рок восьмо́му.", "source": "She's three years younger. She was born in 1948.", "source_literal": "She by three years younger. She was-born in thousand nine-hundred forty eighth."},
+        {"speaker": "Сем", "gender": "m", "target": "А скі́льки в них діте́й?", "source": "And how many children do they have?", "source_literal": "And how-many at them of-children?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Дво́є, дві до́ньки: моя́ ма́ма й ті́тка. О́бидві народи́лися в сімдеся́тих ро́ках, як і мій та́то.", "source": "Two, two daughters: my mom and my aunt. Both were born in the seventies, like my dad.", "source_literal": "Two, two daughters: my mom and aunt. Both were-born in seventieth years, as also my dad."},
+        {"speaker": "Сем", "gender": "m", "target": "А ти й твій брат?", "source": "And you and your brother?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Брат народи́вся в ти́сяча дев’ятсо́т дев’яно́сто шо́стому, а я в дві ти́сячі четве́ртому. Між на́ми ві́сім ро́ків.", "source": "My brother was born in 1996, and I was born in 2004. There are eight years between us.", "source_literal": "Brother was-born in thousand nine-hundred ninety sixth, and I in two thousands fourth. Between us eight of-years."},
+        {"speaker": "Сем", "gender": "m", "target": "А це хто? Тут ще одне́ ім’я́.", "source": "And who's this? There's one more name here.", "source_literal": "And this who? Here still one name."},
+        {"speaker": "Окса́на", "gender": "f", "target": "Це О́ля, до́нька мого́ бра́та. Вона́ народи́лася в дві ти́сячі два́дцять пе́ршому ро́ці.", "source": "That's Olia, my brother's daughter. She was born in 2021.", "source_literal": "This Olia, daughter of-my of-brother. She was-born in two thousands twenty first year."},
+        {"speaker": "Сем", "gender": "m", "target": "У ті́тки теж є ді́ти?", "source": "Does your aunt have children too?", "source_literal": "At aunt also are children?"},
+        {"speaker": "Окса́на", "gender": "f", "target": "Так, дво́є, син і до́нька. Тому́ в бабу́сі й діду́ся че́тверо ону́ків.", "source": "Yes, two, a son and a daughter. So Grandma and Grandpa have four grandchildren.", "source_literal": "Yes, two, son and daughter. So at grandma and grandpa four of-grandchildren."}
+      ]
+    }
+  ],
+  "grammar": [
+    {
+      "title": "Numerals in every case: оди́н, два, три, чоти́ри",
+      "explanation": "So far you have used numbers mainly in the nominative, and as the object of a verb when they count things. In those two places the number decides the form of the noun: 'два ро́ки', 'п’ять ро́ків'. But a cardinal numeral changes for case, like a noun or an adjective, and the rule for the noun after it holds only in the nominative and in the accusative of things.\n\nIn every other case the numeral and the noun simply stand in the same case, and the noun is plural, as it is in English after 'two':\n\n- genitive: 'до трьох міст', up to three cities\n- dative: 'трьом міста́м', to three cities\n- instrumental: 'з трьома́ міста́ми', with three cities\n- locative: 'у трьох міста́х', in three cities\n\nSo the special forms disappear. After 'з', with, you say 'з двома́ дру́зями', with the same instrumental plural 'дру́зями' that you would use without the number. 'Дві' exists only in the nominative and the accusative; in the other cases one form serves all three genders: 'двох браті́в', 'двох сесте́р'. The instrumental forms 'двома́', 'трьома́' and 'чотирма́' are stressed on the last syllable, and 'чотирма́' has no soft sign.\n\nThe accusative depends on what is counted, by the rule you know from the plural. With things it is the same as the nominative: 'Я купи́в два квитки́.' With people and animals it is the same as the genitive, for the numeral and for the noun: 'Я зна́ю двох програмі́стів.'\n\n'Оди́н' changes like an adjective and agrees with its noun in every case. The forms below are the genitive, the dative, the instrumental and the locative; the feminine adds its accusative 'одну́', and the masculine accusative is 'одного́' with people:\n\n- masculine and neuter: 'одного́', 'одному́', 'одни́м', 'на одно́му'\n- feminine: 'одніє́ї', 'одні́й', 'одніє́ю', 'на одні́й'\n\nThe feminine forms 'одно́ї' and 'одно́ю' are also correct. A noun after 'оди́н' stays singular in every case: 'з одни́м дру́гом', with one friend.",
+      "table": {
+        "headers": ["Case", "два, дві", "три", "чоти́ри", "Example"],
+        "rows": [
+          ["Nominative", "два, дві", "три", "чоти́ри", "три міста́"],
+          ["Genitive", "двох", "трьох", "чотирьо́х", "до трьох міст"],
+          ["Dative", "двом", "трьом", "чотирьо́м", "трьом міста́м"],
+          ["Accusative, things", "два, дві", "три", "чоти́ри", "три міста́"],
+          ["Accusative, people", "двох", "трьох", "чотирьо́х", "трьох дру́зів"],
+          ["Instrumental", "двома́", "трьома́", "чотирма́", "з трьома́ міста́ми"],
+          ["Locative", "на двох", "на трьох", "на чотирьо́х", "у трьох міста́х"]
+        ]
+      },
+      "examples": [
+        {"target": "Я живу́ з двома́ дру́зями.", "source": "I live with two friends."},
+        {"target": "Ми були́ в трьох міста́х.", "source": "We were in three cities."},
+        {"target": "Я допомага́ю трьом студе́нтам.", "source": "I help three students.", "source_literal": "I help to-three to-students."},
+        {"target": "Ми запро́шуємо трьох сусі́дів.", "source": "We're inviting three neighbors."},
+        {"target": "Цей стіл для чотирьо́х люде́й.", "source": "This table is for four people."}
+      ]
+    },
+    {
+      "title": "From п’ять up: case forms, the hundreds, ти́сяча and мільйо́н",
+      "explanation": "The numbers from 'п’ять' to 'два́дцять', and 'три́дцять', change for case with endings of their own: '-и' in the genitive, the dative and the locative, and '-ма' in the instrumental. Each also has a second set of forms built like 'чотирьо́х', with '-ьох', '-ьом' and '-ьома'. Both sets are standard, and the second is especially common with people:\n\n- genitive: 'п’яти́' or 'п’ятьо́х'\n- dative: 'п’яти́' or 'п’ятьо́м'\n- instrumental: 'п’ятьма́' or 'п’ятьома́'\n- locative: 'на п’яти́' or 'на п’ятьо́х'\n\nIn these forms of 'п’ять' to 'де́сять', 'два́дцять' and 'три́дцять' the stress is on the ending. 'П’ятдеся́т', 'шістдеся́т', 'сімдеся́т' and 'вісімдеся́т' change only their second part, in the same way: 'п’ятдесяти́' or 'п’ятдесятьо́х', 'п’ятдесятьма́' or 'п’ятдесятьома́'. In 'шість', 'сім' and 'ві́сім' the 'і' becomes 'е' or 'о' in the forms in '-и', by the rule of closed and open syllables: 'шести́', 'семи́', 'восьми́'. The other forms keep the 'і': 'шістьма́', 'вісьма́', 'вісьмо́х', and for 'сім' the forms 'сімо́х' and 'сімома́', with no soft sign because 'ь' never follows 'м'. The instrumental of 'сім' is 'сьома́' or 'сімома́'. Three numbers have one form for every case except the nominative and the accusative: 'со́рок' has 'сорока́', 'дев’яно́сто' has 'дев’яно́ста' and 'сто' has 'ста'.\n\nThe noun follows the same rule as with 'два'. In the nominative and in the accusative of things it is in the genitive plural ('п’ять міст'); in the other cases it takes the case of the numeral ('у п’яти́ міста́х', 'з п’ятьма́ студе́нтами'). For people in the accusative both forms are used: 'Я ба́чу п’ять студе́нтів.' and 'Я ба́чу п’ятьо́х студе́нтів.' In a compound number every word changes, in careful speech and in writing: 'до двадцяти́ п’яти́ ро́ків', up to twenty-five years.\n\nThe hundreds are built from a unit and a form of 'сто', and they repeat the rule of the noun after a number, frozen into one word:\n\n- 'дві́сті' (200), with 'сті', an old form used for exactly two of something\n- 'три́ста' (300) and 'чоти́риста' (400), with 'ста', an old plural, as in 'три ро́ки'\n- 'п’ятсо́т' (500) to 'дев’ятсо́т' (900), with 'сот', the genitive plural, as in 'п’ять ро́ків'\n\nIn the other cases both parts change. The genitive is the form needed most: 'двохсо́т', 'трьохсо́т', 'п’ятисо́т', as in 'до п’ятисо́т гри́вень', up to five hundred hryvnias.\n\n'Ти́сяча', 'мільйо́н' and 'мілья́рд' name numbers, and Ukrainian school grammar lists them with the numerals, but in form they are nouns: 'ти́сяча' is feminine, 'мільйо́н' and 'мілья́рд' are masculine, and each has a singular and a plural. A number before them follows the usual rule, and what they count always follows in the genitive plural:\n\n- 'ти́сяча гри́вень', 'дві ти́сячі гри́вень', 'п’ять ти́сяч гри́вень'\n- 'оди́н мільйо́н люде́й', 'три мільйо́ни люде́й', 'п’ять мільйо́нів люде́й'\n\nIn the other cases they change as nouns, and the counted noun stays in the genitive plural: 'з ти́сячею гри́вень', with a thousand hryvnias.\n\nA large number is said from the largest part to the smallest, with no word for 'and': 'ти́сяча дві́сті' (1,200), 'три ти́сячі п’ятсо́т со́рок' (3,540), 'два мільйо́ни сімсо́т ти́сяч' (2,700,000).",
+      "table": {
+        "headers": ["Case", "п’ять", "ві́сім", "со́рок", "сто"],
+        "rows": [
+          ["Nominative", "п’ять", "ві́сім", "со́рок", "сто"],
+          ["Genitive", "п’яти́, п’ятьо́х", "восьми́, вісьмо́х", "сорока́", "ста"],
+          ["Dative", "п’яти́, п’ятьо́м", "восьми́, вісьмо́м", "сорока́", "ста"],
+          ["Accusative", "п’ять, п’ятьо́х", "ві́сім, вісьмо́х", "со́рок", "сто"],
+          ["Instrumental", "п’ятьма́, п’ятьома́", "вісьма́, вісьмома́", "сорока́", "ста"],
+          ["Locative", "на п’яти́, на п’ятьо́х", "на восьми́, на вісьмо́х", "на сорока́", "на ста"]
+        ]
+      },
+      "examples": [
+        {"target": "Мені́ тре́ба п’ятсо́т гри́вень.", "source": "I need five hundred hryvnias.", "source_literal": "To-me necessary five-hundred of-hryvnias."},
+        {"target": "Ми говори́ли з п’ятьма́ студе́нтами.", "source": "We talked with five students."},
+        {"target": "Квитки́ ко́штують до двохсо́т гри́вень.", "source": "The tickets cost up to two hundred hryvnias.", "source_literal": "Tickets cost to two-hundred of-hryvnias."},
+        {"target": "Ця кни́га ко́штує ти́сячу дві́сті гри́вень.", "source": "This book costs twelve hundred hryvnias.", "source_literal": "This book costs thousand two-hundred of-hryvnias."},
+        {"target": "До Льво́ва прибли́зно п’ятсо́т со́рок кіломе́трів.", "source": "It's about five hundred forty kilometers to Lviv.", "source_literal": "To Lviv approximately five-hundred forty of-kilometers."}
+      ]
+    },
+    {
+      "title": "Years, decades and centuries",
+      "explanation": "Ukrainian names a year with an ordinal numeral: 1991 is 'the one thousand nine hundred ninety-first year'. As in dates, only the last word is an ordinal. The words before it are cardinal numerals, and they never change, whatever the case of the phrase; only the ordinal and 'рік' change:\n\n- 'ти́сяча дев’ятсо́т дев’яно́сто пе́рший рік', 1991\n- 'у ти́сяча дев’ятсо́т дев’яно́сто пе́ршому ро́ці', in 1991\n\nTo say in which year something happens, use 'у' or 'в' with the locative, as for a month. The ordinal takes the adjective ending '-ому', and 'рік' becomes 'ро́ці', with 'і' changed to 'о' as in 'ро́ку', and 'к' changed to 'ц' before '-і', as in 'кни́га', 'у кни́зі'. The question is 'У яко́му ро́ці?' In a full date the year follows the month in the genitive, as 'of' the year: 'два́дцять четве́ртого се́рпня ти́сяча дев’ятсо́т дев’яно́сто пе́ршого ро́ку', on August 24, 1991. When the year is clear from the conversation, 'ро́ці' is often left out: 'Він народи́вся в ти́сяча дев’ятсо́т со́рок п’я́тому.'\n\nYears from 2001 on begin with 'дві ти́сячі', which stays in the nominative: 'у дві ти́сячі пе́ршому ро́ці', 'у дві ти́сячі два́дцять п’я́тому ро́ці'. The year 2000 is one word, the ordinal 'двохти́сячний': 'у двохти́сячному ро́ці'.\n\nThe ordinals of the round numbers are built on the cardinals:\n\n- 'сороко́вий', fortieth\n- 'п’ятдеся́тий', 'шістдеся́тий', 'сімдеся́тий', 'вісімдеся́тий', fiftieth to eightieth\n- 'дев’яно́стий', ninetieth\n- 'со́тий', hundredth\n- 'ти́сячний', thousandth\n\nA decade such as the nineties is named by the plural of the ordinal with 'ро́ки': 'дев’яно́сті ро́ки', the nineties. 'In the nineties' is 'у дев’яно́стих ро́ках', with the locative plural, which for ordinals ends in '-их', as for adjectives. Where the century is not clear, add it in the genitive: 'у шістдеся́тих ро́ках двадця́того столі́ття', in the 1960s. The noun 'десятилі́ття' is a decade as a length of time, ten years: 'ці́ле десятилі́ття', a whole decade.\n\nA century is 'столі́ття', a neuter noun, so its ordinal is neuter: 'двадця́те столі́ття', the twentieth century; 'у двадця́тому столі́тті', in the twentieth century; 'у два́дцять пе́ршому столі́тті', in the twenty-first century, where again only the last word is an ordinal.",
+      "table": {
+        "headers": ["Pattern", "Example", "Literal", "Natural"],
+        "rows": [
+          ["year", "ти́сяча дев’ятсо́т дев’яно́сто пе́рший рік", "thousand nine-hundred ninety first year", "1991"],
+          ["in a year", "у ти́сяча дев’ятсо́т дев’яно́сто пе́ршому ро́ці", "in thousand nine-hundred ninety first year", "in 1991"],
+          ["full date", "два́дцять четве́ртого се́рпня ти́сяча дев’ятсо́т дев’яно́сто пе́ршого ро́ку", "twenty of-fourth of-August thousand nine-hundred ninety of-first of-year", "on August 24, 1991"],
+          ["the year 2000", "у двохти́сячному ро́ці", "in two-thousandth year", "in 2000"],
+          ["after 2000", "у дві ти́сячі два́дцять п’я́тому ро́ці", "in two thousands twenty fifth year", "in 2025"],
+          ["decade", "у дев’яно́стих ро́ках", "in ninetieth years", "in the nineties"],
+          ["century", "у двадця́тому столі́тті", "in twentieth century", "in the twentieth century"]
+        ]
+      },
+      "examples": [
+        {"target": "Окса́на народи́лася в дві ти́сячі четве́ртому ро́ці.", "source": "Oksana was born in 2004.", "source_literal": "Oksana was-born in two thousands fourth year."},
+        {"target": "У яко́му ро́ці ти народи́вся?", "source": "What year were you born?", "source_literal": "In which year you were-born?"},
+        {"target": "Пе́рший по́їзд ки́ївського метро́ пої́хав шо́стого листопа́да ти́сяча дев’ятсо́т шістдеся́того ро́ку.", "source": "The first train of the Kyiv metro ran on November 6, 1960.", "source_literal": "First train of-Kyiv of-metro went of-sixth of-November thousand nine-hundred of-sixtieth of-year."},
+        {"target": "Цю пі́сню співа́ли в шістдеся́тих ро́ках.", "source": "People sang this song in the sixties.", "source_literal": "This song they-sang in sixtieth years."},
+        {"target": "Ми живемо́ в два́дцять пе́ршому столі́тті.", "source": "We live in the twenty-first century.", "source_literal": "We live in twenty first century."}
+      ]
+    },
+    {
+      "title": "Collective numerals: дво́є, тро́є; both: о́бидва, о́бидві",
+      "explanation": "Ukrainian has a second set of numerals for counting people and some things as a group: the collective numerals 'дво́є', 'тро́є', 'че́тверо', 'п’я́теро' and so on. 'Дво́є діте́й' means 'two children', and presents them as a pair, a group of two. After a collective numeral the noun is in the genitive plural, as after 'п’ять': 'дво́є діте́й', 'тро́є дру́зів'.\n\nCollective numerals are used with:\n\n- nouns for men, and for groups of men and women: 'дво́є браті́в', 'тро́є студе́нтів'\n- 'ді́ти': 'дво́є діте́й'\n- plural-only nouns, which 'два', 'три' and 'чоти́ри' cannot count: 'дво́є штані́в', two pairs of trousers\n- the pronouns 'нас', 'вас' and 'їх', to say how many people there are: 'Нас дво́є.', There are two of us.\n\nThey are not used with feminine nouns: two sisters are 'дві сестри́'. With nouns for men both kinds are correct: 'два брати́' and 'дво́є браті́в'. In the other cases a collective numeral takes the forms of 'два', 'три' and 'чоти́ри': 'з двома́ дітьми́', with two children; 'Я ба́чу трьох діте́й.', I see three children.\n\nIn 'Нас дво́є.' the pronoun is in the genitive, literally 'of-us two', and the sentence has no verb in the present. In the past the verb is neuter singular: 'Нас було́ тро́є.', There were three of us.\n\n'О́бидва', both, is used with masculine and neuter nouns, and 'о́бидві' with feminine nouns. Like 'два' and 'дві', they take the nominative plural: 'о́бидва брати́', 'о́бидві сестри́'. In the other cases they have one set of forms for every gender: 'обо́х', 'обо́м', 'обома́', 'на обо́х'. For a man and a woman together, and with plural-only nouns, Ukrainian uses the collective numeral 'о́боє': 'Мої́ батьки́ о́боє працю́ють у шко́лі.'",
+      "table": {
+        "headers": ["Pattern", "Example", "Literal", "Natural"],
+        "rows": [
+          ["men", "дво́є браті́в", "two of-brothers", "two brothers"],
+          ["children", "тро́є діте́й", "three of-children", "three children"],
+          ["plural-only noun", "дво́є штані́в", "two of-trousers", "two pairs of trousers"],
+          ["with a pronoun", "Нас дво́є.", "of-us two", "There are two of us."],
+          ["feminine noun", "дві сестри́", "two sisters", "two sisters"],
+          ["о́бидва", "о́бидва брати́", "both brothers", "both brothers"],
+          ["о́бидві", "о́бидві сестри́", "both sisters", "both sisters"],
+          ["о́боє", "Вони́ о́боє тут.", "they both here", "They're both here."]
+        ]
+      },
+      "examples": [
+        {"target": "У на́шій сім’ї́ тро́є діте́й.", "source": "There are three children in our family.", "source_literal": "In our family three of-children."},
+        {"target": "Нас дво́є.", "source": "There are two of us.", "source_literal": "Of-us two."},
+        {"target": "Окса́на купи́ла дво́є штані́в.", "source": "Oksana bought two pairs of trousers.", "source_literal": "Oksana bought two of-trousers."},
+        {"target": "О́бидва брати́ живу́ть у Льво́ві.", "source": "Both brothers live in Lviv."},
+        {"target": "Я говори́ла з обома́ вчителя́ми.", "source": "I talked with both teachers."},
+        {"target": "Мої́ батьки́ о́боє працю́ють у шко́лі.", "source": "My parents both work at a school.", "source_literal": "My parents both work in school."}
+      ]
+    },
+    {
+      "title": "Proportions, percentages and statistics",
+      "explanation": "Ukrainian names most proportions with nouns. 'Полови́на', half, and 'чверть', quarter, are feminine nouns, and what they divide follows in the genitive, where English uses 'of': 'полови́на студе́нтів', half of the students; 'чверть насе́лення', a quarter of the population. They are counted like other nouns: 'три чве́рті', three quarters. As the subject of a sentence 'полови́на' and 'чверть' are singular, so the verb is singular too, and feminine in the past: 'Полови́на студе́нтів працю́є.', 'Полови́на студе́нтів працюва́ла.' After 'три чве́рті' the verb is usually plural, as after 'три': 'Три чве́рті студе́нтів гово́рять англі́йською.' The shorter word 'пів', which you know from telling the time ('пів на во́сьму'), also means half, and a noun after it is in the genitive: 'пів кілогра́ма', half a kilogram.\n\n'Півтора́' means one and a half. It is built from 'пів' and an old word for 'second', so it means 'half of the second'. Use 'півтора́' with masculine and neuter nouns and 'півтори́' with feminine nouns, and put the noun in the genitive singular: 'півтора́ ро́ку', a year and a half; 'півтора́ мільйо́на', one and a half million; 'півтори́ годи́ни', an hour and a half; 'півтори́ ти́сячі', fifteen hundred.\n\n'Відсо́ток', percent, is a masculine noun and is counted like any noun: 'оди́н відсо́ток', 'два відсо́тки', 'п’ять відсо́тків', 'два́дцять оди́н відсо́ток'. What it measures follows in the genitive: 'со́рок відсо́тків люде́й', forty percent of people. The sign '%' is read as this word, in the form the number needs. The question is 'Скі́льки відсо́тків?'\n\nStatistics use a few more patterns:\n\n- 'прибли́зно' before a number, which keeps its own form: 'прибли́зно три мільйо́ни люде́й'\n- 'бі́льше ніж' and 'ме́нше ніж' with the nominative, as in comparisons: 'бі́льше ніж мільйо́н люде́й'\n- 'стано́вити', to amount to, with the amount in the accusative: 'Ціна́ стано́вить ти́сячу гри́вень.'\n- 'на' with the accusative for a difference: 'на два́дцять відсо́тків бі́льше', twenty percent more; 'на три ро́ки моло́дша', three years younger\n\nWhen a number is the subject, the verb after 'два', 'три' and 'чоти́ри' is usually plural: 'Три студе́нти працю́ють.' After 'п’ять' and higher numbers, and after 'бі́льше ніж', it can be plural or singular, and both are correct. The singular presents the number as one amount, which is common in statistics, and in the past it is neuter: 'У мі́сті жило́ п’ять ти́сяч люде́й.'",
+      "table": {
+        "headers": ["Pattern", "Example", "Literal", "Natural"],
+        "rows": [
+          ["полови́на", "полови́на студе́нтів", "half of-students", "half of the students"],
+          ["чверть", "чверть насе́лення", "quarter of-population", "a quarter of the population"],
+          ["three quarters", "три чве́рті", "three quarters", "three quarters"],
+          ["півтора́", "півтора́ ро́ку", "one-and-a-half of-year", "a year and a half"],
+          ["півтори́", "півтори́ годи́ни", "one-and-a-half of-hour", "an hour and a half"],
+          ["one percent", "оди́н відсо́ток", "one percent", "one percent"],
+          ["two to four", "три відсо́тки", "three percents", "three percent"],
+          ["five and higher", "со́рок відсо́тків люде́й", "forty of-percents of-people", "forty percent of people"],
+          ["difference", "на три ро́ки моло́дша", "by three years younger", "three years younger"]
+        ]
+      },
+      "examples": [
+        {"target": "Полови́на мої́х сусі́дів працю́є вдо́ма.", "source": "Half of my neighbors work from home.", "source_literal": "Half of-my of-neighbors works at-home."},
+        {"target": "Три чве́рті студе́нтів гово́рять англі́йською.", "source": "Three quarters of the students speak English.", "source_literal": "Three quarters of-students speak by-English."},
+        {"target": "Ціна́ стано́вить півтори́ ти́сячі гри́вень.", "source": "The price is fifteen hundred hryvnias.", "source_literal": "Price amounts-to one-and-a-half of-thousand of-hryvnias."},
+        {"target": "Скі́льки відсо́тків люде́й чита́ють кни́ги?", "source": "What percentage of people read books?", "source_literal": "How-many of-percents of-people read books?"},
+        {"target": "Квитки́ сього́дні на де́сять відсо́тків деше́вші.", "source": "Tickets are ten percent cheaper today.", "source_literal": "Tickets today by ten of-percents cheaper."}
+      ]
+    },
+    {
+      "title": "Spelling and sound: мільйо́н, дев’ятсо́т, чотирьо́х and столі́ття",
+      "explanation": "Every new word and form in this unit can be read with the rules of the alphabet units and the unit on stress. The numerals bring up the points below.\n\nThe soft sign before 'о' and before 'йо' writes two different things. After a consonant, 'ьо' shows that the consonant is soft and that [ɔ] follows it directly, since the letter 'о' cannot show softness by itself: 'чотирьо́х' [t͡ʃɔtɪˈrʲɔx], 'трьох' [trʲɔx], 'п’ятьо́х' [pjɑˈtʲɔx]. In 'мільйо́н' [mʲilʲˈjɔn] a [j] is said between the soft 'л' and the vowel, and 'й' writes it, so the spelling is 'ьйо'. 'Мілья́рд' [mʲilʲˈjɑrd] has the same [lʲj], written 'ья', because 'я' after the soft sign stands for [j] and [ɑ], as it does after the apostrophe in 'ім’я́'. Its final 'рд' stays voiced, as voiced consonants do at the end of a word.\n\n'Дев’ятсо́т' [dɛʋjɑtˈsɔt] keeps the apostrophe of 'де́в’ять': 'в' stays hard and the [j] of 'я' is said. The hundreds from 'п’ятсо́т' to 'дев’ятсо́т' are stressed on 'сот', and the soft sign of 'п’ять', 'шість' and 'де́в’ять' is not written before it. In 'шістсо́т' [ʃiˈsːɔt] the 'т' between two 'с' is not pronounced, as in 'шістна́дцять', and the two 'с' make one long [sː].\n\nThe instrumental forms in '-ма' are stressed on the ending. In 'п’ятьма́' and 'шістьма́' the soft sign makes the 'т' before 'м' soft, as in 'дітьми́', while 'чотирма́' has a hard 'р' and no soft sign.\n\n'Столі́ття' [stɔˈlʲitʲːɑ] and 'десятилі́ття' have a doubled 'тт', a long soft [tʲː], as in 'життя́', and 'насе́лення' [nɑˈsɛlʲɛnʲːɑ] has a long soft [nʲː]. The doubling stays before a vowel, as in the locative 'у столі́тті', but not at the end of a word: the genitive plural 'столі́ть' has one 'т' and a soft sign.\n\nSeveral numerals and nouns change a sound or move their stress in other forms:\n\n- 'ві́сім', 'восьми́'; 'сім', 'семи́'; 'шість', 'шести́': the 'і' of a closed syllable is 'о' or 'е' in an open one, as in 'кіт', 'кота́', in the forms in '-и' only\n- 'со́рок', 'сорока́': the stress moves to the ending\n- 'о́бидва', 'обо́х': the stress moves from the first syllable to the last\n- 'рік', 'ро́ці': the 'і' of the closed syllable is 'о' in the open one, as in 'ро́ку', and 'к' becomes 'ц' before the locative ending '-і'\n- 'відсо́ток', 'відсо́тка': the 'о' before 'к' drops when an ending is added, as in 'ри́нок', 'на ри́нку'\n- 'рахува́ти', 'раху́ю': '-ува-' becomes '-у-' in the present, as in 'працюва́ти', 'працю́ю'\n- 'стано́вити', 'стано́влю': an 'л' appears after 'в' in the 'я' form, as in 'люби́ти', 'люблю́'\n\n'В' before a consonant is [w], as in 'півтора́' [piwtɔˈrɑ] and 'народи́вся' [nɑrɔˈdɪwsʲɑ]; in 'чверть' [t͡ʃʋɛrtʲ] it stands before a vowel and is [ʋ]. In 'відсо́ток' [ʋidˈsɔtɔk] the 'д' stays voiced before 'с', as voiced consonants do in careful speech.",
+      "table": {
+        "headers": ["Spelling", "Where", "Sound", "Example"],
+        "rows": [
+          ["ьо", "Soft consonant before [ɔ]", "[rʲɔ]", "чотирьо́х, трьох"],
+          ["ьйо", "Soft consonant, then [j]", "[lʲjɔ]", "мільйо́н"],
+          ["ья", "Soft consonant, then [j]", "[lʲjɑ]", "мілья́рд"],
+          ["в’я", "Apostrophe after 'в'", "[ʋjɑ]", "дев’ятсо́т"],
+          ["стс", "'т' between two 'с'", "[sː]", "шістсо́т"],
+          ["тьм", "Soft 'т' before 'м'", "[tʲm]", "п’ятьма́, шістьма́"],
+          ["тт", "Doubled consonant", "[tʲː]", "столі́ття, у столі́тті"],
+          ["нн", "Doubled consonant", "[nʲː]", "насе́лення"],
+          ["ть", "No doubling at the end", "[tʲ]", "столі́ть"],
+          ["і, о, е", "Closed and open syllable", "[i], [ɔ], [ɛ]", "ві́сім, восьми́; сім, семи́"],
+          ["в", "Before a consonant", "[w]", "півтора́, народи́вся"]
+        ]
+      },
+      "examples": [
+        {"target": "У мілья́рді ти́сяча мільйо́нів.", "source": "There are a thousand million in a billion.", "source_literal": "In billion thousand of-millions."},
+        {"target": "Окса́на гуля́ла з чотирма́ по́другами.", "source": "Oksana went for a walk with four friends.", "source_literal": "Oksana strolled with four friends."},
+        {"target": "Це було́ сто ро́ків тому́, у мину́лому столі́тті.", "source": "That was a hundred years ago, in the last century.", "source_literal": "This was hundred of-years ago, in past century."},
+        {"target": "В університе́ті шістсо́т студе́нтів.", "source": "There are six hundred students at the university.", "source_literal": "In university six-hundred of-students."}
+      ]
+    }
+  ],
+  "culture": {
+    "title": "Writing numbers, and the dates of independence",
+    "text": "Ukrainian writes numbers a little differently from American English. A space separates the thousands where English uses a comma, and a comma separates the whole number from the decimals where English uses a period:\n\n- 1 500 is fifteen hundred, 'ти́сяча п’ятсо́т'\n- 1 000 000 is a million, 'мільйо́н'\n- 2,5 is two and a half\n\nNews reports shorten the large numbers: 'тис.' stands for 'ти́сяча', 'млн' for 'мільйо́н' and 'млрд' for 'мілья́рд'. A year in writing is often followed by 'р.', short for 'рік' in whatever form the sentence needs, and a reader says the full words: '1991 р.' is read 'ти́сяча дев’ятсо́т дев’яно́сто пе́рший рік'. Centuries are written in Roman numerals, so 'XX столі́ття' is read 'двадця́те столі́ття'. In everyday speech a year of the last century is often shortened to its last two words, as English says 'ninety-one': 'у дев’яно́сто пе́ршому', in ninety-one.\n\nTwo dates of 1991 mark the independence of Ukraine. On August 24, 'два́дцять четве́ртого се́рпня', the parliament in Kyiv adopted the Act of Declaration of Independence, and August 24 is Independence Day, 'День Незале́жності', the main state holiday. On December 1 of the same year a national referendum confirmed the decision: more than ninety percent of those who voted, 'бі́льше ніж дев’яно́сто відсо́тків', voted yes.\n\nIn 1982 Kyiv celebrated its fifteen hundredth anniversary, counting from the year 482, a founding date that historians chose on the evidence of archaeology. Kyiv Day, 'День Ки́єва', is celebrated every year on the last Sunday of May."
+  },
+  "readings": [
+    {
+      "id": "r1",
+      "title": "Украї́на в ци́фрах",
+      "paragraphs": [
+        {"target": "Пло́ща Украї́ни стано́вить бі́льше ніж шістсо́т ти́сяч квадра́тних кіломе́трів. Це одна́ з найбі́льших краї́н Євро́пи. Украї́на межу́є з сімома́ краї́нами.", "source": "Ukraine's area is more than six hundred thousand square kilometers. It is one of the largest countries in Europe. Ukraine borders seven countries.", "source_literal": "Area of-Ukraine amounts-to more than six-hundred of-thousands of-square of-kilometers. This one from largest of-countries of-Europe. Ukraine borders with seven countries."},
+        {"target": "У дві ти́сячі пе́ршому ро́ці в Украї́ні жило́ бі́льше ніж со́рок ві́сім мільйо́нів люде́й. Прибли́зно сімдеся́т відсо́тків насе́лення живе́ в міста́х.", "source": "In 2001 more than forty-eight million people lived in Ukraine. About seventy percent of the population lives in cities.", "source_literal": "In two thousands first year in Ukraine lived more than forty eight of-millions of-people. Approximately seventy of-percents of-population lives in cities."},
+        {"target": "У Ки́єві, найбі́льшому мі́сті краї́ни, живу́ть прибли́зно три мільйо́ни люде́й. У Ха́ркові живе́ прибли́зно півтора́ мільйо́на, а у Льво́ві прибли́зно сімсо́т ти́сяч.", "source": "About three million people live in Kyiv, the largest city in the country. About one and a half million live in Kharkiv, and about seven hundred thousand in Lviv.", "source_literal": "In Kyiv, largest city of-country, live approximately three millions of-people. In Kharkiv lives approximately one-and-a-half of-million, and in Lviv approximately seven-hundred of-thousands."},
+        {"target": "В Украї́ні прибли́зно шістдеся́т три ти́сячі рі́чок. Довжина́ Дніпра́, найбі́льшої з них, стано́вить бі́льше ніж дві ти́сячі кіломе́трів.", "source": "Ukraine has about sixty-three thousand rivers. The length of the Dnipro, the largest of them, is more than two thousand kilometers.", "source_literal": "In Ukraine approximately sixty three thousands of-rivers. Length of-Dnipro, of-largest from them, amounts-to more than two thousands of-kilometers."},
+        {"target": "Прибли́зно ти́сяча кіломе́трів Дніпра́ в Украї́ні. Ки́їв стої́ть на Дніпрі́.", "source": "About a thousand kilometers of the Dnipro are in Ukraine. Kyiv stands on the Dnipro.", "source_literal": "Approximately thousand of-kilometers of-Dnipro in Ukraine. Kyiv stands on Dnipro."}
+      ],
+      "questions": [
+        {"type": "multiple_choice", "prompt": "How many countries does Ukraine border?", "choices": ["Five", "Seven", "Ten"], "answer_index": 1, "explanation": "The text says 'Украї́на межу́є з сімома́ краї́нами.' 'Сімома́' is the instrumental of 'сім', after 'з'."},
+        {"type": "multiple_choice", "prompt": "Where does about seventy percent of the population live?", "choices": ["In Kyiv", "In villages", "In cities"], "answer_index": 2, "explanation": "'Прибли́зно сімдеся́т відсо́тків насе́лення живе́ в міста́х.' 'В міста́х' is the locative plural of 'мі́сто'."},
+        {"type": "multiple_choice", "prompt": "About how many people live in Kharkiv?", "choices": ["About one and a half million", "About seven hundred thousand", "About three million"], "answer_index": 0, "explanation": "'У Ха́ркові живе́ прибли́зно півтора́ мільйо́на.' After 'півтора́' the noun is in the genitive singular, 'мільйо́на'. Seven hundred thousand is the figure for Lviv, and three million for Kyiv."},
+        {"type": "multiple_choice", "prompt": "How many kilometers of the Dnipro are in Ukraine?", "choices": ["About a hundred", "More than two thousand", "About a thousand"], "answer_index": 2, "explanation": "'Прибли́зно ти́сяча кіломе́трів Дніпра́ в Украї́ні.' More than two thousand kilometers is the length of the whole river."}
+      ]
+    },
+    {
+      "id": "r2",
+      "title": "Коро́тка істо́рія Ки́єва",
+      "paragraphs": [
+        {"target": "За леге́ндою, Ки́їв заснува́ли тро́є браті́в, Кий, Щек і Хори́в, і ї́хня сестра́ Ли́бідь. Ім’я́ мі́сту дав ста́рший брат, Кий.", "source": "According to legend, Kyiv was founded by three brothers, Kyi, Shchek and Khoryv, and their sister Lybid. The eldest brother, Kyi, gave the city its name.", "source_literal": "By legend, Kyiv founded three of-brothers, Kyi, Shchek and Khoryv, and their sister Lybid. Name to-city gave elder brother, Kyi."},
+        {"target": "Ки́єву бі́льше ніж п’ятна́дцять столі́ть. У дев’я́тому столі́тті він став столи́цею вели́кої краї́ни, Ки́ївської Ру́сі.", "source": "Kyiv is more than fifteen centuries old. In the ninth century it became the capital of a large country, Kyivan Rus.", "source_literal": "To-Kyiv more than fifteen of-centuries. In ninth century it became by-capital of-large of-country, of-Kyivan of-Rus."},
+        {"target": "В одина́дцятому столі́тті тут збудува́ли Софі́йський собо́р, і він стої́ть до сього́дні. У ти́сяча дві́сті сороко́вому ро́ці мі́сто зруйнува́ли монго́ли.", "source": "In the eleventh century Saint Sophia's Cathedral was built here, and it still stands today. In 1240 the Mongols destroyed the city.", "source_literal": "In eleventh century here they-built Sophia cathedral, and it stands to today. In thousand two-hundred fortieth year city destroyed Mongols."},
+        {"target": "Пі́сля цього́ Ки́їв кі́лька столі́ть був мали́м мі́стом. У ти́сяча вісімсо́т дев’яно́сто сьо́мому ро́ці тут жило́ прибли́зно дві́сті п’ятдеся́т ти́сяч люде́й.", "source": "After that, Kyiv was a small town for several centuries. In 1897 about two hundred fifty thousand people lived here.", "source_literal": "After this Kyiv several of-centuries was by-small by-town. In thousand eight-hundred ninety seventh year here lived approximately two-hundred fifty of-thousands of-people."},
+        {"target": "У ти́сяча дев’ятсо́т шістдеся́тому ро́ці в Ки́єві пої́хав пе́рший по́їзд метро́. У вісімдеся́тих ро́ках у мі́сті жило́ вже бі́льше ніж два мільйо́ни люде́й.", "source": "In 1960 the first metro train ran in Kyiv. In the eighties more than two million people already lived in the city.", "source_literal": "In thousand nine-hundred sixtieth year in Kyiv went first train of-metro. In eightieth years in city lived already more than two millions of-people."},
+        {"target": "Два́дцять четве́ртого се́рпня ти́сяча дев’ятсо́т дев’яно́сто пе́ршого ро́ку Украї́на ста́ла незале́жною краї́ною, а Ки́їв її́ столи́цею.", "source": "On August 24, 1991, Ukraine became an independent country, and Kyiv its capital.", "source_literal": "Twenty of-fourth of-August thousand nine-hundred ninety of-first of-year Ukraine became by-independent by-country, and Kyiv its by-capital."}
+      ],
+      "questions": [
+        {"type": "multiple_choice", "prompt": "According to the legend, who founded Kyiv?", "choices": ["Three brothers and their sister", "Two brothers", "A prince and his four sons"], "answer_index": 0, "explanation": "'Ки́їв заснува́ли тро́є браті́в ... і ї́хня сестра́ Ли́бідь.' 'Тро́є браті́в' is the collective numeral with the genitive plural."},
+        {"type": "multiple_choice", "prompt": "In which century did Kyiv become the capital of Kyivan Rus?", "choices": ["The eleventh", "The ninth", "The twentieth"], "answer_index": 1, "explanation": "'У дев’я́тому столі́тті він став столи́цею.' The cathedral was built in the eleventh century, 'в одина́дцятому столі́тті'."},
+        {"type": "multiple_choice", "prompt": "What happened in 1240?", "choices": ["Saint Sophia's Cathedral was built.", "The first metro train ran.", "The Mongols destroyed the city."], "answer_index": 2, "explanation": "'У ти́сяча дві́сті сороко́вому ро́ці мі́сто зруйнува́ли монго́ли.' Only the last word of the year, 'сороко́вому', is an ordinal."},
+        {"type": "multiple_choice", "prompt": "About how many people lived in Kyiv in 1897?", "choices": ["About two hundred fifty thousand", "More than two million", "About fifteen thousand"], "answer_index": 0, "explanation": "'Тут жило́ прибли́зно дві́сті п’ятдеся́т ти́сяч люде́й.' More than two million is the figure for the eighties."}
+      ]
+    }
+  ],
+  "exercises": [
+    {"type": "match", "prompt": "Match the Ukrainian words with their meanings", "pairs": [{"target": "ти́сяча", "source": "thousand"}, {"target": "мільйо́н", "source": "million"}, {"target": "полови́на", "source": "half"}, {"target": "чверть", "source": "quarter"}, {"target": "столі́ття", "source": "century"}, {"target": "насе́лення", "source": "population"}]},
+    {"type": "multiple_choice", "prompt": "What does 'десятилі́ття' mean?", "choices": ["a century", "a decade", "a percent"], "answer_index": 1, "explanation": "'Десятилі́ття' is built from 'де́сять', ten, and 'лі́то', summer, which once also meant a year. 'Столі́ття', a century, is built the same way from 'сто'."},
+    {"type": "listening_choice", "audio_target": "У цьо́му мі́сті живу́ть прибли́зно два мільйо́ни люде́й.", "choices": ["About two million people live in this city.", "About two thousand people live in this city.", "About three million people live in this city."], "answer_index": 0},
+    {"type": "listening_choice", "audio_target": "У ме́не дво́є діте́й.", "choices": ["I have three children.", "I have two children.", "I have two brothers."], "answer_index": 1},
+    {"type": "multiple_choice", "prompt": "Which phrase means 'a thousand hryvnias'?", "choices": ["ти́сяча гри́вні", "ти́сяча гри́вня", "ти́сяча гри́вень"], "answer_index": 2, "explanation": "'Ти́сяча' is a noun, and what it counts always follows in the genitive plural, 'гри́вень', as after 'п’ять'."},
+    {"type": "fill_blank", "prompt_target": "На конце́рті було́ дві ___ люде́й.", "answers": ["ти́сячі"], "hint_source": "There were two thousand people at the concert.", "explanation": "After 'дві' a noun takes the nominative plural, and 'ти́сяча' is a feminine noun, so it is 'дві ти́сячі'. The people counted follow in the genitive plural, 'люде́й'."},
+    {"type": "multiple_choice", "prompt": "Why is it 'три́ста' but 'п’ятсо́т'?", "choices": ["The hundreds repeat the rule of the noun after a number: 'ста' is an old plural, as in 'три ро́ки', and 'сот' is the genitive plural, as in 'п’ять ро́ків'.", "'Три́ста' is masculine and 'п’ятсо́т' is feminine.", "'П’ятсо́т' is an ordinal numeral."], "answer_index": 0, "explanation": "Each hundred is a unit plus a form of 'сто', chosen by the same rule as the noun after a number. 'Дві́сті' has an old form used for exactly two."},
+    {"type": "fill_blank", "prompt_target": "Окса́на ї́де на мо́ре з ___ по́другами.", "answers": ["двома́"], "hint_source": "Oksana is going to the sea with two friends.", "explanation": "After 'з', with, the noun is in the instrumental plural, 'по́другами', and the numeral takes the same case: 'двома́'. The form 'дві' exists only in the nominative and the accusative."},
+    {"type": "fill_blank", "prompt_target": "Тара́с подзвони́в ___ дру́зям.", "answers": ["чотирьо́м"], "hint_source": "Taras phoned four friends.", "explanation": "'Дзвони́ти' takes the person in the dative, so the noun is the dative plural 'дру́зям' and the numeral is the dative 'чотирьо́м'."},
+    {"type": "multiple_choice", "prompt": "In 'Ми жили́ в двох міста́х.', why is it 'двох' and not 'два'?", "choices": ["'Двох' is used only with animate nouns.", "'Двох' is the plural of 'два'.", "After 'в' meaning 'in', the noun is in the locative, and the numeral takes the locative too."], "answer_index": 2, "explanation": "Outside the nominative and the accusative, the numeral and the noun stand in the same case: 'в двох міста́х', like 'в міста́х' without the number."},
+    {"type": "multiple_choice", "prompt": "Which sentence means 'I see two students'?", "choices": ["Я ба́чу двом студе́нтам.", "Я ба́чу два студе́нти.", "Я ба́чу двох студе́нтів."], "answer_index": 2, "explanation": "Students are people, so in the accusative the numeral and the noun take the genitive forms 'двох студе́нтів'. 'Два студе́нти' would be the form for things, and 'двом студе́нтам' is the dative."},
+    {"type": "listening_choice", "audio_target": "Він народи́вся в ти́сяча дев’ятсо́т вісімдеся́т шо́стому ро́ці.", "choices": ["He was born in 1996.", "He was born in 1986.", "He was born in 1976."], "answer_index": 1},
+    {"type": "fill_blank", "prompt_target": "Мій брат народи́вся в ти́сяча дев’ятсо́т дев’яно́сто ___ ро́ці.", "answers": ["шо́стому"], "hint_source": "My brother was born in 1996.", "explanation": "Only the last word of a year is an ordinal, and after 'в' meaning 'in' it takes the locative ending '-ому', with 'ро́ці'. The words before it stay as they are."},
+    {"type": "multiple_choice", "prompt": "How do you say 'in the twentieth century'?", "choices": ["у двадця́тому столі́тті", "у два́дцять столі́тті", "у двадця́те столі́ття"], "answer_index": 0, "explanation": "A century is named by an ordinal, 'двадця́тий', which agrees with the neuter noun 'столі́ття'. After 'у' meaning 'in', both are in the locative: 'у двадця́тому столі́тті'."},
+    {"type": "multiple_choice", "prompt": "In 'у ти́сяча дев’ятсо́т сімдеся́тому ро́ці', which numeral changes for the case?", "choices": ["All three numerals", "Only 'ти́сяча'", "Only 'сімдеся́тому', the last one, an ordinal"], "answer_index": 2, "explanation": "In a year only the last word is an ordinal, and only it changes with 'рік'. 'Ти́сяча' and 'дев’ятсо́т' stay in the nominative."},
+    {"type": "fill_blank", "prompt_target": "Мої́ батьки́ познайо́милися у вісімдеся́тих ___.", "answers": ["ро́ках"], "hint_source": "My parents met in the eighties.", "explanation": "A decade is the plural of the ordinal with 'ро́ки'. 'In the eighties' is the locative plural: 'у вісімдеся́тих ро́ках'."},
+    {"type": "fill_blank", "prompt_target": "Украї́на ста́ла незале́жною два́дцять четве́ртого се́рпня ти́сяча дев’ятсо́т дев’яно́сто ___ ро́ку.", "answers": ["пе́ршого"], "hint_source": "Ukraine became independent on August 24, 1991.", "explanation": "In a full date the year follows in the genitive, as 'of' the year: the ordinal 'пе́ршого' with 'ро́ку'. 'Незале́жний' means independent."},
+    {"type": "dictation", "audio_target": "Нас було́ тро́є.", "hint_source": "There were three of us."},
+    {"type": "multiple_choice", "prompt": "Which phrase means 'two sisters'?", "choices": ["дво́є сесте́р", "дві сестри́", "два сестри́"], "answer_index": 1, "explanation": "Collective numerals are not used with feminine nouns, so two sisters are 'дві сестри́', with the feminine form 'дві' and the nominative plural."},
+    {"type": "fill_blank", "prompt_target": "На вечі́рці було́ ___ студе́нтів із Кана́ди.", "answers": ["тро́є"], "hint_source": "There were three students from Canada at the party.", "explanation": "The noun is in the genitive plural, 'студе́нтів', so 'three' must be the collective numeral 'тро́є'. With 'три' the noun would be in the nominative plural, 'три студе́нти'."},
+    {"type": "fill_blank", "prompt_target": "___ сестри́ працю́ють у лі́карні.", "answers": ["о́бидві"], "hint_source": "Both sisters work at the hospital.", "explanation": "'Сестра́' is feminine, so 'both' is 'о́бидві', followed by the nominative plural, as after 'дві'."},
+    {"type": "order_words", "prompt_source": "We have two children.", "words": ["У", "нас", "дво́є", "діте́й."], "distractors": ["два", "ді́ти"]},
+    {"type": "listening_choice", "audio_target": "Полови́на мої́х дру́зів живе́ у Льво́ві.", "choices": ["A quarter of my friends live in Lviv.", "Half of my friends live in Kyiv.", "Half of my friends live in Lviv."], "answer_index": 2},
+    {"type": "multiple_choice", "prompt": "What does 'півтори́ годи́ни' mean?", "choices": ["half an hour", "an hour and a half", "two and a half hours"], "answer_index": 1, "explanation": "'Півтора́', or 'півтори́' with a feminine noun such as 'годи́на', means one and a half, and the noun follows in the genitive singular."},
+    {"type": "fill_blank", "prompt_target": "Сем живе́ в Ки́єві півтора́ ___.", "answers": ["ро́ку"], "hint_source": "Sam has lived in Kyiv for a year and a half.", "explanation": "After 'півтора́' the noun is in the genitive singular. The genitive of 'рік' is 'ро́ку'."},
+    {"type": "multiple_choice", "prompt": "Which phrase means 'two percent'?", "choices": ["два відсо́тків", "два відсо́ток", "два відсо́тки"], "answer_index": 2, "explanation": "'Відсо́ток' is counted like any masculine noun: after 'два' it takes the nominative plural 'відсо́тки'. After 'п’ять' it would be 'відсо́тків'."},
+    {"type": "fill_blank", "prompt_target": "Два́дцять ___ студе́нтів працю́ють.", "answers": ["відсо́тків"], "hint_source": "Twenty percent of the students work.", "explanation": "After 'два́дцять' the noun is in the genitive plural, 'відсо́тків', and what is measured follows in the genitive too, 'студе́нтів'."},
+    {"type": "dictation", "audio_target": "Тут живе́ мільйо́н люде́й.", "hint_source": "A million people live here."},
+    {"type": "multiple_choice", "prompt": "Why is 'мільйо́н' written with 'ьйо' but 'чотирьо́х' with 'ьо'?", "choices": ["Both are said the same, and the spelling only records history.", "In 'мільйо́н' a [j] is said after the soft 'л', and 'й' writes it; in 'чотирьо́х' the 'р' is soft with no [j] after it, so the soft sign alone is written.", "The 'й' marks the stressed syllable."], "answer_index": 1, "explanation": "'Ьо' writes a soft consonant followed directly by [ɔ]; 'ьйо' writes a soft consonant, then [j], then [ɔ]: [mʲilʲˈjɔn], [t͡ʃɔtɪˈrʲɔx]."},
+    {"type": "translate_to_target", "prompt_source": "There are four of us.", "answers": ["Нас че́тверо."], "explanation": "The number of people in a group is said with the genitive 'нас' and a collective numeral, here 'че́тверо'."},
+    {"type": "translate_to_target", "prompt_source": "Taras lives with three friends.", "answers": ["Тара́с живе́ з трьома́ дру́зями.", "Тара́с живе́ з трьома́ по́другами."], "explanation": "After 'з', with, the numeral and the noun are both in the instrumental: 'трьома́ дру́зями'."},
+    {"type": "translate_to_target", "prompt_source": "I was born in 1991.", "answers": ["Я народи́вся в ти́сяча дев’ятсо́т дев’яно́сто пе́ршому ро́ці.", "Я народи́лася в ти́сяча дев’ятсо́т дев’яно́сто пе́ршому ро́ці.", "Я народи́вся в ти́сяча дев’ятсо́т дев’яно́сто пе́ршому.", "Я народи́лася в ти́сяча дев’ятсо́т дев’яно́сто пе́ршому."], "explanation": "A man says 'народи́вся' and a woman 'народи́лася'. Only the last word of the year is an ordinal, in the locative with 'ро́ці', and 'в' follows the vowel of the verb."},
+    {"type": "translate_to_target", "prompt_source": "Half of the students work.", "answers": ["Полови́на студе́нтів працю́є."], "explanation": "'Полови́на' is a singular noun, so the verb is singular, and the students follow in the genitive plural."},
+    {"type": "order_words", "prompt_source": "The population of the city is one and a half million.", "words": ["Насе́лення", "мі́ста", "стано́вить", "півтора́", "мільйо́на."], "distractors": ["мільйо́ни", "мільйо́нів"]},
+    {"type": "order_words", "prompt_source": "My grandfather was born in the twentieth century.", "words": ["Мій", "діду́сь", "народи́вся", "в", "двадця́тому", "столі́тті."], "distractors": ["два́дцять", "столі́ття"]},
+    {"type": "multiple_choice", "prompt": "In the first dialogue, how many people did the survey ask?", "choices": ["A hundred", "Three million", "A thousand"], "answer_index": 2, "explanation": "Taras answers 'Ти́сячу.', the accusative of 'ти́сяча', and Sam thinks a thousand out of three million is too few."},
+    {"type": "multiple_choice", "prompt": "In the first dialogue, what percentage of people walk to work?", "choices": ["Fifteen percent", "Twenty-five percent", "Forty percent"], "answer_index": 0, "explanation": "'П’ятна́дцять відсо́тків хо́дять на робо́ту, бо живу́ть бли́зько.' Forty percent take the metro and a quarter, twenty-five percent, take the bus."},
+    {"type": "multiple_choice", "prompt": "In the second dialogue, how many years are there between Oksana and her brother?", "choices": ["Six", "Eight", "Three"], "answer_index": 1, "explanation": "Her brother was born in 1996 and she was born in 2004: 'Між на́ми ві́сім ро́ків.' Three years is the difference between her grandparents."}
+  ]
+}
