@@ -136,7 +136,7 @@ Rules for each section:
 
 - `vocabulary`: at least 12 items; 12 to 20 is typical. Every item needs an `example` pair. `part_of_speech` is optional and names the item's real class (noun, verb, adjective, phrase, noun phrase, and so on). Where gender or class matters for nouns, include what the language needs in `target` (in Portuguese, the article: `a cidade`, `o aluguel`). For verbs use the dictionary form. Do not repeat a `target` value within the unit.
 - `dialogues`: 2 to 3 dialogues, each with 6 to 14 lines, 2 to 4 distinct speakers, speaker names consistent within a dialogue and `gender` of `f` or `m` on every line matching the speaker. Dialogues use the unit's vocabulary and grammar focus in realistic situations. A dialogue id is unique within the unit (`d1`, `d2`, ...).
-- `grammar`: 2 to 4 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, real usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
+- `grammar`: 2 to 9 notes covering the unit's grammar focus. Each explanation is at least 250 characters and genuinely teaches (rule, pattern, exceptions, real usage). Each note has at least 4 examples. Add a `table` where a paradigm, comparison or list of forms helps (all cells are strings, every row as wide as the headers).
 - Table headers on a phone: a narrow screen shows a table as labelled rows.
   - The first column leads each row. Where consecutive rows repeat their first cell, that cell becomes a group heading and the second column leads.
   - Every later header becomes an uppercase label in a column about 11 letters wide beside its value.
