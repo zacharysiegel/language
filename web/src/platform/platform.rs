@@ -83,6 +83,27 @@ mod browser {
         web_sys::window()?.local_storage().ok()?
     }
 
+    /// `false` when `navigator.storage` lacks a callable member of this name. A member the browser does not
+    /// have throws synchronously from the web-sys call instead of rejecting a promise, so a caller asks first
+    /// rather than relying on an `Err`.
+    pub fn has_storage_function(name: &str) -> bool {
+        let Some(window) = web_sys::window()
+        else {
+            return false;
+        };
+        let navigator: web_sys::Navigator = window.navigator();
+        let Ok(storage) = js_sys::Reflect::get(navigator.as_ref(), &JsValue::from_str("storage"))
+        else {
+            return false;
+        };
+
+        if !storage.is_object() {
+            return false;
+        }
+
+        js_sys::Reflect::get(&storage, &JsValue::from_str(name)).is_ok_and(|member| member.is_function())
+    }
+
     pub fn read_stored_text(key: &str) -> Option<String> {
         local_storage()?.get_item(key).ok()?
     }
@@ -426,6 +447,10 @@ mod server {
     use super::*;
 
     // The server renders a static shell; nothing below runs before the client attaches.
+    pub fn has_storage_function(_name: &str) -> bool {
+        false
+    }
+
     pub fn read_stored_text(_key: &str) -> Option<String> {
         None
     }
