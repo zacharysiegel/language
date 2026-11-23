@@ -674,6 +674,14 @@ mod browser {
             return;
         };
 
+        // A browser shipping OPFS without `persist` throws here rather than rejecting, and no `await`
+        // turns that throw into an `Err`.
+        if !crate::platform::has_storage_function("persist") {
+            log::info!("this browser cannot persist its storage");
+
+            return;
+        }
+
         let persist_request: Result<js_sys::Promise, wasm_bindgen::JsValue> = window.navigator().storage().persist();
         let persisted: Result<wasm_bindgen::JsValue, wasm_bindgen::JsValue> = match persist_request {
             Ok(promise) => JsFuture::from(promise).await,
