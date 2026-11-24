@@ -6,6 +6,7 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::{File, FileSystemDirectoryHandle, FileSystemFileHandle, FileSystemGetDirectoryOptions, FileSystemGetFileOptions, FileSystemWritableFileStream};
 
 use crate::artifact_client::js_interop;
+use crate::platform;
 
 const CACHE_DIRECTORY_NAME: &str = "artifact-cache";
 
@@ -37,6 +38,13 @@ fn entry_name(relative_path: &str) -> &str {
 
 async fn open_cache_directory() -> Result<FileSystemDirectoryHandle, AppErrorStatic> {
     let window: web_sys::Window = js_interop::get_window()?;
+
+    // A browser without OPFS throws from `getDirectory` itself, and a throw escaping the import never
+    // becomes a rejected promise, so the await below would never see it as an `Err`.
+    if !platform::has_storage_function("getDirectory") {
+        return Err(AppErrorStatic::from("navigator.storage.getDirectory is unavailable"));
+    }
+
     let root: FileSystemDirectoryHandle = js_interop::await_and_cast(window.navigator().storage().get_directory()).await?;
     let options: FileSystemGetDirectoryOptions = FileSystemGetDirectoryOptions::new();
 
